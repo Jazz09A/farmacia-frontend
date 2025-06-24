@@ -32,6 +32,7 @@ import CreateBlogPostPage from './pages/Admin/CreateBlogPostPage';
 import EditBlogPostPage from './pages/Admin/EditBlogPostPage';
 import AdminCustomersPage from './pages/Admin/AdminCustomersPage';
 import AdminProductsPage from './pages/Admin/AdminProductsPage';
+import AdminEditProductPage from './pages/Admin/AdminEditProductPage';
 import AdminAnalyticsPage from './pages/Admin/AdminAnalyticsPage';
 import AdminRoute from './components/Admin/AdminRoute';
 
@@ -151,6 +152,7 @@ function App() {
                   <Route path="orders" element={<AdminOrdersPage />} />
                   <Route path="customers" element={<AdminCustomersPage />} />
                   <Route path="products" element={<AdminProductsPage />} />
+                  <Route path="products/edit/:id" element={<AdminEditProductPage />} />
                   <Route path="analytics" element={<AdminAnalyticsPage />} />
                   
                   {/* Rutas del Blog en el Admin Panel */}

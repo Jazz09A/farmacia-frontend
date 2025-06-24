@@ -24,6 +24,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { mockProducts } from '../../data/mockData';
 import { Product } from '../../types';
 
@@ -48,6 +49,7 @@ const mockProductsWithStats: ProductWithStats[] = mockProducts.map((product, ind
 }));
 
 const AdminProductsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -492,6 +494,7 @@ const AdminProductsPage: React.FC = () => {
                           <Eye className="h-4 w-4" />
                         </button>
                         <button
+                          onClick={() => navigate(`/admin/products/edit/${product.id}`)}
                           className="text-yellow-600 hover:text-yellow-900 transition-colors"
                           title="Editar"
                         >
@@ -589,7 +592,10 @@ const AdminProductsPage: React.FC = () => {
                   >
                     Ver Detalles
                   </button>
-                  <button className="p-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded transition-colors">
+                  <button 
+                    onClick={() => navigate(`/admin/products/edit/${product.id}`)}
+                    className="p-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded transition-colors"
+                  >
                     <Edit className="h-4 w-4" />
                   </button>
                 </div>
@@ -684,7 +690,13 @@ const AdminProductsPage: React.FC = () => {
                 >
                   Cerrar
                 </button>
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                <button 
+                  onClick={() => {
+                    setShowProductModal(false);
+                    navigate(`/admin/products/edit/${selectedProduct.id}`);
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
                   Editar Producto
                 </button>
               </div>
