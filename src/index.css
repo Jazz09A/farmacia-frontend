@@ -1,0 +1,403 @@
+/* Google Fonts - Medical Typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Variables for Medical Theme */
+:root {
+  --medical-blue-50: #f2fbfe;
+  --medical-blue-500: #24ace9;
+  --medical-blue-600: #248ccb;
+  --medical-green-50: #E8F5E8;
+  --medical-green-500: #4CAF50;
+  --medical-green-600: #43A047;
+  --medical-gray-50: #FAFAFA;
+  --medical-gray-100: #F5F5F5;
+  --medical-gray-500: #9E9E9E;
+  
+  /* Animation durations */
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  
+  /* Easing functions */
+  --ease-medical: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Base optimizations for performance */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  font-variation-settings: 'opsz' 32;
+  background-color: var(--medical-gray-50);
+  color: #2c3e50;
+  line-height: 1.6;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Fix for root container */
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Performance optimizations */
+img, video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Preload critical animations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Medical specific base styles */
+.medical-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .medical-container {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .medical-container {
+    padding: 0 2rem;
+  }
+}
+
+/* Custom scrollbar for medical theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--medical-gray-100);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--medical-blue-500);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--medical-blue-600);
+}
+
+/* Firefox scrollbar */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--medical-blue-500) var(--medical-gray-100);
+}
+
+/* Selection styles */
+::selection {
+  background-color: var(--medical-blue-50);
+  color: var(--medical-blue-600);
+}
+
+::-moz-selection {
+  background-color: var(--medical-blue-50);
+  color: var(--medical-blue-600);
+}
+
+/* Focus styles for accessibility */
+*:focus {
+  outline: 2px solid var(--medical-blue-500);
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--medical-blue-500);
+  outline-offset: 2px;
+}
+
+/* Custom components */
+@layer components {
+  /* Medical Button Base */
+  .btn-medical {
+    @apply inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-medical transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-medical-primary {
+    @apply btn-medical bg-medical-blue-600 text-white hover:bg-medical-blue-700 focus:ring-medical-blue-500 hover:shadow-medical-hover hover:-translate-y-0.5;
+  }
+  
+  .btn-medical-secondary {
+    @apply btn-medical bg-white text-medical-blue-600 border-medical-blue-200 hover:bg-medical-blue-50 focus:ring-medical-blue-500 hover:border-medical-blue-300;
+  }
+  
+  .btn-medical-glass {
+    @apply btn-medical glass-bg bg-medical-blue-50/15 border border-medical-blue-50/30 text-medical-blue-700 hover:bg-white/20;
+  }
+
+  /* Medical Input Base */
+  .input-medical {
+    @apply w-full px-4 py-3 border border-medical-gray-300 rounded-lg shadow-soft focus:ring-2 focus:ring-medical-blue-500 focus:border-medical-blue-500 transition-all duration-200 bg-white;
+  }
+
+  /* Medical Card Base */
+  .card-medical {
+    @apply bg-white rounded-xl shadow-soft border border-medical-gray-200 overflow-hidden transition-all duration-300 hover:shadow-medical hover:-translate-y-1;
+  }
+  
+  .card-medical-glass {
+    @apply glass-bg bg-white/80 border border-white/30 shadow-glass rounded-xl overflow-hidden transition-all duration-300 hover:shadow-glass hover:-translate-y-1;
+  }
+
+  /* Medical Text Styles */
+  .text-medical-heading {
+    @apply font-serif font-semibold text-medical-gray-900 leading-tight;
+  }
+  
+  .text-medical-body {
+    @apply font-sans text-medical-gray-700 leading-relaxed;
+  }
+  
+  .text-medical-caption {
+    @apply font-sans text-sm text-medical-gray-500 leading-normal;
+  }
+
+  /* Admin Layout Improvements */
+  .admin-layout {
+    @apply h-screen flex overflow-hidden;
+  }
+
+  .admin-sidebar {
+    @apply w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col h-full overflow-hidden;
+  }
+
+  .admin-main {
+    @apply flex-1 flex flex-col min-w-0 overflow-hidden;
+  }
+
+  .admin-content {
+    @apply flex-1 overflow-y-auto;
+  }
+}
+
+/* Utility animations */
+@layer utilities {
+  /* Skeleton loading animation */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: #f0f0f0;
+  }
+  
+  .skeleton::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.2) 20%, rgba(255, 255, 255, 0.5) 60%, rgba(255, 255, 255, 0));
+    animation: shimmer 2s infinite;
+    content: '';
+  }
+  
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Loading dots animation */
+  .loading-dots {
+    animation: loading-dots 1.4s infinite ease-in-out both;
+  }
+  
+  .loading-dots::after {
+    content: '...';
+    animation: loading-dots 1.4s infinite ease-in-out both;
+  }
+  
+  @keyframes loading-dots {
+    0%, 80%, 100% {
+      opacity: 0;
+    }
+    40% {
+      opacity: 1;
+    }
+  }
+
+  /* Medical pulse animation */
+  .pulse-medical {
+    animation: pulse-medical 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-medical {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .5;
+    }
+  }
+
+  /* Slide animations */
+  .slide-in-bottom {
+    animation: slide-in-bottom 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  }
+
+  @keyframes slide-in-bottom {
+    0% {
+      transform: translateY(1000px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .slide-in-top {
+    animation: slide-in-top 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  }
+
+  @keyframes slide-in-top {
+    0% {
+      transform: translateY(-1000px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Scroll improvements */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Accessibility and motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --medical-blue-500: #0066cc;
+    --medical-blue-600: #0052a3;
+    --medical-gray-500: #666666;
+  }
+}
+
+/* Dark mode (future implementation) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --medical-gray-50: #1a1a1a;
+    --medical-gray-100: #2d2d2d;
+    --medical-gray-500: #a0a0a0;
+  }
+}
+
+/* Print styles */
+@media print {
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  body {
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+}
+
+/* Navbar dynamic spacing - centralized solution */
+:root {
+  --navbar-height: 128px; /* Default fallback height */
+}
+
+/* Automatic navbar spacing for page content */
+.page-content {
+  position: relative;
+  width: 100%;
+}
+
+/* Fallback for cases where JS hasn't calculated the height yet */
+.page-content::before {
+  content: '';
+  display: block;
+  height: var(--navbar-height);
+  margin-top: calc(var(--navbar-height) * -1);
+  pointer-events: none;
+}
+
+/* Smooth transitions for navbar height changes */
+.page-content {
+  transition: padding-top 0.3s ease;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 1024px) {
+  :root {
+    --navbar-height: 112px; /* Mobile fallback */
+  }
+}
+
+/* Ensure proper spacing for all content types */
+.page-content > * {
+  position: relative;
+  z-index: 1;
+}
