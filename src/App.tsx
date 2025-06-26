@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';
@@ -7,33 +7,34 @@ import { ArrowUp } from 'lucide-react';
 import { Navbar } from './components/Header/Navbar';
 import { Footer } from './components/Footer/Footer';
 import { PageLayout } from './components/Layout/PageLayout';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
-// Pages
-import HomePage from './pages/HomePage';
-import CatalogPage from './pages/CatalogPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-import CartPage from './pages/CartPage';
-import CheckoutPage from './pages/CheckoutPage';
-import AuthPage from './pages/AuthPage';
-import ProfilePage from './pages/ProfilePage';
-import TrackingPage from './pages/TrackingPage';
-// import ContactPage from './pages/ContactPage';
+// Pages with Lazy Loading
+const HomePage = lazy(() => import('./pages/HomePage'));
+const CatalogPage = lazy(() => import('./pages/CatalogPage'));
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
+const CartPage = lazy(() => import('./pages/CartPage'));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
+const AuthPage = lazy(() => import('./pages/AuthPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const TrackingPage = lazy(() => import('./pages/TrackingPage'));
+// const ContactPage = lazy(() => import('./pages/ContactPage'));
 
-// Blog Pages
-import BlogPage from './pages/BlogPage';
-import BlogPostDetailPage from './pages/BlogPostDetailPage';
+// Blog Pages with Lazy Loading
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const BlogPostDetailPage = lazy(() => import('./pages/BlogPostDetailPage'));
 
-// Importaciones del Panel de Administración
-import AdminLayout from './pages/Admin/AdminLayout';
-import AdminDashboardPage from './pages/Admin/AdminDashboardPage';
-import AdminOrdersPage from './pages/Admin/AdminOrdersPage';
-import AdminBlogPage from './pages/Admin/AdminBlogPage';
-import CreateBlogPostPage from './pages/Admin/CreateBlogPostPage';
-import EditBlogPostPage from './pages/Admin/EditBlogPostPage';
-import AdminCustomersPage from './pages/Admin/AdminCustomersPage';
-import AdminProductsPage from './pages/Admin/AdminProductsPage';
-import AdminEditProductPage from './pages/Admin/AdminEditProductPage';
-import AdminAnalyticsPage from './pages/Admin/AdminAnalyticsPage';
+// Admin Panel Imports with Lazy Loading
+const AdminLayout = lazy(() => import('./pages/Admin/AdminLayout'));
+const AdminDashboardPage = lazy(() => import('./pages/Admin/AdminDashboardPage'));
+const AdminOrdersPage = lazy(() => import('./pages/Admin/AdminOrdersPage'));
+const AdminBlogPage = lazy(() => import('./pages/Admin/AdminBlogPage'));
+const CreateBlogPostPage = lazy(() => import('./pages/Admin/CreateBlogPostPage'));
+const EditBlogPostPage = lazy(() => import('./pages/Admin/EditBlogPostPage'));
+const AdminCustomersPage = lazy(() => import('./pages/Admin/AdminCustomersPage'));
+const AdminProductsPage = lazy(() => import('./pages/Admin/AdminProductsPage'));
+const AdminEditProductPage = lazy(() => import('./pages/Admin/AdminEditProductPage'));
+const AdminAnalyticsPage = lazy(() => import('./pages/Admin/AdminAnalyticsPage'));
 import AdminRoute from './components/Admin/AdminRoute';
 
 // Hooks
@@ -129,39 +130,40 @@ function App() {
           />
           
           <ConditionalLayout>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/catalog" element={<CatalogPage />} />
-              <Route path="/product/:id" element={<ProductDetailPage />} />
-              <Route path="/cart" element={<CartPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/tracking" element={<TrackingPage />} />
-              {/* <Route path="/contacto" element={<ContactPage />} /> */}
+            <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando...</div>}>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/catalog" element={<CatalogPage />} />
+                <Route path="/product/:id" element={<ProductDetailPage />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/tracking" element={<TrackingPage />} />
 
-              {/* Rutas del Blog para usuarios */}
-              <Route path="/blog" element={<BlogPage />} />
-              <Route path="/blog/:slug" element={<BlogPostDetailPage />} />
+                {/* Blog Routes */}
+                <Route path="/blog" element={<BlogPage />} />
+                <Route path="/blog/:slug" element={<BlogPostDetailPage />} />
 
-              {/* Rutas del Panel de Administración */}
-              <Route path="/admin" element={<AdminRoute />}>
-                <Route element={<AdminLayout />}>
-                  <Route index element={<Navigate to="dashboard" />} />
-                  <Route path="dashboard" element={<AdminDashboardPage />} />
-                  <Route path="orders" element={<AdminOrdersPage />} />
-                  <Route path="customers" element={<AdminCustomersPage />} />
-                  <Route path="products" element={<AdminProductsPage />} />
-                  <Route path="products/edit/:id" element={<AdminEditProductPage />} />
-                  <Route path="analytics" element={<AdminAnalyticsPage />} />
-                  
-                  {/* Rutas del Blog en el Admin Panel */}
-                  <Route path="blog" element={<AdminBlogPage />} />
-                  <Route path="blog/new" element={<CreateBlogPostPage />} />
-                  <Route path="blog/edit/:id" element={<EditBlogPostPage />} />
+                {/* Admin Panel Routes */}
+                <Route path="/admin" element={<AdminRoute />}>
+                  <Route element={<AdminLayout />}>
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<AdminDashboardPage />} />
+                    <Route path="orders" element={<AdminOrdersPage />} />
+                    <Route path="customers" element={<AdminCustomersPage />} />
+                    <Route path="products" element={<AdminProductsPage />} />
+                    <Route path="products/edit/:id" element={<AdminEditProductPage />} />
+                    <Route path="analytics" element={<AdminAnalyticsPage />} />
+
+                    {/* Blog Admin Routes */}
+                    <Route path="blog" element={<AdminBlogPage />} />
+                    <Route path="blog/new" element={<CreateBlogPostPage />} />
+                    <Route path="blog/edit/:id" element={<EditBlogPostPage />} />
+                  </Route>
                 </Route>
-              </Route>
-            </Routes>
+              </Routes>
+            </Suspense>
           </ConditionalLayout>
         
           {/* Global Scroll to Top Button - Solo en páginas que no son admin */}
