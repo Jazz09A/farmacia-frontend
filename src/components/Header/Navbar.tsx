@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Shield, Phone, LogOut, Settings, Package } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -51,14 +51,43 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   // Detectar páginas con fondos claros que necesitan navbar más sólido
-  const lightBackgroundPages = ['/catalog', '/cart', '/checkout', '/auth', '/profile'];
+  const lightBackgroundPages = ['/catalog', '/cart', '/checkout', '/auth', '/profile', '/blog'];
   const isLightBackgroundPage = lightBackgroundPages.includes(location.pathname) || 
                                 location.pathname.startsWith('/product') ||
-                                location.pathname.startsWith('/tracking');
+                                location.pathname.startsWith('/tracking') ||
+                                location.pathname.startsWith('/blog');
 
   // Detectar páginas donde ocultar la barra de búsqueda
   const hideSearchBarPages = ['/auth', '/catalog','/cart'];
   const shouldHideSearchBar = hideSearchBarPages.includes(location.pathname) || location.pathname.startsWith('/product');
+
+  // Optimizar animaciones para mobile
+  const getMobileOptimizedTransition = useCallback((baseTransition: any) => {
+    if (isMobile) {
+      return {
+        ...baseTransition,
+        type: "tween",
+        ease: "easeOut",
+        duration: baseTransition.duration ? Math.min(baseTransition.duration, 0.25) : 0.25
+      };
+    }
+    return baseTransition;
+  }, [isMobile]);
+
+  // Optimizar propiedades para mobile
+  const getMobileOptimizedProps = useCallback((props: any) => {
+    if (isMobile) {
+      return {
+        ...props,
+        style: {
+          ...props.style,
+          willChange: 'transform',
+          transform3d: true
+        }
+      };
+    }
+    return props;
+  }, [isMobile]);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -111,9 +140,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (isLightBackgroundPage) {
       return 'bg-white/95 backdrop-blur-xl shadow-medical border-b border-medical-gray-200/50';
     }
-    // Con scroll, el fondo es oscuro y translúcido
+    // Con scroll, el fondo es blanco y translúcido
     if (isScrolled) {
-      return 'glass-bg bg-medical-gray-900/80 border-b border-white/10 shadow-lg';
+      return 'glass-bg bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-lg';
     }
     // Estado inicial transparente
     return 'bg-transparent border-b border-transparent';
@@ -122,14 +151,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   // Función para obtener las clases del logo según el contexto
   const getLogoClasses = () => {
     // En fondos claros o con scroll, el logo es oscuro
-    if (isLightBackgroundPage) {
+    if (isLightBackgroundPage || isScrolled) {
       return {
         iconContainer: 'bg-medical-blue-gradient text-white shadow-medical',
         title: 'text-medical-blue-700',
         subtitle: 'text-medical-gray-600'
       };
     } 
-    // Siempre blanco en los demás casos (inicial y con scroll)
+    // Blanco solo en estado inicial sin scroll
     return {
       iconContainer: 'bg-white/20 backdrop-blur-md text-white border border-white/30',
       title: 'text-white',
@@ -139,13 +168,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   // Función para obtener las clases de los elementos de navegación
   const getNavItemClasses = (isActive: boolean) => {
-    // En fondos claros, los items son oscuros
-    if (isLightBackgroundPage) {
+    // En fondos claros o con scroll, los items son oscuros
+    if (isLightBackgroundPage || isScrolled) {
       return isActive
         ? 'text-medical-blue-700 bg-medical-blue-100'
         : 'text-medical-gray-700 hover:text-medical-blue-700 hover:bg-medical-blue-50';
     }
-    // Siempre blancos en los demás casos (inicial y con scroll)
+    // Blancos solo en estado inicial sin scroll
     return isActive
       ? 'text-white bg-white/20'
       : 'text-white/90 hover:text-white hover:bg-white/10';
@@ -153,8 +182,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   // Función para obtener las clases de los botones de acción
   const getActionButtonClasses = (type: 'wishlist' | 'cart' | 'user' | 'mobile-menu') => {
-    // En fondos claros, los botones son oscuros
-    if (isLightBackgroundPage) {
+    // En fondos claros o con scroll, los botones son oscuros
+    if (isLightBackgroundPage || isScrolled) {
       switch (type) {
         case 'wishlist':
           return 'text-medical-gray-600 hover:text-red-600 hover:bg-red-50 hover:shadow-medical';
@@ -167,7 +196,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           return '';
       }
     }
-    // Siempre blancos en los demás casos (inicial y con scroll)
+    // Blancos solo en estado inicial sin scroll
     return 'text-white/90 hover:text-white hover:bg-white/10 backdrop-blur-md';
   };
 
@@ -177,32 +206,42 @@ export const Navbar: React.FC<NavbarProps> = ({
     <>
       <motion.nav
         data-navbar
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-600 ${getNavbarClasses()}`}
+        className={`fixed top-0 left-0 right-0 z-50 ${getNavbarClasses()}`}
+        style={{ 
+          transitionDuration: isMobile ? '200ms' : '600ms',
+          willChange: 'transform'
+        }}
         initial={{ y: -100 }}
         animate={{ y: isMobile && isMobileMenuOpen ? '-110%' : 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={getMobileOptimizedTransition({ 
+          type: "spring", 
+          stiffness: isMobile ? 200 : 300, 
+          damping: isMobile ? 25 : 30 
+        })}
       >
         <div className='bg-medical-blue-gradient'>
           {/* Top Medical Banner - Oculto en mobile para páginas de auth */}
           {!(shouldHideSearchBar && isMobile) && (
             <motion.div
-              className={`transition-all duration-500 ${
+              className={`transition-all ${
                 isScrolled 
                   ? 'text-white py-1 px-4' 
                   : 'text-white py-2 px-4'
               }`}
+              style={{ transitionDuration: isMobile ? '200ms' : '500ms' }}
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              transition={{ duration: 0.5 }}
+              transition={getMobileOptimizedTransition({ duration: 0.3 })}
             >
             <div className="medical-container text-center">
               <motion.p 
-                className={`font-medium transition-all duration-300 ${
+                className={`font-medium transition-all ${
                   isScrolled ? 'text-xs' : 'text-sm'
                 }`}
+                style={{ transitionDuration: isMobile ? '200ms' : '300ms' }}
                 initial={{ y: -10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
+                transition={getMobileOptimizedTransition({ delay: 0.1 })}
               >
                 {isScrolled 
                   ? '🚚 Envío GRATIS +$25 | 📞 0800-FARMA'
@@ -286,7 +325,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Search Bar - Desktop */}
             {!shouldHideSearchBar && (
               <div className="hidden lg:block flex-1 max-w-lg mx-8">
-                <SearchBar />
+                <SearchBar isScrolled={isScrolled || isLightBackgroundPage} />
               </div>
             )}
 
@@ -486,7 +525,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile Search Bar */}
           {!shouldHideSearchBar && (
             <div className="lg:hidden pb-4">
-              <SearchBar />
+              <SearchBar isScrolled={isScrolled || isLightBackgroundPage} />
             </div>
           )}
         </div>

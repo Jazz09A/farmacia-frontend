@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, Shield, Clock, Truck, Stethoscope, Heart, Phone } from 'lucide-react';
+import { BenefitCard } from './BenefitCard';
 
 export const HeroSection: React.FC = () => {
   const benefits = [
@@ -21,16 +22,37 @@ export const HeroSection: React.FC = () => {
     }
   ];
 
-  const scrollToContent = () => {
-    // Calcular la altura del navbar + banner para el scroll
-    const navbarHeight = window.innerWidth >= 1024 ? 80 : 64; // lg:h-20 : h-16
-    const bannerHeight = 40; // altura aproximada del banner superior
-    const totalNavHeight = navbarHeight + bannerHeight;
+  const scrollToProducts = () => {
+    // Buscar la sección de productos por su ID o clase
+    const productsSection = document.querySelector('[data-section="products"]') || 
+                          document.querySelector('.products-section') ||
+                          document.querySelector('[id*="products"]') ||
+                          // Fallback: scroll después del hero hacia las ofertas/productos
+                          document.querySelector('main');
     
-    window.scrollTo({
-      top: window.innerHeight - totalNavHeight,
-      behavior: 'smooth'
-    });
+    if (productsSection) {
+      // Calcular offset para navbar fijo
+      const navbarHeight = window.innerWidth >= 1024 ? 80 : 64;
+      const bannerHeight = 40;
+      const offset = navbarHeight + bannerHeight + 20; // +20px de padding extra
+      
+      const elementPosition = productsSection.getBoundingClientRect().top + window.pageYOffset;
+      
+      window.scrollTo({
+        top: elementPosition - offset,
+        behavior: 'smooth'
+      });
+    } else {
+      // Fallback: scroll a la altura de la ventana
+      const navbarHeight = window.innerWidth >= 1024 ? 80 : 64;
+      const bannerHeight = 40;
+      const totalNavHeight = navbarHeight + bannerHeight;
+      
+      window.scrollTo({
+        top: window.innerHeight - totalNavHeight,
+        behavior: 'smooth'
+      });
+    }
   };
 
   return (
@@ -142,7 +164,8 @@ export const HeroSection: React.FC = () => {
               </motion.button>
               
               <motion.button
-                className="group px-8 py-4 glass-medical border border-white/30 text-white rounded-2xl font-semibold text-lg hover:glass-card hover:text-medical-gray-700 transition-all duration-400 min-w-[200px]"
+                onClick={scrollToProducts}
+                className="group px-8 py-[0.9rem] glass-medical border border-white/30 text-black rounded-2xl font-semibold text-lg hover:glass-card hover:text-medical-gray-700 transition-all duration-400 min-w-[200px]"
                 whileHover={{ scale: 1.05, y: -3 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -154,41 +177,25 @@ export const HeroSection: React.FC = () => {
             </motion.div>
 
             {/* Enhanced Benefits */}
-            <motion.div
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-            >
-              {benefits.map((benefit, index) => (
-                <motion.div
-                  key={index}
-                  className="group text-center"
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    duration: 0.6, 
-                    delay: 0.8 + index * 0.2,
-                    type: "spring", 
-                    stiffness: 400, 
-                    damping: 17 
-                  }}
-                >
-                  <div className="glass-medical rounded-2xl p-6 border border-white/20 hover:glass-card hover:text-medical-gray-700 transition-all duration-400">
-                    <div className="flex flex-col items-center space-y-3">
-                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl border border-white/30 group-hover:bg-medical-blue-100 group-hover:border-medical-blue-200 transition-all duration-300">
-                        <benefit.icon className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-base mb-1">{benefit.text}</h3>
-                        <p className="text-sm opacity-90 leading-relaxed">{benefit.description}</p>
-                      </div>
-                    </div>
+            <div className="mb-12 max-w-5xl mx-auto px-4">
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start justify-items-center"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.8 }}
+              >
+                {benefits.map((benefit, index) => (
+                  <div key={index} className="w-full max-w-sm">
+                    <BenefitCard
+                      icon={benefit.icon}
+                      title={benefit.text}
+                      description={benefit.description}
+                      index={index}
+                    />
                   </div>
-                </motion.div>
-              ))}
-            </motion.div>
+                ))}
+              </motion.div>
+            </div>
 
             {/* Trust Indicators */}
             <motion.div
@@ -216,21 +223,24 @@ export const HeroSection: React.FC = () => {
             </motion.div>
           </motion.div>
         </div>
-        {/* Enhanced Scroll Indicator */}
-        <motion.button
-          onClick={scrollToContent}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/90 hover:text-white transition-all duration-300 group"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          whileHover={{ scale: 1.1 }}
-        >
-          <div className="flex flex-col items-center space-y-3">
-            <div className="glass-medical rounded-2xl p-3 border border-white/30 group-hover:glass-card group-hover:text-medical-gray-700 transition-all duration-300">
-              <ChevronDown className="h-6 w-6" />
+        {/* Enhanced Scroll Indicator - Centered */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex justify-center">
+          <motion.button
+            onClick={scrollToProducts}
+            className="text-white/90 hover:text-white transition-all duration-300 group cursor-pointer"
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <div className="flex flex-col items-center space-y-3">
+              <div className="glass-medical rounded-2xl p-3 border border-white/30 group-hover:glass-card group-hover:text-medical-gray-700 transition-all duration-300">
+                <ChevronDown className="h-6 w-6" />
+              </div>
+              <span className="text-sm font-medium hidden sm:block">Explorar Productos</span>
             </div>
-            <span className="text-sm font-medium hidden sm:block">Explorar Productos</span>
-          </div>
-        </motion.button>
+          </motion.button>
+        </div>
 
         {/* Background Pattern Overlay */}
         <div className="absolute inset-0 opacity-10 pointer-events-none">

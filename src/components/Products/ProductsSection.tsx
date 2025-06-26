@@ -25,7 +25,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
     : mockProducts.filter(product => product.category === selectedCategory);
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-16 bg-gray-50" data-section="products" id="products-section">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div

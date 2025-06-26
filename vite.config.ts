@@ -23,7 +23,10 @@ export default defineConfig({
       exclude: [/\\.(br)$/, /\\.(gz)$/],
     })
   ],
-
+  server: {
+    allowedHosts: ['assign-nyc-wright-specify.trycloudflare.com'],
+    host: true,
+  },
   build: {
     // Activar minificación avanzada
     minify: 'terser',

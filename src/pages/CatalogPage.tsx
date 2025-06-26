@@ -5,6 +5,7 @@ import { Product, SearchFilters, MedicalCategory } from '../types';
 import { mockProducts, medicalCategories, medicalConditions } from '../data/mockData';
 import { useCart } from '../hooks/useCart';
 
+
 const CatalogPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -208,9 +209,9 @@ const CatalogPage: React.FC = () => {
       {/* Background Image & Overlay */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1576683572733-415b93b5a4a5?auto=format&fit=crop&w=1920&q=80"
+          src="https://images.unsplash.com/photo-1576602976047-174e57a47881?q=80&w=1169&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
           alt="Interior de una farmacia moderna y luminosa"
-          className="w-full h-full object-cover fixed"
+          className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-medical-blue-50/95 via-medical-green-50/90 to-white/95" />
       </div>
@@ -243,7 +244,7 @@ const CatalogPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Sidebar de filtros */}
             <div className="lg:w-80 space-y-6">
@@ -465,6 +466,8 @@ const CatalogPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+
       </div>
     </div>
   );

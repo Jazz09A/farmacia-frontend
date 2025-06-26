@@ -42,7 +42,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col">
       <HeroSection />
-      <main className="flex-1 pt-28 lg:pt-32">
+      <main className="flex-1">
         <FlashOffersSection
           currency={currency.currency}
           onAddToCart={handleAddToCart}

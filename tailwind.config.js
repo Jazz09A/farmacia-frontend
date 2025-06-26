@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  safelist: [
+    'bg-white',
+  ],
   theme: {
     extend: {
       colors: {
@@ -170,6 +173,22 @@ export default {
           ].join(' '),
           // El color de fondo se aplica con las utilidades de Tailwind (e.g., bg-black/30)
         },
+        // Glassmorphism específico para búsqueda médica
+        '.glass-medical': {
+          '@defaults backdrop-filter': {},
+          backdropFilter: 'blur(10px) saturate(180%)',
+          backgroundColor: 'rgba(255, 255, 255, 0.85)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+        },
+        // Glassmorphism para tarjetas
+        '.glass-card': {
+          '@defaults backdrop-filter': {},
+          backdropFilter: 'blur(16px) saturate(180%)',
+          backgroundColor: 'rgba(255, 255, 255, 0.75)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+        },
         // Medical gradient backgrounds
         '.bg-medical-gradient': {
           background: 'linear-gradient(135deg, #f2fbfe 0%, #E8F5E8 100%)',
@@ -200,6 +219,17 @@ export default {
           '-webkit-background-clip': 'text',
           '-webkit-text-fill-color': 'transparent',
           'background-clip': 'text',
+        },
+        // Ocultar scrollbar
+        '.scrollbar-hide': {
+          /* IE and Edge */
+          '-ms-overflow-style': 'none',
+          /* Firefox */
+          'scrollbar-width': 'none',
+          /* Safari and Chrome */
+          '&::-webkit-scrollbar': {
+            display: 'none'
+          }
         },
       };
       addUtilities(newUtilities);
