@@ -7,6 +7,7 @@ import type { User } from '../../services/AuthService';
 import { SearchBar } from './SearchBar';
 import { CurrencyToggle } from './CurrencyToggle';
 import { NavLink } from 'react-router-dom';
+import logoSrc from '../../public/logo/Logo.webp';
 
 interface NavbarProps {
   isScrolled: boolean;
@@ -216,35 +217,16 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="medical-container">
           <div className="flex justify-between items-center h-16 lg:h-20">
             {/* Logo Premium */}
-            <Link to="/">
-              <motion.div
-                className="flex-shrink-0 flex items-center"
-                whileHover={{ scale: 1.05 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <div className="flex items-center space-x-3">
-                  <motion.div
-                    className={`rounded-2xl transition-all duration-300 overflow-hidden`}
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <img 
-                      src="/src/public/logo/Logo.webp" 
-                      alt="FarmaPlus Logo" 
-                      className="h-20 w-auto object-contain"
-                    />
-                  </motion.div>
-                  <div className="flex flex-col">
-                    {/* <div className={`text-2xl font-serif font-bold transition-colors duration-300 ${logoClasses.title}`}>
-                      FarmaPlus
-                    </div> */}
-                    {/* <div className={`text-xs font-medium -mt-1 transition-colors duration-300 ${logoClasses.subtitle}`}>
-                      Professional Care
-                    </div> */}
-                  </div>
-                </div>
-              </motion.div>
-            </Link>
+            <div className="flex lg:flex-1">
+              <Link to="/" className="-m-1.5 p-1.5">
+                <span className="sr-only">FarmaPlus</span>
+                <img
+                  src={logoSrc}
+                  alt="FarmaPlus Logo"
+                  className="h-20 w-auto object-contain"
+                />
+              </Link>
+            </div>
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-1">
@@ -542,7 +524,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="flex items-center space-x-3">
                     <div className="rounded-xl overflow-hidden">
                       <img 
-                        src="/src/public/logo/Logo.webp" 
+                        src={logoSrc}
                         alt="FarmaPlus Logo" 
                         className="h-10 w-auto object-contain"
                       />
