@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flame, Clock, Zap, TrendingDown, AlertCircle, Timer } from 'lucide-react';
+import { Flame, Zap, TrendingDown, AlertCircle, Timer } from 'lucide-react';
 import { ProductCard } from '../Products/ProductCard';
 import { mockProducts, mockFlashOffers } from '../../data/mockData';
 
@@ -309,14 +309,14 @@ export const FlashOffersSection: React.FC<FlashOffersSectionProps> = ({
                 <span>Ver Todas las Ofertas Flash</span>
               </motion.button>
 
-              <motion.button
+              {/* <motion.button
                 className="btn-medical-glass px-6 py-4 font-medium flex items-center space-x-2"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <Clock className="h-5 w-5" />
                 <span>Configurar Alertas</span>
-              </motion.button>
+              </motion.button> */}
             </div>
 
             {/* Offer Statistics */}
