@@ -1,10 +1,20 @@
 // Tipos para el sistema de perfil de usuario
+export enum UserRole {
+  SUPER_ADMIN = 'super_admin',
+  ADMIN = 'admin',
+  USER = 'user'
+}
+
+export enum UserType {
+  NATURAL = 'natural',
+  JURIDICO = 'juridico'
+}
 
 export interface UserProfile {
   id: string;
   email: string;
-  user_type: 'natural' | 'juridico';
-  is_admin: boolean;
+  user_type: UserType;
+  user_role: UserRole;
   created_at: string;
   last_login: string;
   profile_data: NaturalProfile | JuridicoProfile;
