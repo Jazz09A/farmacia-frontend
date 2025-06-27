@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Building, Users, FileCheck, Phone, Globe, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Building, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { validatePassword, validateEmail, validateRIF } from '../../services/AuthService';
 import { JuridicoRegisterForm } from '../../types/auth';
 

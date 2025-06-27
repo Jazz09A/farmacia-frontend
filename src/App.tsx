@@ -42,9 +42,6 @@ import { useCart } from './hooks/useCart';
 import { useCurrency } from './hooks/useCurrency';
 import { AuthProvider } from './hooks/useAuth';
 
-// Data
-import { mockProducts } from './data/mockData';
-
 // Component to conditionally render Navbar and Footer with automatic spacing
 const ConditionalLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -89,18 +86,10 @@ const ConditionalNavbar: React.FC<{
 function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const heroRef = useRef<HTMLDivElement>(null);
+  // const heroRef = useRef<HTMLDivElement>(null);
   
   const cart = useCart();
   const currency = useCurrency();
-
-  // Handle add to cart
-  const handleAddToCart = (productId: string, quantity: number = 1) => {
-    const product = mockProducts.find(p => p.id === productId);
-    if (product) {
-      cart.addItem(product, quantity);
-    }
-  };
 
   // Scroll to top functionality
   const scrollToTop = () => {

@@ -8,15 +8,10 @@ import {
   Calendar, 
   Clock, 
   CheckCircle, 
-  Phone, 
-  Mail, 
   ArrowLeft, 
   Download, 
-  Share2,
-  AlertCircle,
   Info,
   User,
-  Building,
   CreditCard,
   ShoppingBag
 } from 'lucide-react';

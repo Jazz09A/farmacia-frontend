@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Grid, List, ChevronDown, Star, Heart, ShoppingCart, AlertCircle, Clock, Pill, Stethoscope, Shield, Sparkles } from 'lucide-react';
+import { Search, Filter, Grid, List, Star, Heart, ShoppingCart, AlertCircle, Pill, Stethoscope, Shield, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Product, SearchFilters, MedicalCategory } from '../types';
+import { Product, SearchFilters } from '../types';
 import { mockProducts, medicalCategories, medicalConditions } from '../data/mockData';
 import { useCart } from '../hooks/useCart';
 

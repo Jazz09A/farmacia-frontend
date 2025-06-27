@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Mail, 
@@ -7,7 +7,6 @@ import {
   User, 
   Building, 
   LogIn, 
-  UserPlus, 
   Eye, 
   EyeOff, 
   Phone,

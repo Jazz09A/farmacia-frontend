@@ -98,7 +98,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                         layout
                       >
                         <img
-                          src={item.image}
+                          src={item.product.image}
                           alt={item.name}
                           className="w-16 h-16 object-cover rounded-lg"
                         />
@@ -107,9 +107,9 @@ export const CartModal: React.FC<CartModalProps> = ({
                           <h4 className="font-medium text-gray-900 text-sm mb-1">
                             {item.name}
                           </h4>
-                          <p className="text-gray-500 text-xs mb-2">{item.brand}</p>
+                          <p className="text-gray-500 text-xs mb-2">{item.product.brand}</p>
                           <p className="font-semibold text-blue-600">
-                            {formatPrice(item.priceVES, item.priceREF)}
+                            {formatPrice(item.product.priceVES, item.product.priceREF)}
                           </p>
                         </div>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { BlogPost } from '../../types';
-import { Calendar, User, Clock } from 'lucide-react';
+import { Calendar, User } from 'lucide-react';
 
 interface BlogPostCardProps {
   post: BlogPost;

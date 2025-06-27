@@ -1,11 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp } from 'lucide-react';
+import React from 'react';
 
 // Components
 import { HeroSection } from '../components/Hero/HeroSection';
-import { SearchBar } from '../components/Header/SearchBar';
-import { CurrencyToggle } from '../components/Header/CurrencyToggle';
+
 import { FlashOffersSection } from '../components/FlashOffers/FlashOffersSection';
 import { ProductsSection } from '../components/Products/ProductsSection';
 import { BrandsSection } from '../components/Brands/BrandsSection';

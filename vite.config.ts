@@ -25,7 +25,7 @@ export default defineConfig({
     })
   ],
   server: {
-    allowedHosts: ['assign-nyc-wright-specify.trycloudflare.com'],
+    allowedHosts: ['would-continues-democracy-examined.trycloudflare.com'],
     host: true,
   },
   build: {

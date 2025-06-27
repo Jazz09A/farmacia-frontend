@@ -30,6 +30,7 @@ export interface Product {
 
 export interface CartItem {
   id: string;
+  name: string;
   product: Product;
   quantity: number;
   selectedPresentation?: string;

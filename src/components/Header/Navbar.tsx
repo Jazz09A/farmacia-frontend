@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Shield, Phone, LogOut, Settings, Package } from 'lucide-react';
+import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Settings, Package } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../services/AuthService';
 import { SearchBar } from './SearchBar';
 import { CurrencyToggle } from './CurrencyToggle';
-import { NavLink } from 'react-router-dom';
 import logoSrc from '../../public/logo/Logo.webp';
 
 interface NavbarProps {
