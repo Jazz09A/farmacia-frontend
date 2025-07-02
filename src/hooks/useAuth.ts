@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext, createContext, ReactNode } from 'react';
 import { authService, User, LoginRequest, RegisterRequest } from '../services/AuthService';
+import { UserRole } from '../types/profile';
 
 // Context para autenticación
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  role: UserRole | null;
   login: (credentials: LoginRequest) => Promise<void>;
   register: (userData: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
@@ -86,6 +88,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     user,
     isAuthenticated,
     isLoading,
+    role: user?.role as UserRole | null,  // Aseguramos que el tipo sea correcto
     login,
     register,
     logout,

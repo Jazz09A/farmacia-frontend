@@ -1,17 +1,44 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import BlogPostCard from '../components/Blog/BlogPostCard';
 import FeaturedBlogPosts from '../components/Blog/FeaturedBlogPosts';
 import { mockBlogPosts } from '../data/blogMockData';
 import { BlogPost } from '../types';
 import { Search, Filter, Calendar, User, Tag, ChevronRight, TrendingUp } from 'lucide-react';
+import { BlogPostSkeleton, SkeletonBase } from '../components/Skeleton';
+import { useScrollContext } from '../contexts/ScrollContext';
 
 const BlogPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('publishedAt');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFiltering, setIsFiltering] = useState(false);
+  
+  const { scrollToTop } = useScrollContext();
   
   const postsPerPage = 6;
+
+  // Initial loading simulation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Filter change loading simulation
+  useEffect(() => {
+    if (!isLoading) {
+      setIsFiltering(true);
+      const timer = setTimeout(() => {
+        setIsFiltering(false);
+      }, 400);
+
+      return () => clearTimeout(timer);
+    }
+  }, [searchTerm, selectedCategory, sortBy, isLoading]);
 
   // Filtramos para mostrar solo los artículos publicados
   const publishedPosts = mockBlogPosts.filter(post => post.published);
@@ -58,15 +85,15 @@ const BlogPage: React.FC = () => {
     .filter(post => post.category !== selectedCategory || selectedCategory === 'all')
     .slice(0, 4);
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    scrollToTop({ smooth: true });
+  }, [scrollToTop]);
 
-  const handleCategoryChange = (category: string) => {
+  const handleCategoryChange = useCallback((category: string) => {
     setSelectedCategory(category);
     setCurrentPage(1);
-  };
+  }, []);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -183,7 +210,13 @@ const BlogPage: React.FC = () => {
             )}
 
             {/* Blog Posts Grid */}
-            {paginatedPosts.length > 0 ? (
+            {isLoading || isFiltering ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                {[...Array(6)].map((_, index) => (
+                  <BlogPostSkeleton key={index} />
+                ))}
+              </div>
+            ) : paginatedPosts.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 {paginatedPosts.map(post => (
                   <BlogPostCard key={post.id} post={post} />
@@ -253,29 +286,42 @@ const BlogPage: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-900">Artículos Destacados</h3>
                 </div>
                 <div className="space-y-4">
-                  {featuredPosts.map(post => (
-                    <div key={post.id} className="group">
-                      <a 
-                        href={`/blog/${post.slug}`}
-                        className="flex items-start space-x-3 hover:bg-gray-50 p-2 rounded-lg transition-colors"
-                      >
-                        <img
-                          src={post.image}
-                          alt={post.title}
-                          className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 line-clamp-2">
-                            {post.title}
-                          </h4>
-                          <div className="flex items-center mt-1 text-xs text-gray-500">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {new Date(post.publishedAt!).toLocaleDateString('es-ES')}
-                          </div>
+                  {isLoading ? (
+                    [...Array(4)].map((_, index) => (
+                      <div key={index} className="flex items-start space-x-3 p-2">
+                        <SkeletonBase width="4rem" height="4rem" rounded="lg" />
+                        <div className="flex-1 space-y-2">
+                          <SkeletonBase height="1rem" width="90%" />
+                          <SkeletonBase height="1rem" width="70%" />
+                          <SkeletonBase height="0.75rem" width="50%" />
                         </div>
-                      </a>
-                    </div>
-                  ))}
+                      </div>
+                    ))
+                  ) : (
+                    featuredPosts.map(post => (
+                      <div key={post.id} className="group">
+                        <a 
+                          href={`/blog/${post.slug}`}
+                          className="flex items-start space-x-3 hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                        >
+                          <img
+                            src={post.image}
+                            alt={post.title}
+                            className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 line-clamp-2">
+                              {post.title}
+                            </h4>
+                            <div className="flex items-center mt-1 text-xs text-gray-500">
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {new Date(post.publishedAt!).toLocaleDateString('es-ES')}
+                            </div>
+                          </div>
+                        </a>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 

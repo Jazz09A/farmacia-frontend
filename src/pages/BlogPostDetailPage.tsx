@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { mockBlogPosts } from '../data/blogMockData';
 import FeaturedBlogPosts from '../components/Blog/FeaturedBlogPosts';
+import { BlogPostDetailSkeleton } from '../components/Skeleton';
 import { 
   Calendar, 
   User, 
@@ -17,7 +18,20 @@ import {
 
 const BlogPostDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const post = mockBlogPosts.find(p => p.slug === slug);
+  const [post, setPost] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate loading delay
+  useEffect(() => {
+    setIsLoading(true);
+    setPost(null);
+    
+    setTimeout(() => {
+      const foundPost = mockBlogPosts.find(p => p.slug === slug);
+      setPost(foundPost);
+      setIsLoading(false);
+    }, 1000);
+  }, [slug]);
 
   // Artículos relacionados (misma categoría, excluyendo el actual)
   const relatedPosts = mockBlogPosts
@@ -30,6 +44,12 @@ const BlogPostDetailPage: React.FC = () => {
     .sort((a, b) => new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime())
     .slice(0, 4);
 
+  // Show skeleton while loading
+  if (isLoading) {
+    return <BlogPostDetailSkeleton />;
+  }
+
+  // Show not found message if post doesn't exist
   if (!post) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -153,7 +173,7 @@ const BlogPostDetailPage: React.FC = () => {
                 <div className="flex items-center flex-wrap gap-3">
                   <Tag className="w-5 h-5 text-gray-600" />
                   <span className="text-gray-600 font-medium mr-2">Etiquetas:</span>
-                  {post.tags.map(tag => (
+                  {post.tags.map((tag: string) => (
                     <Link
                       key={tag}
                       to={`/blog?tag=${tag}`}

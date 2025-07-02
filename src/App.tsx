@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, memo, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';
@@ -8,6 +8,7 @@ import { Navbar } from './components/Header/Navbar';
 import { Footer } from './components/Footer/Footer';
 import { PageLayout } from './components/Layout/PageLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import ScrollToTop from './components/ScrollToTop';
 
 // Pages with Lazy Loading
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -41,6 +42,9 @@ import AdminRoute from './components/Admin/AdminRoute';
 import { useCart } from './hooks/useCart';
 import { useCurrency } from './hooks/useCurrency';
 import { AuthProvider } from './hooks/useAuth';
+
+// Contexts
+import { ScrollProvider, useScrollContext } from './contexts/ScrollContext';
 
 // Component to conditionally render Navbar and Footer with automatic spacing
 const ConditionalLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -83,18 +87,47 @@ const ConditionalNavbar: React.FC<{
   );
 };
 
+// Optimized component for scroll button to avoid re-renders
+const OptimizedScrollToTopButton: React.FC<{
+  showScrollTop: boolean;
+}> = memo(({ showScrollTop }) => {
+  const location = useLocation();
+  const { scrollToTop } = useScrollContext();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  const handleClick = useCallback(() => {
+    scrollToTop({ smooth: true });
+  }, [scrollToTop]);
+
+  if (isAdminRoute) return null;
+
+  return (
+    <AnimatePresence>
+      {showScrollTop && (
+        <motion.button
+          onClick={handleClick}
+          className="fixed bottom-8 right-8 z-40 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg backdrop-blur-sm"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0 }}
+          whileHover={{ scale: 1.1, y: -2 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <ArrowUp className="h-5 w-5" />
+        </motion.button>
+      )}
+    </AnimatePresence>
+  );
+});
+
+OptimizedScrollToTopButton.displayName = 'OptimizedScrollToTopButton';
+
 function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  // const heroRef = useRef<HTMLDivElement>(null);
   
   const cart = useCart();
   const currency = useCurrency();
-
-  // Scroll to top functionality
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -109,7 +142,9 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="App min-h-screen flex flex-col bg-medical-gray-50">
+        <ScrollProvider>
+          <ScrollToTop />
+          <div className="App min-h-screen flex flex-col bg-medical-gray-50">
           <ConditionalNavbar
             isScrolled={isScrolled}
             cartItemsCount={cart.totalItems}
@@ -156,40 +191,14 @@ function App() {
           </ConditionalLayout>
         
           {/* Global Scroll to Top Button - Solo en páginas que no son admin */}
-          <ScrollToTopButton showScrollTop={showScrollTop} scrollToTop={scrollToTop} />
+          <OptimizedScrollToTopButton showScrollTop={showScrollTop} />
         </div>
+        </ScrollProvider>
       </Router>
     </AuthProvider>
   );
 }
 
-// Separate component for scroll to top button
-const ScrollToTopButton: React.FC<{
-  showScrollTop: boolean;
-  scrollToTop: () => void;
-}> = ({ showScrollTop, scrollToTop }) => {
-  const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
 
-  if (isAdminRoute) return null;
-
-  return (
-    <AnimatePresence>
-      {showScrollTop && (
-        <motion.button
-          onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-40 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg backdrop-blur-sm"
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0 }}
-          whileHover={{ scale: 1.1, y: -2 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <ArrowUp className="h-5 w-5" />
-        </motion.button>
-      )}
-    </AnimatePresence>
-  );
-};
 
 export default App;

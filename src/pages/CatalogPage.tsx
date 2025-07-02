@@ -1,15 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, Grid, List, Star, Heart, ShoppingCart, AlertCircle, Pill, Stethoscope, Shield, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Product, SearchFilters } from '../types';
 import { mockProducts, medicalCategories, medicalConditions } from '../data/mockData';
 import { useCart } from '../hooks/useCart';
+import { ProductCardSkeleton, SkeletonBase } from '../components/Skeleton';
 
 
 const CatalogPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFiltering, setIsFiltering] = useState(false);
   const cart = useCart();
   
   const [filters, setFilters] = useState<SearchFilters>({
@@ -24,6 +27,27 @@ const CatalogPage: React.FC = () => {
     sortBy: 'name',
     sortOrder: 'asc'
   });
+
+  // Initial loading simulation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Filter change loading simulation
+  useEffect(() => {
+    if (!isLoading) {
+      setIsFiltering(true);
+      const timer = setTimeout(() => {
+        setIsFiltering(false);
+      }, 600);
+
+      return () => clearTimeout(timer);
+    }
+  }, [searchTerm, filters, isLoading]);
 
   // Icono dinámico para categorías
   const getCategoryIcon = (iconName: string) => {
@@ -420,7 +444,17 @@ const CatalogPage: React.FC = () => {
               </div>
 
               {/* Grid de productos */}
-              {filteredProducts.length > 0 ? (
+              {isLoading || isFiltering ? (
+                <div className={`grid gap-6 ${
+                  viewMode === 'grid' 
+                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                    : 'grid-cols-1'
+                }`}>
+                  {[...Array(12)].map((_, index) => (
+                    <ProductCardSkeleton key={index} />
+                  ))}
+                </div>
+              ) : filteredProducts.length > 0 ? (
                 <div className={`grid gap-6 ${
                   viewMode === 'grid' 
                     ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 

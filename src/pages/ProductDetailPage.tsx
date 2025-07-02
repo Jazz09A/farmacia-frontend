@@ -7,6 +7,7 @@ import { Product } from '../types';
 import { mockProducts, mockReviews } from '../data/mockData';
 import { useCart } from '../hooks/useCart';
 import { useCurrency } from '../hooks/useCurrency';
+import { ProductDetailSkeleton } from '../components/Skeleton';
 
 // Placeholder para un componente de carrusel de productos
 const ProductsCarousel: React.FC<{ products: Product[], title: string }> = ({ products, title }) => (
@@ -29,6 +30,7 @@ const ProductsCarousel: React.FC<{ products: Product[], title: string }> = ({ pr
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   const [activeImage, setActiveImage] = useState('');
@@ -37,14 +39,27 @@ const ProductDetailPage: React.FC = () => {
   const { formatPrice } = useCurrency();
 
   useEffect(() => {
-    const foundProduct = mockProducts.find(p => p.id === id);
-    if (foundProduct) {
-      setProduct(foundProduct);
-      setActiveImage(foundProduct.images?.[0] || foundProduct.image);
-      setQuantity(1);
-    }
+    // Simulate API call with loading delay
+    setIsLoading(true);
+    setProduct(null);
+    
+    setTimeout(() => {
+      const foundProduct = mockProducts.find(p => p.id === id);
+      if (foundProduct) {
+        setProduct(foundProduct);
+        setActiveImage(foundProduct.images?.[0] || foundProduct.image);
+        setQuantity(1);
+      }
+      setIsLoading(false);
+    }, 1000); // 1 second loading simulation
   }, [id]);
 
+  // Show skeleton while loading
+  if (isLoading) {
+    return <ProductDetailSkeleton />;
+  }
+
+  // Show not found message if product doesn't exist
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-medical pt-24">
