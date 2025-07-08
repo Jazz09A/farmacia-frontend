@@ -67,7 +67,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ isScrolled }) => {
       if (isScrolled) {
         // Con scroll: colores oscuros porque el navbar es blanco
         return {
-          icon: 'text-gray-600',
+          icon: 'text-medical-blue-900',
           text: 'text-gray-900',
           placeholder: 'placeholder-gray-500',
           background: 'bg-white/90',
@@ -76,11 +76,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({ isScrolled }) => {
       } else {
         // Sin scroll: colores blancos porque el navbar es transparente
         return {
-          icon: 'text-white/70',
-          text: 'text-white',
-          placeholder: 'placeholder-white/60',
-          background: 'bg-white/20',
-          clearButton: 'text-white/70 hover:text-white'
+          icon: 'text-medical-blue-900',
+          text: 'text-gray-900',
+          placeholder: 'placeholder-gray-500',
+          background: 'bg-white/90',
+          clearButton: 'text-gray-400 hover:text-gray-600'
         };
       }
     }

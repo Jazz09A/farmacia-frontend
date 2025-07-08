@@ -144,7 +144,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       return 'glass-bg bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-lg';
     }
     // Estado inicial transparente
-    return 'bg-transparent border-b border-transparent';
+    return 'bg-white/95 backdrop-blur-xl shadow-medical border-b border-medical-gray-200/50';
   };
 
   // Función para obtener las clases del logo según el contexto
@@ -156,12 +156,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         title: 'text-medical-blue-700',
         subtitle: 'text-medical-gray-600'
       };
-    } 
+    }
     // Blanco solo en estado inicial sin scroll
     return {
-      iconContainer: 'bg-white/20 backdrop-blur-md text-white border border-white/30',
-      title: 'text-white',
-      subtitle: 'text-white/80'
+      iconContainer: 'bg-medical-blue-gradient text-white shadow-medical',
+      title: 'text-medical-blue-700',
+      subtitle: 'text-medical-gray-600'
     };
   };
 
@@ -171,12 +171,12 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (isLightBackgroundPage || isScrolled) {
       return isActive
         ? 'text-medical-blue-700 bg-medical-blue-100'
-        : 'text-medical-gray-700 hover:text-medical-blue-700 hover:bg-medical-blue-50';
+        : 'text-medical-blue-900 hover:text-medical-blue-700 hover:bg-medical-blue-50';
     }
     // Blancos solo en estado inicial sin scroll
     return isActive
-      ? 'text-white bg-white/20'
-      : 'text-white/90 hover:text-white hover:bg-white/10';
+      ? 'text-medical-blue-700 bg-medical-blue-100'
+      : 'text-medical-blue-900 hover:text-medical-blue-700 hover:bg-medical-blue-50';
   };
 
   // Función para obtener las clases de los botones de acción
@@ -185,18 +185,28 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (isLightBackgroundPage || isScrolled) {
       switch (type) {
         case 'wishlist':
-          return 'text-medical-gray-600 hover:text-red-600 hover:bg-red-50 hover:shadow-medical';
+          return 'text-medical-blue-900 hover:text-red-600 hover:bg-red-50 hover:shadow-medical';
         case 'cart':
         case 'user':
-          return 'text-medical-gray-600 hover:text-medical-blue-700 hover:bg-medical-blue-50 hover:shadow-medical';
+          return 'text-medical-blue-900 hover:text-medical-blue-700 hover:bg-medical-blue-50 hover:shadow-medical';
         case 'mobile-menu':
-          return 'text-medical-gray-600 hover:text-medical-gray-900 hover:bg-medical-gray-100';
+          return 'text-medical-blue-900 hover:text-medical-gray-900 hover:bg-medical-gray-100';
         default:
           return '';
       }
     }
     // Blancos solo en estado inicial sin scroll
-    return 'text-white/90 hover:text-white hover:bg-white/10 backdrop-blur-md';
+    switch (type) {
+      case 'wishlist':
+        return 'text-medical-blue-900 hover:text-red-600 hover:bg-red-50 hover:shadow-medical';
+      case 'cart':
+      case 'user':
+        return 'text-medical-blue-900 hover:text-medical-blue-700 hover:bg-medical-blue-50 hover:shadow-medical';
+      case 'mobile-menu':
+        return 'text-medical-blue-900 hover:text-medical-gray-900 hover:bg-medical-gray-100';
+      default:
+        return '';
+    }
   };
 
   const logoClasses = getLogoClasses();

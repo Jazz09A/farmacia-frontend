@@ -30,8 +30,8 @@ export const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
       disabled={isConverting}
       className={`relative flex items-center px-4 py-3 rounded-full transition-all duration-300 backdrop-blur-md border ${
         isScrolled
-          ? 'bg-white/90 text-gray-700 border-gray-200 hover:bg-white hover:shadow-md'
-          : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
+          ? 'bg-white/90 text-medical-blue-900 border-gray-200 hover:bg-white hover:shadow-md'
+          : 'bg-white/90 text-medical-blue-900 border-gray-200 hover:bg-white hover:shadow-md'
       } ${isConverting ? 'cursor-not-allowed opacity-75' : ''}`}
       whileHover={!isConverting ? { 
         scale: 1.05,
@@ -89,7 +89,7 @@ export const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
           </motion.span>
           <motion.span
             className={`text-xs leading-none mt-0.5 ${
-              isScrolled ? 'text-gray-500' : 'text-white/70'
+              isScrolled ? 'text-gray-500' : 'text-gray-500'
             }`}
             initial={{ y: 5, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
