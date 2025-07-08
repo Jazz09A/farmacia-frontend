@@ -138,44 +138,6 @@ export const HeroSection: React.FC = () => {
               </span>
             </motion.p>
 
-            {/* Enhanced CTA Buttons */}
-            <motion.div
-              className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-12"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-            >
-              <motion.button
-                className="group relative px-8 py-4 bg-medical-blue-gradient hover:shadow-medical-hover text-white rounded-2xl font-semibold text-lg transition-all duration-400 min-w-[280px] overflow-hidden"
-                whileHover={{ scale: 1.05, y: -3 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="relative z-10 flex items-center justify-center space-x-2">
-                  <Phone className="h-5 w-5" />
-                  <span>Consulta con Nuestro Farmacéutico</span>
-                </div>
-                {/* Hover Effect */}
-                <motion.div
-                  className="absolute inset-0 bg-white/20"
-                  initial={{ x: '-100%' }}
-                  whileHover={{ x: '100%' }}
-                  transition={{ duration: 0.6 }}
-                />
-              </motion.button>
-              
-              <motion.button
-                onClick={scrollToProducts}
-                className="group px-8 py-[0.9rem] glass-medical border border-white/30 text-black rounded-2xl font-semibold text-lg hover:glass-card hover:text-medical-gray-700 transition-all duration-400 min-w-[200px]"
-                whileHover={{ scale: 1.05, y: -3 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <Heart className="h-5 w-5" />
-                  <span>Ver Catálogo</span>
-                </div>
-              </motion.button>
-            </motion.div>
-
             {/* Enhanced Benefits */}
             <div className="mb-12 max-w-5xl mx-auto px-4">
               <motion.div

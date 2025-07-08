@@ -7,6 +7,7 @@ import { ProductsSection } from '../components/Products/ProductsSection';
 import { BrandsSection } from '../components/Brands/BrandsSection';
 import { CartModal } from '../components/Cart/CartModal';
 import FeaturedBlogPosts from '../components/Blog/FeaturedBlogPosts';
+import { ContactUsSection } from '../components/ContactUs/ContactUsSection';
 
 // Skeleton Components
 import { 
@@ -32,7 +33,8 @@ const HomePage: React.FC = () => {
     flashOffers: true,
     products: true,
     blog: true,
-    brands: true
+    brands: true,
+    contact: true
   });
 
   // Simulate realistic loading times for different sections
@@ -42,7 +44,8 @@ const HomePage: React.FC = () => {
       { section: 'flashOffers', delay: 1200 },
       { section: 'products', delay: 1500 },
       { section: 'blog', delay: 1800 },
-      { section: 'brands', delay: 2000 }
+      { section: 'brands', delay: 2000 },
+      { section: 'contact', delay: 2200 }
     ];
 
     loadingSims.forEach(({ section, delay }) => {
@@ -142,6 +145,16 @@ const HomePage: React.FC = () => {
           />
         ) : (
           <BrandsSection />
+        )}
+
+        {/* Contact Us Section with Skeleton */}
+        {loadingStates.contact ? (
+          <SectionSkeleton 
+            showTitle={true}
+            className="bg-gray-50"
+          />
+        ) : (
+          <ContactUsSection />
         )}
       </main>
 
