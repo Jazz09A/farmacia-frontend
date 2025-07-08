@@ -53,7 +53,7 @@ const ConditionalLayout: React.FC<{ children: React.ReactNode }> = ({ children }
 
   return (
     <>
-      <div className={!isAdminRoute ? 'flex-1 flex flex-col' : ''}>
+      <div className={!isAdminRoute ? 'flex-1 flex flex-col w-full max-w-full' : ''}>
         <PageLayout>
           {children}
         </PageLayout>
@@ -144,7 +144,7 @@ function App() {
       <Router>
         <ScrollProvider>
           <ScrollToTop />
-          <div className="App min-h-screen flex flex-col bg-medical-gray-50">
+          <div className="App min-h-screen w-full flex flex-col bg-medical-gray-50 relative">
           <ConditionalNavbar
             isScrolled={isScrolled}
             cartItemsCount={cart.totalItems}

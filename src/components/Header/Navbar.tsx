@@ -230,10 +230,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     <>
       <motion.nav
         data-navbar
-        className={`fixed top-0 left-0 right-0 z-50 ${getNavbarClasses()}`}
+        className={`fixed top-0 left-0 right-0 z-50 w-full ${getNavbarClasses()}`}
         style={{ 
           transitionDuration: isMobile ? '200ms' : '600ms',
-          willChange: 'transform'
+          willChange: 'transform',
+          maxWidth: '100vw'
         }}
         initial={{ y: -100 }}
         animate={{ y: isMobile && isMobileMenuOpen ? '-110%' : 0 }}
@@ -278,7 +279,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         <div className="medical-container">
-          <div className="flex justify-between items-center h-16 lg:h-20">
+          <div className="flex justify-between items-center h-14 lg:h-18">
             {/* Left Group: Menu + Logo */}
             <div className="flex items-center flex-shrink-0">
               <div className="hidden lg:flex items-center mr-4">
@@ -296,7 +297,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <img
                   src={logoSrc}
                   alt="FarmaPlus Logo"
-                  className="h-20 w-auto object-contain"
+                  className="h-12 lg:h-16 w-auto object-contain"
                 />
               </Link>
             </div>
@@ -311,7 +312,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             {/* Right Group: Actions */}
-            <div className="flex items-center flex-shrink-0 space-x-3">
+            <div className="flex items-center flex-shrink-0 space-x-2 lg:space-x-3">
               <div className="hidden sm:block">
                 <CurrencyToggle
                   currency={currency}
@@ -321,10 +322,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 lg:space-x-2">
                 {/* Wishlist */}
-                <motion.button
-                  className={`p-3 rounded-2xl transition-all duration-300 relative group ${getActionButtonClasses('wishlist')}`}
+                                  <motion.button
+                    className={`p-2 lg:p-3 rounded-2xl transition-all duration-300 relative group ${getActionButtonClasses('wishlist')}`}
                   whileHover={{ scale: 1.1, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -349,7 +350,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Link to="/cart">
                   <motion.button
                     onClick={onCartOpen}
-                    className={`relative p-3 rounded-2xl transition-all duration-300 group ${getActionButtonClasses('cart')}`}
+                    className={`relative p-2 lg:p-3 rounded-2xl transition-all duration-300 group ${getActionButtonClasses('cart')}`}
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -378,7 +379,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="relative">
                     <motion.button
                       onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                      className={`p-3 rounded-2xl transition-all duration-300 group relative ${getActionButtonClasses('user')}`}
+                      className={`p-2 lg:p-3 rounded-2xl transition-all duration-300 group relative ${getActionButtonClasses('user')}`}
                       whileHover={{ scale: 1.1, y: -2 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -473,7 +474,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ) : (
                   <Link to="/auth">
                     <motion.button
-                      className={`p-3 rounded-2xl transition-all duration-300 group ${getActionButtonClasses('user')}`}
+                      className={`p-2 lg:p-3 rounded-2xl transition-all duration-300 group ${getActionButtonClasses('user')}`}
                       whileHover={{ scale: 1.1, y: -2 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -492,7 +493,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Mobile menu button */}
               <motion.button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className={`lg:hidden p-3 rounded-2xl transition-all duration-300 ${getActionButtonClasses('mobile-menu')}`}
+                className={`lg:hidden p-2 lg:p-3 rounded-2xl transition-all duration-300 ${getActionButtonClasses('mobile-menu')}`}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 aria-label="Abrir menú"
@@ -608,7 +609,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <img 
                         src={logoSrc}
                         alt="FarmaPlus Logo" 
-                        className="h-10 w-auto object-contain"
+                        className="h-8 w-auto object-contain"
                       />
                     </div>
                     <div>

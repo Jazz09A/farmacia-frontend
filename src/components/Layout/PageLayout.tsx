@@ -88,7 +88,9 @@ export const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
     <div 
       style={{
         paddingTop: navbarHeight > 0 ? `${navbarHeight}px` : undefined,
-        minHeight: '100vh'
+        minHeight: '100vh',
+        width: '100%',
+        maxWidth: '100%'
       }}
       className="page-content"
     >
