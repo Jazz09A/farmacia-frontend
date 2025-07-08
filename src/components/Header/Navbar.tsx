@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Settings, Package } from 'lucide-react';
+import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Settings, Package, HelpCircle, Briefcase, Tag, BookText } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../services/AuthService';
@@ -25,6 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -99,6 +100,17 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
   }, [isMobileMenuOpen]);
 
+  useEffect(() => {
+    if (isDesktopMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isDesktopMenuOpen]);
+
   // Detectar si es mobile
   useEffect(() => {
     const checkIsMobile = () => {
@@ -127,10 +139,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const menuItems = [
     { name: 'Inicio', href: '/', icon: Stethoscope, isRoute: true },
+    { name: '¿Por qué nosotros?', href: '/porque-nosotros', icon: HelpCircle, isRoute: true },
     { name: 'Catálogo', href: '/catalog', icon: ShoppingCart, isRoute: true },
-    { name: 'Blog', href: '/blog', icon: ShoppingCart, isRoute: true },
-    { name: 'Contacto', href: '/contacto', icon: ShoppingCart, isRoute: true },
-    { name: 'Consulta Online', href: '#consulta', icon: Phone, isRoute: false }
+    { name: 'Cliente Drozainka', href: '/cliente-drozainka', icon: UserIcon, isRoute: true },
+    { name: 'Proveedor Drozainka', href: '/proveedor-drozainka', icon: Briefcase, isRoute: true },
+    { name: 'Nuestras marcas', href: '/marcas', icon: Tag, isRoute: true },
+    { name: 'Blog', href: '/blog', icon: BookText, isRoute: true },
+    { name: 'Contáctanos', href: '/contacto', icon: Phone, isRoute: true },
   ];
 
   // Función para obtener las clases del navbar según el contexto
@@ -264,8 +279,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <div className="medical-container">
           <div className="flex justify-between items-center h-16 lg:h-20">
-            {/* Logo Premium */}
-            <div className="flex lg:flex-1">
+            {/* Left Group: Menu + Logo */}
+            <div className="flex items-center flex-shrink-0">
+              <div className="hidden lg:flex items-center mr-4">
+                <motion.button
+                  onClick={() => setIsDesktopMenuOpen(true)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${getNavItemClasses(false)}`}
+                  whileHover={{ y: -2, scale: 1.05 }}
+                >
+                  <Menu className="h-5 w-5" />
+                  <span>Menú</span>
+                </motion.button>
+              </div>
               <Link to="/" className="-m-1.5 p-1.5">
                 <span className="sr-only">FarmaPlus</span>
                 <img
@@ -276,71 +301,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               </Link>
             </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-1">
-              {menuItems.map((item, index) => {
-                const isActive = item.isRoute && location.pathname === item.href;
-                
-                return (
-                  <motion.div key={item.name}>
-                    {item.isRoute ? (
-                      <Link
-                        to={item.href}
-                        className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${getNavItemClasses(isActive)}`}
-                      >
-                        <motion.div
-                          whileHover={{ y: -2, scale: 1.05 }}
-                          initial={{ opacity: 0, y: -20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ 
-                            delay: index * 0.1,
-                            type: "spring", 
-                            stiffness: 400, 
-                            damping: 17 
-                          }}
-                          className="flex items-center space-x-2"
-                        >
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                        </motion.div>
-                      </Link>
-                    ) : (
-                      <a
-                        href={item.href}
-                        className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${getNavItemClasses(false)}`}
-                      >
-                        <motion.div
-                          whileHover={{ y: -2, scale: 1.05 }}
-                          initial={{ opacity: 0, y: -20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ 
-                            delay: index * 0.1,
-                            type: "spring", 
-                            stiffness: 400, 
-                            damping: 17 
-                          }}
-                          className="flex items-center space-x-2"
-                        >
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                        </motion.div>
-                      </a>
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            {/* Search Bar - Desktop */}
+            {/* Center Group: Search Bar */}
             {!shouldHideSearchBar && (
-              <div className="hidden lg:block flex-1 max-w-lg mx-8">
-                <SearchBar isScrolled={isScrolled || isLightBackgroundPage} />
+              <div className="hidden lg:flex flex-1 justify-center px-8">
+                <div className="w-full max-w-lg">
+                  <SearchBar isScrolled={isScrolled || isLightBackgroundPage} />
+                </div>
               </div>
             )}
 
-            {/* Right side actions */}
-            <div className="flex items-center space-x-3">
-              {/* Currency Toggle */}
+            {/* Right Group: Actions */}
+            <div className="flex items-center flex-shrink-0 space-x-3">
               <div className="hidden sm:block">
                 <CurrencyToggle
                   currency={currency}
@@ -539,6 +510,69 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
       </motion.nav>
+
+      {/* Desktop Aside Menu */}
+      <AnimatePresence>
+        {isDesktopMenuOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 hidden lg:block"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsDesktopMenuOpen(false)}
+            />
+            <motion.div
+              className="fixed left-0 top-0 h-full w-80 max-w-sm glass-card shadow-elegant border-r border-white/30"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <div className="flex flex-col h-full">
+                <div className="flex justify-between items-center p-6 border-b border-medical-gray-200">
+                  <div className="text-lg font-serif font-bold text-medical-gray-900">Menú</div>
+                  <motion.button
+                    onClick={() => setIsDesktopMenuOpen(false)}
+                    className="p-2 rounded-full text-medical-gray-600 hover:bg-medical-gray-100 transition-colors"
+                    aria-label="Cerrar menú"
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <X className="h-6 w-6" />
+                  </motion.button>
+                </div>
+                <div className="flex-1 p-6 space-y-2 overflow-y-auto">
+                  {menuItems.map((item, index) => (
+                    <Link
+                      to={item.href}
+                      key={item.name}
+                      onClick={() => setIsDesktopMenuOpen(false)}
+                    >
+                      <motion.div
+                        className="flex items-center space-x-3 p-4 rounded-xl text-medical-gray-700 hover:text-medical-blue-700 hover:bg-medical-blue-50 transition-all duration-200 group"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                      >
+                        <div className="p-2 bg-medical-blue-50 text-medical-blue-600 rounded-lg group-hover:bg-medical-blue-100 transition-colors duration-200">
+                          <item.icon className="h-4 w-4" />
+                        </div>
+                        <span className="font-medium">{item.name}</span>
+                      </motion.div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Enhanced Mobile Menu Overlay */}
       <AnimatePresence>
