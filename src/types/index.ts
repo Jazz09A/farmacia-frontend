@@ -175,3 +175,11 @@ export interface BlogPost {
   updatedAt: Date;
   readTime: number;
 }
+
+export interface ProductWithStats extends Product {
+  views: number;
+  sales: number;
+  revenue: number;
+  stock_status: 'in_stock' | 'low_stock' | 'out_of_stock';
+  last_updated: string;
+}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Package, 
   Search, 
@@ -26,15 +26,8 @@ import {
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { mockProducts } from '../../data/mockData';
-import { Product } from '../../types';
-
-interface ProductWithStats extends Product {
-  views: number;
-  sales: number;
-  revenue: number;
-  stock_status: 'in_stock' | 'low_stock' | 'out_of_stock';
-  last_updated: string;
-}
+import { Product, ProductWithStats } from '../../types';
+import ProductModal from '../../components/Admin/ProductModal';
 
 // Extender mockProducts con estadísticas
 const mockProductsWithStats: ProductWithStats[] = mockProducts.map((product, index) => ({
@@ -60,6 +53,18 @@ const AdminProductsPage: React.FC = () => {
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductWithStats | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
+
+  useEffect(() => {
+    const body = document.body;
+    if (showProductModal) {
+      body.style.overflow = 'hidden';
+    } else {
+      body.style.overflow = 'auto';
+    }
+    return () => {
+      body.style.overflow = 'auto';
+    };
+  }, [showProductModal]);
 
   const itemsPerPage = 12;
 
@@ -622,87 +627,12 @@ const AdminProductsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Product Detail Modal */}
-      {showProductModal && selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-96 overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900">Detalles del Producto</h3>
-                <button
-                  onClick={() => setShowProductModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ×
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <img
-                    src={selectedProduct.image}
-                    alt={selectedProduct.name}
-                    className="w-full h-64 object-cover rounded-lg mb-4"
-                  />
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">SKU:</span> {selectedProduct.id}</p>
-                    <p><span className="font-medium">Categoría:</span> {selectedProduct.category}</p>
-                    <p><span className="font-medium">Marca:</span> {selectedProduct.brand}</p>
-                    <p><span className="font-medium">Estado:</span> {getStockStatusBadge(selectedProduct.stock_status)}</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">{selectedProduct.name}</h4>
-                  <p className="text-gray-600 mb-4">{selectedProduct.description}</p>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Precio VES</p>
-                      <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedProduct.priceVES)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Precio REF</p>
-                      <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedProduct.priceREF)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Ventas</p>
-                      <p className="text-lg font-bold text-blue-600">{selectedProduct.sales}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Ingresos</p>
-                      <p className="text-lg font-bold text-green-600">{formatCurrency(selectedProduct.revenue)}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">Rating:</span> {selectedProduct.rating}/5 ({selectedProduct.reviews} reseñas)</p>
-                    <p><span className="font-medium">Vistas:</span> {selectedProduct.views}</p>
-                    <p><span className="font-medium">Última actualización:</span> {formatDate(selectedProduct.last_updated)}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowProductModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Cerrar
-                </button>
-                <button 
-                  onClick={() => {
-                    setShowProductModal(false);
-                    navigate(`/admin/products/edit/${selectedProduct.id}`);
-                  }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                >
-                  Editar Producto
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Modal de Producto */}
+      {showProductModal && (
+        <ProductModal 
+          product={selectedProduct}
+          onClose={() => setShowProductModal(false)}
+        />
       )}
     </div>
   );
