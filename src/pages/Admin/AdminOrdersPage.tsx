@@ -3,8 +3,6 @@ import {
   Search, 
   Filter, 
   Download, 
-  Eye, 
-  Edit, 
   Trash2,
   Clock,
   CheckCircle,
@@ -13,6 +11,8 @@ import {
 } from 'lucide-react';
 import { mockOrders, orderStatuses, mockUsers } from '../../data/mockData';
 import { Order } from '../../types';
+import OrderModal from '../../components/Admin/OrderModal';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 
 const AdminOrdersPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,6 +20,7 @@ const AdminOrdersPage: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
 
   // Filter orders
   const filteredOrders = orders.filter(order => {
@@ -75,6 +76,19 @@ const AdminOrdersPage: React.FC = () => {
     // We will close the modal after updating status for better UX
     // setShowOrderModal(false); 
   };
+  
+  const handleDeleteRequest = (e: React.MouseEvent, order: Order) => {
+    e.stopPropagation(); // Evita que se abra el modal de detalles
+    setOrderToDelete(order);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!orderToDelete) return;
+
+    setOrders(prevOrders => prevOrders.filter(o => o.id !== orderToDelete.id));
+    console.log(`Pedido ${orderToDelete.id} eliminado.`);
+    setOrderToDelete(null); // Cierra el modal de confirmación
+  };
 
   return (
     <div className="space-y-6">
@@ -124,64 +138,136 @@ const AdminOrdersPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+      {/* Orders List/Table */}
+      <div className="bg-white rounded-lg shadow-sm">
         <div className="p-4 border-b">
           <h3 className="text-lg font-semibold">Pedidos ({filteredOrders.length})</h3>
         </div>
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3">Pedido</th>
-              <th scope="col" className="px-6 py-3">Cliente</th>
-              <th scope="col" className="px-6 py-3">Fecha</th>
-              <th scope="col" className="px-6 py-3">Total</th>
-              <th scope="col" className="px-6 py-3">Estado</th>
-              <th scope="col" className="px-6 py-3 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
+        
+        {/* Mobile View - List */}
+        <div className="md:hidden">
+          <div className="divide-y divide-gray-200">
             {filteredOrders.map((order) => {
               const customer = mockUsers.find(user => user.id === order.userId);
               return (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">{order.id}</div>
-                    <div className="text-xs text-gray-500">{order.trackingNumber}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div>{customer?.name}</div>
-                    <div className="text-xs text-gray-500">{customer?.email}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {new Date(order.createdAt).toLocaleDateString('es-VE')}
-                  </td>
-                  <td className="px-6 py-4 font-medium">{formatCurrency(order.total)}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      {getStatusIcon(order.status)}
-                      <span className="ml-2">{orderStatuses.find(s => s.id === order.status)?.name}</span>
+                <div 
+                  key={order.id} 
+                  onClick={() => handleViewOrder(order)}
+                  className="p-4 hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="font-bold text-gray-900">#{order.id.substring(0, 8)}...</div>
+                      <div className="text-sm text-gray-600">{customer?.name}</div>
+                      <div className="text-sm text-gray-500 mt-1">{new Date(order.createdAt).toLocaleDateString('es-VE')}</div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button onClick={() => handleViewOrder(order)} className="text-gray-400 hover:text-blue-600 p-1">
-                        <Eye className="w-5 h-5" />
-                      </button>
-                      <button className="text-gray-400 hover:text-green-600 p-1">
-                        <Edit className="w-5 h-5" />
-                      </button>
-                      <button className="text-gray-400 hover:text-red-600 p-1">
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <div className="font-bold text-gray-900">{formatCurrency(order.total)}</div>
+                      <div className="flex items-center justify-end mt-1 text-sm">
+                        {getStatusIcon(order.status)}
+                        <span className="ml-1.5">{orderStatuses.find(s => s.id === order.status)?.name}</span>
+                      </div>
                     </div>
-                  </td>
-                </tr>
+                  </div>
+                  <div className="flex justify-end mt-3 pt-3 border-t">
+                     <button 
+                        onClick={(e) => handleDeleteRequest(e, order)} 
+                        className="text-red-600 hover:text-red-800 flex items-center text-sm font-medium p-2 -m-2"
+                        title="Eliminar pedido"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Eliminar
+                      </button>
+                  </div>
+                </div>
               );
             })}
-          </tbody>
-        </table>
+          </div>
+        </div>
+
+        {/* Desktop View - Table */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-3">Pedido</th>
+                <th scope="col" className="px-6 py-3">Cliente</th>
+                <th scope="col" className="px-6 py-3">Fecha</th>
+                <th scope="col" className="px-6 py-3">Total</th>
+                <th scope="col" className="px-6 py-3">Estado</th>
+                <th scope="col" className="px-6 py-3 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filteredOrders.map((order) => {
+                const customer = mockUsers.find(user => user.id === order.userId);
+                return (
+                  <tr 
+                    key={order.id} 
+                    onClick={() => handleViewOrder(order)}
+                    className="hover:bg-gray-50 cursor-pointer"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-blue-600 hover:underline">#{order.id.substring(0, 8)}...</div>
+                      <div className="text-xs text-gray-500">{order.trackingNumber}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>{customer?.name}</div>
+                      <div className="text-xs text-gray-500">{customer?.email}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {new Date(order.createdAt).toLocaleDateString('es-VE')}
+                    </td>
+                    <td className="px-6 py-4 font-medium">{formatCurrency(order.total)}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        {getStatusIcon(order.status)}
+                        <span className="ml-2">{orderStatuses.find(s => s.id === order.status)?.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button 
+                        onClick={(e) => handleDeleteRequest(e, order)} 
+                        className="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-red-100"
+                        title="Eliminar pedido"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {showOrderModal && (
+        <OrderModal
+          order={selectedOrder}
+          users={mockUsers}
+          onClose={() => setShowOrderModal(false)}
+          onUpdateStatus={handleUpdateStatus}
+        />
+      )}
+
+      {orderToDelete && (
+        <ConfirmationModal
+          isOpen={!!orderToDelete}
+          onClose={() => setOrderToDelete(null)}
+          onConfirm={handleConfirmDelete}
+          title="Confirmar Eliminación"
+          message={
+            <span>
+              ¿Estás seguro de que quieres eliminar el pedido <strong>#{orderToDelete.id.substring(0, 8)}...</strong>? 
+              <br />
+              Esta acción no se puede deshacer.
+            </span>
+          }
+          confirmText="Sí, eliminar"
+          isDestructive={true}
+        />
+      )}
     </div>
   );
 };
