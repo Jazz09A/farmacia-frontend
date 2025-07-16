@@ -6,21 +6,17 @@ import {
   Plus, 
   Edit, 
   Trash2, 
-  Mail, 
-  Phone, 
-  Calendar,
   Building,
   User,
-  MapPin,
-  ShoppingCart,
   DollarSign,
   Eye,
   UserCheck,
   UserX,
   Download,
-  MoreVertical
+  Upload,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 
 // Mock data para clientes (extender el mockData existente)
 interface Customer {
@@ -118,6 +114,7 @@ const AdminCustomersPage: React.FC = () => {
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
 
   const itemsPerPage = 10;
 
@@ -149,7 +146,7 @@ const AdminCustomersPage: React.FC = () => {
     return new Intl.NumberFormat('es-VE', {
       style: 'currency',
       currency: 'VES',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 2
     }).format(amount);
   };
 
@@ -171,7 +168,7 @@ const AdminCustomersPage: React.FC = () => {
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.inactive;
     
     return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full ${config.class}`}>
+      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${config.class}`}>
         {config.label}
       </span>
     );
@@ -205,6 +202,25 @@ const AdminCustomersPage: React.FC = () => {
     setShowCustomerModal(true);
   };
 
+  const handleDeleteRequest = (e: React.MouseEvent, customer: Customer) => {
+    e.stopPropagation();
+    setCustomerToDelete(customer);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!customerToDelete) return;
+    // Lógica de eliminación
+    console.log(`Cliente ${customerToDelete.id} eliminado`);
+    setCustomerToDelete(null);
+  };
+
+  const handleEditCustomer = (e: React.MouseEvent, customerId: string) => {
+    e.stopPropagation();
+    // Navegar a la página de edición o abrir un modal de edición
+    console.log(`Editando cliente ${customerId}`);
+  };
+
+
   // Estadísticas
   const stats = {
     total: mockCustomers.length,
@@ -226,27 +242,60 @@ const AdminCustomersPage: React.FC = () => {
             Administra y supervisa todos los clientes registrados en tu plataforma.
           </p>
         </div>
-        <div className="flex items-center space-x-3 mt-4 sm:mt-0">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Filtros
-          </button>
-          <button className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-            <Download className="w-4 h-4 mr-2" />
-            Exportar
-          </button>
-          <button className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-            <Plus className="w-4 h-4 mr-2" />
-            Nuevo Cliente
-          </button>
+        <div className="w-full sm:w-auto mt-4 sm:mt-0">
+           {/* Mobile Buttons */}
+           <div className="sm:hidden">
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center justify-center px-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              >
+                <Filter className="w-4 h-4 mr-1" />
+                Filtros
+              </button>
+              <button className="flex items-center justify-center px-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                <Upload className="w-4 h-4 mr-1" />
+                Importar
+              </button>
+              <button className="flex items-center justify-center px-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                <Download className="w-4 h-4 mr-1" />
+                Exportar
+              </button>
+            </div>
+            <button 
+              className="mt-2 w-full flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo Cliente
+            </button>
+          </div>
+          {/* Desktop Buttons */}
+          <div className="hidden sm:flex items-center space-x-3">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Filtros
+            </button>
+            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <Upload className="w-4 h-4 mr-2" />
+              Importar
+            </button>
+            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <Download className="w-4 h-4 mr-2" />
+              Exportar
+            </button>
+            <button className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo Cliente
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
@@ -387,129 +436,158 @@ const AdminCustomersPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Customers Table */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+      {/* Customers List/Table */}
+      <div className="bg-white rounded-lg shadow-sm">
+        <div className="p-4 border-b flex justify-between items-center">
+          <h3 className="text-lg font-semibold">Clientes ({filteredCustomers.length})</h3>
+          {selectedCustomers.length > 0 && (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500">{selectedCustomers.length} seleccionados</span>
+              <button className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+        
+        {/* Mobile View - Cards */}
+        <div className="md:hidden">
+          <div className="divide-y divide-gray-200">
+            {paginatedCustomers.map((customer) => (
+              <div 
+                key={customer.id} 
+                className="p-4 active:bg-gray-100"
+                onClick={() => handleViewCustomer(customer)}
+              >
+                <div className="flex items-center space-x-4">
+                  <div className={`p-3 rounded-full ${customer.user_type === 'natural' ? 'bg-blue-100' : 'bg-green-100'}`}>
+                    {customer.user_type === 'natural' ? <User className="w-6 h-6 text-blue-600" /> : <Building className="w-6 h-6 text-green-600" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-800 truncate">{getCustomerDisplayName(customer)}</p>
+                    <p className="text-sm text-gray-500">{customer.email}</p>
+                  </div>
+                  <div className="text-right">
+                    {getStatusBadge(customer.status)}
+                  </div>
+                </div>
+                 <div className="flex justify-between items-end mt-4">
+                    <div className="text-sm text-gray-600">
+                      <p>Gastado:</p>
+                      <p className="font-semibold text-gray-900">{formatCurrency(customer.total_spent)}</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                       <button 
+                        onClick={(e) => handleEditCustomer(e, customer.id)} 
+                        className="p-2 text-gray-500 rounded-full hover:bg-blue-100 hover:text-blue-600"
+                        title="Editar Cliente"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={(e) => handleDeleteRequest(e, customer)}
+                        className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
+                        title="Eliminar Cliente"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop View - Table */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
-                    onChange={handleSelectAll}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
+                <th scope="col" className="p-4">
+                  <div className="flex items-center">
+                    <input 
+                      id="checkbox-all-search" 
+                      type="checkbox" 
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                      checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
+                      onChange={handleSelectAll}
+                    />
+                    <label htmlFor="checkbox-all-search" className="sr-only">checkbox</label>
+                  </div>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Cliente
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tipo
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pedidos
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Gastado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Último Acceso
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
+                <th scope="col" className="px-6 py-3">Cliente</th>
+                <th scope="col" className="px-6 py-3">Tipo</th>
+                <th scope="col" className="px-6 py-3">Estado</th>
+                <th scope="col" className="px-6 py-3">Total Gastado</th>
+                <th scope="col" className="px-6 py-3">Registro</th>
+                <th scope="col" className="px-6 py-3 text-center">Acciones</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedCustomers.map((customer) => (
-                <motion.tr
-                  key={customer.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="hover:bg-gray-50 transition-colors"
+            <tbody>
+              {paginatedCustomers.map(customer => (
+                <tr 
+                  key={customer.id} 
+                  className="bg-white border-b hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleViewCustomer(customer)}
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={selectedCustomers.includes(customer.id)}
-                      onChange={() => handleSelectCustomer(customer.id)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="w-4 p-4">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          {customer.user_type === 'juridico' ? (
-                            <Building className="h-5 w-5 text-blue-600" />
-                          ) : (
-                            <User className="h-5 w-5 text-blue-600" />
-                          )}
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {getCustomerDisplayName(customer)}
-                        </div>
-                        <div className="text-sm text-gray-500 flex items-center">
-                          <Mail className="h-4 w-4 mr-1" />
-                          {customer.email}
-                        </div>
-                      </div>
+                      <input 
+                        id={`checkbox-table-search-${customer.id}`} 
+                        type="checkbox" 
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                        checked={selectedCustomers.includes(customer.id)}
+                        onChange={() => handleSelectCustomer(customer.id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <label htmlFor={`checkbox-table-search-${customer.id}`} className="sr-only">checkbox</label>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      customer.user_type === 'juridico' 
-                        ? 'bg-purple-100 text-purple-800' 
-                        : 'bg-green-100 text-green-800'
-                    }`}>
+                  <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center space-x-3">
+                    <div className={`p-3 rounded-full ${customer.user_type === 'natural' ? 'bg-blue-100' : 'bg-green-100'}`}>
+                      {customer.user_type === 'natural' ? <User className="w-6 h-6 text-blue-600" /> : <Building className="w-6 h-6 text-green-600" />}
+                    </div>
+                    <div>
+                      <div className="text-base font-semibold">{getCustomerDisplayName(customer)}</div>
+                      <div className="text-sm text-gray-500">{customer.email}</div>
+                    </div>
+                  </th>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${customer.user_type === 'natural' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
                       {customer.user_type === 'juridico' ? 'Jurídico' : 'Natural'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                     {getStatusBadge(customer.status)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex items-center">
-                      <ShoppingCart className="h-4 w-4 mr-1 text-gray-400" />
-                      {customer.total_orders}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                    {formatCurrency(customer.total_spent)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(customer.last_login)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleViewCustomer(customer)}
-                        className="text-blue-600 hover:text-blue-900 transition-colors"
-                        title="Ver detalles"
+                  <td className="px-6 py-4 font-semibold">{formatCurrency(customer.total_spent)}</td>
+                  <td className="px-6 py-4">{formatDate(customer.created_at)}</td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center space-x-1">
+                      <button 
+                        onClick={(e) => handleViewCustomer(customer)}
+                        className="p-2 text-gray-500 rounded-full hover:bg-gray-100 hover:text-gray-600"
+                        title="Ver Detalles"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="w-4 h-4" />
                       </button>
-                      <button
-                        className="text-yellow-600 hover:text-yellow-900 transition-colors"
-                        title="Editar"
+                      <button 
+                        onClick={(e) => handleEditCustomer(e, customer.id)} 
+                        className="p-2 text-gray-500 rounded-full hover:bg-blue-100 hover:text-blue-600"
+                        title="Editar Cliente"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="w-4 h-4" />
                       </button>
-                      <button
-                        className="text-red-600 hover:text-red-900 transition-colors"
-                        title="Eliminar"
+                      <button 
+                        onClick={(e) => handleDeleteRequest(e, customer)}
+                        className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
+                        title="Eliminar Cliente"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>
@@ -517,24 +595,22 @@ const AdminCustomersPage: React.FC = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-            <div className="flex items-center">
-              <p className="text-sm text-gray-700">
-                Página {currentPage} de {totalPages}
-              </p>
-            </div>
+          <div className="p-4 border-t flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
+            <span className="text-sm text-gray-700">
+              Página <span className="font-semibold">{currentPage}</span> de <span className="font-semibold">{totalPages}</span>
+            </span>
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Anterior
               </button>
               <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Siguiente
               </button>
@@ -543,80 +619,17 @@ const AdminCustomersPage: React.FC = () => {
         )}
       </div>
 
-      {/* Empty State */}
-      {filteredCustomers.length === 0 && (
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-12 text-center">
-          <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron clientes</h3>
-          <p className="text-gray-500 mb-6">
-            {searchTerm ? 'Intenta con otros términos de búsqueda.' : 'Aún no tienes clientes registrados.'}
-          </p>
-          {!searchTerm && (
-            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-              <Plus className="w-4 h-4 mr-2 inline" />
-              Agregar Primer Cliente
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Customer Detail Modal */}
-      {showCustomerModal && selectedCustomer && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900">Detalles del Cliente</h3>
-                <button
-                  onClick={() => setShowCustomerModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ×
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Información General</h4>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">Nombre:</span> {getCustomerDisplayName(selectedCustomer)}</p>
-                    <p><span className="font-medium">Email:</span> {selectedCustomer.email}</p>
-                    <p><span className="font-medium">Tipo:</span> {selectedCustomer.user_type === 'juridico' ? 'Jurídico' : 'Natural'}</p>
-                    <p><span className="font-medium">Estado:</span> {getStatusBadge(selectedCustomer.status)}</p>
-                    {selectedCustomer.user_type === 'juridico' && (
-                      <>
-                        <p><span className="font-medium">RIF:</span> {selectedCustomer.rif}</p>
-                        <p><span className="font-medium">Contacto:</span> {selectedCustomer.contact_person}</p>
-                      </>
-                    )}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Estadísticas</h4>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">Total Pedidos:</span> {selectedCustomer.total_orders}</p>
-                    <p><span className="font-medium">Total Gastado:</span> {formatCurrency(selectedCustomer.total_spent)}</p>
-                    <p><span className="font-medium">Registrado:</span> {formatDate(selectedCustomer.created_at)}</p>
-                    <p><span className="font-medium">Último Acceso:</span> {formatDate(selectedCustomer.last_login)}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowCustomerModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Cerrar
-                </button>
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                  Editar Cliente
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* TODO: Add Customer Detail Modal */}
+      {customerToDelete && (
+        <ConfirmationModal
+          isOpen={!!customerToDelete}
+          title="Confirmar Eliminación"
+          message={`¿Estás seguro de que deseas eliminar al cliente "${getCustomerDisplayName(customerToDelete)}"? Esta acción no se puede deshacer.`}
+          onConfirm={handleConfirmDelete}
+          onClose={() => setCustomerToDelete(null)}
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+        />
       )}
     </div>
   );
