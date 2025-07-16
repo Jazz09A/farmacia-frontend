@@ -25,7 +25,7 @@ export default defineConfig({
     })
   ],
   server: {
-    allowedHosts: ['would-continues-democracy-examined.trycloudflare.com'],
+    allowedHosts: ['plymouth-adjacent-tuner-absolute.trycloudflare.com'],
     host: true,
   },
   build: {
