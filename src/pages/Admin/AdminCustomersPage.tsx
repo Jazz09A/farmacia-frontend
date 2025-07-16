@@ -255,25 +255,25 @@ const AdminCustomersPage: React.FC = () => {
           </div>
           {/* Desktop Buttons */}
           <div className="hidden sm:flex items-center space-x-3">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Filtros
-            </button>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filtros
+          </button>
             <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
               <Upload className="w-4 h-4 mr-2" />
               Importar
             </button>
             <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              <Download className="w-4 h-4 mr-2" />
-              Exportar
-            </button>
+            <Download className="w-4 h-4 mr-2" />
+            Exportar
+          </button>
             <button className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-              <Plus className="w-4 h-4 mr-2" />
-              Nuevo Cliente
-            </button>
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo Cliente
+          </button>
           </div>
         </div>
       </div>
@@ -481,13 +481,13 @@ const AdminCustomersPage: React.FC = () => {
               <tr>
                 <th scope="col" className="p-4">
                   <div className="flex items-center">
-                    <input 
+                  <input
                       id="checkbox-all-search" 
-                      type="checkbox" 
+                    type="checkbox"
                       className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                      checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
-                      onChange={handleSelectAll}
-                    />
+                    checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
+                    onChange={handleSelectAll}
+                  />
                     <label htmlFor="checkbox-all-search" className="sr-only">checkbox</label>
                   </div>
                 </th>
@@ -502,17 +502,17 @@ const AdminCustomersPage: React.FC = () => {
             <tbody>
               {paginatedCustomers.map(customer => (
                 <tr 
-                  key={customer.id} 
+                  key={customer.id}
                   className="bg-white border-b hover:bg-gray-50"
                 >
                   <td className="w-4 p-4">
                     <div className="flex items-center">
-                      <input 
+                    <input
                         id={`checkbox-table-search-${customer.id}`} 
-                        type="checkbox" 
+                      type="checkbox"
                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                        checked={selectedCustomers.includes(customer.id)}
-                        onChange={() => handleSelectCustomer(customer.id)}
+                      checked={selectedCustomers.includes(customer.id)}
+                      onChange={() => handleSelectCustomer(customer.id)}
                         onClick={(e) => e.stopPropagation()}
                       />
                       <label htmlFor={`checkbox-table-search-${customer.id}`} className="sr-only">checkbox</label>
@@ -539,7 +539,7 @@ const AdminCustomersPage: React.FC = () => {
                   <td className="px-6 py-4">{formatDate(customer.created_at)}</td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center space-x-1">
-                      <button 
+                      <button
                         onClick={(e) => handleDeleteRequest(e, customer)}
                         className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
                         title="Eliminar Cliente"

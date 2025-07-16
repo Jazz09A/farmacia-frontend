@@ -216,28 +216,28 @@ const AdminProductsPage: React.FC = () => {
           </div>
           {/* Desktop Buttons */}
           <div className="hidden sm:flex items-center space-x-3">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Filtros
-            </button>
-            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              <Upload className="w-4 h-4 mr-2" />
-              Importar
-            </button>
-            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              <Download className="w-4 h-4 mr-2" />
-              Exportar
-            </button>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filtros
+          </button>
+          <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <Upload className="w-4 h-4 mr-2" />
+            Importar
+          </button>
+          <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <Download className="w-4 h-4 mr-2" />
+            Exportar
+          </button>
             <button 
               onClick={() => navigate('/admin/products/create')}
               className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Nuevo Producto
-            </button>
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo Producto
+          </button>
           </div>
         </div>
       </div>
@@ -305,82 +305,82 @@ const AdminProductsPage: React.FC = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 xl:col-span-2">
-            <div className="flex items-center justify-between">
-              <div>
+          <div className="flex items-center justify-between">
+            <div>
                 <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-full">
                 <DollarSign className="w-6 h-6 text-purple-600" />
-              </div>
             </div>
+          </div>
         </div>
       </div>
 
       {/* Filters Section */}
-      {showFilters && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200"
-        >
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200"
             >
-              <option value="all">Todas las categorías</option>
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">Todas las categorías</option>
+                  {categories.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Todos los estados</option>
-              <option value="active">Activos</option>
-              <option value="inactive">Inactivos</option>
-            </select>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">Todos los estados</option>
+                  <option value="active">Activos</option>
+                  <option value="inactive">Inactivos</option>
+                </select>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Stock</label>
-            <select
-              value={stockFilter}
-              onChange={(e) => setStockFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Todos los niveles</option>
-              <option value="in_stock">En Stock</option>
-              <option value="low_stock">Stock Bajo</option>
-              <option value="out_of_stock">Agotado</option>
-            </select>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Stock</label>
+                <select
+                  value={stockFilter}
+                  onChange={(e) => setStockFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">Todos los niveles</option>
+                  <option value="in_stock">En Stock</option>
+                  <option value="low_stock">Stock Bajo</option>
+                  <option value="out_of_stock">Agotado</option>
+                </select>
+              </div>
 
-          <div className="flex items-end">
-            <button
-              onClick={() => {
-                setCategoryFilter('all');
-                setStatusFilter('all');
-                setStockFilter('all');
-                setSearchTerm('');
-              }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Limpiar Filtros
-            </button>
-          </div>
-        </motion.div>
-      )}
+              <div className="flex items-end">
+                <button
+                  onClick={() => {
+                    setCategoryFilter('all');
+                    setStatusFilter('all');
+                    setStockFilter('all');
+                    setSearchTerm('');
+                  }}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Limpiar Filtros
+                </button>
+              </div>
+            </motion.div>
+          )}
 
       {/* Products List/Table */}
       <div className="bg-white rounded-lg shadow-sm">
@@ -440,8 +440,8 @@ const AdminProductsPage: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
         </div>
+      </div>
 
         {/* Desktop View - Table */}
         <div className="hidden md:block overflow-x-auto">
@@ -450,16 +450,16 @@ const AdminProductsPage: React.FC = () => {
               <tr>
                 <th scope="col" className="p-4">
                   <div className="flex items-center">
-                    <input 
+                    <input
                       id="checkbox-all-search" 
-                      type="checkbox" 
+                      type="checkbox"
                       className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                       checked={selectedProducts.length === paginatedProducts.length && paginatedProducts.length > 0}
                       onChange={handleSelectAll}
                     />
                     <label htmlFor="checkbox-all-search" className="sr-only">checkbox</label>
                   </div>
-                </th>
+                  </th>
                 <th scope="col" className="px-6 py-3">Producto</th>
                 <th scope="col" className="px-6 py-3">Categoría</th>
                 <th scope="col" className="px-6 py-3">Precio</th>
@@ -467,20 +467,20 @@ const AdminProductsPage: React.FC = () => {
                 <th scope="col" className="px-6 py-3">Ventas</th>
                 <th scope="col" className="px-6 py-3">Última Actualización</th>
                 <th scope="col" className="px-6 py-3 text-center">Acciones</th>
-              </tr>
-            </thead>
+                </tr>
+              </thead>
             <tbody>
               {paginatedProducts.map(product => (
                 <tr 
-                  key={product.id} 
+                    key={product.id}
                   className="bg-white border-b hover:bg-gray-50 cursor-pointer"
                   onClick={() => handleViewProduct(product)}
-                >
+                  >
                   <td className="w-4 p-4">
                     <div className="flex items-center">
-                      <input 
+                      <input
                         id={`checkbox-table-search-${product.id}`} 
-                        type="checkbox" 
+                        type="checkbox"
                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                         checked={selectedProducts.includes(product.id)}
                         onChange={() => handleSelectProduct(product.id)}
@@ -488,74 +488,74 @@ const AdminProductsPage: React.FC = () => {
                       />
                       <label htmlFor={`checkbox-table-search-${product.id}`} className="sr-only">checkbox</label>
                     </div>
-                  </td>
+                    </td>
                   <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center space-x-3">
-                    <img 
+                          <img
                       src={product.images?.[0] || product.image || 'https://placehold.co/400x400/png'} 
-                      alt={product.name} 
+                            alt={product.name}
                       className="w-12 h-12 rounded-lg object-cover border" 
                     />
                     <div>
                       <div className="text-base font-semibold">{product.name}</div>
-                      <div className="text-sm text-gray-500">{product.brand}</div>
-                    </div>
+                          <div className="text-sm text-gray-500">{product.brand}</div>
+                        </div>
                   </th>
                   <td className="px-6 py-4">{product.category}</td>
                   <td className="px-6 py-4 font-semibold">{formatCurrency(product.priceVES)}</td>
                   <td className="px-6 py-4">
-                    {getStockStatusBadge(product.stock_status)}
-                  </td>
+                      {getStockStatusBadge(product.stock_status)}
+                    </td>
                   <td className="px-6 py-4">{product.sales}</td>
                   <td className="px-6 py-4">{formatDate(product.last_updated)}</td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center space-x-2">
-                       <button 
+                        <button
                         onClick={(e) => handleEditProduct(e, product.id)} 
                         className="p-2 text-gray-500 rounded-full hover:bg-blue-100 hover:text-blue-600"
                         title="Editar Producto"
                       >
                         <Edit className="w-4 h-4" />
-                      </button>
-                      <button 
+                        </button>
+                        <button
                         onClick={(e) => handleDeleteRequest(e, product)}
                         className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
                         title="Eliminar Producto"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+                        </button>
+                      </div>
+                    </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
+          {/* Pagination */}
+          {totalPages > 1 && (
           <div className="p-4 border-t flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
             <span className="text-sm text-gray-700">
               Página <span className="font-semibold">{currentPage}</span> de <span className="font-semibold">{totalPages}</span>
             </span>
-            <div className="flex items-center space-x-2">
-              <button
+              <div className="flex items-center space-x-2">
+                <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
+                  disabled={currentPage === 1}
                 className="px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Anterior
-              </button>
-              <button
+                >
+                  Anterior
+                </button>
+                <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages}
                 className="px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Siguiente
-              </button>
+                >
+                  Siguiente
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
       {showProductModal && selectedProduct && (
         <ProductModal 
