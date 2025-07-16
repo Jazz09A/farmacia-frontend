@@ -4,12 +4,10 @@ import {
   Search, 
   Filter, 
   Plus, 
-  Edit, 
   Trash2, 
   Building,
   User,
   DollarSign,
-  Eye,
   UserCheck,
   UserX,
   Download,
@@ -112,8 +110,6 @@ const AdminCustomersPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
-  const [showCustomerModal, setShowCustomerModal] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
 
   const itemsPerPage = 10;
@@ -197,11 +193,6 @@ const AdminCustomersPage: React.FC = () => {
     }
   };
 
-  const handleViewCustomer = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setShowCustomerModal(true);
-  };
-
   const handleDeleteRequest = (e: React.MouseEvent, customer: Customer) => {
     e.stopPropagation();
     setCustomerToDelete(customer);
@@ -213,13 +204,6 @@ const AdminCustomersPage: React.FC = () => {
     console.log(`Cliente ${customerToDelete.id} eliminado`);
     setCustomerToDelete(null);
   };
-
-  const handleEditCustomer = (e: React.MouseEvent, customerId: string) => {
-    e.stopPropagation();
-    // Navegar a la página de edición o abrir un modal de edición
-    console.log(`Editando cliente ${customerId}`);
-  };
-
 
   // Estadísticas
   const stats = {
@@ -456,8 +440,7 @@ const AdminCustomersPage: React.FC = () => {
             {paginatedCustomers.map((customer) => (
               <div 
                 key={customer.id} 
-                className="p-4 active:bg-gray-100"
-                onClick={() => handleViewCustomer(customer)}
+                className="p-4"
               >
                 <div className="flex items-center space-x-4">
                   <div className={`p-3 rounded-full ${customer.user_type === 'natural' ? 'bg-blue-100' : 'bg-green-100'}`}>
@@ -478,13 +461,6 @@ const AdminCustomersPage: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                        <button 
-                        onClick={(e) => handleEditCustomer(e, customer.id)} 
-                        className="p-2 text-gray-500 rounded-full hover:bg-blue-100 hover:text-blue-600"
-                        title="Editar Cliente"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button 
                         onClick={(e) => handleDeleteRequest(e, customer)}
                         className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
                         title="Eliminar Cliente"
@@ -527,8 +503,7 @@ const AdminCustomersPage: React.FC = () => {
               {paginatedCustomers.map(customer => (
                 <tr 
                   key={customer.id} 
-                  className="bg-white border-b hover:bg-gray-50 cursor-pointer"
-                  onClick={() => handleViewCustomer(customer)}
+                  className="bg-white border-b hover:bg-gray-50"
                 >
                   <td className="w-4 p-4">
                     <div className="flex items-center">
@@ -564,20 +539,6 @@ const AdminCustomersPage: React.FC = () => {
                   <td className="px-6 py-4">{formatDate(customer.created_at)}</td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center space-x-1">
-                      <button 
-                        onClick={(e) => handleViewCustomer(customer)}
-                        className="p-2 text-gray-500 rounded-full hover:bg-gray-100 hover:text-gray-600"
-                        title="Ver Detalles"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={(e) => handleEditCustomer(e, customer.id)} 
-                        className="p-2 text-gray-500 rounded-full hover:bg-blue-100 hover:text-blue-600"
-                        title="Editar Cliente"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
                       <button 
                         onClick={(e) => handleDeleteRequest(e, customer)}
                         className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
@@ -619,7 +580,6 @@ const AdminCustomersPage: React.FC = () => {
         )}
       </div>
 
-      {/* TODO: Add Customer Detail Modal */}
       {customerToDelete && (
         <ConfirmationModal
           isOpen={!!customerToDelete}
