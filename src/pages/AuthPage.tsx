@@ -51,21 +51,23 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className={`bg-white rounded-2xl shadow-xl p-8 transition-all duration-500 w-full ${
-        isLogin ? 'max-w-md' : 'max-w-4xl'
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-2 sm:p-4">
+      <div className={`bg-white rounded-xl sm:rounded-2xl shadow-xl transition-all duration-500 w-full flex flex-col ${
+        isLogin ? 'max-w-md' : 'max-w-5xl max-h-[90vh]'
       }`}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={isLogin ? 'login' : 'register'}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {renderForm()}
-          </motion.div>
-        </AnimatePresence>
+        <div className={`flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 ${isLogin ? '' : 'custom-scrollbar'}`}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={isLogin ? 'login' : 'register'}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {renderForm()}
+              </motion.div>
+            </AnimatePresence>
+        </div>
       </div>
     </div>
   );

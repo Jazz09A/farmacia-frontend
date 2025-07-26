@@ -160,57 +160,63 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
   };
   
   return (
-    <div className="w-full max-w-3xl mx-auto p-4">
-      <div className="mb-8">
-        <FormStepper steps={steps} currentStep={currentStep} />
-      </div>
+    <div className="w-full h-full flex flex-col">
+      <div className="flex-grow overflow-y-auto custom-scrollbar pr-2 sm:pr-4">
+        <div className="w-full max-w-4xl mx-auto">
+          <div className="mb-4 sm:mb-6 mt-4">
+            <FormStepper steps={steps} currentStep={currentStep} />
+          </div>
 
-      {errors.general && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 flex items-center">
-          <AlertCircle className="w-5 h-5 mr-2" />
-          <span>{errors.general[0]}</span>
+          {errors.general && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded-lg relative mb-3 sm:mb-4 flex items-center text-sm">
+              <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span>{errors.general[0]}</span>
+            </div>
+          )}
+          
+          <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 mb-4">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">{steps[currentStep - 1].title}</h3>
+                {currentStep === 1 && <Step1BasicInfo formData={formData} onChange={handleInputChange} errors={errors} />}
+                {currentStep === 2 && <Step2Representatives formData={formData} onChange={handleInputChange} errors={errors} />}
+                {currentStep === 3 && <Step3References formData={formData} onChange={handleInputChange} errors={errors} />}
+                {currentStep === 4 && <Step4AdditionalContacts formData={formData} onChange={handleInputChange} errors={errors} />}
+                {currentStep === 5 && <Step5ExtraInfo formData={formData} onChange={handleInputChange} errors={errors} />}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
-      )}
-      
-      <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">{steps[currentStep - 1].title}</h3>
-            {currentStep === 1 && <Step1BasicInfo formData={formData} onChange={handleInputChange} errors={errors} />}
-            {currentStep === 2 && <Step2Representatives formData={formData} onChange={handleInputChange} errors={errors} />}
-            {currentStep === 3 && <Step3References formData={formData} onChange={handleInputChange} errors={errors} />}
-            {currentStep === 4 && <Step4AdditionalContacts formData={formData} onChange={handleInputChange} errors={errors} />}
-            {currentStep === 5 && <Step5ExtraInfo formData={formData} onChange={handleInputChange} errors={errors} />}
-          </motion.div>
-        </AnimatePresence>
       </div>
 
-      <FormNavigation 
-        currentStep={currentStep}
-        totalSteps={steps.length}
-        isLoading={isLoading}
-        onPrevStep={prevStep}
-        onNextStep={nextStep}
-        onSubmit={handleSubmit}
-      />
+      <div className="flex-shrink-0 w-full max-w-4xl mx-auto">
+        <FormNavigation 
+          currentStep={currentStep}
+          totalSteps={steps.length}
+          isLoading={isLoading}
+          onPrevStep={prevStep}
+          onNextStep={nextStep}
+          onSubmit={handleSubmit}
+        />
 
-      <div className="text-center mt-6">
-        <p className="text-gray-600">
-          ¿Ya tienes una cuenta?{' '}
-          <button
-            type="button"
-            onClick={onSwitchToLogin}
-            className="font-medium text-blue-600 hover:text-blue-700"
-          >
-            Iniciar Sesión
-          </button>
-        </p>
+        <div className="text-center mt-3 sm:mt-4">
+          <p className="text-gray-600 text-sm">
+            ¿Ya tienes una cuenta?{' '}
+            <button
+              type="button"
+              onClick={onSwitchToLogin}
+              className="font-medium text-blue-600 hover:text-blue-700"
+            >
+              Iniciar Sesión
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -224,13 +230,13 @@ type StepProps = {
 };
 
 const Step1BasicInfo: React.FC<StepProps> = ({ formData, onChange, errors }) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
       <InputField id="company_name" label="Nombre de la Empresa" value={formData.company_name} onChange={onChange} error={errors.company_name?.[0]} required />
       <InputField id="rif" label="RIF" value={formData.rif} onChange={onChange} error={errors.rif?.[0]} required />
       <InputField id="registro_mercantil" label="Registro Mercantil" value={formData.registro_mercantil} onChange={onChange} error={errors.registro_mercantil?.[0]} required />
       <InputField id="email" label="Email" type="email" value={formData.email} onChange={onChange} error={errors.email?.[0]} required />
       <InputField id="phone" label="Teléfono Principal" type="tel" value={formData.phone} onChange={onChange} error={errors.phone?.[0]} required />
-      <div className="md:col-span-2">
+      <div className="lg:col-span-2">
         <InputField id="direccion_establecimiento" label="Dirección del Establecimiento" value={formData.direccion_establecimiento} onChange={onChange} error={errors.direccion_establecimiento?.[0]} isTextArea required />
       </div>
       <InputField id="password" label="Contraseña" type="password" value={formData.password} onChange={onChange} error={errors.password?.[0]} required />
@@ -239,43 +245,43 @@ const Step1BasicInfo: React.FC<StepProps> = ({ formData, onChange, errors }) => 
 );
 
 const Step2Representatives: React.FC<StepProps> = ({ formData, onChange, errors }) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
         <InputField id="representante_legal_nombre" label="Nombre del Representante Legal" value={formData.representante_legal_nombre} onChange={onChange} error={errors.representante_legal_nombre?.[0]} required />
         <InputField id="representante_legal_cedula" label="Cédula del Representante Legal" value={formData.representante_legal_cedula} onChange={onChange} error={errors.representante_legal_cedula?.[0]} required />
-        <div className="md:col-span-2">
+        <div className="lg:col-span-2">
             <InputField id="representantes_adicionales" label="Representantes Adicionales" value={formData.representantes_adicionales} onChange={onChange} error={errors.representantes_adicionales?.[0]} isTextArea placeholder="Nombres separados por comas (opcional)" />
         </div>
     </div>
 );
 
 const Step3References: React.FC<StepProps> = ({ formData, onChange, errors }) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
         <InputField id="referencia_comercial_proveedor" label="Referencia Comercial/Proveedor" value={formData.referencia_comercial_proveedor} onChange={onChange} error={errors.referencia_comercial_proveedor?.[0]} required />
         <InputField id="referencia_bancaria" label="Referencia Bancaria" value={formData.referencia_bancaria} onChange={onChange} error={errors.referencia_bancaria?.[0]} required />
     </div>
 );
 
 const Step4AdditionalContacts: React.FC<StepProps> = ({ formData, onChange }) => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h4 className="font-medium text-gray-800 mb-4">Información del Dueño</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border p-4 rounded-lg">
+        <h4 className="font-medium text-gray-800 mb-3 text-sm sm:text-base">Información del Dueño</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 border p-3 sm:p-4 rounded-lg">
             <InputField id="dueno_telefono" label="Teléfono" type="tel" value={formData.dueno_telefono} onChange={onChange} />
             <InputField id="dueno_email" label="Email" type="email" value={formData.dueno_email} onChange={onChange} />
             <InputField id="dueno_cumpleanos" label="Cumpleaños" type="date" value={formData.dueno_cumpleanos} onChange={onChange} />
         </div>
       </div>
       <div>
-        <h4 className="font-medium text-gray-800 mb-4">Encargado de Compra</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border p-4 rounded-lg">
+        <h4 className="font-medium text-gray-800 mb-3 text-sm sm:text-base">Encargado de Compra</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 border p-3 sm:p-4 rounded-lg">
             <InputField id="encargado_compra_telefono" label="Teléfono" type="tel" value={formData.encargado_compra_telefono} onChange={onChange} />
             <InputField id="encargado_compra_email" label="Email" type="email" value={formData.encargado_compra_email} onChange={onChange} />
             <InputField id="encargado_compra_cumpleanos" label="Cumpleaños" type="date" value={formData.encargado_compra_cumpleanos} onChange={onChange} />
         </div>
       </div>
       <div>
-        <h4 className="font-medium text-gray-800 mb-4">Encargado de Cobranza</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border p-4 rounded-lg">
+        <h4 className="font-medium text-gray-800 mb-3 text-sm sm:text-base">Encargado de Cobranza</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 border p-3 sm:p-4 rounded-lg">
             <InputField id="encargado_cobranza_telefono" label="Teléfono" type="tel" value={formData.encargado_cobranza_telefono} onChange={onChange} />
             <InputField id="encargado_cobranza_email" label="Email" type="email" value={formData.encargado_cobranza_email} onChange={onChange} />
             <InputField id="encargado_cobranza_cumpleanos" label="Cumpleaños" type="date" value={formData.encargado_cobranza_cumpleanos} onChange={onChange} />
@@ -285,15 +291,15 @@ const Step4AdditionalContacts: React.FC<StepProps> = ({ formData, onChange }) =>
 );
 
 const Step5ExtraInfo: React.FC<StepProps> = ({ formData, onChange, errors }) => (
-    <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-4 sm:space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
             <InputField id="redes_sociales" label="Redes Sociales" value={formData.redes_sociales} onChange={onChange} error={errors.redes_sociales?.[0]} placeholder="@farmacia_xyz" />
             <InputField id="pagina_web" label="Página Web" type="url" value={formData.pagina_web} onChange={onChange} error={errors.pagina_web?.[0]} placeholder="https://www.farmacia.com" />
             <InputField id="codigo_sicm" label="Código SICM" value={formData.codigo_sicm} onChange={onChange} error={errors.codigo_sicm?.[0]} placeholder="SICM123456" />
         </div>
-        <div className="bg-blue-50 text-blue-800 p-4 rounded-lg text-center">
-            <p className="font-semibold">¡Casi listo!</p>
-            <p className="text-sm">Revisa que toda la información sea correcta antes de finalizar.</p>
+        <div className="bg-blue-50 text-blue-800 p-3 sm:p-4 rounded-lg text-center">
+            <p className="font-semibold text-sm sm:text-base">¡Casi listo!</p>
+            <p className="text-xs sm:text-sm">Revisa que toda la información sea correcta antes de finalizar.</p>
         </div>
     </div>
 );
