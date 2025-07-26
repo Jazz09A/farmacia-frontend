@@ -110,6 +110,24 @@ class AuthService {
     }
   }
 
+  // Obtener datos del usuario autenticado
+  async getMe(): Promise<User | null> {
+    try {
+      const response = await this.authenticatedFetch(`${this.baseUrl}/me`);
+      if (!response.ok) {
+        this.logout();
+        return null;
+      }
+      const userData = await response.json();
+      this.setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      this.logout();
+      return null;
+    }
+  }
+
   // Logout
   logout(): void {
     this.removeToken();

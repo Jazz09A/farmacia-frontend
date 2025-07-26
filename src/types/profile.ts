@@ -1,3 +1,5 @@
+import { User } from './auth';
+
 // Tipos para el sistema de perfil de usuario - Solo usuarios jurídicos
 export enum UserRole {
   SUPER_ADMIN = 'super_admin',
@@ -9,34 +11,7 @@ export enum UserType {
   JURIDICO = 'juridico'
 }
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  user_type: UserType;
-  user_role: UserRole;
-  created_at: string;
-  last_login: string;
-  profile_data: JuridicoProfile;
-}
-
-export interface JuridicoProfile {
-  company_name: string;
-  rif: string;
-  registro_mercantil: string;
-  phone: string;
-  preferred_currency: 'VES' | 'USD';
-  direccion_establecimiento: string;
-  representante_legal_nombre: string;
-  representante_legal_cedula: string;
-  avatar?: string;
-  // Contactos adicionales
-  dueno_nombre?: string;
-  dueno_telefono?: string;
-  dueno_email?: string;
-  encargado_compra_nombre?: string;
-  encargado_compra_telefono?: string;
-  encargado_compra_email?: string;
-}
+// Eliminamos UserProfile y JuridicoProfile para usar el tipo User de auth.ts
 
 // Tipos para pedidos
 export interface Order {
@@ -169,7 +144,7 @@ export interface ChangePasswordForm {
   confirm_password: string;
 }
 
-export interface SupportForm {
+export type SupportForm = {
   subject: string;
   category: string;
   priority: string;

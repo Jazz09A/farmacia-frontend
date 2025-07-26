@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  User, 
+  User as UserIcon, 
   Package, 
   Gift, 
   Bell, 
@@ -19,41 +19,31 @@ import {
   Mail,
   MapPin,
   Building,
-  Calendar
+  Calendar,
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import type { 
-  UserProfile, 
   Order, 
   UserPromotion, 
   UserNotification, 
-  SupportTicket,
-  JuridicoProfile 
+  SupportTicket 
 } from '../types/profile';
-
-// Importar datos mock
-import { 
-  mockUserProfile, 
-  mockOrders, 
-  mockPromotions, 
-  mockNotifications, 
-  mockSupportTickets,
-  mockUserStats 
-} from '../data/profileMockData';
+import { User } from '../types/auth';
 
 type TabType = 'cuenta' | 'pedidos' | 'promociones' | 'notificaciones' | 'soporte';
 
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('cuenta');
-  const [profile] = useState<UserProfile>(mockUserProfile);
-  const [orders] = useState<Order[]>(mockOrders);
-  const [promotions] = useState<UserPromotion[]>(mockPromotions);
-  const [notifications] = useState<UserNotification[]>(mockNotifications);
-  const [supportTickets] = useState<SupportTicket[]>(mockSupportTickets);
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  
+  const [orders] = useState<Order[]>([]);
+  const [promotions] = useState<UserPromotion[]>([]);
+  const [notifications] = useState<UserNotification[]>([]);
+  const [supportTickets] = useState<SupportTicket[]>([]);
 
   const tabs = [
-    { id: 'cuenta', label: 'Mi Cuenta', icon: User, count: null },
+    { id: 'cuenta', label: 'Mi Cuenta', icon: UserIcon, count: null },
     { id: 'pedidos', label: 'Pedidos', icon: Package, count: orders.length },
     { id: 'promociones', label: 'Promociones', icon: Gift, count: promotions.filter(p => !p.is_used).length },
     { id: 'notificaciones', label: 'Notificaciones', icon: Bell, count: notifications.filter(n => !n.is_read).length },
@@ -61,6 +51,7 @@ const ProfilePage: React.FC = () => {
   ];
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'Fecha no disponible**';
     return new Date(dateString).toLocaleDateString('es-VE', {
       year: 'numeric',
       month: 'long',
@@ -76,6 +67,14 @@ const ProfilePage: React.FC = () => {
     return formatters[currency].format(amount);
   };
 
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-medical-blue-500 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-medical-gray-50 pt-32 pb-16">
       <div className="medical-container">
@@ -89,24 +88,21 @@ const ProfilePage: React.FC = () => {
             {/* Avatar y info básica */}
             <div className="flex items-center gap-6">
               <div className="w-20 h-20 bg-medical-blue-gradient rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                {profile.user_type === 'juridico' 
-                  ? (profile.profile_data as JuridicoProfile).company_name.charAt(0)
+                {user.user_type === 'juridico' && user.company_name
+                  ? user.company_name.charAt(0).toUpperCase()
                   : 'U'
                 }
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-medical-gray-900">
-                  {profile.user_type === 'juridico' 
-                    ? (profile.profile_data as JuridicoProfile).company_name
-                    : 'Usuario'
-                  }
+                  {user.company_name || 'Usuario'}
                 </h1>
-                <p className="text-medical-gray-600">{profile.email}</p>
+                <p className="text-medical-gray-600">{user.email}</p>
                 <div className="flex items-center gap-4 mt-2">
                   <span className="text-sm text-medical-gray-500">
-                    Miembro desde {formatDate(profile.created_at)}
+                    Miembro desde {formatDate(user.created_at)}
                   </span>
-                  {profile.user_role === 'admin' && (
+                  {user.user_type === 'admin' && (
                     <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
                       Administrador
                     </span>
@@ -115,24 +111,24 @@ const ProfilePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Estadísticas rápidas */}
+            {/* Estadísticas rápidas (datos de ejemplo) */}
             <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-4 lg:ml-8">
               <div className="text-center p-4 bg-medical-blue-50 rounded-xl">
-                <div className="text-2xl font-bold text-medical-blue-700">{mockUserStats.total_orders}</div>
+                <div className="text-2xl font-bold text-medical-blue-700">0**</div>
                 <div className="text-sm text-medical-gray-600">Pedidos</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-xl">
                 <div className="text-2xl font-bold text-green-700">
-                  {formatCurrency(mockUserStats.total_spent, mockUserStats.currency)}
+                  {formatCurrency(0, user.preferred_currency || 'VES')}**
                 </div>
                 <div className="text-sm text-medical-gray-600">Total gastado</div>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-xl">
-                <div className="text-2xl font-bold text-purple-700">{mockUserStats.loyalty_points}</div>
+                <div className="text-2xl font-bold text-purple-700">0**</div>
                 <div className="text-sm text-medical-gray-600">Puntos</div>
               </div>
               <div className="text-center p-4 bg-orange-50 rounded-xl">
-                <div className="text-2xl font-bold text-orange-700">{mockUserStats.unread_notifications}</div>
+                <div className="text-2xl font-bold text-orange-700">0**</div>
                 <div className="text-sm text-medical-gray-600">Notificaciones</div>
               </div>
             </div>
@@ -184,7 +180,7 @@ const ProfilePage: React.FC = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            {activeTab === 'cuenta' && <AccountSection profile={profile} />}
+            {activeTab === 'cuenta' && <AccountSection user={user} />}
             {activeTab === 'pedidos' && <OrdersSection orders={orders} />}
             {activeTab === 'promociones' && <PromotionsSection promotions={promotions} />}
             {activeTab === 'notificaciones' && <NotificationsSection notifications={notifications} />}
@@ -197,8 +193,7 @@ const ProfilePage: React.FC = () => {
 };
 
 // Componente para la sección de cuenta
-const AccountSection: React.FC<{ profile: UserProfile }> = ({ profile }) => {
-  const profileData = profile.profile_data as JuridicoProfile;
+const AccountSection: React.FC<{ user: User }> = ({ user }) => {
 
   return (
     <div className="space-y-8">
@@ -206,7 +201,7 @@ const AccountSection: React.FC<{ profile: UserProfile }> = ({ profile }) => {
       <div className="bg-white rounded-2xl shadow-soft p-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-medical-gray-900 flex items-center gap-2">
-            <User className="w-5 h-5" />
+            <UserIcon className="w-5 h-5" />
             Información de la Cuenta
           </h2>
           <button className="btn-medical-secondary">
@@ -221,21 +216,21 @@ const AccountSection: React.FC<{ profile: UserProfile }> = ({ profile }) => {
               <Building className="w-5 h-5 text-medical-gray-500" />
               <div>
                 <div className="text-sm text-medical-gray-500">Empresa</div>
-                <div className="font-semibold">{profileData.company_name}</div>
+                <div className="font-semibold">{user.company_name || 'Nombre de Empresa**'}</div>
               </div>
             </div>
             <div className="flex items-center gap-3 p-4 bg-medical-gray-50 rounded-xl">
               <Mail className="w-5 h-5 text-medical-gray-500" />
               <div>
                 <div className="text-sm text-medical-gray-500">Email</div>
-                <div className="font-semibold">{profile.email}</div>
+                <div className="font-semibold">{user.email}</div>
               </div>
             </div>
             <div className="flex items-center gap-3 p-4 bg-medical-gray-50 rounded-xl">
               <Phone className="w-5 h-5 text-medical-gray-500" />
               <div>
                 <div className="text-sm text-medical-gray-500">Teléfono</div>
-                <div className="font-semibold">{profileData.phone}</div>
+                <div className="font-semibold">{user.phone || 'Teléfono no disponible**'}</div>
               </div>
             </div>
           </div>
@@ -244,21 +239,21 @@ const AccountSection: React.FC<{ profile: UserProfile }> = ({ profile }) => {
               <CreditCard className="w-5 h-5 text-medical-gray-500" />
               <div>
                 <div className="text-sm text-medical-gray-500">RIF</div>
-                <div className="font-semibold">{profileData.rif}</div>
+                <div className="font-semibold">{user.rif || 'RIF no disponible**'}</div>
               </div>
             </div>
             <div className="flex items-center gap-3 p-4 bg-medical-gray-50 rounded-xl">
               <Shield className="w-5 h-5 text-medical-gray-500" />
               <div>
                 <div className="text-sm text-medical-gray-500">Representante Legal</div>
-                <div className="font-semibold">{profileData.representante_legal_nombre}</div>
+                <div className="font-semibold">{user.representante_legal_nombre || 'No disponible**'}</div>
               </div>
             </div>
             <div className="flex items-center gap-3 p-4 bg-medical-gray-50 rounded-xl">
               <MapPin className="w-5 h-5 text-medical-gray-500" />
               <div>
                 <div className="text-sm text-medical-gray-500">Dirección</div>
-                <div className="font-semibold text-sm">{profileData.direccion_establecimiento}</div>
+                <div className="font-semibold text-sm">{user.direccion_establecimiento || 'No disponible**'}</div>
               </div>
             </div>
           </div>
@@ -281,15 +276,15 @@ const AccountSection: React.FC<{ profile: UserProfile }> = ({ profile }) => {
           <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
             <CheckCircle className="w-5 h-5 text-green-600" />
             <div>
-              <div className="font-semibold text-green-800">Cuenta verificada</div>
-              <div className="text-sm text-green-600">Tu cuenta ha sido verificada y está activa</div>
+              <div className="font-semibold text-green-800">Cuenta {user.is_verified ? 'verificada' : 'no verificada'}</div>
+              <div className="text-sm text-green-600">Tu cuenta está {user.is_active ? 'activa' : 'inactiva'}</div>
             </div>
           </div>
           <div className="flex items-center gap-3 p-4 bg-medical-gray-50 rounded-xl">
             <Calendar className="w-5 h-5 text-medical-gray-500" />
             <div>
               <div className="text-sm text-medical-gray-500">Último acceso</div>
-              <div className="font-semibold">{new Date(profile.last_login).toLocaleString('es-VE')}</div>
+              <div className="font-semibold">{user.last_login ? new Date(user.last_login).toLocaleString('es-VE') : 'No registrado**'}</div>
             </div>
           </div>
         </div>
@@ -563,7 +558,7 @@ const NotificationsSection: React.FC<{ notifications: UserNotification[] }> = ({
       order_shipped: Package,
       order_delivered: CheckCircle,
       promotion_available: Gift,
-      account_update: User,
+      account_update: UserIcon,
       system_message: Bell,
       payment_received: CreditCard,
       low_stock_alert: AlertTriangle

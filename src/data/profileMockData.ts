@@ -9,33 +9,7 @@ import type {
   JuridicoProfile
 } from '../types/profile';
 
-// Usuario de prueba - Farmacia normal
-export const mockUserProfile: UserProfile = {
-  id: 'user_001',
-  email: 'farmacia.central@email.com',
-  user_type: 'juridico',
-  is_admin: false,
-  created_at: '2024-01-15T10:00:00Z',
-  last_login: '2024-12-10T14:30:00Z',
-  profile_data: {
-    company_name: 'Farmacia Central San José',
-    rif: 'J-40123456-7',
-    registro_mercantil: 'RM-2024-001234',
-    phone: '+58 212-555-0123',
-    preferred_currency: 'VES',
-    direccion_establecimiento: 'Av. Principal, Centro Comercial Plaza Mayor, Local 15, Caracas, Venezuela',
-    representante_legal_nombre: 'María Elena González',
-    representante_legal_cedula: 'V-12345678',
-    dueno_nombre: 'Carlos González',
-    dueno_telefono: '+58 414-555-0124',
-    dueno_email: 'carlos.gonzalez@farmaciacentral.com',
-    encargado_compra_nombre: 'Ana Rodríguez',
-    encargado_compra_telefono: '+58 424-555-0125',
-    encargado_compra_email: 'compras@farmaciacentral.com'
-  } as JuridicoProfile
-};
 
-// Usuario administrador
 export const mockAdminProfile: UserProfile = {
   id: 'admin_001',
   email: 'admin@farmaplus.com',

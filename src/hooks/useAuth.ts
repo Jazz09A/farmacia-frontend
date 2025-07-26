@@ -7,14 +7,25 @@ export const useAuth = (): AuthContextType => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Inicializar estado desde localStorage
+  // Inicializar estado y verificar sesión
   useEffect(() => {
-    const savedUser = authService.getCurrentUser();
-    const savedToken = authService.getCurrentToken();
-    
-    setUser(savedUser);
-    setToken(savedToken);
-    setIsLoading(false);
+    const checkUserSession = async () => {
+      const savedToken = authService.getCurrentToken();
+      if (savedToken) {
+        setToken(savedToken);
+        const userData = await authService.getMe();
+        if (userData) {
+          setUser(userData);
+        } else {
+          // Token inválido o sesión expirada
+          authService.logout();
+          setToken(null);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkUserSession();
   }, []);
 
   // Computed property para isAuthenticated
@@ -29,11 +40,14 @@ export const useAuth = (): AuthContextType => {
       console.log('🔐 useAuth: Login response:', response);
       
       if (response.success && response.data) {
-        console.log('🔐 useAuth: Login successful, setting user and token');
-        console.log('🔐 useAuth: User data:', response.data.user);
-        console.log('🔐 useAuth: Token received:', response.data.token ? 'YES' : 'NO');
-        setUser(response.data.user);
         setToken(response.data.token);
+        // Después del login, obtener los datos del usuario
+        const userData = await authService.getMe();
+        if (userData) {
+          setUser(userData);
+        }
+        // Devolver la respuesta original del login
+        return { ...response, data: { ...response.data, user: userData! } };
       } else {
         console.log('🔐 useAuth: Login failed:', response.message);
       }

@@ -56,6 +56,7 @@ export interface User {
   is_verified: boolean;
   created_at: string;
   updated_at: string;
+  last_login?: string;
   
   // Datos jurídicos (opcionales)
   company_name?: string;
