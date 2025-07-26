@@ -21,12 +21,14 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { LoginData } from '../types/auth';
 import JuridicoRegisterForm from '../components/Auth/JuridicoRegisterForm';
+import { useWindowSize } from '../hooks/useWindowSize';
 
 type AuthMode = 'login' | 'register';
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { height } = useWindowSize();
   
   const [mode, setMode] = useState<AuthMode>('login');
   const [isLoading, setIsLoading] = useState(false);
@@ -138,10 +140,10 @@ const AuthPage: React.FC = () => {
       className="w-full max-w-md mx-auto"
     >
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-r from-medical-primary to-medical-accent rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 bg-medical-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Building className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-medical-primary to-medical-accent bg-clip-text text-transparent">
+        <h2 className="text-3xl font-bold text-gray-800">
           Iniciar Sesión
         </h2>
         <p className="text-gray-600 mt-2">
@@ -227,7 +229,7 @@ const AuthPage: React.FC = () => {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-gradient-to-r from-medical-primary to-medical-primary-dark text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg hover:shadow-medical-primary/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-full bg-medical-primary text-white py-3 px-6 rounded-lg font-semibold hover:bg-medical-primary-dark transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
           {isLoading ? (
             <>
@@ -258,176 +260,120 @@ const AuthPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
-      <div className="w-full flex">
-        {/* Left Panel - Por qué registrarse (Fondo azul médico) */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-medical-primary via-medical-primary-dark to-medical-accent relative overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-            }} />
-          </div>
-
-          <div className="relative z-10 flex flex-col justify-center p-12 text-white">
-            <div className="max-w-lg">
-              {/* Logo/Icon */}
-              <div className="mb-8">
-                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
-                  <Building className="w-10 h-10 text-white" />
+    <div 
+      className="bg-white flex flex-col lg:flex-row"
+      style={{ height: height > 720 ? height : 'auto' }}
+    >
+      {/* Columna Izquierda - Formularios */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 lg:p-12 order-2 lg:order-1 overflow-y-auto">
+        <div className="w-full max-w-2xl">
+          <AnimatePresence mode="wait">
+            {mode === 'login' && (
+              <motion.div
+                key="login"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {renderLoginForm()}
+              </motion.div>
+            )}
+            {mode === 'register' && (
+              <motion.div
+                key="register"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="w-full"
+              >
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-medical-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Building className="w-8 h-8 text-white" />
+                  </div>
+                  <h2 className="text-3xl font-bold text-gray-800">
+                    Registro de Farmacia
+                  </h2>
+                  <p className="text-gray-600 mt-2">
+                    Únete a nuestra red de farmacias asociadas
+                  </p>
                 </div>
-                <h1 className="text-4xl font-bold mb-2">FarmaPlus</h1>
-                <p className="text-xl text-white/90">
-                  La plataforma líder para farmacias en Venezuela
-                </p>
-              </div>
-
-              {/* Beneficios principales */}
-              <div className="space-y-6 mb-8">
-                <h2 className="text-2xl font-bold mb-6">
-                  ¿Por qué unirse a FarmaPlus?
-                </h2>
                 
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
-                      <TrendingUp className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1">Aumenta tus ventas</h3>
-                      <p className="text-white/80 text-sm">
-                        Accede a miles de productos farmacéuticos con precios preferenciales exclusivos para farmacias asociadas.
-                      </p>
-                    </div>
-                  </div>
+                <JuridicoRegisterForm 
+                  onSuccess={handleRegistrationSuccess}
+                  onSwitchToLogin={handleSwitchToLogin}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
 
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Shield className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1">Garantía de calidad</h3>
-                      <p className="text-white/80 text-sm">
-                        Todos nuestros productos cuentan con registro sanitario INVIMA y cadena de frío certificada.
-                      </p>
-                    </div>
-                  </div>
+      {/* Columna Derecha - Branding */}
+      <div className="w-full lg:w-1/2 bg-medical-primary relative overflow-hidden order-1 lg:order-2 min-h-[40vh] lg:min-h-screen flex items-center justify-center">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }} />
+        </div>
 
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1">Entrega rápida</h3>
-                      <p className="text-white/80 text-sm">
-                        Despacho en 24-48 horas a nivel nacional con seguimiento en tiempo real de tus pedidos.
-                      </p>
-                    </div>
-                  </div>
+        <div className="relative z-10 flex flex-col justify-center p-12 text-white text-center lg:text-left">
+          <div className="max-w-lg mx-auto">
+            <div className="mb-8">
+              <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 mx-auto lg:mx-0">
+                <Building className="w-10 h-10 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold mb-2">FarmaPlus</h1>
+              <p className="text-xl text-white/90">
+                La plataforma líder para farmacias en Venezuela
+              </p>
+            </div>
 
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Users className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1">Soporte especializado</h3>
-                      <p className="text-white/80 text-sm">
-                        Representante comercial asignado y soporte técnico 24/7 especializado en farmacias.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Award className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1">Beneficios exclusivos</h3>
-                      <p className="text-white/80 text-sm">
-                        Crédito comercial, descuentos por volumen, facturación empresarial y programas de fidelidad.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
-                      <HeartHandshake className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1">Red de farmacias</h3>
-                      <p className="text-white/80 text-sm">
-                        Únete a más de 500+ farmacias en toda Venezuela que confían en nuestra plataforma.
-                      </p>
-                    </div>
-                  </div>
+            <div className="space-y-4 mb-8 text-left">
+              <div className="flex items-start space-x-4">
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Aumenta tus ventas</h3>
                 </div>
               </div>
-
-              {/* Estadísticas */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-                <h3 className="font-bold text-lg mb-4 text-center">Estadísticas que nos respaldan</h3>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold">500+</div>
-                    <div className="text-sm text-white/80">Farmacias</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold">50K+</div>
-                    <div className="text-sm text-white/80">Productos</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold">98%</div>
-                    <div className="text-sm text-white/80">Satisfacción</div>
-                  </div>
+              <div className="flex items-start space-x-4">
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Garantía de calidad</h3>
+                </div>
+              </div>
+              <div className="flex items-start space-x-4">
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Entrega rápida y segura</h3>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Right Panel - Formularios */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
-          <div className="w-full max-w-2xl">
-            <AnimatePresence mode="wait">
-              {mode === 'login' && (
-                <motion.div
-                  key="login"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {renderLoginForm()}
-                </motion.div>
-              )}
-              {mode === 'register' && (
-                <motion.div
-                  key="register"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full"
-                >
-                  <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-gradient-to-r from-medical-primary to-medical-accent rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Building className="w-8 h-8 text-white" />
-                    </div>
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-medical-primary to-medical-accent bg-clip-text text-transparent">
-                      Registro de Farmacia
-                    </h2>
-                    <p className="text-gray-600 mt-2">
-                      Únete a nuestra red de farmacias asociadas
-                    </p>
-                  </div>
-                  
-                  <JuridicoRegisterForm 
-                    onSuccess={handleRegistrationSuccess}
-                    onSwitchToLogin={handleSwitchToLogin}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+              <h3 className="font-bold text-lg mb-4 text-center">Únete a más de <span className="text-green-300">500+ farmacias</span></h3>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold">50K+</div>
+                  <div className="text-sm text-white/80">Productos</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">24/7</div>
+                  <div className="text-sm text-white/80">Soporte</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">98%</div>
+                  <div className="text-sm text-white/80">Satisfacción</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

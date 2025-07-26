@@ -9,6 +9,8 @@ import { Footer } from './components/Footer/Footer';
 import { PageLayout } from './components/Layout/PageLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
+import AdminRoute from './components/Admin/AdminRoute';
+
 
 // Pages with Lazy Loading
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -36,7 +38,6 @@ const AdminCustomersPage = lazy(() => import('./pages/Admin/AdminCustomersPage')
 const AdminProductsPage = lazy(() => import('./pages/Admin/AdminProductsPage'));
 const AdminEditProductPage = lazy(() => import('./pages/Admin/AdminEditProductPage'));
 const AdminAnalyticsPage = lazy(() => import('./pages/Admin/AdminAnalyticsPage'));
-import AdminRoute from './components/Admin/AdminRoute';
 
 // Hooks
 import { useCart } from './hooks/useCart';
@@ -46,46 +47,81 @@ import { useCurrency } from './hooks/useCurrency';
 // Contexts
 import { ScrollProvider, useScrollContext } from './contexts/ScrollContext';
 
-// Component to conditionally render Navbar and Footer with automatic spacing
-const ConditionalLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+
+const AppLayout = () => {
+  const { isScrolled, showScrollTop, cart, currency } = useApp();
   const location = useLocation();
+  
+  const isAuthRoute = location.pathname.startsWith('/auth');
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  if (isAuthRoute || isAdminRoute) {
+    return (
+      <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando...</div>}>
+        <Routes>
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/admin/*" element={<AdminRoutes />} />
+        </Routes>
+      </Suspense>
+    );
+  }
 
   return (
     <>
-      <div className={!isAdminRoute ? 'flex-1 flex flex-col w-full max-w-full' : ''}>
+      <Navbar
+        isScrolled={isScrolled}
+        cartItemsCount={cart.totalItems}
+        onCartOpen={() => cart.setIsOpen(true)}
+        currency={currency.currency}
+        onCurrencyToggle={currency.toggleCurrency}
+      />
+      <div className="flex-1 flex flex-col w-full max-w-full">
         <PageLayout>
-          {children}
+          <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando...</div>}>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/catalog" element={<CatalogPage />} />
+              <Route path="/product/:id" element={<ProductDetailPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="/tracking" element={<TrackingPage />} />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/blog/:slug" element={<BlogPostDetailPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </PageLayout>
       </div>
-      {!isAdminRoute && <Footer />}
+      <Footer />
+      <OptimizedScrollToTopButton showScrollTop={showScrollTop} />
     </>
   );
 };
 
-// Component for Navbar with conditional rendering
-const ConditionalNavbar: React.FC<{
-  isScrolled: boolean;
-  cartItemsCount: number;
-  onCartOpen: () => void;
-  currency: 'VES' | 'REF';
-  onCurrencyToggle: () => void;
-}> = ({ isScrolled, cartItemsCount, onCartOpen, currency, onCurrencyToggle }) => {
-  const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
 
-  if (isAdminRoute) return null;
+// Hook personalizado para evitar pasar props repetidamente
+const useApp = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  
+  const cart = useCart();
+  const currency = useCurrency();
 
-  return (
-    <Navbar
-      isScrolled={isScrolled}
-      cartItemsCount={cartItemsCount}
-      onCartOpen={onCartOpen}
-      currency={currency}
-      onCurrencyToggle={onCurrencyToggle}
-    />
-  );
-};
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      setIsScrolled(scrollY > 100);
+      setShowScrollTop(scrollY > 500);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return { isScrolled, showScrollTop, cart, currency };
+}
+
 
 // Optimized component for scroll button to avoid re-renders
 const OptimizedScrollToTopButton: React.FC<{
@@ -122,83 +158,38 @@ const OptimizedScrollToTopButton: React.FC<{
 
 OptimizedScrollToTopButton.displayName = 'OptimizedScrollToTopButton';
 
+const AdminRoutes = () => (
+  <AdminRoute>
+    <AdminLayout>
+      <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando...</div>}>
+        <Routes>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="customers" element={<AdminCustomersPage />} />
+          <Route path="products" element={<AdminProductsPage />} />
+          <Route path="products/edit/:id" element={<AdminEditProductPage />} />
+          <Route path="analytics" element={<AdminAnalyticsPage />} />
+          <Route path="blog" element={<AdminBlogPage />} />
+          <Route path="blog/new" element={<CreateBlogPostPage />} />
+          <Route path="blog/edit/:id" element={<EditBlogPostPage />} />
+        </Routes>
+      </Suspense>
+    </AdminLayout>
+  </AdminRoute>
+);
+
 function App() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  
-  const cart = useCart();
-  const currency = useCurrency();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 100);
-      setShowScrollTop(window.scrollY > 500);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    // <AuthProvider>
-      <Router>
-        <ScrollProvider>
-          <ScrollToTop />
-          <div className="App min-h-screen w-full flex flex-col bg-medical-gray-50 relative">
-          <ConditionalNavbar
-            isScrolled={isScrolled}
-            cartItemsCount={cart.totalItems}
-            onCartOpen={() => cart.setIsOpen(true)}
-            currency={currency.currency}
-            onCurrencyToggle={currency.toggleCurrency}
-          />
-          
-          <ConditionalLayout>
-            <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando...</div>}>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/catalog" element={<CatalogPage />} />
-                <Route path="/product/:id" element={<ProductDetailPage />} />
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-                <Route path="/tracking" element={<TrackingPage />} />
-
-                {/* Blog Routes */}
-                <Route path="/blog" element={<BlogPage />} />
-                <Route path="/blog/:slug" element={<BlogPostDetailPage />} />
-
-                {/* Admin Panel Routes */}
-                <Route path="/admin" element={<AdminRoute />}>
-                  <Route element={<AdminLayout />}>
-                    <Route index element={<Navigate to="dashboard" replace />} />
-                    <Route path="dashboard" element={<AdminDashboardPage />} />
-                    <Route path="orders" element={<AdminOrdersPage />} />
-                    <Route path="customers" element={<AdminCustomersPage />} />
-                    <Route path="products" element={<AdminProductsPage />} />
-                    <Route path="products/edit/:id" element={<AdminEditProductPage />} />
-                    <Route path="analytics" element={<AdminAnalyticsPage />} />
-
-                    {/* Blog Admin Routes */}
-                    <Route path="blog" element={<AdminBlogPage />} />
-                    <Route path="blog/new" element={<CreateBlogPostPage />} />
-                    <Route path="blog/edit/:id" element={<EditBlogPostPage />} />
-                  </Route>
-                </Route>
-              </Routes>
-            </Suspense>
-          </ConditionalLayout>
-        
-          {/* Global Scroll to Top Button - Solo en páginas que no son admin */}
-          <OptimizedScrollToTopButton showScrollTop={showScrollTop} />
+    <Router>
+      <ScrollProvider>
+        <ScrollToTop />
+        <div className="App min-h-screen w-full flex flex-col bg-medical-gray-50 relative">
+          <AppLayout />
         </div>
-        </ScrollProvider>
-      </Router>
-    // </AuthProvider>
+      </ScrollProvider>
+    </Router>
   );
 }
-
-
 
 export default App;

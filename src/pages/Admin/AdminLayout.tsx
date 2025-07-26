@@ -210,7 +210,11 @@ const AdminHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => 
 };
 
 
-const AdminLayout: React.FC = () => {
+interface AdminLayoutProps {
+  children?: React.ReactNode;
+}
+
+const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -238,10 +242,8 @@ const AdminLayout: React.FC = () => {
       
       <div className="flex-1 flex flex-col min-w-0">
         <AdminHeader onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          <div className="max-w-7xl mx-auto">
-            <Outlet />
-          </div>
+        <main className="flex-1 p-6 bg-gray-50 overflow-y-auto">
+          {children || <Outlet />}
         </main>
       </div>
     </div>
