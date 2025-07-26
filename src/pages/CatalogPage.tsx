@@ -2,9 +2,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, Grid, List, Star, Heart, ShoppingCart, AlertCircle, Pill, Stethoscope, Shield, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Product, SearchFilters } from '../types';
-import { mockProducts, medicalCategories, medicalConditions } from '../data/mockData';
+import { medicalCategories, medicalConditions } from '../data/mockData';
+import { getProductsPaginated } from '../data/products';
 import { useCart } from '../hooks/useCart';
 import { ProductCardSkeleton, SkeletonBase } from '../components/Skeleton';
+import Pagination from '../components/common/Pagination';
 
 
 const CatalogPage: React.FC = () => {
@@ -13,6 +15,11 @@ const CatalogPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [productsPerPage] = useState(8);
   const cart = useCart();
   
   const [filters, setFilters] = useState<SearchFilters>({
@@ -28,14 +35,39 @@ const CatalogPage: React.FC = () => {
     sortOrder: 'asc'
   });
 
-  // Initial loading simulation
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  // Función para cargar productos paginados
+  const loadProducts = async (page: number = 1) => {
+    setIsLoading(true);
+    try {
+      const response = await getProductsPaginated(page, productsPerPage);
+      console.log('Pagination response:', response);
+      setProducts(response.products);
+      setTotalPages(response.totalPages);
+      setTotalProducts(response.total);
+      setCurrentPage(response.page);
+      console.log('Pagination state updated:', {
+        currentPage: response.page,
+        totalPages: response.totalPages,
+        totalProducts: response.total
+      });
+    } catch (error) {
+      console.error('Error loading products:', error);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
+  };
 
-    return () => clearTimeout(timer);
+  // Initial loading
+  useEffect(() => {
+    loadProducts(1);
   }, []);
+
+  // Manejar cambio de página
+  const handlePageChange = (page: number) => {
+    loadProducts(page);
+    // Scroll to top cuando cambie de página
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Filter change loading simulation
   useEffect(() => {
@@ -47,7 +79,7 @@ const CatalogPage: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [searchTerm, filters, isLoading]);
+  }, [searchTerm, filters]);
 
   // Icono dinámico para categorías
   const getCategoryIcon = (iconName: string) => {
@@ -61,9 +93,9 @@ const CatalogPage: React.FC = () => {
     return icons[iconName] || <Pill className="w-5 h-5" />;
   };
 
-  // Filtrar y ordenar productos
+  // Filtrar y ordenar productos (ahora aplicado sobre los productos paginados)
   const filteredProducts = useMemo(() => {
-    let filtered = mockProducts.filter(product => {
+    let filtered = products.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            product.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -106,7 +138,7 @@ const CatalogPage: React.FC = () => {
     });
 
     return filtered;
-  }, [searchTerm, filters]);
+  }, [products, searchTerm, filters]);
 
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat('es-VE', {
@@ -395,7 +427,7 @@ const CatalogPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
                 <div className="flex items-center gap-4">
                   <p className="text-gray-600">
-                    {filteredProducts.length} productos encontrados
+                    {totalProducts} productos encontrados
                   </p>
                 </div>
                 
@@ -497,6 +529,28 @@ const CatalogPage: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {/* Paginación */}
+              {/* Debug: Mostrar información de paginación */}
+              <div className="mt-4 p-4 bg-yellow-100 rounded-lg text-sm">
+                <p>Debug Paginación:</p>
+                <p>Current Page: {currentPage}</p>
+                <p>Total Pages: {totalPages}</p>
+                <p>Total Products: {totalProducts}</p>
+                <p>Products Length: {products.length}</p>
+                <p>Products per page: {productsPerPage}</p>
+                <p>Should show pagination: {totalPages > 1 ? 'YES' : 'NO'}</p>
+              </div>
+              
+              {/* Mostrar paginación siempre para testing */}
+              <div className="mt-6">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={totalProducts}
+                  onPageChange={handlePageChange}
+                />
+              </div>
             </div>
           </div>
         </div>

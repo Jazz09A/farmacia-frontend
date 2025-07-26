@@ -27,6 +27,13 @@ export default defineConfig({
   server: {
     allowedHosts: ['plymouth-adjacent-tuner-absolute.trycloudflare.com'],
     host: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   build: {
     target: 'es2018',
