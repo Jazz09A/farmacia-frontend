@@ -134,10 +134,8 @@ const AdminHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => 
 
   const getUserDisplayName = () => {
     if (!user) return 'Usuario Admin';
-    if (user.user_type === 'natural') {
-      return `${user.first_name} ${user.last_name}`;
-    }
-    return user.company_name;
+    // Solo usuarios jurídicos permitidos
+    return user.company_name || 'Usuario Admin';
   };
 
   const getUserInitials = () => {

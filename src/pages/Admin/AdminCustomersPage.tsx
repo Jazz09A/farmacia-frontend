@@ -19,7 +19,7 @@ import ConfirmationModal from '../../components/common/ConfirmationModal';
 // Mock data para clientes (extender el mockData existente)
 interface Customer {
   id: string;
-  user_type: 'natural' | 'juridico';
+  user_type: 'juridico';
   email: string;
   status: 'active' | 'inactive' | 'pending';
   created_at: string;
@@ -58,7 +58,7 @@ const mockCustomers: Customer[] = [
   },
   {
     id: '2',
-    user_type: 'natural',
+    user_type: 'juridico',
     email: 'carlos.martinez@gmail.com',
     status: 'active',
     created_at: '2024-02-01',
@@ -88,7 +88,7 @@ const mockCustomers: Customer[] = [
   },
   {
     id: '4',
-    user_type: 'natural',
+    user_type: 'juridico',
     email: 'lucia.fernandez@hotmail.com',
     status: 'inactive',
     created_at: '2023-11-20',
@@ -171,9 +171,6 @@ const AdminCustomersPage: React.FC = () => {
   };
 
   const getCustomerDisplayName = (customer: Customer) => {
-    if (customer.user_type === 'natural') {
-      return `${customer.first_name} ${customer.last_name}`;
-    }
     return customer.company_name || 'Sin nombre';
   };
 
@@ -378,7 +375,6 @@ const AdminCustomersPage: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">Todos los tipos</option>
-                  <option value="natural">Personas Naturales</option>
                   <option value="juridico">Personas Jurídicas</option>
                 </select>
               </div>
@@ -443,8 +439,8 @@ const AdminCustomersPage: React.FC = () => {
                 className="p-4"
               >
                 <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-full ${customer.user_type === 'natural' ? 'bg-blue-100' : 'bg-green-100'}`}>
-                    {customer.user_type === 'natural' ? <User className="w-6 h-6 text-blue-600" /> : <Building className="w-6 h-6 text-green-600" />}
+                  <div className={`p-3 rounded-full bg-green-100`}>
+                    <Building className="w-6 h-6 text-green-600" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800 truncate">{getCustomerDisplayName(customer)}</p>
@@ -519,8 +515,8 @@ const AdminCustomersPage: React.FC = () => {
                     </div>
                   </td>
                   <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center space-x-3">
-                    <div className={`p-3 rounded-full ${customer.user_type === 'natural' ? 'bg-blue-100' : 'bg-green-100'}`}>
-                      {customer.user_type === 'natural' ? <User className="w-6 h-6 text-blue-600" /> : <Building className="w-6 h-6 text-green-600" />}
+                    <div className={`p-3 rounded-full bg-green-100`}>
+                      <Building className="w-6 h-6 text-green-600" />
                     </div>
                     <div>
                       <div className="text-base font-semibold">{getCustomerDisplayName(customer)}</div>
@@ -528,8 +524,8 @@ const AdminCustomersPage: React.FC = () => {
                     </div>
                   </th>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${customer.user_type === 'natural' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-                      {customer.user_type === 'juridico' ? 'Jurídico' : 'Natural'}
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800`}>
+                      Jurídico
                     </span>
                   </td>
                   <td className="px-6 py-4">

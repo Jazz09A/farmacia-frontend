@@ -1,7 +1,6 @@
 import { 
   LoginData, 
   JuridicoRegisterData, 
-  NaturalRegisterData, 
   AuthResponse, 
   User 
 } from '../types/auth';
@@ -41,44 +40,6 @@ class AuthService {
       };
     } catch (error) {
       console.error('Error registering juridico user:', error);
-      return {
-        success: false,
-        message: 'Error de conexión. Por favor, intenta nuevamente.',
-        errors: {}
-      };
-    }
-  }
-
-  // Registro de usuario natural
-  async registerNatural(data: NaturalRegisterData): Promise<AuthResponse> {
-    try {
-      console.log('Registering natural user:', { email: data.email, first_name: data.first_name });
-      
-      const response = await fetch(`${this.baseUrl}/register/natural`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-      
-      if (!response.ok) {
-        return {
-          success: false,
-          message: result.message || 'Error en el registro',
-          errors: result.errors || {}
-        };
-      }
-
-      return {
-        success: true,
-        message: result.message || 'Registro exitoso',
-        data: result.data
-      };
-    } catch (error) {
-      console.error('Error registering natural user:', error);
       return {
         success: false,
         message: 'Error de conexión. Por favor, intenta nuevamente.',

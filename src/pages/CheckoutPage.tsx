@@ -14,7 +14,7 @@ const steps = [
 
 const CheckoutPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [userType, setUserType] = useState<'natural' | 'juridico'>('natural');
+  const userType = 'juridico'; // Solo usuarios jurídicos
 
   const { items, totalPrice } = useCart();
   const { formatPrice } = useCurrency();
@@ -54,20 +54,16 @@ const CheckoutPage: React.FC = () => {
               >
                 {currentStep === 0 && (
                   <div>
-                    <h2 className="text-2xl font-bold mb-6">1. Identificación</h2>
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <button onClick={() => setUserType('natural')} className={`flex items-center justify-center gap-2 p-4 rounded-xl border-2 ${userType === 'natural' ? 'border-medical-primary bg-medical-blue-50' : 'border-gray-200'}`}>
-                        <User /> Persona Natural
-                      </button>
-                      <button onClick={() => setUserType('juridico')} className={`flex items-center justify-center gap-2 p-4 rounded-xl border-2 ${userType === 'juridico' ? 'border-medical-primary bg-medical-blue-50' : 'border-gray-200'}`}>
-                        <Building /> Persona Jurídica
-                      </button>
+                    <h2 className="text-2xl font-bold mb-6">1. Información de Farmacia</h2>
+                    <div className="flex items-center gap-2 p-4 rounded-xl border-2 border-medical-primary bg-medical-blue-50 mb-6">
+                      <Building className="text-medical-primary" />
+                      <span className="font-medium">Persona Jurídica (Farmacia)</span>
                     </div>
                     
                     <form className="space-y-4">
-                      {userType === 'juridico' && <input type="text" placeholder="Razón Social" className="w-full p-3 border-gray-300 rounded-lg" />}
-                      {userType === 'juridico' && <input type="text" placeholder="RIF (J-12345678-9)" className="w-full p-3 border-gray-300 rounded-lg" />}
-                      <input type="text" placeholder={userType === 'natural' ? "Nombre y Apellido" : "Nombre del Contacto"} className="w-full p-3 border-gray-300 rounded-lg" />
+                      <input type="text" placeholder="Razón Social" className="w-full p-3 border-gray-300 rounded-lg" />
+                      <input type="text" placeholder="RIF (J-12345678-9)" className="w-full p-3 border-gray-300 rounded-lg" />
+                      <input type="text" placeholder="Nombre del Contacto" className="w-full p-3 border-gray-300 rounded-lg" />
                       <input type="text" placeholder="Cédula de Identidad" className="w-full p-3 border-gray-300 rounded-lg" />
                       <input type="email" placeholder="Correo Electrónico" className="w-full p-3 border-gray-300 rounded-lg" />
                       <input type="tel" placeholder="Teléfono" className="w-full p-3 border-gray-300 rounded-lg" />

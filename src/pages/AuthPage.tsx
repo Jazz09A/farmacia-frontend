@@ -7,7 +7,6 @@ import {
   LogIn, 
   Eye, 
   EyeOff, 
-  User,
   Building,
   AlertCircle,
   CheckCircle,
@@ -16,9 +15,8 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { LoginData } from '../types/auth';
 import JuridicoRegisterForm from '../components/Auth/JuridicoRegisterForm';
-// import NaturalRegisterForm from '../components/Auth/NaturalRegisterForm';
 
-type AuthMode = 'login' | 'register-choice' | 'register-natural' | 'register-juridico';
+type AuthMode = 'login' | 'register';
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
@@ -138,7 +136,7 @@ const AuthPage: React.FC = () => {
           Iniciar Sesión
         </h2>
         <p className="text-gray-600 mt-2">
-          Accede a tu cuenta para continuar
+          Accede a tu cuenta de farmacia
         </p>
       </div>
 
@@ -178,7 +176,7 @@ const AuthPage: React.FC = () => {
               className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-medical-primary ${
                 errors.email ? 'border-red-300' : 'border-gray-300'
               }`}
-              placeholder="tu@email.com"
+              placeholder="farmacia@email.com"
             />
           </div>
           {errors.email && (
@@ -240,75 +238,10 @@ const AuthPage: React.FC = () => {
         <p className="text-gray-600">
           ¿No tienes una cuenta?{' '}
           <button
-            onClick={() => setMode('register-choice')}
+            onClick={() => setMode('register')}
             className="text-medical-primary hover:text-medical-primary-dark font-medium"
           >
-            Regístrate
-          </button>
-        </p>
-      </div>
-    </motion.div>
-  );
-
-  // Render registration choice
-  const renderRegisterChoice = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="w-full max-w-md"
-    >
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-medical-primary to-medical-accent bg-clip-text text-transparent">
-          Crear Cuenta
-        </h2>
-        <p className="text-gray-600 mt-2">
-          Selecciona el tipo de cuenta que deseas crear
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        {/* Natural Person */}
-        <button
-          onClick={() => setMode('register-natural')}
-          className="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-medical-primary transition-all duration-300 text-left group"
-        >
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-medical-primary group-hover:text-white transition-all duration-300">
-              <User className="w-6 h-6" />
-            </div>
-            <div className="ml-4">
-              <h3 className="font-semibold text-gray-900">Persona Natural</h3>
-              <p className="text-gray-600 text-sm">Para clientes individuales</p>
-            </div>
-          </div>
-        </button>
-
-        {/* Juridical Person */}
-        <button
-          onClick={() => setMode('register-juridico')}
-          className="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-medical-primary transition-all duration-300 text-left group"
-        >
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-lg group-hover:bg-medical-primary group-hover:text-white transition-all duration-300">
-              <Building className="w-6 h-6" />
-            </div>
-            <div className="ml-4">
-              <h3 className="font-semibold text-gray-900">Persona Jurídica</h3>
-              <p className="text-gray-600 text-sm">Para empresas y farmacias</p>
-            </div>
-          </div>
-        </button>
-      </div>
-
-      <div className="text-center mt-6">
-        <p className="text-gray-600">
-          ¿Ya tienes una cuenta?{' '}
-          <button
-            onClick={() => setMode('login')}
-            className="text-medical-primary hover:text-medical-primary-dark font-medium"
-          >
-            Iniciar Sesión
+            Registrar Farmacia
           </button>
         </p>
       </div>
@@ -324,22 +257,27 @@ const AuthPage: React.FC = () => {
             <div className="lg:w-1/2 bg-gradient-to-br from-medical-primary to-medical-accent p-8 text-white">
               <div className="h-full flex flex-col justify-center">
                 <div className="text-center">
+                  <Building className="w-16 h-16 mx-auto mb-4" />
                   <h1 className="text-4xl font-bold mb-4">FarmaPlus</h1>
                   <p className="text-xl mb-8 opacity-90">
-                    Tu farmacia de confianza online
+                    Plataforma exclusiva para farmacias
                   </p>
                   <div className="space-y-4">
                     <div className="flex items-center text-white/90">
                       <CheckCircle className="w-5 h-5 mr-3" />
-                      <span>Medicamentos certificados</span>
+                      <span>Gestión de inventario avanzada</span>
                     </div>
                     <div className="flex items-center text-white/90">
                       <CheckCircle className="w-5 h-5 mr-3" />
-                      <span>Entrega express</span>
+                      <span>Precios preferenciales para farmacias</span>
                     </div>
                     <div className="flex items-center text-white/90">
                       <CheckCircle className="w-5 h-5 mr-3" />
-                      <span>Servicio 24/7</span>
+                      <span>Soporte técnico especializado</span>
+                    </div>
+                    <div className="flex items-center text-white/90">
+                      <CheckCircle className="w-5 h-5 mr-3" />
+                      <span>Facturación empresarial</span>
                     </div>
                   </div>
                 </div>
@@ -350,21 +288,7 @@ const AuthPage: React.FC = () => {
             <div className="lg:w-1/2 p-8 flex items-center justify-center">
               <AnimatePresence mode="wait">
                 {mode === 'login' && renderLoginForm()}
-                {mode === 'register-choice' && renderRegisterChoice()}
-                {mode === 'register-natural' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="w-full max-w-2xl"
-                  >
-                    {/* <NaturalRegisterForm 
-                      onSuccess={handleRegistrationSuccess}
-                      onSwitchToLogin={handleSwitchToLogin}
-                    /> */}
-                  </motion.div>
-                )}
-                {mode === 'register-juridico' && (
+                {mode === 'register' && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}

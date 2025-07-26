@@ -120,7 +120,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  type: 'natural' | 'juridico';
+  type: 'juridico';
   phone?: string;
   address?: Address;
   preferences?: UserPreferences;

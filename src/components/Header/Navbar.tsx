@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Settings, Package, HelpCircle, Briefcase, Tag, BookText } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import type { User } from '../../services/AuthService';
+import type { User } from '../../types/auth';
 import { SearchBar } from './SearchBar';
 import { CurrencyToggle } from './CurrencyToggle';
 import logoSrc from '../../public/logo/Logo.webp';
@@ -38,10 +38,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const getUserDisplayName = (u: User | null): string => {
     if (!u) return '';
-    if (u.user_type === 'natural') {
-      return `${u.first_name} ${u.last_name}`;
-    }
-    return u.company_name;
+    // Solo usuarios jurídicos
+    return u.company_name || '';
   };
 
   const getUserInitials = (u: User | null): string => {
@@ -416,7 +414,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                                 <div className="font-semibold text-medical-gray-900">{getUserDisplayName(user)}</div>
                                 <div className="text-sm text-medical-gray-600">{user.email}</div>
                                 <div className="text-xs text-medical-blue-600 font-medium">
-                                  {user.user_type === 'natural' ? 'Persona Natural' : 'Persona Jurídica'}
+                                  Persona Jurídica (Farmacia)
                                 </div>
                               </div>
                             </div>

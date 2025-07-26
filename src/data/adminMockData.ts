@@ -1,26 +1,20 @@
-// Mock data específico para el panel de administración
+// Mock data específico para el panel de administración - Solo usuarios jurídicos
 
 export interface AdminUser {
   id: string;
-  user_type: 'natural' | 'juridico';
+  user_type: 'juridico';
   email: string;
   status: 'active' | 'inactive' | 'pending';
   created_at: string;
   last_login: string;
   total_orders: number;
   total_spent: number;
-  // Para usuarios naturales
-  first_name?: string;
-  last_name?: string;
-  phone?: string;
-  birth_date?: string;
-  address?: string;
-  // Para usuarios jurídicos
-  company_name?: string;
-  rif?: string;
-  company_phone?: string;
-  company_address?: string;
-  contact_person?: string;
+  // Para usuarios jurídicos (farmacias)
+  company_name: string;
+  rif: string;
+  company_phone: string;
+  company_address: string;
+  contact_person: string;
 }
 
 export const mockAdminUsers: AdminUser[] = [
@@ -41,63 +35,63 @@ export const mockAdminUsers: AdminUser[] = [
   },
   {
     id: '2',
-    user_type: 'natural',
-    email: 'carlos.martinez@gmail.com',
+    user_type: 'juridico',
+    email: 'contacto@farmaciaplus.com',
     status: 'active',
     created_at: '2024-02-01',
     last_login: '2024-03-09',
-    total_orders: 12,
-    total_spent: 35000,
-    first_name: 'Carlos',
-    last_name: 'Martínez',
-    phone: '+58-414-1234567',
-    birth_date: '1985-08-15',
-    address: 'Calle 123, Valencia'
+    total_orders: 32,
+    total_spent: 89000,
+    company_name: 'Farmacia Plus',
+    rif: 'J-30987654-3',
+    company_phone: '+58-414-9876543',
+    company_address: 'Centro Comercial Sambil, Maracaibo',
+    contact_person: 'Carlos Martínez'
   },
   {
     id: '3',
     user_type: 'juridico',
-    email: 'info@farmavida.com',
+    email: 'gerencia@farmavida.com',
     status: 'pending',
-    created_at: '2024-03-01',
+    created_at: '2024-03-05',
     last_login: '2024-03-08',
-    total_orders: 3,
-    total_spent: 15000,
-    company_name: 'Farmacia Vida Nueva',
-    rif: 'J-30987654-3',
-    company_phone: '+58-251-9876543',
-    company_address: 'Centro Comercial Plaza, Maracay',
+    total_orders: 8,
+    total_spent: 24000,
+    company_name: 'Farmacia Vida',
+    rif: 'J-29876543-1',
+    company_phone: '+58-424-5555555',
+    company_address: 'Av. Universidad, Valencia',
     contact_person: 'Ana Rodríguez'
   },
   {
     id: '4',
-    user_type: 'natural',
-    email: 'lucia.fernandez@hotmail.com',
-    status: 'inactive',
-    created_at: '2023-11-20',
-    last_login: '2024-01-15',
-    total_orders: 8,
-    total_spent: 22000,
-    first_name: 'Lucía',
-    last_name: 'Fernández',
-    phone: '+58-426-7890123',
-    birth_date: '1990-12-03',
-    address: 'Urbanización El Rosal, Caracas'
+    user_type: 'juridico',
+    email: 'admin@farmaciacentral.com',
+    status: 'active',
+    created_at: '2024-01-20',
+    last_login: '2024-03-07',
+    total_orders: 67,
+    total_spent: 198000,
+    company_name: 'Farmacia Central',
+    rif: 'J-35555555-9',
+    company_phone: '+58-212-9998888',
+    company_address: 'Plaza Venezuela, Caracas',
+    contact_person: 'Luis Fernández'
   },
   {
     id: '5',
     user_type: 'juridico',
-    email: 'contacto@farmaplus.com',
-    status: 'active',
-    created_at: '2023-08-10',
-    last_login: '2024-03-11',
-    total_orders: 67,
-    total_spent: 189000,
-    company_name: 'FarmaPlus C.A.',
-    rif: 'J-12345678-9',
-    company_phone: '+58-212-9876543',
-    company_address: 'Centro Comercial Sambil, Caracas',
-    contact_person: 'Roberto Silva'
+    email: 'info@farmaciauniversal.com',
+    status: 'inactive',
+    created_at: '2023-12-10',
+    last_login: '2024-02-28',
+    total_orders: 23,
+    total_spent: 67000,
+    company_name: 'Farmacia Universal',
+    rif: 'J-41234567-8',
+    company_phone: '+58-416-7777777',
+    company_address: 'C.C. Galerías Ávila, Caracas',
+    contact_person: 'Isabel Torres'
   }
 ];
 

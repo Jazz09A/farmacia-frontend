@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { AuthContextType, LoginData, JuridicoRegisterData, NaturalRegisterData, User } from '../types/auth';
+import { AuthContextType, LoginData, JuridicoRegisterData, User } from '../types/auth';
 import { authService } from '../services/AuthService';
 
 export const useAuth = (): AuthContextType => {
@@ -48,17 +48,6 @@ export const useAuth = (): AuthContextType => {
     }
   }, []);
 
-  // Register Natural function
-  const registerNatural = useCallback(async (data: NaturalRegisterData) => {
-    setIsLoading(true);
-    try {
-      const response = await authService.registerNatural(data);
-      return response;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   // Logout function
   const logout = useCallback(() => {
     authService.logout();
@@ -73,7 +62,6 @@ export const useAuth = (): AuthContextType => {
     isLoading,
     login,
     registerJuridico,
-    registerNatural,
     logout,
   };
 }; 

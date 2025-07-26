@@ -1,4 +1,4 @@
-// Tipos para el sistema de perfil de usuario
+// Tipos para el sistema de perfil de usuario - Solo usuarios jurídicos
 export enum UserRole {
   SUPER_ADMIN = 'super_admin',
   ADMIN = 'admin',
@@ -6,7 +6,6 @@ export enum UserRole {
 }
 
 export enum UserType {
-  NATURAL = 'natural',
   JURIDICO = 'juridico'
 }
 
@@ -17,18 +16,7 @@ export interface UserProfile {
   user_role: UserRole;
   created_at: string;
   last_login: string;
-  profile_data: NaturalProfile | JuridicoProfile;
-}
-
-export interface NaturalProfile {
-  first_name: string;
-  last_name: string;
-  cedula: string;
-  phone: string;
-  birth_date?: string;
-  address?: string;
-  preferred_currency: 'VES' | 'USD';
-  avatar?: string;
+  profile_data: JuridicoProfile;
 }
 
 export interface JuridicoProfile {
@@ -167,14 +155,11 @@ export interface SupportResponse {
   attachments?: string[];
 }
 
-// Tipos para formularios de actualización
+// Tipos para formularios de actualización - Solo empresas
 export interface UpdateProfileForm {
-  first_name?: string;
-  last_name?: string;
-  company_name?: string;
+  company_name: string;
   phone: string;
-  address?: string;
-  direccion_establecimiento?: string;
+  direccion_establecimiento: string;
   preferred_currency: 'VES' | 'USD';
 }
 

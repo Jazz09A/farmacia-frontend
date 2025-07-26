@@ -1,4 +1,4 @@
-// Tipos para autenticación
+// Tipos para autenticación - Solo usuarios jurídicos
 
 export interface JuridicoRegisterData {
   email: string;
@@ -30,19 +30,6 @@ export interface JuridicoRegisterData {
   password: string;
 }
 
-export interface NaturalRegisterData {
-  email: string;
-  phone: string;
-  preferred_currency: 'VES' | 'USD';
-  user_type: 'natural';
-  first_name: string;
-  last_name: string;
-  cedula: string;
-  fecha_nacimiento: string;
-  direccion: string;
-  password: string;
-}
-
 export interface LoginData {
   email: string;
   password: string;
@@ -63,27 +50,20 @@ export interface User {
   id: string;
   email: string;
   phone: string;
-  user_type: 'natural' | 'juridico';
+  user_type: 'juridico';
   preferred_currency: 'VES' | 'USD';
   is_active: boolean;
   is_verified: boolean;
   created_at: string;
   updated_at: string;
   
-  // Datos específicos según el tipo
-  first_name?: string;
-  last_name?: string;
-  cedula?: string;
-  fecha_nacimiento?: string;
-  direccion?: string;
-  
   // Datos jurídicos
-  company_name?: string;
-  rif?: string;
-  registro_mercantil?: string;
-  representante_legal_cedula?: string;
-  representante_legal_nombre?: string;
-  direccion_establecimiento?: string;
+  company_name: string;
+  rif: string;
+  registro_mercantil: string;
+  representante_legal_cedula: string;
+  representante_legal_nombre: string;
+  direccion_establecimiento: string;
 }
 
 export interface AuthContextType {
@@ -93,6 +73,5 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (data: LoginData) => Promise<AuthResponse>;
   registerJuridico: (data: JuridicoRegisterData) => Promise<AuthResponse>;
-  registerNatural: (data: NaturalRegisterData) => Promise<AuthResponse>;
   logout: () => void;
 } 
