@@ -1,108 +1,79 @@
-import React, { useState, useEffect, useContext, createContext, ReactNode } from 'react';
-import { authService, User, LoginRequest, RegisterRequest } from '../services/AuthService';
-import { UserRole } from '../types/profile';
+import { useState, useEffect, useCallback } from 'react';
+import { AuthContextType, LoginData, JuridicoRegisterData, NaturalRegisterData, User } from '../types/auth';
+import { authService } from '../services/AuthService';
 
-// Context para autenticación
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  role: UserRole | null;
-  login: (credentials: LoginRequest) => Promise<void>;
-  register: (userData: RegisterRequest) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Provider de autenticación
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const useAuth = (): AuthContextType => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Verificar autenticación al cargar
+  // Inicializar estado desde localStorage
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (authService.isAuthenticated()) {
-          const userData = await authService.getCurrentUser();
-          setUser(userData);
-          setIsAuthenticated(true);
-        }
-      } catch (error) {
-        console.warn('Error initializing auth:', error);
-        authService.clearAuthData();
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initAuth();
+    const savedUser = authService.getCurrentUser();
+    const savedToken = authService.getCurrentToken();
+    
+    setUser(savedUser);
+    setToken(savedToken);
+    setIsLoading(false);
   }, []);
 
-  const login = async (credentials: LoginRequest): Promise<void> => {
+  // Computed property para isAuthenticated
+  const isAuthenticated = !!(user && token);
+
+  // Login function
+  const login = useCallback(async (data: LoginData) => {
     setIsLoading(true);
     try {
-      const response = await authService.login(credentials);
-      setUser(response.user);
-      setIsAuthenticated(true);
+      const response = await authService.login(data);
+      
+      if (response.success && response.data) {
+        setUser(response.data.user);
+        setToken(response.data.token);
+      }
+      
+      return response;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const register = async (userData: RegisterRequest): Promise<void> => {
+  // Register Juridico function
+  const registerJuridico = useCallback(async (data: JuridicoRegisterData) => {
     setIsLoading(true);
     try {
-      await authService.register(userData);
+      const response = await authService.registerJuridico(data);
+      return response;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async (): Promise<void> => {
+  // Register Natural function
+  const registerNatural = useCallback(async (data: NaturalRegisterData) => {
     setIsLoading(true);
     try {
-      await authService.logout();
-      setUser(null);
-      setIsAuthenticated(false);
+      const response = await authService.registerNatural(data);
+      return response;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const refreshUser = async (): Promise<void> => {
-    try {
-      const userData = await authService.getCurrentUser();
-      setUser(userData);
-      setIsAuthenticated(true);
-    } catch (error) {
-      setUser(null);
-      setIsAuthenticated(false);
-    }
-  };
+  // Logout function
+  const logout = useCallback(() => {
+    authService.logout();
+    setUser(null);
+    setToken(null);
+  }, []);
 
-  const value: AuthContextType = {
+  return {
     user,
+    token,
     isAuthenticated,
     isLoading,
-    role: user?.role as UserRole | null,  // Aseguramos que el tipo sea correcto
     login,
-    register,
+    registerJuridico,
+    registerNatural,
     logout,
-    refreshUser
   };
-
-  return React.createElement(AuthContext.Provider, { value }, children);
-};
-
-// Hook para usar autenticación
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }; 

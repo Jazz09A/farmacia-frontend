@@ -41,7 +41,7 @@ import AdminRoute from './components/Admin/AdminRoute';
 // Hooks
 import { useCart } from './hooks/useCart';
 import { useCurrency } from './hooks/useCurrency';
-import { AuthProvider } from './hooks/useAuth';
+// import { AuthProvider } from './hooks/useAuth';
 
 // Contexts
 import { ScrollProvider, useScrollContext } from './contexts/ScrollContext';
@@ -140,7 +140,7 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
+    // <AuthProvider>
       <Router>
         <ScrollProvider>
           <ScrollToTop />
@@ -195,7 +195,7 @@ function App() {
         </div>
         </ScrollProvider>
       </Router>
-    </AuthProvider>
+    // </AuthProvider>
   );
 }
 
