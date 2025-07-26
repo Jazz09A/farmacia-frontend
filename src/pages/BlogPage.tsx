@@ -1,9 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import BlogPostCard from '../components/Blog/BlogPostCard';
-import FeaturedBlogPosts from '../components/Blog/FeaturedBlogPosts';
 import { mockBlogPosts } from '../data/blogMockData';
-import { BlogPost } from '../types';
-import { Search, Filter, Calendar, User, Tag, ChevronRight, TrendingUp } from 'lucide-react';
+import { Search, Calendar, Tag, TrendingUp } from 'lucide-react';
 import { BlogPostSkeleton, SkeletonBase } from '../components/Skeleton';
 import { useScrollContext } from '../contexts/ScrollContext';
 

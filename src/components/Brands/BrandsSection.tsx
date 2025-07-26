@@ -1,7 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { mockBrands } from '../../data/mockData';
 
+const mockBrands = [
+  {
+    id: 1,
+    name: 'Brand 1',
+    logo: 'https://via.placeholder.com/150'
+  }
+]
 export const BrandsSection: React.FC = () => {
   // Duplicate brands for infinite scroll effect
   const duplicatedBrands = [...mockBrands, ...mockBrands];

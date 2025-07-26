@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Filter, Grid, List } from 'lucide-react';
 import { ProductCard } from './ProductCard';
-import { mockProducts } from '../../data/mockData';
+import { Product } from '../../types/index';
 
 interface ProductsSectionProps {
   currency: 'VES' | 'REF';
@@ -21,8 +21,8 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
   const categories = ['Todos', 'Analgésicos', 'Vitaminas', 'Antiinflamatorios', 'Cuidado Personal', 'Medicamentos'];
   
   const filteredProducts = selectedCategory === 'Todos' 
-    ? mockProducts 
-    : mockProducts.filter(product => product.category === selectedCategory);
+    ? [] 
+    : [];
 
   return (
     <section className="py-16 bg-gray-50" data-section="products" id="products-section">
@@ -111,7 +111,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
           }`}
           layout
         >
-          {filteredProducts.map((product, index) => (
+          {filteredProducts.map((product: Product, index: number) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, y: 50 }}

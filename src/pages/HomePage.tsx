@@ -19,9 +19,7 @@ import {
 // Hooks
 import { useCart } from '../hooks/useCart';
 import { useCurrency } from '../hooks/useCurrency';
-
-// Data
-import { mockProducts } from '../data/mockData';
+import { getProductsPaginated } from '../data/products';
 
 const HomePage: React.FC = () => {
   const cart = useCart();
@@ -60,10 +58,7 @@ const HomePage: React.FC = () => {
 
   // Handle add to cart
   const handleAddToCart = (productId: string, quantity: number = 1) => {
-    const product = mockProducts.find(p => p.id === productId);
-    if (product) {
-      cart.addItem(product, quantity);
-    }
+   console.log(productId, quantity);
   };
 
   // Wrapper function to match component expectations

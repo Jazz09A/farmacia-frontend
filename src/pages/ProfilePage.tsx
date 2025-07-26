@@ -106,7 +106,7 @@ const ProfilePage: React.FC = () => {
                   <span className="text-sm text-medical-gray-500">
                     Miembro desde {formatDate(profile.created_at)}
                   </span>
-                  {profile.is_admin && (
+                  {profile.user_role === 'admin' && (
                     <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
                       Administrador
                     </span>

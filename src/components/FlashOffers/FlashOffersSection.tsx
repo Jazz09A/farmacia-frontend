@@ -2,7 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, Zap, TrendingDown, AlertCircle, Timer } from 'lucide-react';
 import { ProductCard } from '../Products/ProductCard';
-import { mockProducts, mockFlashOffers } from '../../data/mockData';
+
+const mockFlashOffers = [
+  {
+    id: '1',
+    product_id: '1',
+    discount: 10,
+    active: true,
+    endTime: new Date(Date.now() + 1000 * 60 * 60 * 24)
+  }
+]
 
 interface FlashOffersSectionProps {
   currency: 'VES' | 'REF';
@@ -57,8 +66,8 @@ export const FlashOffersSection: React.FC<FlashOffersSectionProps> = ({
     };
   };
 
-  const offerProducts = mockProducts.filter(product => 
-    mockFlashOffers.some(offer => offer.productId === product.id && offer.active)
+  const offerProducts = mockFlashOffers.filter((offer: any) => 
+    mockFlashOffers.some(offer => offer.product_id === offer.id && offer.active)
   );
 
   // Si no hay ofertas, no mostrar la sección (redistribución automática del layout)
@@ -200,8 +209,8 @@ export const FlashOffersSection: React.FC<FlashOffersSectionProps> = ({
 
           {/* Enhanced Products Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            {offerProducts.map((product, index) => {
-              const offer = mockFlashOffers.find(o => o.productId === product.id);
+            {offerProducts.map((product: any, index: number) => {
+              const offer = mockFlashOffers.find(o => o.product_id === product.id);
               const remainingTime = timeLeft[offer?.id || ''] || 0;
               const timeData = formatTime(remainingTime);
               const isUrgent = urgentOffers.includes(offer?.id || '');

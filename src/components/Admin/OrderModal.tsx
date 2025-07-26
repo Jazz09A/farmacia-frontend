@@ -1,6 +1,5 @@
 import React from 'react';
 import { Order, User } from '../../types';
-import { orderStatuses } from '../../data/mockData';
 import { 
   XCircle,
   Clock,
@@ -11,6 +10,15 @@ import {
   Phone,
   Mail
 } from 'lucide-react';
+
+const orderStatuses = [
+
+  { id: 'pending', name: 'Pendiente' },
+  { id: 'processing', name: 'En Proceso' },
+  { id: 'shipped', name: 'Enviado' },
+  { id: 'delivered', name: 'Entregado' },
+  { id: 'cancelled', name: 'Cancelado' }
+];
 
 interface OrderModalProps {
   order: Order | null;
@@ -140,11 +148,11 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, users, onClose, onUpdate
                     <div className="font-medium text-gray-900">{item.product.name}</div>
                     <div className="text-gray-500">{item.product.brand}</div>
                     <div className="mt-1">
-                      {item.quantity} x {formatCurrency(item.product.priceVES)}
+                      {item.quantity} x {formatCurrency(item.product.price_ves)}
                     </div>
                   </div>
                   <div className="font-medium text-gray-900 text-sm">
-                    {formatCurrency(item.product.priceVES * item.quantity)}
+                    {formatCurrency(item.product.price_ves * item.quantity)}
                   </div>
                 </div>
               ))}
@@ -179,10 +187,10 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, users, onClose, onUpdate
                       </td>
                       <td className="px-4 py-3 text-center text-gray-900">{item.quantity}</td>
                       <td className="px-4 py-3 text-right text-gray-900">
-                        {formatCurrency(item.product.priceVES)}
+                        {formatCurrency(item.product.price_ves)}
                       </td>
                       <td className="px-4 py-3 text-right font-medium text-gray-900">
-                        {formatCurrency(item.product.priceVES * item.quantity)}
+                        {formatCurrency(item.product.price_ves * item.quantity)}
                       </td>
                     </tr>
                   ))}

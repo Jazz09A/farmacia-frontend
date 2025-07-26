@@ -2,11 +2,22 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, Grid, List, Star, Heart, ShoppingCart, AlertCircle, Pill, Stethoscope, Shield, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Product, SearchFilters } from '../types';
-import { medicalCategories, medicalConditions } from '../data/mockData';
 import { getProductsPaginated } from '../data/products';
 import { useCart } from '../hooks/useCart';
-import { ProductCardSkeleton, SkeletonBase } from '../components/Skeleton';
+import { ProductCardSkeleton} from '../components/Skeleton';
 import Pagination from '../components/common/Pagination';
+
+// Categorías temporales hasta que se obtengan de la API
+const medicalCategories = [
+  { id: 'SISTEMA NERVIOSO', name: 'Sistema Nervioso', icon: 'Stethoscope', color: 'blue', count: 0 },
+  { id: 'Sin Categoría**', name: 'Sin Categoría', icon: 'Pill', color: 'gray', count: 0 }
+];
+
+const medicalConditions = [
+  'Patología genérica**',
+  'Neurología',
+  'Cardiología'
+];
 
 
 const CatalogPage: React.FC = () => {
@@ -40,18 +51,17 @@ const CatalogPage: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await getProductsPaginated(page, productsPerPage);
-      console.log('Pagination response:', response);
       setProducts(response.products);
       setTotalPages(response.totalPages);
       setTotalProducts(response.total);
       setCurrentPage(response.page);
-      console.log('Pagination state updated:', {
-        currentPage: response.page,
-        totalPages: response.totalPages,
-        totalProducts: response.total
-      });
     } catch (error) {
       console.error('Error loading products:', error);
+      // En caso de error, limpiar el estado
+      setProducts([]);
+      setTotalPages(0);
+      setTotalProducts(0);
+      setCurrentPage(1);
     } finally {
       setIsLoading(false);
     }
@@ -104,8 +114,8 @@ const CatalogPage: React.FC = () => {
       const matchesSubcategory = !filters.subcategory || product.subcategory === filters.subcategory;
       const matchesPatology = !filters.patology || product.patology === filters.patology;
       const matchesBrand = !filters.brand || product.brand.toLowerCase().includes(filters.brand.toLowerCase());
-      const matchesPrice = product.priceVES >= filters.priceRange[0] && product.priceVES <= filters.priceRange[1];
-      const matchesStock = !filters.inStock || product.inStock;
+      const matchesPrice = product.price_ves >= filters.priceRange[0] && product.price_ves <= filters.priceRange[1];
+      const matchesStock = !filters.inStock || product.in_stock;
       const matchesPrescription = !filters.prescription || product.prescription;
       const matchesRating = product.rating >= filters.rating;
 
@@ -119,7 +129,7 @@ const CatalogPage: React.FC = () => {
       
       switch (filters.sortBy) {
         case 'price':
-          comparison = a.priceVES - b.priceVES;
+          comparison = a.price_ves - b.price_ves;
           break;
         case 'rating':
           comparison = a.rating - b.rating;
@@ -128,7 +138,7 @@ const CatalogPage: React.FC = () => {
           comparison = a.name.localeCompare(b.name);
           break;
         case 'popularity':
-          comparison = a.reviews - b.reviews;
+          comparison = a.review_count - b.review_count;
           break;
         default:
           comparison = a.name.localeCompare(b.name);
@@ -153,7 +163,7 @@ const CatalogPage: React.FC = () => {
       <Link to={`/producto/${product.id}`} className="flex flex-col flex-grow">
         {/* Badges */}
         <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-          {product.isOffer && (
+          {product.is_offer && (
             <span className="px-2 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-semibold rounded-full animate-pulse">
               OFERTA
             </span>
@@ -164,7 +174,7 @@ const CatalogPage: React.FC = () => {
               Rx
             </span>
           )}
-          {!product.inStock && (
+          {!product.in_stock && (
             <span className="px-2 py-1 bg-gray-500 text-white text-xs font-semibold rounded-full">
               Agotado
             </span>
@@ -213,7 +223,7 @@ const CatalogPage: React.FC = () => {
               ))}
             </div>
             <span className="text-sm text-gray-600">
-              {product.rating} ({product.reviews})
+              {product.rating} ({product.review_count})
             </span>
           </div>
 
@@ -223,18 +233,18 @@ const CatalogPage: React.FC = () => {
           {/* Precio */}
           <div className="flex items-center justify-between">
             <div>
-              {product.isOffer && product.originalPrice ? (
+              {product.is_offer && product.original_price ? (
                 <div className="space-y-1">
                   <p className="text-lg font-bold text-medical-accent">
-                    {formatPrice(product.priceVES)}
+                    {formatPrice(product.price_ves)}
                   </p>
                   <p className="text-sm text-gray-500 line-through">
-                    {formatPrice(product.originalPrice)}
+                    {formatPrice(product.original_price)}
                   </p>
                 </div>
               ) : (
                 <p className="text-lg font-bold text-gray-900">
-                  {formatPrice(product.priceVES)}
+                  {formatPrice(product.price_ves)}
                 </p>
               )}
             </div>
@@ -248,11 +258,11 @@ const CatalogPage: React.FC = () => {
           cart.addItem(product, 1);
         }}
         className={`mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-          product.inStock
+          product.in_stock
             ? 'bg-gradient-to-r from-medical-primary to-medical-primary-dark text-white hover:shadow-lg hover:shadow-medical-primary/25 hover:scale-105'
             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
         }`}
-        disabled={!product.inStock}
+        disabled={!product.in_stock}
       >
         <ShoppingCart className="w-4 h-4" />
         <span>Añadir</span>
@@ -531,26 +541,14 @@ const CatalogPage: React.FC = () => {
               )}
 
               {/* Paginación */}
-              {/* Debug: Mostrar información de paginación */}
-              <div className="mt-4 p-4 bg-yellow-100 rounded-lg text-sm">
-                <p>Debug Paginación:</p>
-                <p>Current Page: {currentPage}</p>
-                <p>Total Pages: {totalPages}</p>
-                <p>Total Products: {totalProducts}</p>
-                <p>Products Length: {products.length}</p>
-                <p>Products per page: {productsPerPage}</p>
-                <p>Should show pagination: {totalPages > 1 ? 'YES' : 'NO'}</p>
-              </div>
-              
-              {/* Mostrar paginación siempre para testing */}
-              <div className="mt-6">
+              {totalPages > 1 && (
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
                   totalItems={totalProducts}
                   onPageChange={handlePageChange}
                 />
-              </div>
+              )}
             </div>
           </div>
         </div>
