@@ -50,20 +50,25 @@ export interface User {
   id: string;
   email: string;
   phone: string;
-  user_type: 'juridico';
+  user_type: 'juridico' | 'natural' | 'admin';
   preferred_currency: 'VES' | 'USD';
   is_active: boolean;
   is_verified: boolean;
   created_at: string;
   updated_at: string;
   
-  // Datos jurídicos
-  company_name: string;
-  rif: string;
-  registro_mercantil: string;
-  representante_legal_cedula: string;
-  representante_legal_nombre: string;
-  direccion_establecimiento: string;
+  // Datos jurídicos (opcionales)
+  company_name?: string;
+  rif?: string;
+  registro_mercantil?: string;
+  representante_legal_cedula?: string;
+  representante_legal_nombre?: string;
+  direccion_establecimiento?: string;
+
+  // Datos naturales (opcionales)
+  first_name?: string;
+  last_name?: string;
+  cedula?: string;
 }
 
 export interface AuthContextType {
