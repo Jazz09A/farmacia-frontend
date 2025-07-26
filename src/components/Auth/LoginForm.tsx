@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { LoginData } from '../../types/auth';
 import { motion } from 'framer-motion';
@@ -7,11 +8,12 @@ import { Mail, Lock, LogIn, AlertCircle, Loader2 } from 'lucide-react';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
-  onSuccess: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState<LoginData>({ email: '', password: '' });
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -42,8 +44,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
       console.log('📝 LoginForm: Response received:', response);
       
       if (response.success) {
-        console.log('📝 LoginForm: Login successful, calling onSuccess');
-        onSuccess();
+        console.log('📝 LoginForm: Login successful, redirecting...');
+        const from = location.state?.from?.pathname || '/';
+        navigate(from, { replace: true });
       } else {
         console.log('📝 LoginForm: Login failed:', response.message);
         setErrors(response.errors || { general: [response.message] });

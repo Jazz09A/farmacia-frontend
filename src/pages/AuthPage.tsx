@@ -43,17 +43,6 @@ const AuthPage: React.FC = () => {
       return (
         <LoginForm
           onSwitchToRegister={handleShowRegister}
-          onSuccess={() => {
-            console.log('🚀 AuthPage: onSuccess callback triggered');
-            console.log('🚀 AuthPage: Current user in onSuccess:', user);
-            if (user?.user_type === 'admin') {
-              console.log('🚀 AuthPage: onSuccess - Redirecting admin to /admin');
-              navigate('/admin');
-            } else {
-              console.log('🚀 AuthPage: onSuccess - Redirecting user to /profile');
-              navigate('/profile');
-            }
-          }}
         />
       );
     }
