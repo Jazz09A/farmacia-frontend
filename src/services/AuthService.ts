@@ -51,7 +51,6 @@ class AuthService {
   // Login
   async login(data: LoginData): Promise<AuthResponse> {
     try {
-      console.log('Logging in user:', { email: data.email });
       
       const response = await fetch(`${this.baseUrl}/login`, {
         method: 'POST',
@@ -70,20 +69,39 @@ class AuthService {
           errors: result.errors || {}
         };
       }
-
-      // Guardar token y usuario en localStorage
-      if (result.data?.token) {
-        this.setToken(result.data.token);
-        this.setUser(result.data.user);
+      if (result.access_token) {
+        this.setToken(result.access_token);
+        const userData: User = {
+          id: result.sub || 'temp-id',
+          email: data.email,
+          phone: '',
+          user_type: result.role === 'admin' ? 'admin' : 'juridico',
+          preferred_currency: 'VES',
+          is_active: true,
+          is_verified: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          company_name: 'Empresa',
+        };
+        
+        this.setUser(userData);
+        
+        return {
+          success: true,
+          message: 'Login exitoso',
+          data: {
+            token: result.access_token,
+            user: userData
+          }
+        };
+      } else {
+        return {
+          success: false,
+          message: 'Respuesta del servidor inválida',
+          errors: {}
+        };
       }
-
-      return {
-        success: true,
-        message: result.message || 'Login exitoso',
-        data: result.data
-      };
     } catch (error) {
-      console.error('Error logging in:', error);
       return {
         success: false,
         message: 'Error de conexión. Por favor, intenta nuevamente.',

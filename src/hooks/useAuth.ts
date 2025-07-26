@@ -24,11 +24,18 @@ export const useAuth = (): AuthContextType => {
   const login = useCallback(async (data: LoginData) => {
     setIsLoading(true);
     try {
+      console.log('🔐 useAuth: Attempting login with:', { email: data.email });
       const response = await authService.login(data);
+      console.log('🔐 useAuth: Login response:', response);
       
       if (response.success && response.data) {
+        console.log('🔐 useAuth: Login successful, setting user and token');
+        console.log('🔐 useAuth: User data:', response.data.user);
+        console.log('🔐 useAuth: Token received:', response.data.token ? 'YES' : 'NO');
         setUser(response.data.user);
         setToken(response.data.token);
+      } else {
+        console.log('🔐 useAuth: Login failed:', response.message);
       }
       
       return response;

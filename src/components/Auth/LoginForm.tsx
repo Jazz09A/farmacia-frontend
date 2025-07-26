@@ -37,13 +37,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
     setIsLoading(true);
     setErrors({});
     try {
+      console.log('📝 LoginForm: Submitting login form');
       const response = await login(formData);
+      console.log('📝 LoginForm: Response received:', response);
+      
       if (response.success) {
+        console.log('📝 LoginForm: Login successful, calling onSuccess');
         onSuccess();
       } else {
+        console.log('📝 LoginForm: Login failed:', response.message);
         setErrors(response.errors || { general: [response.message] });
       }
     } catch (error) {
+      console.error('📝 LoginForm: Exception during login:', error);
       setErrors({ general: ['Error de conexión.'] });
     } finally {
       setIsLoading(false);

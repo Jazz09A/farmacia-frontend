@@ -22,10 +22,17 @@ const AuthPage: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log('🚀 AuthPage: useEffect triggered');
+    console.log('🚀 AuthPage: isAuthenticated:', isAuthenticated);
+    console.log('🚀 AuthPage: user:', user);
+    
     if (isAuthenticated) {
+      console.log('🚀 AuthPage: User is authenticated, redirecting...');
       if (user?.user_type === 'admin') {
+        console.log('🚀 AuthPage: Redirecting admin to /admin');
         navigate('/admin');
       } else {
+        console.log('🚀 AuthPage: Redirecting user to /profile');
         navigate('/profile');
       }
     }
@@ -37,9 +44,13 @@ const AuthPage: React.FC = () => {
         <LoginForm
           onSwitchToRegister={handleShowRegister}
           onSuccess={() => {
+            console.log('🚀 AuthPage: onSuccess callback triggered');
+            console.log('🚀 AuthPage: Current user in onSuccess:', user);
             if (user?.user_type === 'admin') {
+              console.log('🚀 AuthPage: onSuccess - Redirecting admin to /admin');
               navigate('/admin');
             } else {
+              console.log('🚀 AuthPage: onSuccess - Redirecting user to /profile');
               navigate('/profile');
             }
           }}
