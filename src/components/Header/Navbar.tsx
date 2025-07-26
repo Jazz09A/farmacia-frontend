@@ -423,11 +423,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                           {/* Menu Items */}
                           <div className="p-2">
                             <Link
-                              to="/perfil"
+                              to="/profile"
                               className="flex items-center space-x-3 p-3 rounded-xl hover:bg-medical-blue-50 transition-colors duration-200 group"
                               onClick={() => setIsUserMenuOpen(false)}
                             >
-                              <Settings className="h-4 w-4 text-medical-gray-500 group-hover:text-medical-blue-600" />
+                              <UserIcon className="h-4 w-4 text-medical-gray-500 group-hover:text-medical-blue-600" />
                               <span className="text-medical-gray-700 group-hover:text-medical-gray-900">Mi Perfil</span>
                             </Link>
 
