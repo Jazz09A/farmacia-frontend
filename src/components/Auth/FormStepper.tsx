@@ -40,13 +40,13 @@ export const FormStepper: React.FC<FormStepperProps> = ({ steps, currentStep }) 
                                     <step.icon className={`w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 ${isActive ? 'text-white' : 'text-gray-400'}`} />
                                 )}
                             </motion.div>
-                            <p className={`absolute top-9 sm:top-11 lg:top-14 text-[10px] sm:text-xs font-semibold text-center w-16 sm:w-20 lg:w-28 transition-colors duration-300 ${isActive ? 'text-blue-600' : 'text-gray-500'} leading-tight`}>
+                            <p className={`absolute top-10 sm:top-12 lg:top-15 text-[10px] sm:text-xs font-semibold text-center w-16 sm:w-20 lg:w-24 transition-colors duration-300 ${isActive ? 'text-blue-600' : 'text-gray-500'} leading-tight`}>
                                 {step.title}
                             </p>
                         </div>
 
                         {index < steps.length - 1 && (
-                            <div className={`flex-1 h-0.5 sm:h-1 transition-colors duration-500 mx-1 sm:mx-2 lg:mx-4
+                            <div className={`flex-1 h-0.5 sm:h-1 transition-colors duration-500 mx-1 sm:mx-2 lg:mx-3
                             ${isCompleted ? 'bg-blue-600' : 'bg-gray-300'}
                             `} />
                         )}

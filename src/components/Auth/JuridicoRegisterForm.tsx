@@ -82,6 +82,19 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      // Por ahora, solo guardamos los nombres de los archivos como strings
+      // ya que el tipo espera string[]. Si necesitas subir los archivos,
+      // esto requerirá un manejo más complejo (e.g., FormData).
+      const fileNames = Array.from(e.target.files).map(file => file.name);
+      setFormData(prev => ({ ...prev, fotos_establecimiento: fileNames }));
+      if (errors.fotos_establecimiento) {
+        setErrors(prev => ({ ...prev, fotos_establecimiento: [] }));
+      }
+    }
+  };
+
   const validateCurrentStep = (): boolean => {
     const newErrors: Record<string, string[]> = {};
     if (currentStep === 1) {
@@ -188,7 +201,7 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
                 {currentStep === 2 && <Step2Representatives formData={formData} onChange={handleInputChange} errors={errors} />}
                 {currentStep === 3 && <Step3References formData={formData} onChange={handleInputChange} errors={errors} />}
                 {currentStep === 4 && <Step4AdditionalContacts formData={formData} onChange={handleInputChange} errors={errors} />}
-                {currentStep === 5 && <Step5ExtraInfo formData={formData} onChange={handleInputChange} errors={errors} />}
+                {currentStep === 5 && <Step5ExtraInfo formData={formData} onChange={handleInputChange} onFileChange={handleFileChange} errors={errors} />}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -226,17 +239,21 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
 type StepProps = {
   formData: JuridicoFormData;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  errors: Record<string, any>;
+  errors: Record<string, string[]>;
 };
 
+interface Step5Props extends StepProps {
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
 const Step1BasicInfo: React.FC<StepProps> = ({ formData, onChange, errors }) => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <InputField id="company_name" label="Nombre de la Empresa" value={formData.company_name} onChange={onChange} error={errors.company_name?.[0]} required />
       <InputField id="rif" label="RIF" value={formData.rif} onChange={onChange} error={errors.rif?.[0]} required />
       <InputField id="registro_mercantil" label="Registro Mercantil" value={formData.registro_mercantil} onChange={onChange} error={errors.registro_mercantil?.[0]} required />
       <InputField id="email" label="Email" type="email" value={formData.email} onChange={onChange} error={errors.email?.[0]} required />
       <InputField id="phone" label="Teléfono Principal" type="tel" value={formData.phone} onChange={onChange} error={errors.phone?.[0]} required />
-      <div className="lg:col-span-2">
+      <div className="md:col-span-2">
         <InputField id="direccion_establecimiento" label="Dirección del Establecimiento" value={formData.direccion_establecimiento} onChange={onChange} error={errors.direccion_establecimiento?.[0]} isTextArea required />
       </div>
       <InputField id="password" label="Contraseña" type="password" value={formData.password} onChange={onChange} error={errors.password?.[0]} required />
@@ -245,43 +262,43 @@ const Step1BasicInfo: React.FC<StepProps> = ({ formData, onChange, errors }) => 
 );
 
 const Step2Representatives: React.FC<StepProps> = ({ formData, onChange, errors }) => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <InputField id="representante_legal_nombre" label="Nombre del Representante Legal" value={formData.representante_legal_nombre} onChange={onChange} error={errors.representante_legal_nombre?.[0]} required />
         <InputField id="representante_legal_cedula" label="Cédula del Representante Legal" value={formData.representante_legal_cedula} onChange={onChange} error={errors.representante_legal_cedula?.[0]} required />
-        <div className="lg:col-span-2">
+        <div className="md:col-span-2">
             <InputField id="representantes_adicionales" label="Representantes Adicionales" value={formData.representantes_adicionales} onChange={onChange} error={errors.representantes_adicionales?.[0]} isTextArea placeholder="Nombres separados por comas (opcional)" />
         </div>
     </div>
 );
 
 const Step3References: React.FC<StepProps> = ({ formData, onChange, errors }) => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <InputField id="referencia_comercial_proveedor" label="Referencia Comercial/Proveedor" value={formData.referencia_comercial_proveedor} onChange={onChange} error={errors.referencia_comercial_proveedor?.[0]} required />
         <InputField id="referencia_bancaria" label="Referencia Bancaria" value={formData.referencia_bancaria} onChange={onChange} error={errors.referencia_bancaria?.[0]} required />
     </div>
 );
 
 const Step4AdditionalContacts: React.FC<StepProps> = ({ formData, onChange }) => (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-6">
       <div>
-        <h4 className="font-medium text-gray-800 mb-3 text-sm sm:text-base">Información del Dueño</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 border p-3 sm:p-4 rounded-lg">
+        <h4 className="font-medium text-gray-800 mb-2">Información del Dueño</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 border p-4 rounded-lg">
             <InputField id="dueno_telefono" label="Teléfono" type="tel" value={formData.dueno_telefono} onChange={onChange} />
             <InputField id="dueno_email" label="Email" type="email" value={formData.dueno_email} onChange={onChange} />
             <InputField id="dueno_cumpleanos" label="Cumpleaños" type="date" value={formData.dueno_cumpleanos} onChange={onChange} />
         </div>
       </div>
       <div>
-        <h4 className="font-medium text-gray-800 mb-3 text-sm sm:text-base">Encargado de Compra</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 border p-3 sm:p-4 rounded-lg">
+        <h4 className="font-medium text-gray-800 mb-2">Encargado de Compra</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 border p-4 rounded-lg">
             <InputField id="encargado_compra_telefono" label="Teléfono" type="tel" value={formData.encargado_compra_telefono} onChange={onChange} />
             <InputField id="encargado_compra_email" label="Email" type="email" value={formData.encargado_compra_email} onChange={onChange} />
             <InputField id="encargado_compra_cumpleanos" label="Cumpleaños" type="date" value={formData.encargado_compra_cumpleanos} onChange={onChange} />
         </div>
       </div>
       <div>
-        <h4 className="font-medium text-gray-800 mb-3 text-sm sm:text-base">Encargado de Cobranza</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 border p-3 sm:p-4 rounded-lg">
+        <h4 className="font-medium text-gray-800 mb-2">Encargado de Cobranza</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 border p-4 rounded-lg">
             <InputField id="encargado_cobranza_telefono" label="Teléfono" type="tel" value={formData.encargado_cobranza_telefono} onChange={onChange} />
             <InputField id="encargado_cobranza_email" label="Email" type="email" value={formData.encargado_cobranza_email} onChange={onChange} />
             <InputField id="encargado_cobranza_cumpleanos" label="Cumpleaños" type="date" value={formData.encargado_cobranza_cumpleanos} onChange={onChange} />
@@ -290,17 +307,41 @@ const Step4AdditionalContacts: React.FC<StepProps> = ({ formData, onChange }) =>
     </div>
 );
 
-const Step5ExtraInfo: React.FC<StepProps> = ({ formData, onChange, errors }) => (
-    <div className="space-y-4 sm:space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+const Step5ExtraInfo: React.FC<Step5Props> = ({ formData, onChange, onFileChange, errors }) => (
+    <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField id="redes_sociales" label="Redes Sociales" value={formData.redes_sociales} onChange={onChange} error={errors.redes_sociales?.[0]} placeholder="@farmacia_xyz" />
             <InputField id="pagina_web" label="Página Web" type="url" value={formData.pagina_web} onChange={onChange} error={errors.pagina_web?.[0]} placeholder="https://www.farmacia.com" />
-            <InputField id="codigo_sicm" label="Código SICM" value={formData.codigo_sicm} onChange={onChange} error={errors.codigo_sicm?.[0]} placeholder="SICM123456" />
+            <div className="md:col-span-2">
+                <InputField id="codigo_sicm" label="Código SICM" value={formData.codigo_sicm} onChange={onChange} error={errors.codigo_sicm?.[0]} placeholder="SICM123456" />
+            </div>
         </div>
-        <div className="bg-blue-50 text-blue-800 p-3 sm:p-4 rounded-lg text-center">
-            <p className="font-semibold text-sm sm:text-base">¡Casi listo!</p>
-            <p className="text-xs sm:text-sm">Revisa que toda la información sea correcta antes de finalizar.</p>
+        <div className="bg-blue-50 text-blue-800 p-4 rounded-lg text-center">
+            <p className="font-semibold">¡Casi listo!</p>
+            <p className="text-sm">Revisa que toda la información sea correcta antes de finalizar.</p>
         </div>
+        <div className="md:col-span-2">
+            <label htmlFor="fotos_establecimiento" className="block text-sm font-medium text-gray-700 mb-1">
+              Fotos del Establecimiento
+            </label>
+            <input
+              id="fotos_establecimiento"
+              name="fotos_establecimiento"
+              type="file"
+              multiple
+              onChange={onFileChange}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+            {errors.fotos_establecimiento && <p className="mt-1 text-xs text-red-500">{errors.fotos_establecimiento[0]}</p>}
+            {formData.fotos_establecimiento.length > 0 && (
+              <div className="mt-2 text-sm text-gray-600">
+                <p>{formData.fotos_establecimiento.length} archivo(s) seleccionado(s):</p>
+                <ul className="list-disc list-inside">
+                  {formData.fotos_establecimiento.map((name, index) => <li key={index}>{name}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
     </div>
 );
 

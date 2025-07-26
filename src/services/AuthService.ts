@@ -13,7 +13,7 @@ class AuthService {
   // Registro de usuario jurídico
   async registerJuridico(data: JuridicoRegisterData): Promise<AuthResponse> {
     try {
-      console.log('Registering juridico user:', { email: data.email, company_name: data.company_name });
+      console.log('Registering juridico user:', data);
       
       const response = await fetch(`${this.baseUrl}/register/juridico`, {
         method: 'POST',

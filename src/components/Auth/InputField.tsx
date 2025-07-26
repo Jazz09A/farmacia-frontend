@@ -1,18 +1,18 @@
 
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Calendar } from 'lucide-react';
 
-type InputFieldProps = {
+interface InputFieldProps {
   id: string;
   label: string;
   type?: string;
-  value: string;
+  value: string | number;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   error?: string;
   placeholder?: string;
   isTextArea?: boolean;
   required?: boolean;
-};
+}
 
 export const InputField: React.FC<InputFieldProps> = ({
   id,
@@ -27,6 +27,7 @@ export const InputField: React.FC<InputFieldProps> = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === 'password';
+  const isDate = type === 'date';
 
   const commonProps = {
     id,
@@ -34,33 +35,38 @@ export const InputField: React.FC<InputFieldProps> = ({
     onChange,
     placeholder,
     required,
-    className: `w-full p-2 sm:p-3 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-      error ? 'border-red-500' : 'border-gray-300'
-    }`,
+    className: `w-full px-3 py-2 text-sm sm:text-base border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+      error ? 'border-red-500 ring-red-500' : 'border-gray-300'
+    } ${isPassword || isDate ? 'pr-10' : ''}`,
   };
 
   return (
-    <div>
-      <label htmlFor={id} className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-        {label} {required && '*'}
+    <div className="w-full">
+      <label htmlFor={id} className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        {label} {required && <span className="text-red-500">*</span>}
       </label>
       <div className="relative">
         {isTextArea ? (
-          <textarea {...commonProps} rows={2} />
+          <textarea {...commonProps} rows={3} />
         ) : (
-          <input {...commonProps} type={isPassword && !showPassword ? 'password' : 'text'} />
+          <input {...commonProps} type={isPassword ? (showPassword ? 'text' : 'password') : type} />
         )}
         {isPassword && (
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
           >
-            {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
+            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         )}
+        {isDate && (
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+            <Calendar className="w-5 h-5" />
+          </div>
+        )}
       </div>
-      {error && <p className="text-red-500 text-xs sm:text-sm mt-1">{error}</p>}
+      {error && <p className="text-red-500 text-xs mt-1.5">{error}</p>}
     </div>
   );
 }; 
