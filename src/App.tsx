@@ -80,7 +80,7 @@ const AppLayout = () => {
           <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando...</div>}>
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/catalog" element={<CatalogPage />} />
+              <Route path="/catalog" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
               <Route path="/product/:id" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
