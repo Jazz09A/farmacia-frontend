@@ -22,17 +22,10 @@ const AuthPage: React.FC = () => {
   };
 
   useEffect(() => {
-    console.log('🚀 AuthPage: useEffect triggered');
-    console.log('🚀 AuthPage: isAuthenticated:', isAuthenticated);
-    console.log('🚀 AuthPage: user:', user);
-    
     if (isAuthenticated) {
-      console.log('🚀 AuthPage: User is authenticated, redirecting...');
       if (user?.user_type === 'admin') {
-        console.log('🚀 AuthPage: Redirecting admin to /admin');
         navigate('/admin');
       } else {
-        console.log('🚀 AuthPage: Redirecting user to /profile');
         navigate('/profile');
       }
     }
