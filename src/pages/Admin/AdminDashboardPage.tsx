@@ -10,7 +10,7 @@ import {
   BarChart3,
   MoreVertical
 } from 'lucide-react';
-import { mockOrders, orderStatuses, mockUsers } from '../../data/mockData';
+// import { mockOrders, orderStatuses, mockUsers } from '../../data/mockData';
 import { Order, User } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -18,7 +18,7 @@ import OrderModal from '../../components/Admin/OrderModal';
 
 const AdminDashboardPage: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState('week');
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const AdminDashboardPage: React.FC = () => {
   // Mock data calculations
   const totalOrders = orders.length;
   const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-  const totalCustomers = mockUsers.length;
+  const totalCustomers = 0;
   const pendingOrders = orders.filter(order => order.status === 'pending').length;
   const processingOrders = orders.filter(order => order.status === 'processing').length;
   const shippedOrders = orders.filter(order => order.status === 'shipped').length;
@@ -37,7 +37,7 @@ const AdminDashboardPage: React.FC = () => {
     .slice(0, 5);
 
   const getStatusColor = (status: string) => {
-    return orderStatuses.find(s => s.id === status)?.color || 'gray';
+    return 'gray';
   };
 
   const formatCurrency = (amount: number) => {
@@ -181,12 +181,12 @@ const AdminDashboardPage: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {recentOrders.map((order: Order) => {
-                  const customer = mockUsers.find((user: User) => user.id === order.userId);
+                  // const customer = null;
                   return (
                     <tr key={order.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{customer?.name || 'N/A'}</div>
-                        <div className="text-xs text-gray-500">{customer?.email}</div>
+                        <div className="font-medium text-gray-900">{'N/A'}</div>
+                        <div className="text-xs text-gray-500">{'N/A'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                         {new Date(order.createdAt).toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -195,7 +195,7 @@ const AdminDashboardPage: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-${getStatusColor(order.status)}-100 text-${getStatusColor(order.status)}-800`}>
                           <span className={`w-2 h-2 mr-2 bg-${getStatusColor(order.status)}-500 rounded-full`}></span>
-                          {orderStatuses.find(s => s.id === order.status)?.name || 'Desconocido'}
+                            {'Desconocido'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -249,7 +249,7 @@ const AdminDashboardPage: React.FC = () => {
       {showOrderModal && (
         <OrderModal
           order={selectedOrder}
-          users={mockUsers}
+          users={[]}
           onClose={() => setShowOrderModal(false)}
           onUpdateStatus={handleUpdateStatus}
         />
