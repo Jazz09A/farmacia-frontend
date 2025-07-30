@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Settings, Package, HelpCircle, Briefcase, Tag, BookText } from 'lucide-react';
+import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Settings, Package, HelpCircle, Briefcase, Tag, BookText, Shield } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../types/auth';
@@ -422,6 +422,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                           {/* Menu Items */}
                           <div className="p-2">
+                            {user && (user.role === 'super_admin' || user.role === 'admin') && (
+                              <Link
+                                to="/admin"
+                                className="flex items-center space-x-3 p-3 rounded-xl hover:bg-medical-blue-50 transition-colors duration-200 group"
+                                onClick={() => setIsUserMenuOpen(false)}
+                              >
+                                <Shield className="h-4 w-4 text-medical-gray-500 group-hover:text-medical-blue-600" />
+                                <span className="text-medical-gray-700 group-hover:text-medical-gray-900">Admin</span>
+                              </Link>
+                            )}
                             <Link
                               to="/profile"
                               className="flex items-center space-x-3 p-3 rounded-xl hover:bg-medical-blue-50 transition-colors duration-200 group"

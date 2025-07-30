@@ -51,6 +51,7 @@ export interface User {
   email: string;
   phone: string;
   user_type: 'juridico' | 'natural' | 'admin';
+  role: 'super_admin' | 'admin' | 'user';
   preferred_currency: 'VES' | 'USD';
   is_active: boolean;
   is_verified: boolean;
