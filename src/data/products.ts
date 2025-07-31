@@ -141,5 +141,11 @@ export const getProducts = async (): Promise<Product[]> => {
   return response.products;
 };
 
+export const getProductById = async (id: string): Promise<Product | null> => {
+  const response = await fetch(`/api/v1/public/products/${id}`);
+  const data = await response.json();
+  return data || null;
+};
+
+
 // Default export - empty array since we're now using async loading
-export default [];

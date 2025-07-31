@@ -15,22 +15,13 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { mockProducts } from '../../data/mockData';
-import { ProductWithStats } from '../../types';
+// import { mockProducts } from '../../data/mockData';
+import { Product } from '../../types';
 import ProductModal from '../../components/Admin/ProductModal';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
+import { getProducts } from '../../data/products';
 
-// Extender mockProducts con estadísticas
-const mockProductsWithStats: ProductWithStats[] = mockProducts.map((product, index) => ({
-  ...product,
-  views: Math.floor(Math.random() * 1000) + 50,
-  sales: Math.floor(Math.random() * 100) + 10,
-  revenue: (Math.floor(Math.random() * 100) + 10) * product.priceVES,
-  stock_status: product.inStock 
-    ? (Math.random() > 0.7 ? 'low_stock' : 'in_stock')
-    : 'out_of_stock',
-  last_updated: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
-}));
+const listProducts = await getProducts();
 
 const AdminProductsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -42,8 +33,8 @@ const AdminProductsPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showProductModal, setShowProductModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<ProductWithStats | null>(null);
-  const [productToDelete, setProductToDelete] = useState<ProductWithStats | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
 
   useEffect(() => {
@@ -61,11 +52,11 @@ const AdminProductsPage: React.FC = () => {
   const itemsPerPage = 12;
 
   // Obtener categorías únicas
-  const categories = Array.from(new Set(mockProductsWithStats.map(p => p.category)));
+  const categories = Array.from(new Set(listProducts.map(p => p.category)));
 
   // Filtrar productos
   const filteredProducts = useMemo(() => {
-    return mockProductsWithStats.filter(product => {
+    return listProducts.filter(product => {
       const matchesSearch = 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -74,10 +65,10 @@ const AdminProductsPage: React.FC = () => {
       const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
       
       const matchesStatus = statusFilter === 'all' || 
-        (statusFilter === 'active' && product.inStock) ||
-        (statusFilter === 'inactive' && !product.inStock);
+        (statusFilter === 'active' && product.in_stock) ||
+        (statusFilter === 'inactive' && !product.in_stock);
 
-      const matchesStock = stockFilter === 'all' || product.stock_status === stockFilter;
+      const matchesStock = stockFilter === 'all' || product.in_stock === true;
 
       return matchesSearch && matchesCategory && matchesStatus && matchesStock;
     });
@@ -140,7 +131,7 @@ const AdminProductsPage: React.FC = () => {
     }
   };
 
-  const handleViewProduct = (product: ProductWithStats) => {
+  const handleViewProduct = (product: Product) => {
     setSelectedProduct(product);
     setShowProductModal(true);
   };
@@ -150,7 +141,7 @@ const AdminProductsPage: React.FC = () => {
     navigate(`/admin/products/edit/${productId}`);
   };
 
-  const handleDeleteRequest = (e: React.MouseEvent, product: ProductWithStats) => {
+  const handleDeleteRequest = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
     setProductToDelete(product);
   };
@@ -165,12 +156,12 @@ const AdminProductsPage: React.FC = () => {
 
   // Estadísticas
   const stats = {
-    total: mockProductsWithStats.length,
-    inStock: mockProductsWithStats.filter(p => p.stock_status === 'in_stock').length,
-    lowStock: mockProductsWithStats.filter(p => p.stock_status === 'low_stock').length,
-    outOfStock: mockProductsWithStats.filter(p => p.stock_status === 'out_of_stock').length,
-    totalRevenue: mockProductsWithStats.reduce((sum, p) => sum + p.revenue, 0),
-    totalSales: mockProductsWithStats.reduce((sum, p) => sum + p.sales, 0)
+    total: listProducts.length,
+    inStock: listProducts.filter(p => p.in_stock).length,
+    lowStock: listProducts.filter(p => !p.in_stock).length,
+    outOfStock: listProducts.filter(p => !p.in_stock).length,
+    totalRevenue: listProducts.reduce((sum, p) => sum + p.price_ves, 0),
+    totalSales: 0
   };
 
   return (
@@ -414,9 +405,9 @@ const AdminProductsPage: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800">{product.name}</p>
                     <p className="text-sm text-gray-500">{product.brand}</p>
-                    <p className="font-semibold text-base text-gray-900 mt-2">{formatCurrency(product.priceVES)}</p>
+                    <p className="font-semibold text-base text-gray-900 mt-2">{formatCurrency(product.price_ves)}</p>
                     <div className="mt-2">
-                      {getStockStatusBadge(product.stock_status)}
+                      {getStockStatusBadge(product.in_stock ? 'in_stock' : 'out_of_stock')}
                     </div>
                   </div>
                 </div>
@@ -501,12 +492,12 @@ const AdminProductsPage: React.FC = () => {
                         </div>
                   </th>
                   <td className="px-6 py-4">{product.category}</td>
-                  <td className="px-6 py-4 font-semibold">{formatCurrency(product.priceVES)}</td>
+                  <td className="px-6 py-4 font-semibold">{formatCurrency(product.price_ves)}</td>
                   <td className="px-6 py-4">
-                      {getStockStatusBadge(product.stock_status)}
+                      {getStockStatusBadge(product.in_stock ? 'in stock' : 'out of stock')}
                     </td>
-                  <td className="px-6 py-4">{product.sales}</td>
-                  <td className="px-6 py-4">{formatDate(product.last_updated)}</td>
+                  <td className="px-6 py-4">{0}</td>
+                  <td className="px-6 py-4">{formatDate(product.created_at)}</td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center space-x-2">
                         <button

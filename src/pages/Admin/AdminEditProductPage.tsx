@@ -16,8 +16,9 @@ import {
   Info
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { mockProducts } from '../../data/mockData';
+import { getProductById } from '../../data/products';
 import { Product } from '../../types';
+import { useUploadImage } from '../../hooks/useUploadImage';
 
 interface ProductFormData extends Omit<Product, 'id'> {
   meta_description?: string;
@@ -32,71 +33,31 @@ interface ProductFormData extends Omit<Product, 'id'> {
 const AdminEditProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<ProductFormData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState('general');
   const [showUnsavedChanges, setShowUnsavedChanges] = useState(false);
-
-  // Buscar el producto por ID
-  const product = mockProducts.find(p => p.id === id);
-
-  const [formData, setFormData] = useState<ProductFormData>({
-    name: '',
-    description: '',
-    brand: '',
-    category: '',
-    subcategory: '',
-    patology: '',
-    priceVES: 0,
-    priceREF: 0,
-    originalPrice: 0,
-    image: '',
-    rating: 0,
-    reviews: 0,
-    inStock: true,
-    isOffer: false,
-    prescription: false,
-    meta_description: '',
-    seo_keywords: '',
-    weight: 0,
-    dimensions: '',
-    manufacturer: '',
-    expiry_date: '',
-    batch_number: ''
-  });
+  const {uploadImage, isLoading: isUploading, error: uploadError} = useUploadImage();
 
   useEffect(() => {
-    if (product) {
-      setFormData({
-        name: product.name,
-        description: product.description,
-        brand: product.brand,
-        category: product.category,
-        subcategory: product.subcategory || '',
-        patology: product.patology || '',
-        priceVES: product.priceVES,
-        priceREF: product.priceREF,
-        originalPrice: product.originalPrice || 0,
-        image: product.image,
-        rating: product.rating,
-        reviews: product.reviews,
-        inStock: product.inStock,
-        isOffer: product.isOffer || false,
-        prescription: product.prescription || false,
-        meta_description: '',
-        seo_keywords: '',
-        weight: 0,
-        dimensions: '',
-        manufacturer: product.brand,
-        expiry_date: '',
-        batch_number: ''
-      });
-    }
-  }, [product]);
+    const fetchProduct = async () => {
+      if (id) {
+        const productData = await getProductById(id);
+        if (productData) {
+          console.log(productData);
+          setFormData(productData);
+        }
+      }
+      setIsLoading(false);
+    };
+    fetchProduct();
+  }, [id]);
 
   const handleInputChange = (field: keyof ProductFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (!formData) return;
+    setFormData(prev => ({ ...prev!, [field]: value }));
     setShowUnsavedChanges(true);
     
     // Limpiar error del campo si existe
@@ -106,6 +67,7 @@ const AdminEditProductPage: React.FC = () => {
   };
 
   const validateForm = (): boolean => {
+    if (!formData) return false;
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
@@ -124,15 +86,15 @@ const AdminEditProductPage: React.FC = () => {
       newErrors.category = 'La categoría es requerida';
     }
 
-    if (formData.priceVES <= 0) {
-      newErrors.priceVES = 'El precio en VES debe ser mayor a 0';
+    if (formData.price_ves <= 0) {
+      newErrors.price_ves = 'El precio en VES debe ser mayor a 0';
     }
 
-    if (formData.priceREF <= 0) {
-      newErrors.priceREF = 'El precio de referencia debe ser mayor a 0';
+    if (formData.price_ref <= 0) {
+      newErrors.price_ref = 'El precio de referencia debe ser mayor a 0';
     }
 
-    if (!formData.image.trim()) {
+    if (!formData.image?.trim()) {
       newErrors.image = 'La imagen del producto es requerida';
     }
 
@@ -176,7 +138,25 @@ const AdminEditProductPage: React.FC = () => {
     }
   };
 
-  if (!product) {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const uploadedUrl = await uploadImage(file);
+      if (uploadedUrl) {
+        // This updates your form state with the new image URL
+        handleInputChange('image', uploadedUrl);
+      }
+    }
+  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        Cargando...
+      </div>
+    );
+  }
+
+  if (!formData) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -216,7 +196,7 @@ const AdminEditProductPage: React.FC = () => {
           </button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Editar Producto</h1>
-            <p className="text-gray-600">ID: {product.id} • Última actualización: hace 2 horas</p>
+            <p className="text-gray-600">ID: {id} • Última actualización: hace 2 horas</p>
           </div>
         </div>
         
@@ -374,15 +354,17 @@ const AdminEditProductPage: React.FC = () => {
                         <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                         <div className="space-y-2">
                           <input
-                            type="url"
-                            value={formData.image}
-                            onChange={(e) => handleInputChange('image', e.target.value)}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="URL de la imagen"
+                            placeholder="Selecciona una imagen"
                           />
                           <p className="text-sm text-gray-500">
                             O arrastra una imagen aquí
                           </p>
+                          {isUploading && <p>Subiendo imagen...</p>}
+                          {uploadError && <p style={{ color: 'red' }}>{uploadError}</p>}
                         </div>
                       </div>
                     </div>
@@ -434,16 +416,16 @@ const AdminEditProductPage: React.FC = () => {
                       <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                       <input
                         type="number"
-                        value={formData.priceVES}
-                        onChange={(e) => handleInputChange('priceVES', parseFloat(e.target.value) || 0)}
+                        value={formData.price_ves}
+                        onChange={(e) => handleInputChange('price_ves', parseFloat(e.target.value) || 0)}
                         className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.priceVES ? 'border-red-300' : 'border-gray-300'
+                          errors.price_ves ? 'border-red-300' : 'border-gray-300'
                         }`}
                         placeholder="0.00"
                       />
                     </div>
-                    {errors.priceVES && (
-                      <p className="mt-1 text-sm text-red-600">{errors.priceVES}</p>
+                    {errors.price_ves && (
+                      <p className="mt-1 text-sm text-red-600">{errors.price_ves}</p>
                     )}
                   </div>
 
@@ -455,16 +437,16 @@ const AdminEditProductPage: React.FC = () => {
                       <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                       <input
                         type="number"
-                        value={formData.priceREF}
-                        onChange={(e) => handleInputChange('priceREF', parseFloat(e.target.value) || 0)}
+                        value={formData.price_ref}
+                        onChange={(e) => handleInputChange('price_ref', parseFloat(e.target.value) || 0)}
                         className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.priceREF ? 'border-red-300' : 'border-gray-300'
+                          errors.price_ref ? 'border-red-300' : 'border-gray-300'
                         }`}
                         placeholder="0.00"
                       />
                     </div>
-                    {errors.priceREF && (
-                      <p className="mt-1 text-sm text-red-600">{errors.priceREF}</p>
+                    {errors.price_ref && (
+                      <p className="mt-1 text-sm text-red-600">{errors.price_ref}</p>
                     )}
                   </div>
 
@@ -476,8 +458,8 @@ const AdminEditProductPage: React.FC = () => {
                       <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                       <input
                         type="number"
-                        value={formData.originalPrice}
-                        onChange={(e) => handleInputChange('originalPrice', parseFloat(e.target.value) || 0)}
+                        value={formData.original_price || ''}
+                        onChange={(e) => handleInputChange('original_price', parseFloat(e.target.value) || 0)}
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="0.00"
                       />
@@ -492,8 +474,8 @@ const AdminEditProductPage: React.FC = () => {
                       <label className="flex items-center">
                         <input
                           type="checkbox"
-                          checked={formData.isOffer}
-                          onChange={(e) => handleInputChange('isOffer', e.target.checked)}
+                            checked={formData.is_offer}
+                          onChange={(e) => handleInputChange('is_offer', e.target.checked)}
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                         <span className="ml-2 text-sm text-gray-700">
@@ -501,10 +483,10 @@ const AdminEditProductPage: React.FC = () => {
                         </span>
                       </label>
                       
-                      {formData.isOffer && formData.originalPrice && formData.originalPrice > 0 && (
+                      {formData.is_offer && formData.original_price && formData.original_price > 0 && formData.price_ves && (
                         <div className="text-sm text-gray-600">
-                          <p>Descuento: {Math.round(((formData.originalPrice - formData.priceVES) / formData.originalPrice) * 100)}%</p>
-                          <p>Ahorro: ${(formData.originalPrice - formData.priceVES).toFixed(2)} VES</p>
+                          <p>Descuento: {Math.round(((formData.original_price - formData.price_ves) / formData.original_price) * 100)}%</p>
+                          <p>Ahorro: ${(formData.original_price - formData.price_ves).toFixed(2)} VES</p>
                         </div>
                       )}
                     </div>
@@ -630,8 +612,8 @@ const AdminEditProductPage: React.FC = () => {
                       <label className="flex items-center">
                         <input
                           type="checkbox"
-                          checked={formData.inStock}
-                          onChange={(e) => handleInputChange('inStock', e.target.checked)}
+                          checked={formData.in_stock}
+                          onChange={(e) => handleInputChange('in_stock', e.target.checked)}
                           className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                         />
                         <span className="ml-2 text-sm text-gray-700">
@@ -639,7 +621,7 @@ const AdminEditProductPage: React.FC = () => {
                         </span>
                       </label>
                       
-                      {!formData.inStock && (
+                        {!formData.in_stock && (
                         <div className="text-sm text-red-700 bg-red-100 p-2 rounded">
                           <AlertCircle className="w-4 h-4 inline mr-1" />
                           El producto aparecerá como "Agotado" en la tienda.
@@ -658,7 +640,7 @@ const AdminEditProductPage: React.FC = () => {
                         min="0"
                         max="5"
                         step="0.1"
-                        value={formData.rating}
+                        value={formData.rating || 0}
                         onChange={(e) => handleInputChange('rating', parseFloat(e.target.value) || 0)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
@@ -671,8 +653,8 @@ const AdminEditProductPage: React.FC = () => {
                       <input
                         type="number"
                         min="0"
-                        value={formData.reviews}
-                        onChange={(e) => handleInputChange('reviews', parseInt(e.target.value) || 0)}
+                        value={formData.review_count || 0}
+                        onChange={(e) => handleInputChange('review_count', parseInt(e.target.value) || 0)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProductWithStats } from '../../types';
+import { Product } from '../../types';
 import {
   XCircle,
   Clock,
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 interface ProductModalProps {
-  product: ProductWithStats | null;
+  product: Product | null;
   onClose: () => void;
 }
 
@@ -69,7 +69,7 @@ const getStockStatusInfo = (status: 'in_stock' | 'low_stock' | 'out_of_stock') =
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   if (!product) return null;
 
-  const stockInfo = getStockStatusInfo(product.stock_status);
+  const stockInfo = getStockStatusInfo(product.in_stock ? 'in_stock' : 'out_of_stock');
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-2 sm:p-4 z-50">
@@ -119,17 +119,17 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
                  <div className="flex items-center">
                   <DollarSign className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
                   <span className="text-gray-500 mr-2">Precio:</span>
-                  <span className="font-medium text-gray-800">{formatCurrency(product.priceVES)}</span>
+                  <span className="font-medium text-gray-800">{formatCurrency(product.price_ves)}</span>
                 </div>
                 <div className="flex items-center">
                   <Star className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
                   <span className="text-gray-500 mr-2">Rating:</span>
-                  <span className="font-medium text-gray-800">{product.rating} / 5 ({product.reviews} reviews)</span>
+                  <span className="font-medium text-gray-800">{0} / 5 ({0} reviews)</span>
                 </div>
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
                   <span className="text-gray-500 mr-2">Última Actualización:</span>
-                  <span className="font-medium text-gray-800">{formatDate(product.last_updated)}</span>
+                  <span className="font-medium text-gray-800">{formatDate(product.created_at)}</span>
                 </div>
               </div>
             </div>
@@ -141,17 +141,17 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
                 <div className="flex items-center">
                   <BarChart3 className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
                   <span className="text-gray-500 mr-2">Vistas:</span>
-                  <span className="font-medium text-gray-800">{product.views.toLocaleString()}</span>
+                  <span className="font-medium text-gray-800">{0}</span>
                 </div>
                 <div className="flex items-center">
                   <Package className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
                   <span className="text-gray-500 mr-2">Ventas:</span>
-                  <span className="font-medium text-gray-800">{product.sales.toLocaleString()}</span>
+                  <span className="font-medium text-gray-800">{0}</span>
                 </div>
                 <div className="flex items-center">
                   <TrendingUp className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
                   <span className="text-gray-500 mr-2">Ingresos:</span>
-                  <span className="font-medium text-gray-800">{formatCurrency(product.revenue)}</span>
+                  <span className="font-medium text-gray-800">{formatCurrency(product.price_ves)}</span>
                 </div>
                  <div className="flex items-center">
                   <ImageIcon className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
