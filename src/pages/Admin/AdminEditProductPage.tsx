@@ -16,7 +16,7 @@ import {
   Info
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { getProductById } from '../../data/products';
+import { getProductById, updateProduct } from '../../data/products';
 import { Product } from '../../types';
 import { useUploadImage } from '../../hooks/useUploadImage';
 
@@ -40,7 +40,7 @@ const AdminEditProductPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [showUnsavedChanges, setShowUnsavedChanges] = useState(false);
   const {uploadImage, isLoading: isUploading, error: uploadError} = useUploadImage();
-
+  const token = localStorage.getItem('token');
   useEffect(() => {
     const fetchProduct = async () => {
       if (id) {
@@ -110,22 +110,17 @@ const AdminEditProductPage: React.FC = () => {
     setIsSaving(true);
     
     try {
-      // Simular guardado
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Producto actualizado:', formData);
-      setShowUnsavedChanges(false);
-      
-      // Mostrar mensaje de éxito y redirigir
-      alert('Producto actualizado exitosamente');
-      navigate('/admin/products');
-      
+      const updatedProduct = await updateProduct(id || '', formData as Product, token || '');
+      if (updatedProduct) {
+        setShowUnsavedChanges(false);
+        alert('Producto actualizado exitosamente');
+        navigate('/admin/products');
+      }
     } catch (error) {
       console.error('Error al guardar:', error);
-      alert('Error al guardar el producto');
     } finally {
       setIsSaving(false);
-    }
+    } 
   };
 
   const handleCancel = () => {

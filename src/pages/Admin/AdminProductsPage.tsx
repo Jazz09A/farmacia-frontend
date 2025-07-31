@@ -146,7 +146,7 @@ const AdminProductsPage: React.FC = () => {
     setProductToDelete(product);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = () => { 
     if (!productToDelete) return;
     // Lógica para eliminar el producto
     console.log(`Producto ${productToDelete.id} eliminado.`);
@@ -398,10 +398,10 @@ const AdminProductsPage: React.FC = () => {
               >
                 <div className="flex items-start space-x-4">
                   <img 
-                    src={product.images?.[0] || product.image || 'https://placehold.co/400x400/png'} 
+                    src={product.image} 
                     alt={product.name} 
                     className="w-20 h-20 rounded-lg object-cover border flex-shrink-0"
-                  />
+                    />
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800">{product.name}</p>
                     <p className="text-sm text-gray-500">{product.brand}</p>

@@ -30,16 +30,18 @@ interface BackendResponse {
 
 // Function to map backend product data to frontend Product interface
 const mapBackendProductToProduct = (backendProduct: Product): Product => {
-  // Handle image URLs - if they contain placeholder, use a default image
-  const imageUrl = backendProduct.image?.includes('placeholder') 
-    ? 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop'
-    : backendProduct.image;
+  // Prioriza el campo 'image' si no es un placeholder.
+  // Si no, utiliza el array 'images' como alternativa.
+  const primaryImage =
+    backendProduct.image && !backendProduct.image.includes('placeholder')
+      ? backendProduct.image
+      : backendProduct.images?.[0];
 
-  const images = backendProduct.images?.map(img => 
-    img?.includes('placeholder') 
+  const images = [
+    primaryImage?.includes('placeholder')
       ? 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop'
-      : img
-  ) || [imageUrl];
+      : primaryImage || 'https://placehold.co/400x400/png',
+  ];
 
   return {
     id: backendProduct.id,
@@ -52,7 +54,7 @@ const mapBackendProductToProduct = (backendProduct: Product): Product => {
     price_ref: backendProduct.price_ref,
     description: backendProduct.description,
     ingredients: backendProduct.ingredients || [],
-    image: imageUrl,
+    image: primaryImage || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop',
     images: images,
     in_stock: backendProduct.in_stock,
     stock: backendProduct.stock,
@@ -147,5 +149,16 @@ export const getProductById = async (id: string): Promise<Product | null> => {
   return data || null;
 };
 
-
+export const updateProduct = async (id: string, product: Product, token: string): Promise<Product | null> => {
+  const response = await fetch(`/api/v1/admin/products/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(product),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  const data = await response.json();
+  return data || null;
+};
 // Default export - empty array since we're now using async loading

@@ -13,6 +13,8 @@ export const useAuth = (): AuthContextType => {
       const savedToken = authService.getCurrentToken();
       if (savedToken) {
         setToken(savedToken);
+        localStorage.setItem('token', savedToken);
+        // Obtener los datos del usuario
         const userData = await authService.getMe();
         if (userData) {
           setUser(userData);
