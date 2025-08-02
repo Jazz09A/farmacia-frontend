@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useCurrency } from '../hooks/useCurrency';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ArrowLeft, User, Building, MapPin, CreditCard, ShieldCheck } from 'lucide-react';
-import { Cart, PaymentMethod } from '../types';
-import { authService } from '../services/AuthService';
-
+import { PaymentMethod } from '../types';
+import { useCart } from '../contexts/CartContext';
 
 const steps = [
   { id: 'user', name: 'Identificación', icon: User },
@@ -19,20 +18,66 @@ const paymentMethods: PaymentMethod[] = [
     { id: 'efectivo', name: 'Efectivo', description: 'Paga en efectivo al momento de la entrega.', icon: '', available: true, currencies: ['VES', 'REF'] },
 ];
 
+interface FormData {
+    razonSocial: string;
+    rif: string;
+    nombreContacto: string;
+    cedula: string;
+    email: string;
+    telefono: string;
+    direccion: string;
+    referencia: string;
+    metodoPago: string;
+}
+
 const CheckoutPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
-
-  const [cart, setCart] = useState<Cart | null>(null);
+  const { cart } = useCart();
   const { formatPrice } = useCurrency();
+  const [formData, setFormData] = useState<FormData>({
+    razonSocial: '',
+    rif: '',
+    nombreContacto: '',
+    cedula: '',
+    email: '',
+    telefono: '',
+    direccion: '',
+    referencia: '',
+    metodoPago: 'pago-movil',
+  });
 
-  const nextStep = () => setCurrentStep(s => Math.min(s + 1, steps.length - 1));
-  const prevStep = () => setCurrentStep(s => Math.max(s - 1, 0));
-
+  // Load from localStorage on mount
   useEffect(() => {
-    authService.getCart().then((cart: any) => {
-      setCart(cart.data);
-    });
+    const savedData = localStorage.getItem('checkoutFormData');
+    if (savedData) {
+      setFormData(JSON.parse(savedData));
+    }
   }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, metodoPago: e.target.value }));
+  };
+  
+  const handleConfirmOrder = () => {
+    // Here you would typically send the order to the backend
+    console.log('Order confirmed:', { formData, cart });
+    alert('Pedido confirmado! Gracias por tu compra.');
+    localStorage.removeItem('checkoutFormData');
+    // Redirect or clear cart
+  };
+
+  const nextStep = () => {
+    // Save data on step transition
+    localStorage.setItem('checkoutFormData', JSON.stringify(formData));
+    setCurrentStep(s => Math.min(s + 1, steps.length - 1));
+  };
+  
+  const prevStep = () => setCurrentStep(s => Math.max(s - 1, 0));
 
   return (
     <div className="min-h-screen bg-medical-gray-50 pt-32">
@@ -40,7 +85,6 @@ const CheckoutPage: React.FC = () => {
         <h1 className="text-4xl font-bold text-medical-gray-900 mb-4">Finalizar Compra</h1>
         <p className="text-lg text-medical-gray-600 mb-8">Sigue los pasos para completar tu pedido de forma segura.</p>
 
-        {/* Stepper */}
         <div className="mb-12">
           <ol className="flex items-center w-full">
             {steps.map((step, index) => (
@@ -54,7 +98,6 @@ const CheckoutPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Form Steps */}
           <div className="lg:col-span-2">
             <AnimatePresence mode="wait">
               <motion.div
@@ -71,14 +114,13 @@ const CheckoutPage: React.FC = () => {
                       <Building className="text-medical-primary" />
                       <span className="font-medium">Persona Jurídica (Farmacia)</span>
                     </div>
-                    
                     <form className="space-y-4">
-                      <input type="text" placeholder="Razón Social" className="w-full p-3 border-gray-300 rounded-lg" />
-                      <input type="text" placeholder="RIF (J-12345678-9)" className="w-full p-3 border-gray-300 rounded-lg" />
-                      <input type="text" placeholder="Nombre del Contacto" className="w-full p-3 border-gray-300 rounded-lg" />
-                      <input type="text" placeholder="Cédula de Identidad" className="w-full p-3 border-gray-300 rounded-lg" />
-                      <input type="email" placeholder="Correo Electrónico" className="w-full p-3 border-gray-300 rounded-lg" />
-                      <input type="tel" placeholder="Teléfono" className="w-full p-3 border-gray-300 rounded-lg" />
+                      <input type="text" name="razonSocial" value={formData.razonSocial} onChange={handleChange} placeholder="Razón Social" className="w-full p-3 border-gray-300 rounded-lg" />
+                      <input type="text" name="rif" value={formData.rif} onChange={handleChange} placeholder="RIF (J-12345678-9)" className="w-full p-3 border-gray-300 rounded-lg" />
+                      <input type="text" name="nombreContacto" value={formData.nombreContacto} onChange={handleChange} placeholder="Nombre del Contacto" className="w-full p-3 border-gray-300 rounded-lg" />
+                      <input type="text" name="cedula" value={formData.cedula} onChange={handleChange} placeholder="Cédula de Identidad" className="w-full p-3 border-gray-300 rounded-lg" />
+                      <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Correo Electrónico" className="w-full p-3 border-gray-300 rounded-lg" />
+                      <input type="tel" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Teléfono" className="w-full p-3 border-gray-300 rounded-lg" />
                     </form>
                   </div>
                 )}
@@ -86,8 +128,8 @@ const CheckoutPage: React.FC = () => {
                   <div>
                     <h2 className="text-2xl font-bold mb-6">2. Dirección de Envío</h2>
                     <form className="space-y-4">
-                      <input type="text" placeholder="Dirección Completa (Estado, Ciudad, Calle, Edificio, Apartamento)" className="w-full p-3 border-gray-300 rounded-lg" />
-                      <textarea placeholder="Punto de referencia o instrucciones adicionales" className="w-full p-3 border-gray-300 rounded-lg" rows={3}></textarea>
+                      <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Dirección Completa (Estado, Ciudad, Calle, Edificio, Apartamento)" className="w-full p-3 border-gray-300 rounded-lg" />
+                      <textarea name="referencia" value={formData.referencia} onChange={handleChange} placeholder="Punto de referencia o instrucciones adicionales" className="w-full p-3 border-gray-300 rounded-lg" rows={3}></textarea>
                     </form>
                   </div>
                 )}
@@ -97,7 +139,7 @@ const CheckoutPage: React.FC = () => {
                     <div className="space-y-4">
                       {paymentMethods.map((method: PaymentMethod) => (
                         <label key={method.id} className="flex items-center p-4 rounded-xl border-2 border-gray-200 has-[:checked]:border-medical-primary has-[:checked]:bg-medical-blue-50">
-                          <input type="radio" name="payment" className="h-5 w-5 text-medical-primary focus:ring-medical-primary"/>
+                          <input type="radio" name="metodoPago" value={method.id} checked={formData.metodoPago === method.id} onChange={handlePaymentChange} className="h-5 w-5 text-medical-primary focus:ring-medical-primary"/>
                           <div className="ml-4">
                             <p className="font-semibold">{method.name}</p>
                             <p className="text-sm text-gray-500">{method.description}</p>
@@ -125,14 +167,13 @@ const CheckoutPage: React.FC = () => {
                   Siguiente <ChevronRight className="w-4 h-4" />
                 </button>
               ) : (
-                <button className="flex items-center gap-2 px-6 py-3 bg-medical-accent text-white rounded-xl">
+                <button onClick={handleConfirmOrder} className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-xl">
                   Confirmar Pedido <ShieldCheck className="w-4 h-4" />
                 </button>
               )}
             </div>
           </div>
           
-          {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white p-6 rounded-2xl shadow-soft sticky top-28">
               <h3 className="text-xl font-bold text-medical-gray-800 border-b pb-3 mb-4">Resumen del Pedido</h3>
@@ -146,7 +187,7 @@ const CheckoutPage: React.FC = () => {
                         <p className="text-gray-500">Cant: {item.quantity}</p>
                       </div>
                     </div>
-                    <span className="font-semibold">{formatPrice(item.product.price_ves * item.quantity, 'VES')}</span>
+                    <span className="font-semibold">{formatPrice(item.subtotal_ves, 'VES')}</span>
                   </div>
                 ))}
               </div>
