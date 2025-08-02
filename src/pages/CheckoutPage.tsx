@@ -5,6 +5,7 @@ import { ChevronRight, ArrowLeft, User, Building, MapPin, CreditCard, ShieldChec
 import { Cart } from '../types';
 import { authService } from '../services/AuthService';
 
+
 const steps = [
   { id: 'user', name: 'Identificación', icon: User },
   { id: 'shipping', name: 'Envío', icon: MapPin },

@@ -26,7 +26,7 @@ const CartPage: React.FC = () => {
           Parece que no has añadido nada a tu carrito. ¡Explora nuestros productos!
         </p>
         <Link
-          to="/catalogo"
+          to="/catalog"
           className="px-8 py-4 bg-medical-primary text-white font-semibold rounded-2xl shadow-medical hover:bg-medical-primary-dark transition-all"
         >
           Ir al Catálogo
@@ -86,10 +86,6 @@ const CartPage: React.FC = () => {
                 <div className="flex justify-between">
                   <span>Subtotal ({cart.total_items} productos)</span>
                   <span className="font-semibold">{formatPrice(cart.total_ves, 'VES')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Envío</span>
-                  <span className="font-semibold text-green-600">Gratis (promo)**</span>
                 </div>
                 <div className="flex justify-between font-bold text-xl text-medical-gray-900 border-t pt-4 mt-4">
                   <span>Total</span>
