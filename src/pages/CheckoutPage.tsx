@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useCurrency } from '../hooks/useCurrency';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ArrowLeft, User, Building, MapPin, CreditCard, ShieldCheck } from 'lucide-react';
-import { Cart } from '../types';
+import { Cart, PaymentMethod } from '../types';
 import { authService } from '../services/AuthService';
 
 
@@ -13,9 +13,14 @@ const steps = [
   { id: 'confirm', name: 'Confirmar', icon: ShieldCheck },
 ];
 
+const paymentMethods: PaymentMethod[] = [
+    { id: 'pago-movil', name: 'Pago Móvil', description: 'Paga al instante desde tu banco.', icon: '', available: true, currencies: ['VES'] },
+    { id: 'zelle', name: 'Zelle', description: 'Transferencia directa a nuestra cuenta Zelle.', icon: '', available: true, currencies: ['REF'] },
+    { id: 'efectivo', name: 'Efectivo', description: 'Paga en efectivo al momento de la entrega.', icon: '', available: true, currencies: ['VES', 'REF'] },
+];
+
 const CheckoutPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const userType = 'juridico'; // Solo usuarios jurídicos
 
   const [cart, setCart] = useState<Cart | null>(null);
   const { formatPrice } = useCurrency();
@@ -81,10 +86,7 @@ const CheckoutPage: React.FC = () => {
                   <div>
                     <h2 className="text-2xl font-bold mb-6">2. Dirección de Envío</h2>
                     <form className="space-y-4">
-                      <select className="w-full p-3 border-gray-300 rounded-lg">
-                        {shippingZones.map(zone => <option key={zone.id} value={zone.id}>{zone.name}</option>)}
-                      </select>
-                      <input type="text" placeholder="Dirección Completa (Calle, Edificio, Apartamento)" className="w-full p-3 border-gray-300 rounded-lg" />
+                      <input type="text" placeholder="Dirección Completa (Estado, Ciudad, Calle, Edificio, Apartamento)" className="w-full p-3 border-gray-300 rounded-lg" />
                       <textarea placeholder="Punto de referencia o instrucciones adicionales" className="w-full p-3 border-gray-300 rounded-lg" rows={3}></textarea>
                     </form>
                   </div>
@@ -93,7 +95,7 @@ const CheckoutPage: React.FC = () => {
                   <div>
                     <h2 className="text-2xl font-bold mb-6">3. Método de Pago</h2>
                     <div className="space-y-4">
-                      {paymentMethods.map(method => (
+                      {paymentMethods.map((method: PaymentMethod) => (
                         <label key={method.id} className="flex items-center p-4 rounded-xl border-2 border-gray-200 has-[:checked]:border-medical-primary has-[:checked]:bg-medical-blue-50">
                           <input type="radio" name="payment" className="h-5 w-5 text-medical-primary focus:ring-medical-primary"/>
                           <div className="ml-4">
@@ -170,4 +172,4 @@ const CheckoutPage: React.FC = () => {
   );
 };
 
-export default CheckoutPage; 
+export default CheckoutPage;
