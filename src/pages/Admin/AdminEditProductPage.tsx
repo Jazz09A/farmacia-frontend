@@ -16,7 +16,7 @@ import {
   Info
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { getProductById, updateProduct } from '../../data/products';
+import { getProductById, updateProduct, deleteImage } from '../../data/products';
 import { Product } from '../../types';
 import { useUploadImage } from '../../hooks/useUploadImage';
 
@@ -39,6 +39,7 @@ const AdminEditProductPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState('general');
   const [showUnsavedChanges, setShowUnsavedChanges] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState<string | null>(null);
   const {uploadImage, isLoading: isUploading, error: uploadError} = useUploadImage();
   const token = localStorage.getItem('token');
   useEffect(() => {
@@ -110,11 +111,18 @@ const AdminEditProductPage: React.FC = () => {
     setIsSaving(true);
     
     try {
+      // Si hay una imagen marcada para eliminar, la eliminamos primero
+      if (imageToDelete && id) {
+        await deleteImage(id, imageToDelete, token || '');
+        setImageToDelete(null); // Reseteamos el estado
+      }
+
       const updatedProduct = await updateProduct(id || '', formData as Product, token || '');
       if (updatedProduct) {
         setShowUnsavedChanges(false);
-        alert('Producto actualizado exitosamente');
         navigate('/admin/products');
+      } else {
+        alert('Error al actualizar el producto, no se pudo guardar');
       }
     } catch (error) {
       console.error('Error al guardar:', error);
@@ -142,6 +150,12 @@ const AdminEditProductPage: React.FC = () => {
         handleInputChange('image', uploadedUrl);
       }
     }
+  };
+
+  const handleDeleteImage = () => {
+    if (!formData?.image) return;
+    setImageToDelete(formData.image); // Marcamos la imagen para ser eliminada al guardar
+    handleInputChange('image', ''); // La quitamos de la vista previa
   };
   if (isLoading) {
     return (
@@ -337,7 +351,7 @@ const AdminEditProductPage: React.FC = () => {
                             className="w-full h-48 object-cover rounded-lg border border-gray-300"
                           />
                           <button
-                            onClick={() => handleInputChange('image', '')}
+                            onClick={handleDeleteImage}
                             className="absolute top-2 right-2 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
                           >
                             <X className="w-4 h-4" />

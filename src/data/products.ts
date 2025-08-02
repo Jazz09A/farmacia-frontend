@@ -161,4 +161,15 @@ export const updateProduct = async (id: string, product: Product, token: string)
   const data = await response.json();
   return data || null;
 };
+
+export const deleteImage = async (id: string, image_url: string, token: string): Promise<Product | null> => {
+  const response = await fetch(`/api/v1/admin/products/${id}/image/${image_url}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    });
+  const data = await response.json();
+  return data || null;
+};
 // Default export - empty array since we're now using async loading

@@ -321,8 +321,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Action Buttons */}
               <div className="flex items-center space-x-1 lg:space-x-2">
+
                 {/* Wishlist */}
-                                  <motion.button
+                {/* <motion.button
                     className={`p-2 lg:p-3 rounded-2xl transition-all duration-300 relative group ${getActionButtonClasses('wishlist')}`}
                   whileHover={{ scale: 1.1, y: -2 }}
                   whileTap={{ scale: 0.95 }}
@@ -336,13 +337,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     3
                   </motion.span>
-                  {/* Tooltip */}
+                  Tooltip
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <div className="bg-medical-gray-900 text-white text-xs px-2 py-1 rounded-lg whitespace-nowrap">
                       Lista de Deseos
                     </div>
                   </div>
-                </motion.button>
+                </motion.button> */}
 
                 {/* Cart */}
                 <Link to="/cart">
