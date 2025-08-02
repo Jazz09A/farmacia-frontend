@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Settings, Package, HelpCircle, Briefcase, Tag, BookText, Shield } from 'lucide-react';
+import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Package, HelpCircle, Briefcase, Tag, BookText, Shield } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../types/auth';
@@ -11,21 +11,15 @@ import logoSrc from '../../public/logo/Logo.webp';
 interface NavbarProps {
   isScrolled: boolean;
   cartItemsCount: number;
-  onCartOpen: () => void;
   currency: 'VES' | 'REF';
   onCurrencyToggle: () => void;
-  cartModalOpen: boolean;
-  onCartModalClose: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   isScrolled,
   cartItemsCount,
-  onCartOpen,
   currency,
   onCurrencyToggle,
-  cartModalOpen,
-  onCartModalClose
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -76,21 +70,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     return baseTransition;
   }, [isMobile]);
 
-  // Optimizar propiedades para mobile
-  const getMobileOptimizedProps = useCallback((props: any) => {
-    if (isMobile) {
-      return {
-        ...props,
-        style: {
-          ...props.style,
-          willChange: 'transform',
-          transform3d: true
-        }
-      };
-    }
-    return props;
-  }, [isMobile]);
-
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -127,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   // Cerrar menús al hacer click fuera
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = () => {
       if (isUserMenuOpen) {
         setIsUserMenuOpen(false);
       }
@@ -162,24 +141,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
     // Estado inicial transparente
     return 'bg-white/95 backdrop-blur-xl shadow-medical border-b border-medical-gray-200/50';
-  };
-
-  // Función para obtener las clases del logo según el contexto
-  const getLogoClasses = () => {
-    // En fondos claros o con scroll, el logo es oscuro
-    if (isLightBackgroundPage || isScrolled) {
-      return {
-        iconContainer: 'bg-medical-blue-gradient text-white shadow-medical',
-        title: 'text-medical-blue-700',
-        subtitle: 'text-medical-gray-600'
-      };
-    }
-    // Blanco solo en estado inicial sin scroll
-    return {
-      iconContainer: 'bg-medical-blue-gradient text-white shadow-medical',
-      title: 'text-medical-blue-700',
-      subtitle: 'text-medical-gray-600'
-    };
   };
 
   // Función para obtener las clases de los elementos de navegación
@@ -225,8 +186,6 @@ export const Navbar: React.FC<NavbarProps> = ({
         return '';
     }
   };
-
-  const logoClasses = getLogoClasses();
 
   return (
     <>
@@ -352,22 +311,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {/* Cart */}
                 <Link to="/cart">
                   <motion.button
-                    onClick={onCartOpen}
                     className={`relative p-2 lg:p-3 rounded-2xl transition-all duration-300 group ${getActionButtonClasses('cart')}`}
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <ShoppingCart className="h-5 w-5" />
-                    {cartItemsCount > 0 && (
-                      <motion.span
-                        className="absolute -top-1 -right-1 bg-medical-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                      >
-                        {cartItemsCount}
-                      </motion.span>
-                    )}
+                    <AnimatePresence>
+                      {cartItemsCount > 0 && (
+                        <motion.span
+                          className="absolute -top-1 -right-1 bg-medical-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                        >
+                          {cartItemsCount}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                     {/* Tooltip */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <div className="bg-medical-gray-900 text-white text-xs px-2 py-1 rounded-lg whitespace-nowrap">

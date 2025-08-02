@@ -1,24 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCurrency } from '../hooks/useCurrency';
 import { motion } from 'framer-motion';
 import { Plus, Minus, ShoppingCart, ArrowLeft, Trash2 } from 'lucide-react';
-import { authService } from '../services/AuthService';
-import { Cart } from '../types';
+import { useCart } from '../contexts/CartContext';
 
 const CartPage: React.FC = () => {
   const { formatPrice } = useCurrency();
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    authService.getCart().then((cartData) => {
-      setCart(cartData);
-      setLoading(false);
-    }).catch(() => {
-      setLoading(false);
-    });
-  }, []);
+  const { cart, loading } = useCart();
 
   if (loading) {
     return (

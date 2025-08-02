@@ -10,8 +10,6 @@ import { PageLayout } from './components/Layout/PageLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
 import AdminRoute from './components/Admin/AdminRoute';
-import { Cart } from './types';
-
 
 // Pages with Lazy Loading
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -41,16 +39,17 @@ const AdminEditProductPage = lazy(() => import('./pages/Admin/AdminEditProductPa
 const AdminAnalyticsPage = lazy(() => import('./pages/Admin/AdminAnalyticsPage'));
 
 // Hooks
-// import { useCart } from './hooks/useCart';
 import { useCurrency } from './hooks/useCurrency';
-// import { AuthProvider } from './hooks/useAuth';
+import { useCart } from './contexts/CartContext'; // Import useCart from context
 
 // Contexts
 import { ScrollProvider, useScrollContext } from './contexts/ScrollContext';
+import { CartProvider } from './contexts/CartContext';
 
 
 const AppLayout = () => {
-  const { isScrolled, showScrollTop, cart, currency } = useApp();
+  const { isScrolled, showScrollTop, currency } = useApp();
+  const { cart } = useCart(); // Use cart from context
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const isAuthRoute = location.pathname.startsWith('/auth');
@@ -108,7 +107,6 @@ const useApp = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   
-  const [cart, setCart] = useState<Cart | null>(null);
   const currency = useCurrency();
 
   useEffect(() => {
@@ -122,7 +120,7 @@ const useApp = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  return { isScrolled, showScrollTop, cart, currency };
+  return { isScrolled, showScrollTop, currency };
 }
 
 
@@ -186,10 +184,12 @@ function App() {
   return (
     <Router>
       <ScrollProvider>
-        <ScrollToTop />
-        <div className="App min-h-screen w-full flex flex-col bg-medical-gray-50 relative">
-          <AppLayout />
-        </div>
+        <CartProvider>
+          <ScrollToTop />
+          <div className="App min-h-screen w-full flex flex-col bg-medical-gray-50 relative">
+            <AppLayout />
+          </div>
+        </CartProvider>
       </ScrollProvider>
     </Router>
   );
