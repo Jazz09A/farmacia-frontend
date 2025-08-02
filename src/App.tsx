@@ -186,7 +186,7 @@ function App() {
       <ScrollProvider>
         <CartProvider>
           <ScrollToTop />
-          <div className="App min-h-screen w-full flex flex-col bg-medical-gray-50 relative">
+          <div className="App min-h-screen w-full flex flex-col bg-medical-gray-50 relative pb-16">
             <AppLayout />
           </div>
         </CartProvider>

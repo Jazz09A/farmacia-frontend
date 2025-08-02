@@ -152,7 +152,38 @@ const CheckoutPage: React.FC = () => {
                 {currentStep === 3 && (
                   <div>
                     <h2 className="text-2xl font-bold mb-6">4. Confirmar Pedido</h2>
-                    <p>Revisa tu pedido antes de confirmar.</p>
+                    <p className="mb-6 text-gray-600">Por favor, revisa que toda la información sea correcta antes de confirmar tu pedido.</p>
+                    
+                    <div className="space-y-6">
+                        {/* Resumen de Información */}
+                        <div className="bg-white p-6 rounded-2xl shadow-soft border">
+                            <h3 className="font-bold text-lg mb-4 border-b pb-2">Información de la Farmacia</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div><span className="font-semibold text-gray-600">Razón Social:</span> <p>{formData.razonSocial}</p></div>
+                                <div><span className="font-semibold text-gray-600">RIF:</span> <p>{formData.rif}</p></div>
+                                <div><span className="font-semibold text-gray-600">Contacto:</span> <p>{formData.nombreContacto}</p></div>
+                                <div><span className="font-semibold text-gray-600">Cédula:</span> <p>{formData.cedula}</p></div>
+                                <div><span className="font-semibold text-gray-600">Email:</span> <p>{formData.email}</p></div>
+                                <div><span className="font-semibold text-gray-600">Teléfono:</span> <p>{formData.telefono}</p></div>
+                            </div>
+                        </div>
+
+                        {/* Resumen de Envío */}
+                        <div className="bg-white p-6 rounded-2xl shadow-soft border">
+                            <h3 className="font-bold text-lg mb-4 border-b pb-2">Dirección de Envío</h3>
+                            <div className="text-sm">
+                                <div><span className="font-semibold text-gray-600">Dirección:</span> <p>{formData.direccion}</p></div>
+                                <div className="mt-2"><span className="font-semibold text-gray-600">Referencia:</span> <p>{formData.referencia || 'No especificada'}</p></div>
+                            </div>
+                        </div>
+
+                        {/* Resumen de Pago */}
+                        <div className="bg-white p-6 rounded-2xl shadow-soft border">
+                            <h3 className="font-bold text-lg mb-4 border-b pb-2">Método de Pago</h3>
+                            <p className="text-sm">{paymentMethods.find(p => p.id === formData.metodoPago)?.name || 'No seleccionado'}</p>
+                        </div>
+                    </div>
+
                   </div>
                 )}
               </motion.div>
