@@ -6,7 +6,7 @@ import { Product } from '../../types/index';
 
 interface ProductsSectionProps {
   currency: 'VES' | 'REF';
-  onAddToCart: (productId: string) => void;
+  onAddToCart: (product: Product, quantity: number) => void;
   formatPrice: (priceVES: number, priceREF: number) => string;
 }
 

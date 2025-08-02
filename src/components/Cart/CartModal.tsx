@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingBag, Trash2 } from 'lucide-react';
-import { CartItem } from '../../types';
-
+import { Cart, CartItem } from '../../types';
+import { authService } from '../../services/AuthService';
 interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
-  items: CartItem[];
   currency: 'VES' | 'REF';
   formatPrice: (priceVES: number, priceREF: number) => string;
   totalPrice: number;
@@ -17,13 +16,18 @@ interface CartModalProps {
 export const CartModal: React.FC<CartModalProps> = ({
   isOpen,
   onClose,
-  items,
   currency,
   formatPrice,
   totalPrice,
   onUpdateQuantity,
   onRemoveItem
 }) => {
+  const [cart, setCart] = useState<Cart | null>(null);
+  useEffect(() => {
+    authService.getCart().then((cart) => {
+      setCart(cart);
+    });
+  }, []);
   const totalFormatted = currency === 'VES' 
     ? `Bs. ${totalPrice.toLocaleString('es-VE')}`
     : `$ ${totalPrice.toFixed(2)}`;
@@ -54,7 +58,7 @@ export const CartModal: React.FC<CartModalProps> = ({
               <div className="flex items-center space-x-2">
                 <ShoppingBag className="h-6 w-6 text-blue-600" />
                 <h2 className="text-xl font-semibold text-gray-900">
-                  Carrito ({items.length})
+                  Carrito ({cart?.total_items || 0})
                 </h2>
               </div>
               <motion.button
@@ -69,7 +73,7 @@ export const CartModal: React.FC<CartModalProps> = ({
 
             {/* Content */}
             <div className="flex-1 flex flex-col">
-              {items.length === 0 ? (
+              {cart?.total_items === 0 ? (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
                     <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -88,7 +92,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                 <>
                   {/* Items List */}
                   <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {items.map((item) => (
+                    {cart?.items.map((item) => (
                       <motion.div
                         key={item.id}
                         className="flex items-center space-x-4 bg-gray-50 rounded-lg p-4"
@@ -98,18 +102,18 @@ export const CartModal: React.FC<CartModalProps> = ({
                         layout
                       >
                         <img
-                          src={item.product.image}
-                          alt={item.name}
+                          src={item.product.image || 'https://via.placeholder.com/150'}
+                          alt={item.product.name || 'Producto'}
                           className="w-16 h-16 object-cover rounded-lg"
                         />
                         
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-900 text-sm mb-1">
-                            {item.name}
+                            {item.product.name}
                           </h4>
                           <p className="text-gray-500 text-xs mb-2">{item.product.brand}</p>
                           <p className="font-semibold text-blue-600">
-                            {formatPrice(item.product.priceVES, item.product.priceREF)}
+                            {formatPrice(item.product.price_ves || 0, item.product.price_ref || 0)}
                           </p>
                         </div>
 
@@ -117,7 +121,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                           {/* Quantity Controls */}
                           <div className="flex items-center space-x-2">
                             <motion.button
-                              onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => onUpdateQuantity(item.id, item.quantity || 0 - 1)}
                               className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
@@ -126,11 +130,11 @@ export const CartModal: React.FC<CartModalProps> = ({
                             </motion.button>
                             
                             <span className="w-8 text-center font-medium">
-                              {item.quantity}
+                              {item.quantity || 0}
                             </span>
                             
                             <motion.button
-                              onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => onUpdateQuantity(item.id, item.quantity || 0 + 1)}
                               className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}

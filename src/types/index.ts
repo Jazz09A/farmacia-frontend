@@ -36,10 +36,21 @@ export interface Product {
 
 export interface CartItem {
   id: string;
-  name: string;
   product: Product;
   quantity: number;
-  selectedPresentation?: string;
+  selected_presentation: string | null;
+  subtotal_ref: number;
+  subtotal_ves: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Cart {
+  items: CartItem[];
+  total_items: number;
+  total_unique_items: number;
+  total_ves: number;
+  total_ref: number;
 }
 
 export interface SearchFilters {

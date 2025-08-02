@@ -10,6 +10,7 @@ import { PageLayout } from './components/Layout/PageLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
 import AdminRoute from './components/Admin/AdminRoute';
+import { Cart } from './types';
 
 
 // Pages with Lazy Loading
@@ -40,7 +41,7 @@ const AdminEditProductPage = lazy(() => import('./pages/Admin/AdminEditProductPa
 const AdminAnalyticsPage = lazy(() => import('./pages/Admin/AdminAnalyticsPage'));
 
 // Hooks
-import { useCart } from './hooks/useCart';
+// import { useCart } from './hooks/useCart';
 import { useCurrency } from './hooks/useCurrency';
 // import { AuthProvider } from './hooks/useAuth';
 
@@ -51,7 +52,7 @@ import { ScrollProvider, useScrollContext } from './contexts/ScrollContext';
 const AppLayout = () => {
   const { isScrolled, showScrollTop, cart, currency } = useApp();
   const location = useLocation();
-  
+  const [isOpen, setIsOpen] = useState(false);
   const isAuthRoute = location.pathname.startsWith('/auth');
   const isAdminRoute = location.pathname.startsWith('/admin');
 
@@ -70,10 +71,12 @@ const AppLayout = () => {
     <>
       <Navbar
         isScrolled={isScrolled}
-        cartItemsCount={cart.totalItems}
-        onCartOpen={() => cart.setIsOpen(true)}
+        cartItemsCount={cart?.total_items || 0}
+        onCartOpen={() => setIsOpen(true)}
         currency={currency.currency}
         onCurrencyToggle={currency.toggleCurrency}
+        cartModalOpen={isOpen}
+        onCartModalClose={() => setIsOpen(false)}
       />
       <div className="flex-1 flex flex-col w-full max-w-full">
         <PageLayout>
@@ -105,7 +108,7 @@ const useApp = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   
-  const cart = useCart();
+  const [cart, setCart] = useState<Cart | null>(null);
   const currency = useCurrency();
 
   useEffect(() => {

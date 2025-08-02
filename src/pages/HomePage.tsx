@@ -17,14 +17,15 @@ import {
 } from '../components/Skeleton';
 
 // Hooks
-import { useCart } from '../hooks/useCart';
+
 import { useCurrency } from '../hooks/useCurrency';
-import { getProductsPaginated } from '../data/products';
+import { Cart, Product } from '../types';
+import { authService } from '../services/AuthService';
 
 const HomePage: React.FC = () => {
-  const cart = useCart();
+  const [cart, setCart] = useState<Cart | null>(null);
   const currency = useCurrency();
-
+  const [cartModalOpen, setCartModalOpen] = useState(false);
   // Loading states for different sections
   const [loadingStates, setLoadingStates] = useState({
     hero: true,
@@ -57,8 +58,10 @@ const HomePage: React.FC = () => {
   }, []);
 
   // Handle add to cart
-  const handleAddToCart = (productId: string, quantity: number = 1) => {
-   console.log(productId, quantity);
+  const handleAddToCart = (product: Product, quantity: number = 1) => {
+    authService.addToCart(product.id, quantity).then((cart: any) => {
+      setCart(cart.data);
+    });
   };
 
   // Wrapper function to match component expectations
@@ -155,14 +158,13 @@ const HomePage: React.FC = () => {
 
       {/* Shopping Cart Modal */}
       <CartModal
-        isOpen={cart.isOpen}
-        onClose={() => cart.setIsOpen(false)}
-        items={cart.items}
+        isOpen={cartModalOpen}
+        onClose={() => setCartModalOpen(false)}
         currency={currency.currency}
         formatPrice={formatPrice}
-        totalPrice={cart.totalPrice(currency.currency)}
-        onUpdateQuantity={cart.updateQuantity}
-        onRemoveItem={cart.removeItem}
+        totalPrice={cart?.total_ves || 0}
+        onUpdateQuantity={() => {}}
+        onRemoveItem={() => {}}
       />
     </div>
   );

@@ -4,11 +4,13 @@ import {
   AuthResponse, 
   User 
 } from '../types/auth';
+import { Cart } from '../types';
 
 class AuthService {
   private baseUrl = '/api/v1/auth';
   private tokenKey = 'auth_token';
   private userKey = 'auth_user';
+  private cartUrl = '/api/v1/user/cart';
 
   // Registro de usuario jurídico
   async registerJuridico(data: JuridicoRegisterData): Promise<AuthResponse> {
@@ -82,6 +84,7 @@ class AuthService {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           company_name: 'Empresa',
+          role: result.role
         };
         
         this.setUser(userData);
@@ -232,6 +235,46 @@ class AuthService {
     localStorage.removeItem(this.userKey);
   }
 
+  async addToCart(productId: string, quantity: number): Promise<any> {
+    try {
+      const response = await fetch(`${this.cartUrl}/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.getToken()}`,
+        },
+        body: JSON.stringify({ product_id: productId, quantity: quantity }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error adding to cart');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error in addToCart:', error);
+      throw error;
+    }
+  }
+
+  async getCart(): Promise<Cart> {
+    const response = await fetch(`${this.cartUrl}`, {
+      headers: {
+        'Authorization': `Bearer ${this.getToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error getting cart');
+    }
+
+    const result = await response.json();
+    console.log('Cart:', result);
+    return result;
+
+  }
   // Interceptor para requests autenticados
   async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
     const token = this.getToken();

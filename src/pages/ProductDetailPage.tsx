@@ -4,19 +4,20 @@ import { Star, CheckCircle, AlertTriangle, ChevronRight, ShoppingCart, Plus, Min
 import { motion } from 'framer-motion';
 
 import { Product } from '../types';
-import { mockProducts, mockReviews } from '../data/mockData';
-import { useCart } from '../hooks/useCart';
+import { Cart } from '../types';
 import { useCurrency } from '../hooks/useCurrency';
 import { ProductDetailSkeleton } from '../components/Skeleton';
+import { authService } from '../services/AuthService';
+import { getProductById } from '../data/products';
 
-// Placeholder para un componente de carrusel de productos
+// Placeholder for a component of product carousel
 const ProductsCarousel: React.FC<{ products: Product[], title: string }> = ({ products, title }) => (
   <div className="py-12">
     <h2 className="text-2xl font-bold text-medical-gray-800 mb-6">{title}</h2>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {products.map(product => (
         <div key={product.id} className="group relative bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-4 hover:shadow-xl transition-all duration-300">
-          <Link to={`/producto/${product.id}`}>
+          <Link to={`/product/${product.id}`}>
             <img src={product.image} alt={product.name} className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform" />
             <h3 className="font-semibold text-gray-800 line-clamp-2">{product.name}</h3>
             <p className="text-sm text-medical-primary">{product.brand}</p>
@@ -35,23 +36,30 @@ const ProductDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('description');
   const [activeImage, setActiveImage] = useState('');
 
-  const cart = useCart();
+  const [cart, setCart] = useState<Cart | null>(null);
   const { formatPrice } = useCurrency();
 
   useEffect(() => {
-    // Simulate API call with loading delay
-    setIsLoading(true);
-    setProduct(null);
-    
-    setTimeout(() => {
-      const foundProduct = mockProducts.find(p => p.id === id);
-      if (foundProduct) {
-        setProduct(foundProduct);
-        setActiveImage(foundProduct.images?.[0] || foundProduct.image);
-        setQuantity(1);
+    const fetchProduct = async () => {
+      setIsLoading(true);
+      try {
+        if (id) {
+          const fetchedProduct = await getProductById(id);
+          if (fetchedProduct) {
+            setProduct(fetchedProduct);
+            setActiveImage(fetchedProduct.images?.[0] || fetchedProduct.image);
+          } else {
+            setProduct(null);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        setProduct(null);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    }, 1000); // 1 second loading simulation
+    };
+    fetchProduct();
   }, [id]);
 
   // Show skeleton while loading
@@ -65,7 +73,7 @@ const ProductDetailPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-medical pt-24">
         <div className="text-center">
           <h2 className="text-2xl font-semibold">Producto no encontrado</h2>
-          <Link to="/catalogo" className="text-medical-primary hover:underline mt-4 inline-block">
+          <Link to="/catalog" className="text-medical-primary hover:underline mt-4 inline-block">
             Volver al catálogo
           </Link>
         </div>
@@ -73,15 +81,23 @@ const ProductDetailPage: React.FC = () => {
     );
   }
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (product) {
-      cart.addItem(product, quantity);
+      try {
+        await authService.addToCart(product.id, quantity);
+        const cart = await authService.getCart();
+        setCart(cart);
+        // Maybe show a success notification
+      } catch (error) {
+        console.error("Failed to add item to cart", error);
+        // Maybe show an error notification
+      }
     }
   };
 
-  const productReviews = mockReviews.filter(review => review.productId === product.id);
-  const relatedProducts = mockProducts.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
-  const recommendedProducts = mockProducts.filter(p => p.featured && p.id !== product.id).slice(0, 4);
+  const relatedProducts: Product[] = []; 
+  const recommendedProducts: Product[] = []; 
+  const productReviews: any[] = [];
 
   return (
     <div className="min-h-screen bg-medical-gray-50 pt-24 lg:pt-32">
@@ -89,7 +105,7 @@ const ProductDetailPage: React.FC = () => {
         <nav className="text-sm text-medical-gray-600 mb-8 flex items-center space-x-2">
           <Link to="/" className="hover:text-medical-primary">Inicio</Link>
           <ChevronRight className="w-4 h-4" />
-          <Link to="/catalogo" className="hover:text-medical-primary">Catálogo</Link>
+          <Link to="/catalog" className="hover:text-medical-primary">Catálogo</Link>
           <ChevronRight className="w-4 h-4" />
           <span className="font-medium text-medical-gray-800">{product.name}</span>
         </nav>
@@ -128,31 +144,31 @@ const ProductDetailPage: React.FC = () => {
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => <Star key={i} className={`w-5 h-5 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />)}
                 </div>
-                <span className="text-medical-gray-600">{product.rating} ({product.reviews} reviews)</span>
+                <span className="text-medical-gray-600">{product.rating} ({product.review_count} reviews)</span>
               </div>
             </div>
 
             {/* Price */}
             <div className="bg-medical-blue-50/50 rounded-2xl p-4 sm:p-6">
-              {product.isOffer && product.originalPrice ? (
+              {product.is_offer && product.original_price ? (
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
-                  <span className="text-3xl lg:text-4xl font-bold text-medical-accent">{formatPrice(product.priceVES, 'VES')}</span>
-                  <span className="text-lg lg:text-xl font-medium text-medical-gray-500 line-through">{formatPrice(product.originalPrice, 'VES')}</span>
+                  <span className="text-3xl lg:text-4xl font-bold text-medical-accent">{formatPrice(product.price_ves, 'VES')}</span>
+                  <span className="text-lg lg:text-xl font-medium text-medical-gray-500 line-through">{formatPrice(product.original_price, 'VES')}</span>
                   <span className="text-base lg:text-lg font-bold text-red-500 bg-red-100 px-3 py-1 rounded-full">
-                    - {Math.round(((product.originalPrice - product.priceVES) / product.originalPrice) * 100)}%
+                    - {Math.round(((product.original_price - product.price_ves) / product.original_price) * 100)}%
                   </span>
                 </div>
               ) : (
-                <span className="text-3xl lg:text-4xl font-bold text-medical-primary">{formatPrice(product.priceVES, 'VES')}</span>
+                <span className="text-3xl lg:text-4xl font-bold text-medical-primary">{formatPrice(product.price_ves, 'VES')}</span>
               )}
               <p className="text-base lg:text-lg text-medical-gray-600 mt-2">
-                Aprox. {formatPrice(product.priceREF, 'REF')}
+                Aprox. {formatPrice(product.price_ref, 'REF')}
               </p>
             </div>
             
             {/* Stock & Prescription */}
             <div className="flex items-center space-x-6">
-              {product.inStock ? (
+              {product.in_stock ? (
                 <span className="flex items-center space-x-2 text-green-600 font-semibold">
                   <CheckCircle className="w-5 h-5" />
                   <span>En Stock ({product.stock} unidades)</span>
@@ -181,7 +197,7 @@ const ProductDetailPage: React.FC = () => {
               <div className="flex w-full max-w-xs items-stretch gap-2 sm:w-auto">
                 <motion.button
                   onClick={handleAddToCart}
-                  disabled={!product.inStock}
+                  disabled={!product.in_stock}
                   className="flex-1 flex items-center justify-center space-x-2 rounded-2xl bg-medical-primary px-4 py-3 font-semibold text-white shadow-medical transition-all duration-300 hover:bg-medical-primary-dark disabled:cursor-not-allowed disabled:bg-medical-gray-400"
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
@@ -240,7 +256,7 @@ const ProductDetailPage: React.FC = () => {
                 {product.dosage && <p><strong>Dosis:</strong> {product.dosage}</p>}
                 {product.presentation && <p><strong>Presentación:</strong> {product.presentation}</p>}
                 {product.laboratorio && <p><strong>Laboratorio:</strong> {product.laboratorio}</p>}
-                {product.registroSanitario && <p><strong>Registro Sanitario:</strong> {product.registroSanitario}</p>}
+                {product.registro_sanitario && <p><strong>Registro Sanitario:</strong> {product.registro_sanitario}</p>}
                 {product.patology && <p><strong>Patología:</strong> {product.patology}</p>}
                 {product.contraindicaciones && <p><strong>Contraindicaciones:</strong> {product.contraindicaciones}</p>}
               </div>
@@ -256,7 +272,7 @@ const ProductDetailPage: React.FC = () => {
                       <p className="ml-4 font-bold">{review.userName}</p>
                     </div>
                     <p className="text-medical-gray-700">{review.comment}</p>
-                    <p className="text-sm text-medical-gray-500 mt-2">{review.date.toLocaleDateString()}</p>
+                    <p className="text-sm text-medical-gray-500 mt-2">{new Date(review.date).toLocaleDateString()}</p>
                   </div>
                 )) : <p>No hay opiniones para este producto todavía.</p>}
               </div>

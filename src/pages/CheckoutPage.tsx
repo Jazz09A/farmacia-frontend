@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useCart } from '../hooks/useCart';
+import React, { useEffect, useState } from 'react';
 import { useCurrency } from '../hooks/useCurrency';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ArrowLeft, User, Building, MapPin, CreditCard, ShieldCheck } from 'lucide-react';
-import { shippingZones, paymentMethods } from '../data/mockData';
+import { Cart } from '../types';
+import { authService } from '../services/AuthService';
 
 const steps = [
   { id: 'user', name: 'Identificación', icon: User },
@@ -16,11 +16,17 @@ const CheckoutPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const userType = 'juridico'; // Solo usuarios jurídicos
 
-  const { items, totalPrice } = useCart();
+  const [cart, setCart] = useState<Cart | null>(null);
   const { formatPrice } = useCurrency();
 
   const nextStep = () => setCurrentStep(s => Math.min(s + 1, steps.length - 1));
   const prevStep = () => setCurrentStep(s => Math.max(s - 1, 0));
+
+  useEffect(() => {
+    authService.getCart().then((cart: any) => {
+      setCart(cart.data);
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-medical-gray-50 pt-32">
@@ -128,7 +134,7 @@ const CheckoutPage: React.FC = () => {
             <div className="bg-white p-6 rounded-2xl shadow-soft sticky top-28">
               <h3 className="text-xl font-bold text-medical-gray-800 border-b pb-3 mb-4">Resumen del Pedido</h3>
               <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
-                {items.map(item => (
+                {cart?.items.map(item => (
                   <div key={item.id} className="flex justify-between items-center text-sm">
                     <div className="flex items-center gap-3">
                       <img src={item.product.image} alt={item.product.name} className="w-12 h-12 rounded-lg object-cover" />
@@ -137,14 +143,14 @@ const CheckoutPage: React.FC = () => {
                         <p className="text-gray-500">Cant: {item.quantity}</p>
                       </div>
                     </div>
-                    <span className="font-semibold">{formatPrice(item.product.priceVES * item.quantity, 'VES')}</span>
+                    <span className="font-semibold">{formatPrice(item.product.price_ves * item.quantity, 'VES')}</span>
                   </div>
                 ))}
               </div>
               <div className="space-y-3 text-medical-gray-700 border-t mt-4 pt-4">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span className="font-semibold">{formatPrice(totalPrice('VES'), 'VES')}</span>
+                  <span className="font-semibold">{formatPrice(cart?.total_ves || 0, 'VES')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Envío</span>
@@ -152,7 +158,7 @@ const CheckoutPage: React.FC = () => {
                 </div>
                 <div className="flex justify-between font-bold text-lg text-medical-gray-900 border-t pt-3 mt-3">
                   <span>Total</span>
-                  <span>{formatPrice(totalPrice('VES'), 'VES')}</span>
+                  <span>{formatPrice(cart?.total_ves || 0, 'VES')}</span>
                 </div>
               </div>
             </div>

@@ -14,6 +14,8 @@ interface NavbarProps {
   onCartOpen: () => void;
   currency: 'VES' | 'REF';
   onCurrencyToggle: () => void;
+  cartModalOpen: boolean;
+  onCartModalClose: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -21,7 +23,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   cartItemsCount,
   onCartOpen,
   currency,
-  onCurrencyToggle
+  onCurrencyToggle,
+  cartModalOpen,
+  onCartModalClose
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);

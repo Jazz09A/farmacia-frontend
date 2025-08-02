@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, Zap, TrendingDown, AlertCircle, Timer } from 'lucide-react';
 import { ProductCard } from '../Products/ProductCard';
+import { Product } from '../../types';
 
 const mockFlashOffers = [
   {
@@ -15,7 +16,7 @@ const mockFlashOffers = [
 
 interface FlashOffersSectionProps {
   currency: 'VES' | 'REF';
-  onAddToCart: (productId: string) => void;
+  onAddToCart: (product: Product, quantity: number) => void;
   formatPrice: (priceVES: number, priceREF: number) => string;
 }
 
@@ -67,7 +68,7 @@ export const FlashOffersSection: React.FC<FlashOffersSectionProps> = ({
   };
 
   const offerProducts = mockFlashOffers.filter((offer: any) => 
-    mockFlashOffers.some(offer => offer.product_id === offer.id && offer.active)
+    mockFlashOffers.some(o => o.product_id === offer.id && o.active)
   );
 
   // Si no hay ofertas, no mostrar la sección (redistribución automática del layout)

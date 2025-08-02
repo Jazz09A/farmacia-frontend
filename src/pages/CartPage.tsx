@@ -1,15 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useCart } from '../hooks/useCart';
 import { useCurrency } from '../hooks/useCurrency';
 import { motion } from 'framer-motion';
 import { Plus, Minus, ShoppingCart, ArrowLeft, Trash2 } from 'lucide-react';
+import { authService } from '../services/AuthService';
+import { Cart } from '../types';
 
 const CartPage: React.FC = () => {
-  const { items, updateQuantity, removeItem, totalItems, totalPrice } = useCart();
   const { formatPrice } = useCurrency();
+  const [cart, setCart] = useState<Cart | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (items.length === 0) {
+  useEffect(() => {
+    authService.getCart().then((cartData) => {
+      setCart(cartData);
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) {
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-medical-gray-50 pt-24 text-center px-4">
+            <h1 className="text-3xl font-bold text-medical-gray-800 mb-2">Cargando carrito...**</h1>
+        </div>
+    )
+  }
+
+  if (!cart || cart.items.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-medical-gray-50 pt-24 text-center px-4">
         <ShoppingCart className="w-24 h-24 text-medical-gray-300 mb-6" />
@@ -35,7 +54,7 @@ const CartPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Items List */}
           <div className="lg:col-span-2 space-y-6">
-            {items.map((item, index) => (
+            {cart.items.map((item, index) => (
               <motion.div
                 key={item.id}
                 className="flex items-start space-x-6 bg-white p-6 rounded-2xl shadow-soft"
@@ -43,26 +62,26 @@ const CartPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <img src={item.product.image} alt={item.product.name} className="w-24 h-24 object-cover rounded-xl" />
+                <img src={item.product.image || 'https://via.placeholder.com/150'} alt={item.product.name} className="w-24 h-24 object-cover rounded-xl" />
                 <div className="flex-grow">
                   <Link to={`/producto/${item.product.id}`} className="font-bold text-lg text-medical-gray-800 hover:text-medical-primary transition-colors">
                     {item.product.name}
                   </Link>
                   <p className="text-sm text-medical-gray-500">{item.product.brand}</p>
                   <div className="flex items-center border border-medical-gray-200 rounded-lg mt-4 w-fit">
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="p-2 text-medical-gray-500 hover:text-medical-primary"><Minus className="w-4 h-4" /></button>
+                    <button onClick={() => { alert('Función no implementada**'); }} className="p-2 text-medical-gray-500 hover:text-medical-primary"><Minus className="w-4 h-4" /></button>
                     <span className="px-3 text-md font-semibold">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="p-2 text-medical-gray-500 hover:text-medical-primary"><Plus className="w-4 h-4" /></button>
+                    <button onClick={() => { alert('Función no implementada**'); }} className="p-2 text-medical-gray-500 hover:text-medical-primary"><Plus className="w-4 h-4" /></button>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-lg text-medical-primary">
-                    {formatPrice(item.product.priceVES * item.quantity, 'VES')}
+                    {formatPrice(item.subtotal_ves, 'VES')}
                   </p>
                   <p className="text-sm text-medical-gray-500">
-                    {formatPrice(item.product.priceREF * item.quantity, 'REF')}
+                    {formatPrice(item.subtotal_ref, 'REF')}
                   </p>
-                  <button onClick={() => removeItem(item.id)} className="text-medical-gray-400 hover:text-red-500 mt-4">
+                  <button onClick={() => { alert('Función no implementada**'); }} className="text-medical-gray-400 hover:text-red-500 mt-4">
                     <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
@@ -76,19 +95,19 @@ const CartPage: React.FC = () => {
               <h2 className="text-2xl font-bold text-medical-gray-800 border-b pb-4 mb-6">Resumen del Pedido</h2>
               <div className="space-y-4 text-medical-gray-700">
                 <div className="flex justify-between">
-                  <span>Subtotal ({totalItems} productos)</span>
-                  <span className="font-semibold">{formatPrice(totalPrice('VES'), 'VES')}</span>
+                  <span>Subtotal ({cart.total_items} productos)</span>
+                  <span className="font-semibold">{formatPrice(cart.total_ves, 'VES')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Envío</span>
-                  <span className="font-semibold text-green-600">Gratis (promo)</span>
+                  <span className="font-semibold text-green-600">Gratis (promo)**</span>
                 </div>
                 <div className="flex justify-between font-bold text-xl text-medical-gray-900 border-t pt-4 mt-4">
                   <span>Total</span>
-                  <span>{formatPrice(totalPrice('VES'), 'VES')}</span>
+                  <span>{formatPrice(cart.total_ves, 'VES')}</span>
                 </div>
                 <p className="text-right text-medical-gray-500 text-sm">
-                  Total aprox. {formatPrice(totalPrice('REF'), 'REF')}
+                  Total aprox. {formatPrice(cart.total_ref, 'REF')}
                 </p>
               </div>
 
@@ -115,4 +134,4 @@ const CartPage: React.FC = () => {
   );
 };
 
-export default CartPage; 
+export default CartPage;
