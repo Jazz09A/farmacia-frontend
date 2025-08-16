@@ -203,7 +203,7 @@ class AuthService {
   }
 
   // Métodos privados para manejo de localStorage
-  private setToken(token: string): void {
+  public setToken(token: string): void {
     localStorage.setItem(this.tokenKey, token);
   }
 

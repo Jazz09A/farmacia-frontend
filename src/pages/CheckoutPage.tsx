@@ -54,6 +54,14 @@ const CheckoutPage: React.FC = () => {
     }
   }, []);
 
+  // Save to localStorage on data change
+  useEffect(() => {
+    // Don't save initial empty state
+    if (Object.values(formData).some(value => value !== '')) {
+      localStorage.setItem('checkoutFormData', JSON.stringify(formData));
+    }
+  }, [formData]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -72,8 +80,6 @@ const CheckoutPage: React.FC = () => {
   };
 
   const nextStep = () => {
-    // Save data on step transition
-    localStorage.setItem('checkoutFormData', JSON.stringify(formData));
     setCurrentStep(s => Math.min(s + 1, steps.length - 1));
   };
   

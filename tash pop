@@ -1,0 +1,13 @@
+stash@{0}: WIP on main: e901081 Enhance CheckoutPage with detailed order summary and footer spacing
+stash@{1}: WIP on main: 3ec2a4a Enhance AuthPage navigation logic by incorporating useLocation to redirect users to their intended destination after authentication. This improves user experience by ensuring users are taken to the correct page based on their previous location or user type.
+stash@{2}: WIP on main: d1ab127 Refactor AdminCustomersPage and AdminProductsPage to improve button layouts and enhance responsiveness. Standardize checkbox input formatting and streamline filter section for better usability across devices.
+stash@{3}: WIP on main: 9b2e274 Remove enhanced CTA buttons from HeroSection and integrate ContactUsSection into HomePage with loading simulation for improved user experience.
+stash@{4}: WIP on main: 5ba1709 Refactor Header components to enhance styling consistency with medical-themed colors, updating CurrencyToggle, Navbar, and SearchBar for improved visual coherence and user experience.
+stash@{5}: WIP on main: c49091f Enhance App component with optimized scroll-to-top functionality, integrate loading skeletons in Blog, Catalog, and Home pages, and refactor authentication context to include user role. Implement loading simulations for improved user experience.
+stash@{6}: WIP on main: 15eda61 Update Tailwind CSS configuration to limit content scanning to TypeScript files and enhance Vite configuration by setting the build target to ES2018.
+stash@{7}: WIP on main: 15eda61 Update Tailwind CSS configuration to limit content scanning to TypeScript files and enhance Vite configuration by setting the build target to ES2018.
+stash@{8}: WIP on main: 15eda61 Update Tailwind CSS configuration to limit content scanning to TypeScript files and enhance Vite configuration by setting the build target to ES2018.
+stash@{9}: WIP on main: 15eda61 Update Tailwind CSS configuration to limit content scanning to TypeScript files and enhance Vite configuration by setting the build target to ES2018.
+stash@{10}: WIP on main: 15eda61 Update Tailwind CSS configuration to limit content scanning to TypeScript files and enhance Vite configuration by setting the build target to ES2018.
+stash@{11}: WIP on main: 0fab165 mejorando diseno
+stash@{12}: WIP on main: 61f9878 Add AdminEditProductPage and navigation to edit products in AdminProductsPage
