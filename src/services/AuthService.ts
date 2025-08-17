@@ -275,6 +275,19 @@ class AuthService {
     return await response.json();
   }
 
+  async resendVerificationEmail(): Promise<any> {
+    const response = await this.authenticatedFetch('/api/v1/auth/resend-verification-email', {
+      method: 'POST',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error resending verification email');
+    }
+    
+    return await response.json();
+  }
+
   async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
     const token = this.getToken();
     const headers = {

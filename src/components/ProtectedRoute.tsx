@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -34,17 +34,22 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   redirectTo = '/auth',
   fallback
 }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
 
   // Mostrar loading mientras se verifica la autenticación
-  if (isLoading) {
+  if (loading) {
     return fallback || <LoadingSpinner />;
   }
 
   // Si requiere autenticación pero no está autenticado, redirigir
   if (requireAuth && !isAuthenticated) {
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
+  }
+
+  // Si el usuario está autenticado pero no verificado, redirigir a la página de verificación
+  if (isAuthenticated && user && !user.is_verified) {
+    return <Navigate to="/verify-account" state={{ from: location }} replace />;
   }
 
   // Si no requiere autenticación pero está autenticado, podría redirigir a home

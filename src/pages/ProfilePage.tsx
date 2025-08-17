@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User as UserIcon, 
@@ -22,7 +22,7 @@ import {
   Calendar,
   Loader2
 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import type { 
   Order, 
   UserPromotion, 
@@ -35,12 +35,19 @@ import OrdersSection from '../components/Profile/OrdersSection';
 type TabType = 'cuenta' | 'pedidos' | 'promociones' | 'notificaciones' | 'soporte';
 
 const ProfilePage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('cuenta');
+  const [activeTab, setActiveTab] = useState<TabType>('pedidos');
   const { user, isLoading } = useAuth();
+  const location = useLocation();
   
   const [promotions] = useState<UserPromotion[]>([]);
   const [notifications] = useState<UserNotification[]>([]);
   const [supportTickets] = useState<SupportTicket[]>([]);
+
+  useEffect(() => {
+    if (location.state?.defaultTab) {
+      setActiveTab(location.state.defaultTab);
+    }
+  }, [location.state]);
 
   const tabs = [
     { id: 'cuenta', label: 'Mi Cuenta', icon: UserIcon, count: null },

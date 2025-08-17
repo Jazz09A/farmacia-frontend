@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Package, HelpCircle, Briefcase, Tag, BookText, Shield } from 'lucide-react';
+import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Package, HelpCircle, Briefcase, Tag, BookText, Shield, Loader2 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; // Updated import
 import type { User } from '../../types/auth';
@@ -25,6 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
@@ -273,27 +274,30 @@ export const Navbar: React.FC<NavbarProps> = ({
                               <UserIcon className="h-4 w-4 text-medical-gray-500 group-hover:text-medical-blue-600" />
                               <span className="text-medical-gray-700 group-hover:text-medical-gray-900">Mi Perfil</span>
                             </Link>
-                            <Link to="/mis-pedidos" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-medical-blue-50 transition-colors duration-200 group" onClick={() => setIsUserMenuOpen(false)}>
-                              <Package className="h-4 w-4 text-medical-gray-500 group-hover:text-medical-blue-600" />
-                              <span className="text-medical-gray-700 group-hover:text-medical-gray-900">Mis Pedidos</span>
-                            </Link>
-                            <Link to="/favoritos" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-medical-blue-50 transition-colors duration-200 group" onClick={() => setIsUserMenuOpen(false)}>
-                              <Heart className="h-4 w-4 text-medical-gray-500 group-hover:text-medical-blue-600" />
-                              <span className="text-medical-gray-700 group-hover:text-medical-gray-900">Lista de Deseos</span>
-                            </Link>
                             <div className="border-t border-medical-gray-200/50 my-2"></div>
                             <motion.button
                               onClick={async () => {
-                                setIsUserMenuOpen(false);
-                                await logout();
-                                navigate('/');
+                                setIsLoggingOut(true);
+                                setTimeout(async () => {
+                                  setIsUserMenuOpen(false);
+                                  await logout();
+                                  navigate('/');
+                                  setIsLoggingOut(false);
+                                }, 500); // Delay for visual feedback
                               }}
                               className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-red-50 transition-colors duration-200 group"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
+                              disabled={isLoggingOut}
                             >
-                              <LogOut className="h-4 w-4 text-red-500" />
-                              <span className="text-red-600 group-hover:text-red-700">Cerrar Sesión</span>
+                              {isLoggingOut ? (
+                                <Loader2 className="h-4 w-4 text-red-500 animate-spin" />
+                              ) : (
+                                <LogOut className="h-4 w-4 text-red-500" />
+                              )}
+                              <span className="text-red-600 group-hover:text-red-700">
+                                {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar Sesión'}
+                              </span>
                             </motion.button>
                           </div>
                         </motion.div>

@@ -1,16 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../hooks/useAuth';
 import LoginForm from '../components/Auth/LoginForm';
 import JuridicoRegisterForm from '../components/Auth/JuridicoRegisterForm';
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [userType, setUserType] = useState<'juridico' | null>(null);
-  const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const handleShowRegister = () => {
     setIsLogin(false);
@@ -21,20 +16,6 @@ const AuthPage: React.FC = () => {
     setIsLogin(true);
     setUserType(null);
   };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      const from = location.state?.from?.pathname;
-
-      if (from) {
-        navigate(from, { replace: true });
-      } else if (user?.user_type === 'admin') {
-        navigate('/admin', { replace: true });
-      } else {
-        navigate('/profile', { replace: true });
-      }
-    }
-  }, [isAuthenticated, user, navigate, location.state]);
 
   const renderForm = () => {
     if (isLogin) {

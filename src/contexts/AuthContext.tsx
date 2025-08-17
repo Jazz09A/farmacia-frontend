@@ -66,14 +66,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       const response = await authService.login(data);
-      if (response.success) {
-        await verifyUser();
+      if (response.success && response.data?.user) {
+        // Directly update state from the login response to avoid race conditions
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+      } else {
+        // Ensure state is cleared on a failed login
+        setUser(null);
+        setIsAuthenticated(false);
       }
       return response;
     } finally {
       setLoading(false);
     }
-  }, [verifyUser]);
+  }, []);
 
   const registerJuridico = useCallback(async (data: JuridicoRegisterData) => {
     setLoading(true);

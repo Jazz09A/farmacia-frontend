@@ -1,26 +1,28 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
-const AdminRoute: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+const AdminRoute = ({ children }: { children: JSX.Element }) => {
+  const { isAuthenticated, user, loading } = useAuth();
+  const location = useLocation();
 
-  if (isLoading) {
-    return <div>Cargando...</div>; // O un spinner de carga
+  if (loading) {
+    return <div>Loading...</div>; // O un spinner más elaborado
   }
 
   if (!isAuthenticated || !user) {
-    // Si no está autenticado, redirigir a la página de login
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+  
+  if (!user.is_verified) {
+    return <Navigate to="/verify-account" state={{ from: location }} replace />;
   }
 
   if (user.role !== 'admin' && user.role !== 'super_admin') {
-    // Si no tiene el rol adecuado, redirigir a su perfil o a una página de "no autorizado"
-    return <Navigate to="/profile" replace />;
+    return <Navigate to="/" replace />; // O a una página de "no autorizado"
   }
 
-  // Si está autenticado y tiene el rol correcto, renderizar el contenido
-  return children ? <>{children}</> : <Outlet />;
+  return children;
 };
 
 export default AdminRoute; 

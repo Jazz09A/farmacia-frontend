@@ -21,6 +21,7 @@ const AuthPage = lazy(() => import('./pages/AuthPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const TrackingPage = lazy(() => import('./pages/TrackingPage'));
 const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'));
+const VerificationRequiredPage = lazy(() => import('./pages/VerificationRequiredPage'));
 
 // Blog Pages with Lazy Loading
 const BlogPage = lazy(() => import('./pages/BlogPage'));
@@ -59,6 +60,7 @@ const AppLayout = () => {
       <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando...</div>}>
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/verify-account" element={<VerificationRequiredPage />} />
           <Route path="/admin/*" element={<AdminRoutes />} />
         </Routes>
       </Suspense>
@@ -79,14 +81,15 @@ const AppLayout = () => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/catalog" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
-              <Route path="/product/:id" element={<ProductDetailPage />} />
-              <Route path="/cart" element={<CartPage />} />
+              <Route path="/product/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
+              <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
               <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
               <Route path="/order-success" element={<ProtectedRoute><OrderSuccessPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-              <Route path="/tracking" element={<TrackingPage />} />
+              <Route path="/tracking" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogPostDetailPage />} />
+              <Route path="/verify-account" element={<VerificationRequiredPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
