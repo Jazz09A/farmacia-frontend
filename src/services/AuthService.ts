@@ -185,6 +185,20 @@ class AuthService {
     localStorage.removeItem(this.userKey);
   }
   
+  async addToCart(productId: string, quantity: number): Promise<any> {
+    const response = await this.authenticatedFetch(`${this.cartUrl}/add`, {
+      method: 'POST',
+      body: JSON.stringify({ product_id: productId, quantity }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error adding to cart');
+    }
+    
+    return await response.json();
+  }
+
   async getCart(): Promise<Cart> {
     const response = await this.authenticatedFetch(this.cartUrl);
     if (!response.ok) {
@@ -194,31 +208,54 @@ class AuthService {
     return await response.json();
   }
 
-  async getShippingZones(): Promise<any> {
-    const response = await fetch('/api/v1/shipping/zones');
-    if (!response.ok) {
-        throw new Error('Failed to fetch shipping zones');
-    }
-    const data = await response.json(); 
-    console.log(data); 
-    return data;
-  }
-
-  async createOrder(orderData: any): Promise<any> {
-    console.log(orderData);
-    const response = await fetch('/api/v1/user/orders', {
-        method: 'POST',
-        body: JSON.stringify(orderData),
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.getToken()}`
-        }
+  async clearCart(): Promise<void> {
+    const response = await this.authenticatedFetch(`${this.cartUrl}/clear`, {
+      method: 'POST',
     });
 
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Error creating order');
+      throw new Error('Failed to clear cart');
     }
+  }
+
+  async createOrder(orderData: {
+    shipping_address_id: string;
+    payment_method: string;
+    payment_capture_url: string;
+    customer_notes: string;
+  }): Promise<any> {
+    const response = await this.authenticatedFetch('/api/v1/user/orders', {
+      method: 'POST',
+      body: JSON.stringify(orderData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error creating order');
+    }
+    
+    return await response.json();
+  }
+
+  async getUserAddresses(): Promise<any[]> {
+    const response = await this.authenticatedFetch('/api/v1/user/addresses');
+    if (!response.ok) {
+      throw new Error('Failed to fetch user addresses');
+    }
+    return await response.json();
+  }
+
+  async createUserAddress(addressData: any): Promise<any> {
+    const response = await this.authenticatedFetch('/api/v1/user/addresses', {
+      method: 'POST',
+      body: JSON.stringify(addressData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error creating address');
+    }
+    
     return await response.json();
   }
 

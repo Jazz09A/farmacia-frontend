@@ -20,6 +20,7 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const TrackingPage = lazy(() => import('./pages/TrackingPage'));
+const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'));
 
 // Blog Pages with Lazy Loading
 const BlogPage = lazy(() => import('./pages/BlogPage'));
@@ -81,6 +82,7 @@ const AppLayout = () => {
               <Route path="/product/:id" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+              <Route path="/order-success" element={<ProtectedRoute><OrderSuccessPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/tracking" element={<TrackingPage />} />
               <Route path="/blog" element={<BlogPage />} />

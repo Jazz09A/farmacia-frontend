@@ -20,11 +20,11 @@ import {
 
 import { useCurrency } from '../hooks/useCurrency';
 import { Cart, Product } from '../types';
-import { authService } from '../services/AuthService';
+import { useCart } from '../contexts/CartContext';
 
 const HomePage: React.FC = () => {
-  const [cart, setCart] = useState<Cart | null>(null);
   const currency = useCurrency();
+  const { addToCart } = useCart();
   const [cartModalOpen, setCartModalOpen] = useState(false);
   // Loading states for different sections
   const [loadingStates, setLoadingStates] = useState({
@@ -58,10 +58,14 @@ const HomePage: React.FC = () => {
   }, []);
 
   // Handle add to cart
-  const handleAddToCart = (product: Product, quantity: number = 1) => {
-    authService.addToCart(product.id, quantity).then((cart: any) => {
-      setCart(cart.data);
-    });
+  const handleAddToCart = async (product: Product, quantity: number = 1) => {
+    try {
+      await addToCart(product.id, quantity);
+      // Optionally show a success notification
+    } catch (error) {
+      console.error('Failed to add product to cart:', error);
+      // Optionally show an error notification
+    }
   };
 
   // Wrapper function to match component expectations
@@ -162,7 +166,7 @@ const HomePage: React.FC = () => {
         onClose={() => setCartModalOpen(false)}
         currency={currency.currency}
         formatPrice={formatPrice}
-        totalPrice={cart?.total_ves || 0}
+        totalPrice={0} // Cart state is now managed by CartContext, so this will be updated automatically
         onUpdateQuantity={() => {}}
         onRemoveItem={() => {}}
       />

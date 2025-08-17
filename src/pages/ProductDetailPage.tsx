@@ -6,9 +6,10 @@ import { motion } from 'framer-motion';
 import { Product } from '../types';
 import { Cart } from '../types';
 import { useCurrency } from '../hooks/useCurrency';
-import { ProductDetailSkeleton } from '../components/Skeleton';
+import { useCart } from '../contexts/CartContext';
 import { authService } from '../services/AuthService';
 import { getProductById } from '../data/products';
+import { ProductDetailSkeleton } from '../components/Skeleton';
 
 // Placeholder for a component of product carousel
 const ProductsCarousel: React.FC<{ products: Product[], title: string }> = ({ products, title }) => (
@@ -31,17 +32,18 @@ const ProductsCarousel: React.FC<{ products: Product[], title: string }> = ({ pr
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   const [activeImage, setActiveImage] = useState('');
 
-  const [cart, setCart] = useState<Cart | null>(null);
   const { formatPrice } = useCurrency();
+  const { addToCart } = useCart();
+  const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
-      setIsLoading(true);
+      setLoading(true);
       try {
         if (id) {
           const fetchedProduct = await getProductById(id);
@@ -56,14 +58,14 @@ const ProductDetailPage: React.FC = () => {
         console.error('Error fetching product:', error);
         setProduct(null);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
     fetchProduct();
   }, [id]);
 
   // Show skeleton while loading
-  if (isLoading) {
+  if (loading) {
     return <ProductDetailSkeleton />;
   }
 
@@ -83,14 +85,15 @@ const ProductDetailPage: React.FC = () => {
 
   const handleAddToCart = async () => {
     if (product) {
+      setAddingToCart(true);
       try {
-        await authService.addToCart(product.id, quantity);
-        const cart = await authService.getCart();
-        setCart(cart);
+        await addToCart(product.id, quantity);
         // Maybe show a success notification
       } catch (error) {
         console.error("Failed to add item to cart", error);
         // Maybe show an error notification
+      } finally {
+        setAddingToCart(false);
       }
     }
   };
@@ -197,13 +200,20 @@ const ProductDetailPage: React.FC = () => {
               <div className="flex w-full max-w-xs items-stretch gap-2 sm:w-auto">
                 <motion.button
                   onClick={handleAddToCart}
-                  disabled={!product.in_stock}
+                  disabled={!product.in_stock || addingToCart}
                   className="flex-1 flex items-center justify-center space-x-2 rounded-2xl bg-medical-primary px-4 py-3 font-semibold text-white shadow-medical transition-all duration-300 hover:bg-medical-primary-dark disabled:cursor-not-allowed disabled:bg-medical-gray-400"
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <ShoppingCart className="w-5 h-5" />
-                  <span>Agregar al Carrito</span>
+                  {addingToCart ? (
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <ShoppingCart className="w-5 h-5" />
+                  )}
+                  <span>{addingToCart ? 'Agregando...' : 'Agregar al Carrito'}</span>
                 </motion.button>
                 <motion.button 
                   className="rounded-2xl border border-medical-gray-300 p-3 text-medical-gray-600 transition-all hover:border-red-500 hover:bg-red-50 hover:text-red-500"

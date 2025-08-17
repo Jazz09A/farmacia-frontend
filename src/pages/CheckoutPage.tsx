@@ -2,11 +2,23 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useCurrency } from '../hooks/useCurrency';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ArrowLeft, User, MapPin, CreditCard, ShieldCheck, UploadCloud, CheckCircle } from 'lucide-react';
-import { PaymentMethod, ShippingZone } from '../types';
+import { PaymentMethod } from '../types';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/AuthService';
 import { useUploadImage } from '../hooks/useUploadImage';
+import { useNavigate } from 'react-router-dom';
+
+interface Address {
+  id: string;
+  street: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  recipient_name: string;
+  recipient_phone: string;
+  is_default: boolean;
+}
 
 const steps = [
   { id: 'user', name: 'Identificación', icon: User },
@@ -34,11 +46,24 @@ interface FormData {
 
 const CheckoutPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const { cart } = useCart();
+  const { cart, clearCart } = useCart();
   const { user, loading: userLoading } = useAuth();
   const { formatPrice } = useCurrency();
   const { uploadImage, isUploading } = useUploadImage();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [newAddress, setNewAddress] = useState({
+    street: '',
+    city: '',
+    state: '',
+    postal_code: '',
+    recipient_name: '',
+    recipient_phone: '',
+    is_default: true,
+  });
 
   const [formData, setFormData] = useState<FormData>({
     razonSocial: '',
@@ -51,19 +76,47 @@ const CheckoutPage: React.FC = () => {
     payment_capture_url: '',
   });
 
-  const [shippingZones, setShippingZones] = useState<ShippingZone[]>([]);
-
   useEffect(() => {
-    authService.getShippingZones().then(shippingData => {
-      // La API devuelve el array directamente, así que lo usamos.
-      setShippingZones(shippingData);
-      
-      // Verificamos que el array exista y tenga elementos antes de usarlo.
-      if (!formData.shipping_address_id && shippingData && shippingData.length > 0) {
-        setFormData(prev => ({ ...prev, shipping_address_id: shippingData[0].id }));
+    if (currentStep === 1) {
+      fetchAddresses();
+    }
+  }, [currentStep]);
+
+  const fetchAddresses = async () => {
+    try {
+      const userAddresses = await authService.getUserAddresses();
+      setAddresses(userAddresses);
+      if (userAddresses.length > 0) {
+        setFormData(prev => ({ ...prev, shipping_address_id: userAddresses.find(a => a.is_default)?.id || userAddresses[0].id }));
+      } else {
+        setShowAddressForm(true);
       }
-    }).catch(console.error);
-  }, [formData.shipping_address_id]);
+    } catch (error) {
+      console.error('Failed to fetch addresses:', error);
+      setShowAddressForm(true); // Show form if there's an error fetching
+    }
+  };
+
+  const handleNewAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setNewAddress(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSaveAddress = async () => {
+    try {
+      const createdAddress = await authService.createUserAddress(newAddress);
+      setAddresses([...addresses, createdAddress]);
+      setFormData(prev => ({ ...prev, shipping_address_id: createdAddress.id }));
+      setShowAddressForm(false);
+    } catch (error) {
+      console.error('Failed to save address:', error);
+      alert('Hubo un error al guardar la dirección.');
+    }
+  };
+
 
   useEffect(() => {
     if (user && !userLoading) {
@@ -75,7 +128,7 @@ const CheckoutPage: React.FC = () => {
         telefono: user.phone || prev.telefono,
       }));
     }
-  }, []);
+  }, [user, userLoading]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -85,15 +138,40 @@ const CheckoutPage: React.FC = () => {
   const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, metodoPago: e.target.value }));
   };
-  
-  const handleConfirmOrder = () => {
-    // Here you would typically send the order to the backend
-    console.log('Order confirmed:', { formData, cart });
-    alert('Pedido confirmado! Gracias por tu compra.');
-    localStorage.removeItem('checkoutFormData');
-    // Redirect or clear cart
-  };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const uploadedUrl = await uploadImage(file);
+      if (uploadedUrl) {
+        setFormData(prev => ({ ...prev, payment_capture_url: uploadedUrl }));
+      }
+    }
+  };
+  
+  const handleConfirmOrder = async () => {
+    const orderData = {
+      shipping_address_id: formData.shipping_address_id,
+      payment_method: formData.payment_method,
+      payment_capture_url: formData.payment_capture_url,
+      customer_notes: formData.customer_notes,
+    };
+  
+    try {
+      const result = await authService.createOrder(orderData);
+      console.log('Order created successfully:', result);
+      alert('Pedido confirmado! Gracias por tu compra.');
+      
+      localStorage.removeItem('checkoutFormData');
+      clearCart(); 
+      
+      navigate('/order-success');
+    } catch (error) {
+      console.error('Failed to create order:', error);
+      alert('Hubo un error al procesar tu pedido. Por favor, intenta de nuevo.');
+    }
+  };
+  
   const nextStep = () => {
     // Save data on step transition
     localStorage.setItem('checkoutFormData', JSON.stringify(formData));
@@ -145,12 +223,43 @@ const CheckoutPage: React.FC = () => {
                 {currentStep === 1 && (
                   <div>
                     <h2 className="text-2xl font-bold mb-6">2. Dirección de Envío</h2>
-                    <form className="space-y-4">
-                      <select name="shipping_address_id" value={formData.shipping_address_id} onChange={handleChange} className="w-full p-3 border-gray-300 rounded-lg">
-                        {shippingZones.map(zone => <option key={zone.id} value={zone.id}>{zone.name} - {formatPrice(zone.price, 'REF')}</option>)}
-                      </select>
-                      <textarea name="customer_notes" value={formData.customer_notes} onChange={handleChange} placeholder="Punto de referencia o instrucciones adicionales" className="w-full p-3 border-gray-300 rounded-lg" rows={3}></textarea>
-                    </form>
+                    {addresses.length > 0 && !showAddressForm ? (
+                      <div className="space-y-4">
+                        <select name="shipping_address_id" value={formData.shipping_address_id} onChange={handleChange} className="w-full p-3 border-gray-300 rounded-lg">
+                          {addresses.map(addr => (
+                            <option key={addr.id} value={addr.id}>
+                              {`${addr.street}, ${addr.city}, ${addr.state}`}
+                            </option>
+                          ))}
+                        </select>
+                        <button onClick={() => setShowAddressForm(true)} className="text-medical-primary font-semibold">
+                          + Agregar nueva dirección
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Agregar nueva dirección de envío</h3>
+                        <input type="text" name="street" value={newAddress.street} onChange={handleNewAddressChange} placeholder="Calle" className="w-full p-3 border-gray-300 rounded-lg" />
+                        <input type="text" name="city" value={newAddress.city} onChange={handleNewAddressChange} placeholder="Ciudad" className="w-full p-3 border-gray-300 rounded-lg" />
+                        <input type="text" name="state" value={newAddress.state} onChange={handleNewAddressChange} placeholder="Estado" className="w-full p-3 border-gray-300 rounded-lg" />
+                        <input type="text" name="postal_code" value={newAddress.postal_code} onChange={handleNewAddressChange} placeholder="Código Postal" className="w-full p-3 border-gray-300 rounded-lg" />
+                        <input type="text" name="recipient_name" value={newAddress.recipient_name} onChange={handleNewAddressChange} placeholder="Nombre del destinatario" className="w-full p-3 border-gray-300 rounded-lg" />
+                        <input type="text" name="recipient_phone" value={newAddress.recipient_phone} onChange={handleNewAddressChange} placeholder="Teléfono del destinatario" className="w-full p-3 border-gray-300 rounded-lg" />
+                        <label className="flex items-center gap-2">
+                          <input type="checkbox" name="is_default" checked={newAddress.is_default} onChange={handleNewAddressChange} />
+                          <span>Marcar como dirección por defecto</span>
+                        </label>
+                        <button onClick={handleSaveAddress} className="px-6 py-3 bg-medical-primary text-white rounded-xl">
+                          Guardar Dirección
+                        </button>
+                        {addresses.length > 0 && (
+                           <button onClick={() => setShowAddressForm(false)} className="ml-4 text-gray-600">
+                             Cancelar
+                           </button>
+                        )}
+                      </div>
+                    )}
+                    <textarea name="customer_notes" value={formData.customer_notes} onChange={handleChange} placeholder="Punto de referencia o instrucciones adicionales" className="w-full p-3 border-gray-300 rounded-lg mt-4" rows={3}></textarea>
                   </div>
                 )}
                 {currentStep === 2 && (
@@ -223,7 +332,7 @@ const CheckoutPage: React.FC = () => {
                         <div className="bg-white p-6 rounded-2xl shadow-soft border">
                             <h3 className="font-bold text-lg mb-4 border-b pb-2">Dirección de Envío</h3>
                             <div className="text-sm">
-                                <div><span className="font-semibold text-gray-600">Zona:</span> <p>{shippingZones.find(z => z.id === formData.shipping_address_id)?.name}</p></div>
+                                <div><span className="font-semibold text-gray-600">Zona:</span> <p>{addresses.find(z => z.id === formData.shipping_address_id)?.street}</p></div>
                                 <div className="mt-2"><span className="font-semibold text-gray-600">Notas:</span> <p>{formData.customer_notes || 'N/A'}</p></div>
                             </div>
                         </div>
@@ -276,11 +385,11 @@ const CheckoutPage: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Envío</span>
-                  <span className="font-semibold">{shippingZones.find(z => z.id === formData.shipping_address_id)?.price ? formatPrice(shippingZones.find(z => z.id === formData.shipping_address_id)!.price, 'REF') : 'Selecciona una zona'}</span>
+                  <span className="font-semibold">Gratis</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg text-medical-gray-900 border-t pt-3 mt-3">
                   <span>Total</span>
-                  <span>{formatPrice((cart?.total_ref || 0) + (shippingZones.find(z => z.id === formData.shipping_address_id)?.price || 0), 'REF')}</span>
+                  <span>{formatPrice((cart?.total_ref || 0), 'REF')}</span>
                 </div>
               </div>
             </div>
