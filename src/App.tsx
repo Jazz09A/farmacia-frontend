@@ -20,7 +20,6 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const TrackingPage = lazy(() => import('./pages/TrackingPage'));
-// const ContactPage = lazy(() => import('./pages/ContactPage'));
 
 // Blog Pages with Lazy Loading
 const BlogPage = lazy(() => import('./pages/BlogPage'));
@@ -40,18 +39,17 @@ const AdminAnalyticsPage = lazy(() => import('./pages/Admin/AdminAnalyticsPage')
 
 // Hooks
 import { useCurrency } from './hooks/useCurrency';
-import { useCart } from './contexts/CartContext'; // Import useCart from context
+import { useCart } from './contexts/CartContext'; 
 
 // Contexts
 import { ScrollProvider, useScrollContext } from './contexts/ScrollContext';
 import { CartProvider } from './contexts/CartContext';
-
+import { AuthProvider } from './contexts/AuthContext';
 
 const AppLayout = () => {
   const { isScrolled, showScrollTop, currency } = useApp();
-  const { cart } = useCart(); // Use cart from context
+  const { cart } = useCart();
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
   const isAuthRoute = location.pathname.startsWith('/auth');
   const isAdminRoute = location.pathname.startsWith('/admin');
 
@@ -71,11 +69,8 @@ const AppLayout = () => {
       <Navbar
         isScrolled={isScrolled}
         cartItemsCount={cart?.total_items || 0}
-        onCartOpen={() => setIsOpen(true)}
         currency={currency.currency}
         onCurrencyToggle={currency.toggleCurrency}
-        cartModalOpen={isOpen}
-        onCartModalClose={() => setIsOpen(false)}
       />
       <div className="flex-1 flex flex-col w-full max-w-full">
         <PageLayout>
@@ -101,7 +96,6 @@ const AppLayout = () => {
   );
 };
 
-
 // Hook personalizado para evitar pasar props repetidamente
 const useApp = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -122,7 +116,6 @@ const useApp = () => {
 
   return { isScrolled, showScrollTop, currency };
 }
-
 
 // Optimized component for scroll button to avoid re-renders
 const OptimizedScrollToTopButton: React.FC<{
@@ -183,14 +176,16 @@ const AdminRoutes = () => (
 function App() {
   return (
     <Router>
-      <ScrollProvider>
-        <CartProvider>
-          <ScrollToTop />
-          <div className="App min-h-screen w-full flex flex-col bg-medical-gray-50 relative pb-16">
-            <AppLayout />
-          </div>
-        </CartProvider>
-      </ScrollProvider>
+      <AuthProvider>
+        <ScrollProvider>
+          <CartProvider>
+            <ScrollToTop />
+            <div className="App min-h-screen w-full flex flex-col bg-medical-gray-50 relative pb-16">
+              <AppLayout />
+            </div>
+          </CartProvider>
+        </ScrollProvider>
+      </AuthProvider>
     </Router>
   );
 }

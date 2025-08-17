@@ -96,6 +96,7 @@ export interface PaymentMethod {
   id: string;
   name: string;
   description: string;
+  data?: string;
   icon: string;
   available: boolean;
   currencies: Currency[];

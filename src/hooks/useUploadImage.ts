@@ -1,57 +1,50 @@
 import { useState } from 'react';
 
-// 1. Get credentials from .env
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-
-// 2. Validate credentials
-if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-  throw new Error(
-    'Cloudinary credentials are not configured. Please set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET in your .env file.'
-  );
-}
-
-
-const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
-
-interface UploadResult {
+interface UploadResponse {
   secure_url: string;
 }
 
-export const useUploadImage = () => {
-  const [isLoading, setIsLoading] = useState(false);
+interface UseUploadImageReturn {
+  uploadImage: (file: File) => Promise<string | null>;
+  isUploading: boolean;
+  error: string | null;
+}
+
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+
+export const useUploadImage = (): UseUploadImageReturn => {
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const uploadImage = async (file: File): Promise<string | null> => {
-    setIsLoading(true);
+    setIsUploading(true);
     setError(null);
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    formData.append('folder', 'pagos');
 
     try {
-      const response = await fetch(UPLOAD_URL, {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error?.message || 'Error al subir la imagen.');
+        throw new Error('Image upload failed');
       }
 
-      const data: UploadResult = await response.json();
+      const data: UploadResponse = await response.json();
       return data.secure_url;
-
     } catch (err: any) {
-      setError(err.message);
-      console.error('Upload Error:', err);
+      setError(err.message || 'An unknown error occurred');
       return null;
     } finally {
-      setIsLoading(false);
+      setIsUploading(false);
     }
   };
 
-  return { uploadImage, isLoading, error };
+  return { uploadImage, isUploading, error };
 };

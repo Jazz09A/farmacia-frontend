@@ -11,145 +11,96 @@ class AuthService {
   private tokenKey = 'auth_token';
   private userKey = 'auth_user';
   private cartUrl = '/api/v1/user/cart';
+  private mePromise: Promise<User | null> | null = null;
 
   // Registro de usuario jurídico
   async registerJuridico(data: JuridicoRegisterData): Promise<AuthResponse> {
     try {
-      console.log('Registering juridico user:', data);
-      
       const response = await fetch(`${this.baseUrl}/register/juridico`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-
       const result = await response.json();
-      
       if (!response.ok) {
-        return {
-          success: false,
-          message: result.message || 'Error en el registro',
-          errors: result.errors || {}
-        };
+        return { success: false, message: result.message || 'Error en el registro', errors: result.errors || {} };
       }
-
-      return {
-        success: true,
-        message: result.message || 'Registro exitoso',
-        data: result.data
-      };
+      return { success: true, message: result.message || 'Registro exitoso', data: result.data };
     } catch (error) {
-      console.error('Error registering juridico user:', error);
-      return {
-        success: false,
-        message: 'Error de conexión. Por favor, intenta nuevamente.',
-        errors: {}
-      };
+      return { success: false, message: 'Error de conexión. Por favor, intenta nuevamente.', errors: {} };
     }
   }
 
   // Login
   async login(data: LoginData): Promise<AuthResponse> {
     try {
-      
       const response = await fetch(`${this.baseUrl}/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-
       const result = await response.json();
-      
       if (!response.ok) {
-        return {
-          success: false,
-          message: result.message || 'Credenciales inválidas',
-          errors: result.errors || {}
-        };
+        return { success: false, message: result.message || 'Credenciales inválidas', errors: result.errors || {} };
       }
       if (result.access_token) {
         this.setToken(result.access_token);
-        const userData: User = {
-          id: result.sub || 'temp-id',
-          email: data.email,
-          phone: '',
-          user_type: result.role === 'admin' ? 'admin' : 'juridico',
-          preferred_currency: 'VES',
-          is_active: true,
-          is_verified: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          company_name: 'Empresa',
-          role: result.role
-        };
-        
-        this.setUser(userData);
-        
-        return {
-          success: true,
-          message: 'Login exitoso',
-          data: {
-            token: result.access_token,
-            user: userData
-          }
-        };
+        const user = await this.getMe(); // Fetch user data after setting token
+        if (user) {
+          return { success: true, message: 'Login exitoso', data: { token: result.access_token, user } };
+        } else {
+          return { success: false, message: 'No se pudieron obtener los datos del usuario.', errors: {} };
+        }
       } else {
-        return {
-          success: false,
-          message: 'Respuesta del servidor inválida',
-          errors: {}
-        };
+        return { success: false, message: 'Respuesta del servidor inválida', errors: {} };
       }
     } catch (error) {
-      return {
-        success: false,
-        message: 'Error de conexión. Por favor, intenta nuevamente.',
-        errors: {}
-      };
+      return { success: false, message: 'Error de conexión. Por favor, intenta nuevamente.', errors: {} };
     }
   }
 
-  // Obtener datos del usuario autenticado
-  async getMe(): Promise<User | null> {
-    try {
-      const response = await this.authenticatedFetch(`${this.baseUrl}/me`);
-      if (!response.ok) {
+  // Obtener datos del usuario autenticado (con patrón singleton promise)
+  getMe(): Promise<User | null> {
+    if (this.mePromise) {
+      return this.mePromise;
+    }
+    
+    this.mePromise = (async () => {
+      try {
+        const response = await this.authenticatedFetch(`${this.baseUrl}/me`);
+        if (!response.ok) {
+          this.logout();
+          return null;
+        }
+        const userData = await response.json();
+        this.setUser(userData);
+        return userData;
+      } catch (error) {
         this.logout();
         return null;
+      } finally {
+        // Clear the promise after it has resolved to allow re-fetching if needed (e.g., after a logout/login cycle)
+        setTimeout(() => { this.mePromise = null; }, 1000);
       }
-      const userData = await response.json();
-      this.setUser(userData);
-      return userData;
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      this.logout();
-      return null;
-    }
+    })();
+    
+    return this.mePromise;
   }
 
-  // Logout
   logout(): void {
     this.removeToken();
     this.removeUser();
+    this.mePromise = null; // Clear promise on logout
   }
 
-  // Verificar si el usuario está autenticado
   isAuthenticated(): boolean {
-    const token = this.getToken();
-    const user = this.getUser();
-    return !!(token && user);
+    return !!this.getToken();
   }
 
-  // Obtener usuario actual
   getCurrentUser(): User | null {
     return this.getUser();
   }
 
-  // Obtener token actual
   getCurrentToken(): string | null {
     return this.getToken();
   }
@@ -203,7 +154,7 @@ class AuthService {
   }
 
   // Métodos privados para manejo de localStorage
-  public setToken(token: string): void {
+  private setToken(token: string): void {
     localStorage.setItem(this.tokenKey, token);
   }
 
@@ -222,7 +173,6 @@ class AuthService {
   private getUser(): User | null {
     const userStr = localStorage.getItem(this.userKey);
     if (!userStr) return null;
-    
     try {
       return JSON.parse(userStr);
     } catch {
@@ -234,82 +184,64 @@ class AuthService {
   private removeUser(): void {
     localStorage.removeItem(this.userKey);
   }
-
-  async addToCart(productId: string, quantity: number): Promise<any> {
-    try {
-      const response = await fetch(`${this.cartUrl}/add`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getToken()}`,
-        },
-        body: JSON.stringify({ product_id: productId, quantity: quantity }),
-      });
-
-      if (!response.ok) {
+  
+  async getCart(): Promise<Cart> {
+    const response = await this.authenticatedFetch(this.cartUrl);
+    if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Error adding to cart');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error in addToCart:', error);
-      throw error;
+        throw new Error(error.message || 'Error getting cart');
     }
+    return await response.json();
   }
 
-  async getCart(): Promise<Cart> {
-    const response = await fetch(`${this.cartUrl}`, {
-      headers: {
-        'Authorization': `Bearer ${this.getToken()}`,
-      },
+  async getShippingZones(): Promise<any> {
+    const response = await fetch('/api/v1/shipping/zones');
+    if (!response.ok) {
+        throw new Error('Failed to fetch shipping zones');
+    }
+    const data = await response.json(); 
+    console.log(data); 
+    return data;
+  }
+
+  async createOrder(orderData: any): Promise<any> {
+    console.log(orderData);
+    const response = await fetch('/api/v1/user/orders', {
+        method: 'POST',
+        body: JSON.stringify(orderData),
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.getToken()}`
+        }
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Error getting cart');
+        const error = await response.json();
+        throw new Error(error.message || 'Error creating order');
     }
-
-    const result = await response.json();
-    console.log('Cart:', result);
-    return result;
-
+    return await response.json();
   }
-  // Interceptor para requests autenticados
+
   async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
     const token = this.getToken();
-    
     const headers = {
       'Content-Type': 'application/json',
       ...(options.headers || {}),
       ...(token && { 'Authorization': `Bearer ${token}` }),
     };
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    const response = await fetch(url, { ...options, headers });
 
-    // Si el token ha expirado, intentar renovarlo
     if (response.status === 401 && token) {
-      const refreshResult = await this.refreshToken();
-      if (refreshResult.success) {
-        // Reintentar la request con el nuevo token
-        const newToken = this.getToken();
-        return fetch(url, {
-          ...options,
-          headers: {
-            ...headers,
-            'Authorization': `Bearer ${newToken}`,
-          },
-        });
-      }
+      this.logout();
+      // Optionally, redirect to login page
+      // window.location.href = '/auth';
+      throw new Error('Session expired');
     }
 
     return response;
   }
 }
 
-// Exportar una instancia singleton
 export const authService = new AuthService();
-export default authService; 
+export default authService;
