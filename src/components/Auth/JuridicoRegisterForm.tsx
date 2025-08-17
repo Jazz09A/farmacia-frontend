@@ -14,7 +14,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { JuridicoRegisterData } from '../../types/auth';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../contexts/AuthContext';
 import { FormStepper } from './FormStepper';
 import { FormNavigation } from './FormNavigation';
 import { InputField } from './InputField';

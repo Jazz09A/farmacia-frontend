@@ -154,7 +154,7 @@ class AuthService {
   }
 
   // Métodos privados para manejo de localStorage
-  private setToken(token: string): void {
+  public setToken(token: string): void {
     localStorage.setItem(this.tokenKey, token);
   }
 
@@ -234,6 +234,22 @@ class AuthService {
       throw new Error(error.message || 'Error creating order');
     }
     
+    return await response.json();
+  }
+
+  async getUserOrders(): Promise<any[]> {
+    const response = await this.authenticatedFetch('/api/v1/user/orders');
+    if (!response.ok) {
+      throw new Error('Failed to fetch user orders');
+    }
+    return await response.json();
+  }
+
+  async getOrderDetails(orderId: string): Promise<any> {
+    const response = await this.authenticatedFetch(`/api/v1/user/orders/${orderId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch order details');
+    }
     return await response.json();
   }
 

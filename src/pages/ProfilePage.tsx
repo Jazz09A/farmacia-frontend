@@ -30,6 +30,7 @@ import type {
   SupportTicket 
 } from '../types/profile';
 import { User } from '../types/auth';
+import OrdersSection from '../components/Profile/OrdersSection';
 
 type TabType = 'cuenta' | 'pedidos' | 'promociones' | 'notificaciones' | 'soporte';
 
@@ -37,14 +38,13 @@ const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('cuenta');
   const { user, isLoading } = useAuth();
   
-  const [orders] = useState<Order[]>([]);
   const [promotions] = useState<UserPromotion[]>([]);
   const [notifications] = useState<UserNotification[]>([]);
   const [supportTickets] = useState<SupportTicket[]>([]);
 
   const tabs = [
     { id: 'cuenta', label: 'Mi Cuenta', icon: UserIcon, count: null },
-    { id: 'pedidos', label: 'Pedidos', icon: Package, count: orders.length },
+    { id: 'pedidos', label: 'Pedidos', icon: Package, count: null },
     { id: 'promociones', label: 'Promociones', icon: Gift, count: promotions.filter(p => !p.is_used).length },
     { id: 'notificaciones', label: 'Notificaciones', icon: Bell, count: notifications.filter(n => !n.is_read).length },
     { id: 'soporte', label: 'Soporte', icon: MessageCircle, count: supportTickets.filter(t => t.status === 'open').length }
@@ -181,7 +181,7 @@ const ProfilePage: React.FC = () => {
             transition={{ duration: 0.3 }}
           >
             {activeTab === 'cuenta' && <AccountSection user={user} />}
-            {activeTab === 'pedidos' && <OrdersSection orders={orders} />}
+            {activeTab === 'pedidos' && <OrdersSection />}
             {activeTab === 'promociones' && <PromotionsSection promotions={promotions} />}
             {activeTab === 'notificaciones' && <NotificationsSection notifications={notifications} />}
             {activeTab === 'soporte' && <SupportSection tickets={supportTickets} />}
@@ -289,125 +289,6 @@ const AccountSection: React.FC<{ user: User }> = ({ user }) => {
           </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-// Componente para la sección de pedidos
-const OrdersSection: React.FC<{ orders: Order[] }> = ({ orders }) => {
-  const getStatusColor = (status: string) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      confirmed: 'bg-blue-100 text-blue-800',
-      processing: 'bg-purple-100 text-purple-800',
-      shipped: 'bg-indigo-100 text-indigo-800',
-      in_transit: 'bg-cyan-100 text-cyan-800',
-      delivered: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800',
-      refunded: 'bg-gray-100 text-gray-800'
-    };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-  };
-
-  const formatCurrency = (amount: number, currency: 'VES' | 'USD') => {
-    const formatters = {
-      USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }),
-      VES: new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES' })
-    };
-    return formatters[currency].format(amount);
-  };
-
-  return (
-    <div className="space-y-6">
-      {orders.map((order) => (
-        <motion.div
-          key={order.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-soft p-6"
-        >
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-            <div>
-              <h3 className="text-lg font-bold text-medical-gray-900">
-                Pedido #{order.order_number}
-              </h3>
-              <p className="text-medical-gray-600">
-                {new Date(order.created_at).toLocaleDateString('es-VE')}
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                {order.status === 'delivered' ? 'Entregado' : 
-                 order.status === 'shipped' ? 'Enviado' : 
-                 order.status === 'processing' ? 'Procesando' : 'Pendiente'}
-              </span>
-              <div className="text-right">
-                <div className="text-lg font-bold text-medical-gray-900">
-                  {formatCurrency(order.total, order.currency)}
-                </div>
-                <div className="text-sm text-medical-gray-600">
-                  {order.items.length} productos
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Productos del pedido */}
-          <div className="border-t border-medical-gray-200 pt-4 mb-4">
-            <div className="space-y-3">
-              {order.items.slice(0, 2).map((item) => (
-                <div key={item.id} className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-medical-gray-100 rounded-lg flex items-center justify-center">
-                    <Package className="w-6 h-6 text-medical-gray-500" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-medical-gray-900">{item.product_name}</h4>
-                    <p className="text-sm text-medical-gray-600">Cantidad: {item.quantity}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold">{formatCurrency(item.price, item.currency)}</div>
-                  </div>
-                </div>
-              ))}
-              {order.items.length > 2 && (
-                <div className="text-sm text-medical-gray-600 text-center py-2">
-                  y {order.items.length - 2} productos más...
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Tracking y acciones */}
-          <div className="flex flex-col lg:flex-row gap-4">
-            {order.tracking_info && (
-              <div className="flex-1 p-4 bg-medical-blue-50 rounded-xl">
-                <h5 className="font-semibold text-medical-blue-900 mb-2">Seguimiento</h5>
-                <p className="text-sm text-medical-blue-700">
-                  <strong>#{order.tracking_info.tracking_number}</strong>
-                </p>
-                <p className="text-sm text-medical-blue-600">
-                  {order.tracking_info.status} - {order.tracking_info.location}
-                </p>
-              </div>
-            )}
-            <div className="flex gap-2">
-              <Link
-                to={`/seguimiento/${order.id}`}
-                className="btn-medical-secondary flex items-center gap-2"
-              >
-                <Package className="w-4 h-4" />
-                Ver detalles
-              </Link>
-              {order.invoice_url && (
-                <button className="btn-medical-primary flex items-center gap-2">
-                  <Download className="w-4 h-4" />
-                  Factura
-                </button>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      ))}
     </div>
   );
 };

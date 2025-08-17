@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { LoginData } from '../../types/auth';
 import { motion } from 'framer-motion';
-import { Mail, Lock, LogIn, AlertCircle, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, User, Lock } from 'lucide-react';
+import { LoginData } from '../../types/auth';
+import { useAuth } from '../../contexts/AuthContext';
+import { FormNavigation } from './FormNavigation';
+import { InputField } from './InputField';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;

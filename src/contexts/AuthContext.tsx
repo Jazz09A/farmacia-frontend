@@ -1,13 +1,14 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { authService } from '../services/AuthService';
-import { User } from '../types/auth';
+import { User, LoginData, JuridicoRegisterData } from '../types/auth';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   loading: boolean;
-  login: (token: string, user: User) => void;
+  login: (data: LoginData) => Promise<any>;
   logout: () => void;
+  registerJuridico: (data: JuridicoRegisterData) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,20 +49,58 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [verifyUser]);
 
-  const login = (token: string, loggedInUser: User) => {
-    authService.setToken(token);
-    setUser(loggedInUser);
-    setIsAuthenticated(true);
-  };
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'auth_token') {
+        verifyUser();
+      }
+    };
 
-  const logout = () => {
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [verifyUser]);
+
+  const login = useCallback(async (data: LoginData) => {
+    setLoading(true);
+    try {
+      const response = await authService.login(data);
+      if (response.success) {
+        await verifyUser();
+      }
+      return response;
+    } finally {
+      setLoading(false);
+    }
+  }, [verifyUser]);
+
+  const registerJuridico = useCallback(async (data: JuridicoRegisterData) => {
+    setLoading(true);
+    try {
+      return await authService.registerJuridico(data);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const logout = useCallback(() => {
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);
-  };
+  }, []);
+
+  const value = useMemo(() => ({
+    isAuthenticated,
+    user,
+    loading,
+    login,
+    logout,
+    registerJuridico,
+  }), [isAuthenticated, user, loading, login, logout, registerJuridico]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, loading, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
