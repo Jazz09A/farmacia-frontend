@@ -10,6 +10,7 @@ import { PageLayout } from './components/Layout/PageLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
 import AdminRoute from './components/Admin/AdminRoute';
+import { LoadingSpinner } from './components/common/LoadingSpinner';
 
 // Pages with Lazy Loading
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -57,7 +58,7 @@ const AppLayout = () => {
 
   if (isAuthRoute || isAdminRoute) {
     return (
-      <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando...</div>}>
+      <Suspense fallback={<LoadingSpinner message="Cargando página..." />}>
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/verify-account" element={<VerificationRequiredPage />} />
@@ -77,7 +78,7 @@ const AppLayout = () => {
       />
       <div className="flex-1 flex flex-col w-full max-w-full">
         <PageLayout>
-          <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando...</div>}>
+          <Suspense fallback={<LoadingSpinner message="Cargando página..." />}>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/catalog" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
@@ -160,7 +161,7 @@ OptimizedScrollToTopButton.displayName = 'OptimizedScrollToTopButton';
 const AdminRoutes = () => (
   <AdminRoute>
     <AdminLayout>
-      <Suspense fallback={<div className="flex justify-center items-center h-screen">Cargando...</div>}>
+      <Suspense fallback={<LoadingSpinner message="Cargando página..." />}>
         <Routes>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />

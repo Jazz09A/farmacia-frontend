@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { 
   ArrowLeft, 
   Save, 
@@ -158,11 +159,7 @@ const AdminEditProductPage: React.FC = () => {
     handleInputChange('image', ''); // La quitamos de la vista previa
   };
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        Cargando...
-      </div>
-    );
+    return <LoadingSpinner variant="inline" message="Cargando producto..." />;
   }
 
   if (!formData) {

@@ -12,6 +12,8 @@ class AuthService {
   private userKey = 'auth_user';
   private cartUrl = '/api/v1/user/cart';
   private mePromise: Promise<User | null> | null = null;
+  private isRequestInProgress = false;
+  private requestAbortController: AbortController | null = null;
 
   // Registro de usuario jurídico
   async registerJuridico(data: JuridicoRegisterData): Promise<AuthResponse> {
@@ -59,38 +61,78 @@ class AuthService {
     }
   }
 
-  // Obtener datos del usuario autenticado (con patrón singleton promise)
-  getMe(): Promise<User | null> {
-    if (this.mePromise) {
+  // Obtener datos del usuario autenticado (mejorado sin singleton problemático)
+  async getMe(forceRefresh = false): Promise<User | null> {
+    // Si hay una solicitud en progreso y no es un refresh forzado, esperamos el resultado
+    if (this.isRequestInProgress && !forceRefresh && this.mePromise) {
       return this.mePromise;
     }
+
+    // Si estamos forzando un refresh, cancelamos la solicitud anterior
+    if (forceRefresh && this.requestAbortController) {
+      this.requestAbortController.abort();
+    }
+
+    // Creamos un nuevo AbortController para esta solicitud
+    this.requestAbortController = new AbortController();
+    this.isRequestInProgress = true;
     
-    this.mePromise = (async () => {
-      try {
-        const response = await this.authenticatedFetch(`${this.baseUrl}/me`);
-        if (!response.ok) {
-          this.logout();
-          return null;
+    this.mePromise = this.fetchUserData(this.requestAbortController.signal);
+    
+    try {
+      const result = await this.mePromise;
+      return result;
+    } finally {
+      this.isRequestInProgress = false;
+      this.requestAbortController = null;
+      // Limpiar la promesa después de un tiempo razonable para permitir cache
+      setTimeout(() => {
+        if (!this.isRequestInProgress) {
+          this.mePromise = null;
         }
-        const userData = await response.json();
-        this.setUser(userData);
-        return userData;
-      } catch (error) {
-        this.logout();
+      }, 5000); // 5 segundos de cache
+    }
+  }
+
+  private async fetchUserData(signal: AbortSignal): Promise<User | null> {
+    try {
+      const response = await this.authenticatedFetch(`${this.baseUrl}/me`, {
+        signal
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.logout();
+        }
         return null;
-      } finally {
-        // Clear the promise after it has resolved to allow re-fetching if needed (e.g., after a logout/login cycle)
-        setTimeout(() => { this.mePromise = null; }, 1000);
       }
-    })();
-    
-    return this.mePromise;
+      
+      const userData = await response.json();
+      this.setUser(userData);
+      return userData;
+    } catch (error: any) {
+      // No hacer logout si la solicitud fue cancelada
+      if (error.name !== 'AbortError') {
+        console.error('Error fetching user data:', error);
+        if (error.message === 'Session expired') {
+          this.logout();
+        }
+      }
+      return null;
+    }
   }
 
   logout(): void {
+    // Cancelar cualquier solicitud en progreso
+    if (this.requestAbortController) {
+      this.requestAbortController.abort();
+    }
+    
     this.removeToken();
     this.removeUser();
-    this.mePromise = null; // Clear promise on logout
+    this.mePromise = null;
+    this.isRequestInProgress = false;
+    this.requestAbortController = null;
   }
 
   isAuthenticated(): boolean {

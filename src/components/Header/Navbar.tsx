@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Package, HelpCircle, Briefcase, Tag, BookText, Shield, Loader2 } from 'lucide-react';
+import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Package, HelpCircle, Briefcase, Tag, BookText, Shield } from 'lucide-react';
+import { LoadingSpinner } from '../common/LoadingSpinner';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; // Updated import
 import type { User } from '../../types/auth';
@@ -291,7 +292,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                               disabled={isLoggingOut}
                             >
                               {isLoggingOut ? (
-                                <Loader2 className="h-4 w-4 text-red-500 animate-spin" />
+                                <LoadingSpinner variant="button" size="sm" className="text-red-500" />
                               ) : (
                                 <LogOut className="h-4 w-4 text-red-500" />
                               )}

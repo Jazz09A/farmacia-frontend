@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, LogIn, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
+import { LoadingSpinner } from '../common/LoadingSpinner';
 import { LoginData } from '../../types/auth';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -126,7 +127,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center disabled:opacity-75"
         >
           {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <LoadingSpinner variant="button" size="md" />
           ) : (
             <>
               <LogIn className="w-5 h-5 mr-2" />

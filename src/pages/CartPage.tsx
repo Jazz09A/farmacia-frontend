@@ -4,17 +4,14 @@ import { useCurrency } from '../hooks/useCurrency';
 import { motion } from 'framer-motion';
 import { Plus, Minus, ShoppingCart, ArrowLeft, Trash2 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { LoadingSpinner } from '../components/common/LoadingSpinner';
 
 const CartPage: React.FC = () => {
   const { formatPrice } = useCurrency();
   const { cart, loading } = useCart();
 
   if (loading) {
-    return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-medical-gray-50 pt-24 text-center px-4">
-            <h1 className="text-3xl font-bold text-medical-gray-800 mb-2">Cargando carrito...**</h1>
-        </div>
-    )
+    return <LoadingSpinner message="Cargando carrito..." />;
   }
 
   if (!cart || cart.items.length === 0) {

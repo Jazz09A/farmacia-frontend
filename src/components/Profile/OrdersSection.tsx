@@ -3,6 +3,7 @@ import { authService } from '../../services/AuthService';
 import { motion } from 'framer-motion';
 import { Package, ChevronRight, Eye } from 'lucide-react';
 import OrderDetailsModal from './OrderDetailsModal';
+import { LoadingSpinner } from '../common/LoadingSpinner';
 
 // Define interfaces for Order and OrderDetails to use TypeScript benefits
 interface Order {
@@ -46,7 +47,7 @@ const OrdersSection: React.FC = () => {
   };
 
   if (loading) {
-    return <div>Loading orders...</div>;
+    return <LoadingSpinner variant="inline" message="Cargando pedidos..." />;
   }
 
   return (

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useCurrency } from '../hooks/useCurrency';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ArrowLeft, User, MapPin, CreditCard, ShieldCheck, UploadCloud, CheckCircle } from 'lucide-react';
+import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { PaymentMethod } from '../types';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -185,7 +186,7 @@ const CheckoutPage: React.FC = () => {
     !formData.payment_capture_url;
 
   
-  if (userLoading) return <div>Cargando...</div>;
+  if (userLoading) return <LoadingSpinner variant="inline" message="Cargando información..." />;
 
   return (
     <div className="min-h-screen bg-medical-gray-50 pt-32 pb-16">

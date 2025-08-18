@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { ChevronLeft, ChevronRight, Loader2, Building } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Building } from 'lucide-react';
+import { LoadingSpinner } from '../common/LoadingSpinner';
 
 interface FormNavigationProps {
   currentStep: number;
@@ -50,7 +51,7 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
         >
           {isLoading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <LoadingSpinner variant="button" size="sm" />
               <span>Creando...</span>
             </>
           ) : (
