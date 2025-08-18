@@ -1,28 +1,21 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { ProtectedRoute } from '../ProtectedRoute';
 
-const AdminRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated, user, loading } = useAuth();
-  const location = useLocation();
+interface AdminRouteProps {
+  children: React.ReactNode;
+}
 
-  if (loading) {
-    return <div>Loading...</div>; // O un spinner más elaborado
-  }
-
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
-  
-  if (!user.is_verified) {
-    return <Navigate to="/verify-account" state={{ from: location }} replace />;
-  }
-
-  if (user.role !== 'admin' && user.role !== 'super_admin') {
-    return <Navigate to="/" replace />; // O a una página de "no autorizado"
-  }
-
-  return children;
+const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
+  return (
+    <ProtectedRoute
+      requireAuth={true}
+      requiredRoles={['admin', 'super_admin']}
+      redirectTo="/auth"
+      unauthorizedRedirectTo="/"
+    >
+      {children}
+    </ProtectedRoute>
+  );
 };
 
 export default AdminRoute; 

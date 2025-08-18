@@ -9,6 +9,8 @@ interface ProtectedRouteProps {
   requireAuth?: boolean;
   redirectTo?: string;
   fallback?: React.ReactNode;
+  requiredRoles?: string[]; // Nuevos roles requeridos
+  unauthorizedRedirectTo?: string; // Redirección para usuarios no autorizados por rol
 }
 
 const LoadingSpinner: React.FC = () => (
@@ -32,7 +34,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requireAuth = true,
   redirectTo = '/auth',
-  fallback
+  fallback,
+  requiredRoles,
+  unauthorizedRedirectTo = '/'
 }) => {
   const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
@@ -50,6 +54,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Si el usuario está autenticado pero no verificado, redirigir a la página de verificación
   if (isAuthenticated && user && !user.is_verified) {
     return <Navigate to="/verify-account" state={{ from: location }} replace />;
+  }
+
+  // Validar roles requeridos si están especificados
+  if (isAuthenticated && user && requiredRoles && requiredRoles.length > 0) {
+    const hasRequiredRole = requiredRoles.includes(user.role);
+    if (!hasRequiredRole) {
+      return <Navigate to={unauthorizedRedirectTo} replace />;
+    }
   }
 
   // Si no requiere autenticación pero está autenticado, podría redirigir a home
