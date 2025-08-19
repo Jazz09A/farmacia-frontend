@@ -36,10 +36,10 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
           viewport={{ once: true }}
         >
           <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-            Nuestros Productos
+            Catálogo Farmacéutico
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Encuentra los mejores medicamentos y productos para tu salud
+            Medicamentos certificados y productos farmacéuticos para tu farmacia
           </p>
         </motion.div>
 
@@ -123,7 +123,6 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
               <ProductCard
                 product={product}
                 currency={currency}
-                onAddToCart={onAddToCart}
                 formatPrice={formatPrice}
               />
             </motion.div>

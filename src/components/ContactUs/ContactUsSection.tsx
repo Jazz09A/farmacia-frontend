@@ -84,20 +84,21 @@ export const ContactUsSection: React.FC = () => {
           >
             <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-800 mb-6">QUEREMOS CONOCERTE</h2>
             <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-              Gracias por tu interés en convertirte en cliente de Drozainka. Por favor, completa el formulario y uno de nuestros asesores comerciales te contactará a la brevedad.
+              Gracias por tu interés en asociarte con Drozainka como distribuidor farmacéutico. Por favor, completa el formulario y uno de nuestros asesores comerciales te contactará para establecer una alianza comercial.
             </p>
             <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
               <div className="flex items-start">
                   <AlertCircle className="h-6 w-6 text-blue-600 mr-4 mt-1" />
                   <div>
-                      <h3 className="font-bold text-gray-800 text-lg mb-2">Requisitos a tener a la mano</h3>
+                      <h3 className="font-bold text-gray-800 text-lg mb-2">Documentación Comercial Requerida</h3>
                       <p className="text-gray-700">
-                          Cuando nuestro asesor te contacte, es necesario que tengas actualizados y a la mano los siguientes documentos:
+                          Para establecer una relación comercial, necesitarás tener actualizados los siguientes documentos de tu farmacia:
                       </p>
                       <ul className="list-disc list-inside mt-4 space-y-2 text-gray-600">
-                          <li>RIF vigente</li>
-                          <li>Registro Mercantil</li>
-                          <li>Permiso de instalación y funcionamiento</li>
+                          <li>RIF vigente de la farmacia</li>
+                          <li>Registro Mercantil actualizado</li>
+                          <li>Permiso de funcionamiento farmacéutico</li>
+                          <li>Licencia del farmacéutico responsable</li>
                       </ul>
                   </div>
               </div>

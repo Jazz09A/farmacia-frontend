@@ -20,7 +20,7 @@ const CartPage: React.FC = () => {
         <ShoppingCart className="w-24 h-24 text-medical-gray-300 mb-6" />
         <h1 className="text-3xl font-bold text-medical-gray-800 mb-2">Tu carrito está vacío</h1>
         <p className="text-medical-gray-600 mb-8">
-          Parece que no has añadido nada a tu carrito. ¡Explora nuestros productos!
+          Parece que no has añadido nada a tu carrito. ¡Explora nuestro catálogo farmacéutico!
         </p>
         <Link
           to="/catalog"
@@ -78,7 +78,7 @@ const CartPage: React.FC = () => {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white p-8 rounded-2xl shadow-soft sticky top-28">
-              <h2 className="text-2xl font-bold text-medical-gray-800 border-b pb-4 mb-6">Resumen del Pedido</h2>
+              <h2 className="text-2xl font-bold text-medical-gray-800 border-b pb-4 mb-6">Resumen del Pedido Comercial</h2>
               <div className="space-y-4 text-medical-gray-700">
                 <div className="flex justify-between">
                   <span>Subtotal ({cart.total_items} productos)</span>

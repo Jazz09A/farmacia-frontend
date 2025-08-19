@@ -22,20 +22,20 @@ export const Footer: React.FC = () => {
 
   const quickLinks = [
     'Sobre Nosotros',
-    'Servicios',
-    'Catálogo',
-    'Consulta Online',
-    'Ofertas',
-    'Blog de Salud'
+    'Servicios de Distribución',
+    'Catálogo Farmacéutico',
+    'Asesoría Comercial',
+    'Promociones B2B',
+    'Blog Farmacéutico'
   ];
 
   const customerService = [
-    'Centro de Ayuda',
-    'Política de Devoluciones',
-    'Términos y Condiciones',
+    'Centro de Ayuda Comercial',
+    'Política de Devoluciones B2B',
+    'Términos Comerciales',
     'Política de Privacidad',
-    'Envíos y Entregas',
-    'Garantía de Calidad'
+    'Logística y Distribución',
+    'Garantía de Productos'
   ];
 
   const certifications = [
@@ -90,8 +90,8 @@ export const Footer: React.FC = () => {
                 Grupo Drozainka
               </h3>
               <p className="text-blue-100 leading-relaxed">
-                Tu farmacia de confianza online. Medicamentos certificados, 
-                consulta profesional y entrega express para cuidar tu salud.
+                Distribuidor líder de productos farmacéuticos en Venezuela. 
+                Suministramos medicamentos certificados a farmacias con la más alta calidad y confiabilidad.
               </p>
             </div>
 
@@ -181,7 +181,7 @@ export const Footer: React.FC = () => {
           >
             <h4 className="text-lg font-semibold mb-6">Newsletter</h4>
             <p className="text-blue-100 mb-4">
-              Recibe ofertas exclusivas y consejos de salud
+              Recibe promociones comerciales y actualizaciones del sector farmacéutico
             </p>
             <form className="space-y-3">
               <input
@@ -210,9 +210,9 @@ export const Footer: React.FC = () => {
               © 2025 Grupo Drozainka. Todos los derechos reservados.
             </p>
             <div className="flex items-center space-x-6 text-sm text-blue-200">
-              <span>Medicamentos con registro sanitario</span>
+              <span>Distribución de medicamentos certificados</span>
               <span>•</span>
-              <span>Entrega segura garantizada</span>
+              <span>Suministro confiable para farmacias</span>
             </div>
           </div>
         </div>

@@ -169,7 +169,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                       whileHover={{ scale: 1.02, y: -1 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      Proceder al Pago
+                      Proceder al Pedido
                     </motion.button>
                     
                     <motion.button
@@ -178,7 +178,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      Continuar Comprando
+                      Continuar Seleccionando
                     </motion.button>
                   </div>
                 </>

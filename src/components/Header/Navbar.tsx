@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, Package, HelpCircle, Briefcase, Tag, BookText, Shield } from 'lucide-react';
+import { ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, HelpCircle, Briefcase, Tag, BookText, Shield } from 'lucide-react';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; // Updated import
@@ -154,8 +154,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 transition={getMobileOptimizedTransition({ delay: 0.1 })}
               >
                 {isScrolled 
-                  ? '🚚 Envío GRATIS +$25 | 📞 0800-FARMA'
-                  : '🚚 Envío GRATIS en compras mayores a $25 | 📞 Línea de emergencia 24/7: 0800-FARMA'
+                  ? '🚚 Distribución NACIONAL | 📞 0800-DROZAINKA'
+                  : '🚚 Distribución Nacional para Farmacias | 📞 Atención comercial 24/7: 0800-DROZAINKA'
                 }
               </motion.p>
             </div>
@@ -260,7 +260,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                               <div>
                                 <div className="font-semibold text-medical-gray-900">{getUserDisplayName(user)}</div>
                                 <div className="text-sm text-medical-gray-600">{user.email}</div>
-                                <div className="text-xs text-medical-blue-600 font-medium">Persona Jurídica (Farmacia)</div>
+                                <div className="text-xs text-medical-blue-600 font-medium">Cliente Comercial (Farmacia)</div>
                               </div>
                             </div>
                           </div>
@@ -404,8 +404,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
                 <div className="p-6 border-t border-medical-gray-200 bg-medical-blue-50">
                   <div className="text-center">
-                    <p className="text-sm text-medical-gray-600 mb-2">¿Necesitas ayuda médica?</p>
-                    <motion.button className="btn-medical-primary w-full" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>Consulta Online 24/7</motion.button>
+                    <p className="text-sm text-medical-gray-600 mb-2">¿Necesitas asesoría comercial?</p>
+                    <motion.button className="btn-medical-primary w-full" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>Contacto Comercial 24/7</motion.button>
                   </div>
                 </div>
               </div>

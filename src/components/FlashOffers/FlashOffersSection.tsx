@@ -180,10 +180,10 @@ export const FlashOffersSection: React.FC<FlashOffersSectionProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.6 }}
             >
-              Aprovecha estos descuentos especiales en medicamentos y productos de salud premium.
+              Aprovecha estos descuentos especiales en medicamentos para mejorar tu margen comercial.
               <br />
               <span className="text-medical-blue-600 font-semibold">
-                Precios reducidos solo por hoy
+                Precios mayoristas con descuentos limitados
               </span>
             </motion.p>
 

@@ -7,18 +7,18 @@ export const HeroSection: React.FC = () => {
   const benefits = [
     { 
       icon: Shield, 
-      text: 'Medicamentos Certificados',
-      description: 'Productos garantizados y aprobados'
+      text: 'Productos Farmacéuticos Certificados',
+      description: 'Medicamentos con registro sanitario garantizado'
     },
     { 
       icon: Clock, 
-      text: 'Entrega Express 24h',
-      description: 'Delivery rápido y confiable'
+      text: 'Distribución Confiable 24/7',
+      description: 'Suministro constante para tu farmacia'
     },
     { 
       icon: Truck, 
-      text: 'Envío Gratuito +$25',
-      description: 'Sin costo adicional en compras mayores'
+      text: 'Logística Especializada',
+      description: 'Entrega segura en toda Venezuela'
     }
   ];
 
@@ -109,7 +109,7 @@ export const HeroSection: React.FC = () => {
           >
             <Stethoscope className="h-5 w-5 text-medical-blue-200" />
             <span className="text-sm font-medium text-medical-blue-100">
-              Farmacia Certificada • Profesionales de la Salud
+              Distribuidor Certificado • Líder en Suministros Farmacéuticos
             </span>
           </motion.div>
 
@@ -119,9 +119,9 @@ export const HeroSection: React.FC = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-serif font-bold mb-6 leading-tight">
-              Tu Salud,{' '}
+              Tu Farmacia,{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-medical-blue-200 via-white to-medical-green-200">
-                Nuestra Prioridad
+                Nuestro Compromiso
               </span>
             </h1>
             
@@ -131,10 +131,10 @@ export const HeroSection: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              Medicamentos certificados, consulta profesional las 24 horas y entrega express.
+              Distribuimos medicamentos certificados con la máxima calidad y confiabilidad para tu farmacia.
               <br />
               <span className="text-lg sm:text-xl text-white/80 font-normal">
-                La farmacia del futuro, hoy en tus manos.
+                El socio estratégico que tu farmacia necesita.
               </span>
             </motion.p>
 
@@ -167,10 +167,10 @@ export const HeroSection: React.FC = () => {
               transition={{ duration: 1, delay: 1.2 }}
             >
               {[
-                "🏥 +10,000 Clientes Satisfechos",
-                "⭐ 4.9/5 Calificación",
-                "🚀 Delivery en 24h",
-                "🔒 Pago 100% Seguro"
+                "🏥 +500 Farmacias Asociadas",
+                "⭐ 4.9/5 Confiabilidad",
+                "🚀 Distribución Nacional",
+                "🔒 Crédito Empresarial"
               ].map((indicator, index) => (
                 <motion.div
                   key={index}
@@ -199,7 +199,7 @@ export const HeroSection: React.FC = () => {
               <div className="glass-medical rounded-2xl p-3 border border-white/30 group-hover:glass-card group-hover:text-medical-gray-700 transition-all duration-300">
                 <ChevronDown className="h-6 w-6" />
               </div>
-              <span className="text-sm font-medium hidden sm:block">Explorar Productos</span>
+              <span className="text-sm font-medium hidden sm:block">Ver Catálogo</span>
             </div>
           </motion.button>
         </div>

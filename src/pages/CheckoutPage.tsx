@@ -191,8 +191,8 @@ const CheckoutPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-medical-gray-50 pt-32 pb-16">
       <div className="medical-container">
-        <h1 className="text-4xl font-bold text-medical-gray-900 mb-4">Finalizar Compra</h1>
-        <p className="text-lg text-medical-gray-600 mb-8">Sigue los pasos para completar tu pedido de forma segura.</p>
+        <h1 className="text-4xl font-bold text-medical-gray-900 mb-4">Finalizar Pedido</h1>
+        <p className="text-lg text-medical-gray-600 mb-8">Completa los datos para procesar tu pedido comercial de manera segura.</p>
 
         <div className="mb-12">
           <ol className="flex items-center w-full">
@@ -364,7 +364,7 @@ const CheckoutPage: React.FC = () => {
           
           <div className="lg:col-span-1">
             <div className="bg-white p-6 rounded-2xl shadow-soft sticky top-28">
-              <h3 className="text-xl font-bold text-medical-gray-800 border-b pb-3 mb-4">Resumen del Pedido</h3>
+              <h3 className="text-xl font-bold text-medical-gray-800 border-b pb-3 mb-4">Resumen del Pedido Comercial</h3>
               <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                 {cart?.items.map(item => (
                   <div key={item.id} className="flex justify-between items-center text-sm">
@@ -385,8 +385,8 @@ const CheckoutPage: React.FC = () => {
                   <span className="font-semibold">{formatPrice(cart?.total_ves || 0, 'VES')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Envío</span>
-                  <span className="font-semibold">Gratis</span>
+                  <span>Logística</span>
+                  <span className="font-semibold">Incluida</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg text-medical-gray-900 border-t pt-3 mt-3">
                   <span>Total</span>
