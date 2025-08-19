@@ -159,8 +159,7 @@ const CheckoutPage: React.FC = () => {
     };
   
     try {
-      const result = await authService.createOrder(orderData);
-      console.log('Order created successfully:', result);
+      await authService.createOrder(orderData);
       alert('Pedido confirmado! Gracias por tu compra.');
       
       localStorage.removeItem('checkoutFormData');

@@ -149,7 +149,6 @@ const AdminProductsPage: React.FC = () => {
   const handleConfirmDelete = () => { 
     if (!productToDelete) return;
     // Lógica para eliminar el producto
-    console.log(`Producto ${productToDelete.id} eliminado.`);
     setProductToDelete(null);
   };
 

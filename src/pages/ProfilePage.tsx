@@ -36,7 +36,7 @@ type TabType = 'cuenta' | 'pedidos' | 'promociones' | 'notificaciones' | 'soport
 
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('pedidos');
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
   
   const [promotions] = useState<UserPromotion[]>([]);
@@ -74,7 +74,7 @@ const ProfilePage: React.FC = () => {
     return formatters[currency].format(amount);
   };
 
-  if (isLoading || !user) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-12 h-12 text-medical-blue-500 animate-spin" />

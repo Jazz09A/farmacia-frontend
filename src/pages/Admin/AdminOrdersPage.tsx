@@ -9,25 +9,23 @@ import {
   AlertCircle,
   Package,
 } from 'lucide-react';
-import { mockOrders, orderStatuses, mockUsers } from '../../data/mockData';
 import { Order } from '../../types';
 import OrderModal from '../../components/Admin/OrderModal';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
+import adminService from '../../services/AdminService';
 
 const AdminOrdersPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
 
   // Filter orders
   const filteredOrders = orders.filter(order => {
-    const customer = mockUsers.find(user => user.id === order.userId);
     const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (order.trackingNumber && order.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (customer && customer.name.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (order.tracking_number && order.tracking_number.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -62,7 +60,8 @@ const AdminOrdersPage: React.FC = () => {
     setShowOrderModal(true);
   };
 
-  const handleUpdateStatus = (orderId: string, newStatus: string) => {
+  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+    await adminService.updateOrderStatus(orderId, newStatus);
     const updatedOrders = orders.map(o => 
       o.id === orderId ? { ...o, status: newStatus } : o
     );
@@ -127,9 +126,11 @@ const AdminOrdersPage: React.FC = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">Todos los estados</option>
-            {orderStatuses.map(status => (
-              <option key={status.id} value={status.id}>{status.name}</option>
-            ))}
+            <option value="pending">Pendiente</option>
+            <option value="processing">Preparando</option>
+            <option value="shipped">Enviado</option>
+            <option value="delivered">Entregado</option>
+            <option value="cancelled">Cancelado</option>
           </select>
           <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
             <Filter className="w-4 h-4 mr-2" />
@@ -148,7 +149,6 @@ const AdminOrdersPage: React.FC = () => {
         <div className="md:hidden">
           <div className="divide-y divide-gray-200">
             {filteredOrders.map((order) => {
-              const customer = mockUsers.find(user => user.id === order.userId);
               return (
                 <div 
                   key={order.id} 
@@ -158,14 +158,14 @@ const AdminOrdersPage: React.FC = () => {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="font-bold text-gray-900">#{order.id.substring(0, 8)}...</div>
-                      <div className="text-sm text-gray-600">{customer?.name}</div>
-                      <div className="text-sm text-gray-500 mt-1">{new Date(order.createdAt).toLocaleDateString('es-VE')}</div>
+                      <div className="text-sm text-gray-600">{order.shipping_address.recipient_name}</div>
+                      <div className="text-sm text-gray-500 mt-1">{new Date(order.created_at).toLocaleDateString('es-VE')}</div>
                     </div>
                     <div className="text-right flex-shrink-0 ml-2">
                       <div className="font-bold text-gray-900">{formatCurrency(order.total)}</div>
                       <div className="flex items-center justify-end mt-1 text-sm">
                         {getStatusIcon(order.status)}
-                        <span className="ml-1.5">{orderStatuses.find(s => s.id === order.status)?.name}</span>
+                        <span className="ml-1.5">{order.status}</span>
                       </div>
                     </div>
                   </div>
@@ -200,7 +200,6 @@ const AdminOrdersPage: React.FC = () => {
             </thead>
             <tbody className="divide-y">
               {filteredOrders.map((order) => {
-                const customer = mockUsers.find(user => user.id === order.userId);
                 return (
                   <tr 
                     key={order.id} 
@@ -209,20 +208,20 @@ const AdminOrdersPage: React.FC = () => {
                   >
                     <td className="px-6 py-4">
                       <div className="font-medium text-blue-600 hover:underline">#{order.id.substring(0, 8)}...</div>
-                      <div className="text-xs text-gray-500">{order.trackingNumber}</div>
+                      <div className="text-xs text-gray-500">{order.tracking_number}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div>{customer?.name}</div>
-                      <div className="text-xs text-gray-500">{customer?.email}</div>
+                      <div>{order.shipping_address.recipient_name}</div>
+                      <div className="text-xs text-gray-500">{order.shipping_address.recipient_phone}</div>
                     </td>
                     <td className="px-6 py-4">
-                      {new Date(order.createdAt).toLocaleDateString('es-VE')}
+                      {new Date(order.created_at).toLocaleDateString('es-VE')}
                     </td>
                     <td className="px-6 py-4 font-medium">{formatCurrency(order.total)}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         {getStatusIcon(order.status)}
-                        <span className="ml-2">{orderStatuses.find(s => s.id === order.status)?.name}</span>
+                        <span className="ml-2">{order.status}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -245,7 +244,6 @@ const AdminOrdersPage: React.FC = () => {
       {showOrderModal && (
         <OrderModal
           order={selectedOrder}
-          users={mockUsers}
           onClose={() => setShowOrderModal(false)}
           onUpdateStatus={handleUpdateStatus}
         />

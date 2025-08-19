@@ -83,7 +83,6 @@ const mapBackendProductToProduct = (backendProduct: Product): Product => {
 // Function to fetch products with pagination from the real API
 const fetchProductsPaginated = async (page: number = 1, limit: number = 20): Promise<PaginatedResponse> => {
   try {
-    console.log(`Fetching products from API - Page: ${page}, Limit: ${limit}`);
     
     // Build the API URL with pagination parameters
     const apiUrl = `/api/v1/public/products?page=${page}&limit=${limit}&sort_by=name`;
@@ -95,7 +94,6 @@ const fetchProductsPaginated = async (page: number = 1, limit: number = 20): Pro
     }
     
     const data: BackendResponse = await response.json();
-    console.log('API Response:', data);
     
     // Map backend products to frontend products
     const mappedProducts = data.products.map(mapBackendProductToProduct);
@@ -108,13 +106,6 @@ const fetchProductsPaginated = async (page: number = 1, limit: number = 20): Pro
       totalPages: data.pagination.total_pages
     };
     
-    console.log('Mapped products:', mappedProducts.length, `Total pages: ${result.totalPages}`);
-    console.log('Pagination info:', {
-      page: result.page,
-      totalPages: result.totalPages,
-      total: result.total,
-      limit: result.limit
-    });
     
     return result;
     

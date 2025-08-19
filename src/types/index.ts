@@ -139,6 +139,7 @@ export interface User {
   createdAt: Date;
 }
 
+// 📍 Address para usuarios (diferente a ShippingAddress)
 export interface Address {
   street: string;
   city: string;
@@ -159,22 +160,54 @@ export interface UserPreferences {
   medicalConditions?: string[];
 }
 
+// 📦 Estructura de Order Item de la API
+export interface OrderItem {
+  id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  selected_presentation: string;
+  product_name: string;
+  product_brand: string;
+  product_image: string;
+}
+
+// 🏠 Dirección de envío desde la API
+export interface ShippingAddress {
+  street: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  recipient_name: string;
+  recipient_phone: string;
+  delivery_instructions?: string;
+}
+
+// 📋 Orden completa desde la API
 export interface Order {
   id: string;
-  userId: string;
-  items: CartItem[];
+  order_number: string;
+  status: string;
   subtotal: number;
-  shipping: number;
+  shipping_cost: number;
   taxes: number;
   total: number;
-  currency: Currency;
-  status: string;
-  paymentMethod: string;
-  shippingAddress: Address;
-  trackingNumber?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  estimatedDelivery?: Date;
+  currency: string;
+  payment_method: string;
+  payment_status: string;
+  payment_reference: string;
+  tracking_number?: string;
+  estimated_delivery?: string;
+  delivered_at?: string;
+  customer_notes?: string;
+  created_at: string;
+  updated_at: string;
+  items: OrderItem[];
+  shipping_address: ShippingAddress;
+  item_count: number;
+  payment_capture_url: string;
 }
 
 export interface BlogPost {

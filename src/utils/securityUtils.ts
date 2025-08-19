@@ -17,7 +17,7 @@ export class SecurityManager {
   // 🔥 CRÍTICO: Configurar listeners de seguridad
   private setupSecurityListeners(): void {
     // Escuchar logout forzado por problemas de autenticación
-    window.addEventListener('forceLogout', this.handleForceLogout.bind(this));
+    window.addEventListener('forceLogout', this.handleForceLogout.bind(this) as EventListener);
     
     // Limpiar datos al cerrar/refrescar la página
     window.addEventListener('beforeunload', this.handlePageUnload.bind(this));
@@ -49,7 +49,6 @@ export class SecurityManager {
   private handleVisibilityChange(): void {
     if (document.hidden) {
       // Página oculta - pausar requests no críticos
-      console.log('🔒 Page hidden - pausing non-critical requests');
     }
   }
 
@@ -74,7 +73,6 @@ export class SecurityManager {
         document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
       });
 
-      console.log('🔒 Emergency cleanup completed');
     } catch (error) {
       console.error('🚨 Error during emergency cleanup:', error);
     }
@@ -132,7 +130,7 @@ export class SecurityManager {
   }
 
   // 🔥 Limpiar datos específicos de un usuario
-  public static cleanUserSpecificData(userId?: string): void {
+  public static async cleanUserSpecificData(userId?: string): Promise<void> {
     const userKeys = [
       `cart_${userId}`,
       `preferences_${userId}`,
@@ -150,7 +148,7 @@ export class SecurityManager {
 
     // 🧹 Limpiar caché específico del carrito usando su API
     try {
-      const { cartCache } = require('../utils/cartCache');
+      const { cartCache } = await import('../utils/cartCache');
       if (userId) {
         cartCache.clearUserCart(userId);
       } else {

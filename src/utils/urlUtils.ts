@@ -17,7 +17,7 @@ interface ObfuscationOptions {
 /**
  * Método 1: Base64 + Salt para obfuscación básica
  */
-export class Base64Obfuscator {
+class Base64Obfuscator {
   static encode(originalUrl: string, salt: string = SALT): string {
     const combined = `${originalUrl}|${salt}|${Date.now()}`;
     const encoded = btoa(combined);
@@ -48,7 +48,7 @@ export class Base64Obfuscator {
 /**
  * Método 2: Hash personalizado para URLs más cortas
  */
-export class HashObfuscator {
+class HashObfuscator {
   private static hashTable: Record<string, string> = {};
   private static reverseTable: Record<string, string> = {};
 
@@ -98,7 +98,7 @@ export class HashObfuscator {
 /**
  * Método 3: UUID-like para URLs que parecen IDs únicos
  */
-export class UUIDObfuscator {
+class UUIDObfuscator {
   static encode(originalUrl: string): string {
     const timestamp = Date.now().toString(16);
     const randomPart = Math.random().toString(16).substr(2, 8);
@@ -128,7 +128,7 @@ export class UUIDObfuscator {
 /**
  * Método 4: Obfuscador personalizado con múltiples capas
  */
-export class CustomObfuscator {
+class CustomObfuscator {
   private static encode_map: Record<string, string> = {};
   private static decode_map: Record<string, string> = {};
 
@@ -182,7 +182,7 @@ export class CustomObfuscator {
 /**
  * Clase principal para gestión de URLs obfuscadas
  */
-export class URLObfuscator {
+class URLObfuscator {
   private static method: ObfuscationOptions['method'] = 'custom';
 
   /**
@@ -270,12 +270,12 @@ export class URLObfuscator {
 /**
  * Utilidades para debugging en desarrollo
  */
-export class DebugUtils {
+class DebugUtils {
   /**
    * Mostrar todos los mapeos de URLs
    */
   static showAllMappings(): void {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.VITE_NODE_ENV === 'development') {
       console.group('🔍 URL Obfuscation Mappings');
       console.log('Custom Mappings:', CustomObfuscator.getAllMappings());
       console.log('Hash Mappings:', HashObfuscator.getMapping());
@@ -287,7 +287,7 @@ export class DebugUtils {
    * Probar obfuscación de URL
    */
   static testObfuscation(originalUrl: string): void {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.VITE_NODE_ENV === 'development') {
       const results = URLObfuscator.generateDebugUrl(originalUrl);
       console.group(`🧪 Testing URL: ${originalUrl}`);
       Object.entries(results).forEach(([method, url]) => {
@@ -301,7 +301,7 @@ export class DebugUtils {
    * Comandos de consola para debugging
    */
   static setupConsoleCommands(): void {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.VITE_NODE_ENV === 'development') {
       // @ts-ignore
       window.farmaDebug = {
         obfuscate: (url: string) => URLObfuscator.generateDebugUrl(url),
@@ -316,7 +316,7 @@ export class DebugUtils {
 }
 
 // Auto-setup en desarrollo
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.VITE_NODE_ENV === 'development') {
   DebugUtils.setupConsoleCommands();
 }
 

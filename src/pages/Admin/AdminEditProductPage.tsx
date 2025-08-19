@@ -41,14 +41,13 @@ const AdminEditProductPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [showUnsavedChanges, setShowUnsavedChanges] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<string | null>(null);
-  const {uploadImage, isLoading: isUploading, error: uploadError} = useUploadImage();
+  const {uploadImage, isUploading, error: uploadError} = useUploadImage();
   const token = localStorage.getItem('token');
   useEffect(() => {
     const fetchProduct = async () => {
       if (id) {
         const productData = await getProductById(id);
         if (productData) {
-          console.log(productData);
           setFormData(productData);
         }
       }

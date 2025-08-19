@@ -1,5 +1,5 @@
-import React from 'react';
-import { Order, User } from '../../types';
+import React, { useState } from 'react';
+import { Order } from '../../types';
 import { 
   XCircle,
   Clock,
@@ -8,29 +8,33 @@ import {
   Package,
   MapPin,
   Phone,
-  Mail
+  Mail,
+  ExternalLink,
+  Receipt,
+  Check
 } from 'lucide-react';
 
 const orderStatuses = [
-
-  { id: 'pending', name: 'Pendiente' },
-  { id: 'processing', name: 'En Proceso' },
+  { id: 'pending', name: 'Recibido' },
+  { id: 'confirmed', name: 'Confirmado' },
+  { id: 'processing', name: 'Preparando' },
   { id: 'shipped', name: 'Enviado' },
   { id: 'delivered', name: 'Entregado' },
-  { id: 'cancelled', name: 'Cancelado' }
+  { id: 'cancelled', name: 'Cancelado' },
 ];
 
 interface OrderModalProps {
   order: Order | null;
-  users: User[];
   onClose: () => void;
-  onUpdateStatus: (orderId: string, newStatus: string) => void;
+  onUpdateStatus: (orderId: string, newStatus: string) => Promise<void>;
 }
 
 const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
         return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'confirmed':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'processing':
         return <AlertCircle className="w-4 h-4 text-blue-500" />;
       case 'shipped':
@@ -52,10 +56,24 @@ const formatCurrency = (amount: number) => {
     }).format(amount);
 };
 
-const OrderModal: React.FC<OrderModalProps> = ({ order, users, onClose, onUpdateStatus }) => {
+  const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus }) => {
+  const [selectedStatus, setSelectedStatus] = useState(order?.status || 'pending');
+  const [isUpdating, setIsUpdating] = useState(false);
+  
   if (!order) return null;
+  
+  const handleConfirmStatusChange = async () => {
+    if (selectedStatus === order.status) return;
+    setIsUpdating(true);
+    try {
+      await onUpdateStatus(order.id, selectedStatus);
+      setSelectedStatus(selectedStatus);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
-  const customer = users.find(user => user.id === order.userId);
+  const hasStatusChanged = selectedStatus !== order.status;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
@@ -82,18 +100,18 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, users, onClose, onUpdate
               <div className="space-y-2 text-sm">
                 <div className="flex items-center">
                   <Mail className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                  <span className="text-gray-600 truncate">{customer?.email}</span>
+                  <span className="text-gray-600 truncate">{order.shipping_address.recipient_name || 'No disponible'}</span>
                 </div>
                 <div className="flex items-center">
                   <Phone className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                  <span className="text-gray-600">{customer?.phone}</span>
+                  <span className="text-gray-600">{order.shipping_address.recipient_phone || 'No disponible'}</span>
                 </div>
                 <div className="flex items-start">
                   <MapPin className="w-4 h-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
                   <div className="text-gray-600">
-                    <div>{order.shippingAddress.street}</div>
-                    <div>{order.shippingAddress.city}, {order.shippingAddress.state}</div>
-                    <div>{order.shippingAddress.country}</div>
+                    <div>{order.shipping_address.street}</div>
+                    <div>{order.shipping_address.city}, {order.shipping_address.state}</div>
+                    <div>{order.shipping_address.country}</div>
                   </div>
                 </div>
               </div>
@@ -110,22 +128,45 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, users, onClose, onUpdate
                 </div>
                 <div>
                   <label className="block text-gray-600 mb-1">Actualizar Estado:</label>
-                  <select 
-                    className="px-3 py-2 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-blue-500"
-                    value={order.status}
-                    onChange={(e) => onUpdateStatus(order.id, e.target.value)}
-                  >
-                    {orderStatuses.map(status => (
-                      <option key={status.id} value={status.id}>
-                        {status.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="space-y-2">
+                    <select 
+                      className="px-3 py-2 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-blue-500"
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value)}
+                      disabled={isUpdating}
+                    >
+                      {orderStatuses.map(status => (
+                        <option key={status.id} value={status.id}>
+                          {status.name}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    {hasStatusChanged && (
+                      <button
+                        onClick={handleConfirmStatusChange}
+                        disabled={isUpdating}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      >
+                        {isUpdating ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Actualizando...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4" />
+                            Confirmar Cambio de Estado
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {order.trackingNumber && (
+                {order.tracking_number && (
                   <div>
                     <span className="text-gray-600">Tracking: </span>
-                    <span className="font-medium">{order.trackingNumber}</span>
+                    <span className="font-medium">{order.tracking_number}</span>
                   </div>
                 )}
               </div>
@@ -140,19 +181,19 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, users, onClose, onUpdate
               {order.items.map((item, index) => (
                 <div key={index} className="bg-gray-50 p-3 rounded-lg flex items-center space-x-3">
                   <img 
-                    src={item.product.image} 
-                    alt={item.product.name}
+                    src={item.product_image} 
+                    alt={item.product_name}
                     className="w-16 h-16 rounded-md object-cover"
                   />
                   <div className="flex-1 text-sm">
-                    <div className="font-medium text-gray-900">{item.product.name}</div>
-                    <div className="text-gray-500">{item.product.brand}</div>
+                    <div className="font-medium text-gray-900">{item.product_name}</div>
+                    <div className="text-gray-500">{item.product_brand}</div>
                     <div className="mt-1">
-                      {item.quantity} x {formatCurrency(item.product.price_ves)}
+                      {item.quantity} x {formatCurrency(item.unit_price)}
                     </div>
                   </div>
                   <div className="font-medium text-gray-900 text-sm">
-                    {formatCurrency(item.product.price_ves * item.quantity)}
+                    {formatCurrency(item.total_price)}
                   </div>
                 </div>
               ))}
@@ -175,22 +216,22 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, users, onClose, onUpdate
                       <td className="px-4 py-3">
                         <div className="flex items-center">
                           <img 
-                            src={item.product.image} 
-                            alt={item.product.name}
+                            src={item.product_image} 
+                            alt={item.product_name}
                             className="w-12 h-12 rounded-lg object-cover mr-4"
                           />
                           <div>
-                            <div className="font-medium text-gray-900">{item.product.name}</div>
-                            <div className="text-gray-500">{item.product.brand}</div>
+                            <div className="font-medium text-gray-900">{item.product_name}</div>
+                            <div className="text-gray-500">{item.product_brand}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center text-gray-900">{item.quantity}</td>
                       <td className="px-4 py-3 text-right text-gray-900">
-                        {formatCurrency(item.product.price_ves)}
+                        {formatCurrency(item.unit_price)}
                       </td>
                       <td className="px-4 py-3 text-right font-medium text-gray-900">
-                        {formatCurrency(item.product.price_ves * item.quantity)}
+                        {formatCurrency(item.total_price)}
                       </td>
                     </tr>
                   ))}
@@ -209,7 +250,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, users, onClose, onUpdate
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Envío:</span>
-                <span>{formatCurrency(order.shipping)}</span>
+                <span>{formatCurrency(order.shipping_cost)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Impuestos:</span>
@@ -221,8 +262,22 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, users, onClose, onUpdate
                 <span>{formatCurrency(order.total)}</span>
               </div>
               <div className="text-gray-600 pt-2">
-                Método de pago: <span className="font-medium text-gray-900">{order.paymentMethod}</span>
+                Método de pago: <span className="font-medium text-gray-900">{order.payment_method}</span>
               </div>
+              
+              {/* Payment Capture Button */}
+              {order.payment_capture_url && (
+                <div className="pt-3 border-t border-gray-200 mt-3">
+                  <button
+                    onClick={() => window.open(order.payment_capture_url, '_blank', 'noopener,noreferrer')}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    <Receipt className="w-4 h-4" />
+                    Ver Comprobante de Pago
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
