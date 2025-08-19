@@ -113,6 +113,64 @@ class AdminService {
     }
   }
 
+  // 📋 Obtener todas las órdenes con filtros y paginación
+  async getOrders(params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    search?: string;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+  }): Promise<{ orders: Order[]; total: number; pages: number }> {
+    try {
+      const searchParams = new URLSearchParams();
+      
+      if (params?.page) searchParams.append('page', params.page.toString());
+      if (params?.limit) searchParams.append('limit', params.limit.toString());
+      if (params?.status && params.status !== 'all') searchParams.append('status', params.status);
+      if (params?.search) searchParams.append('search', params.search);
+      if (params?.sort_by) searchParams.append('sort_by', params.sort_by);
+      if (params?.sort_order) searchParams.append('sort_order', params.sort_order);
+
+      const url = `${this.baseUrl}/orders${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+      const response = await authService.authenticatedFetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching orders: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return {
+        orders: data,
+        total: data.length, // API should return pagination info
+        pages: Math.ceil(data.length / (params?.limit || 20))
+      };
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+      throw error;
+    }
+  }
+
+  // 🗑️ Eliminar orden (soft delete)
+  async deleteOrder(orderId: string): Promise<void> {
+    try {
+      const response = await authService.authenticatedFetch(
+        `${this.baseUrl}/order/${orderId}`,
+        {
+          method: 'DELETE'
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Error deleting order: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error('Failed to delete order:', error);
+      throw error;
+    }
+  }
+
   // 📊 Obtener análiticas avanzadas
   async getAdvancedAnalytics(timeRange: string = 'month'): Promise<any> {
     try {

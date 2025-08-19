@@ -11,16 +11,30 @@ import {
   Mail,
   ExternalLink,
   Receipt,
-  Check
+  Check,
+  CreditCard,
+  Calendar,
+  Truck,
+  User,
+  DollarSign,
+  Copy,
+  CheckCheck
 } from 'lucide-react';
 
 const orderStatuses = [
-  { id: 'pending', name: 'Recibido' },
-  { id: 'confirmed', name: 'Confirmado' },
-  { id: 'processing', name: 'Preparando' },
-  { id: 'shipped', name: 'Enviado' },
-  { id: 'delivered', name: 'Entregado' },
-  { id: 'cancelled', name: 'Cancelado' },
+  { id: 'pending', name: 'Pendiente', color: 'yellow' },
+  { id: 'confirmed', name: 'Confirmado', color: 'blue' },
+  { id: 'processing', name: 'Preparando', color: 'blue' },
+  { id: 'shipped', name: 'Enviado', color: 'purple' },
+  { id: 'delivered', name: 'Entregado', color: 'green' },
+  { id: 'cancelled', name: 'Cancelado', color: 'red' },
+];
+
+const paymentStatuses = [
+  { id: 'pending', name: 'Pendiente', color: 'yellow' },
+  { id: 'completed', name: 'Completado', color: 'green' },
+  { id: 'failed', name: 'Fallido', color: 'red' },
+  { id: 'refunded', name: 'Reembolsado', color: 'gray' },
 ];
 
 interface OrderModalProps {
@@ -56,9 +70,10 @@ const formatCurrency = (amount: number) => {
     }).format(amount);
 };
 
-  const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus }) => {
+const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus }) => {
   const [selectedStatus, setSelectedStatus] = useState(order?.status || 'pending');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   
   if (!order) return null;
   
@@ -73,101 +88,264 @@ const formatCurrency = (amount: number) => {
     }
   };
 
+  const handleCopyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Intl.DateTimeFormat('es-VE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(new Date(dateString));
+  };
+
+  const getStatusBadge = (status: string, type: 'order' | 'payment' = 'order') => {
+    const statuses = type === 'order' ? orderStatuses : paymentStatuses;
+    const statusObj = statuses.find(s => s.id === status);
+    const color = statusObj?.color || 'gray';
+    
+    const colorClasses = {
+      yellow: 'bg-yellow-100 text-yellow-800',
+      blue: 'bg-blue-100 text-blue-800',
+      purple: 'bg-purple-100 text-purple-800',
+      green: 'bg-green-100 text-green-800',
+      red: 'bg-red-100 text-red-800',
+      gray: 'bg-gray-100 text-gray-800'
+    };
+
+    return `px-3 py-1 text-sm font-medium rounded-full ${colorClasses[color as keyof typeof colorClasses]}`;
+  };
+
   const hasStatusChanged = selectedStatus !== order.status;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="bg-white rounded-lg max-w-md md:max-w-4xl w-full max-h-[95vh] overflow-y-auto">
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate pr-2">
-              Pedido #{order.id.split('-')[0]}...
-            </h2>
+      <div className="bg-white rounded-lg max-w-md md:max-w-6xl w-full max-h-[95vh] overflow-y-auto">
+        {/* Header */}
+        <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+                  Pedido #{order.order_number || order.id.substring(0, 8)}
+                </h2>
+                <div className={getStatusBadge(order.status, 'order')}>
+                  {getStatusIcon(order.status)}
+                  <span className="ml-1 capitalize">{orderStatuses.find(s => s.id === order.status)?.name}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  {formatDate(order.created_at)}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Package className="w-4 h-4" />
+                  {order.item_count} items
+                </span>
+                <span className="flex items-center gap-1">
+                  <DollarSign className="w-4 h-4" />
+                  {formatCurrency(order.total)} {order.currency}
+                </span>
+              </div>
+            </div>
             <button 
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+              className="text-gray-400 hover:text-gray-600 flex-shrink-0 p-1"
             >
               <XCircle className="w-6 h-6" />
             </button>
           </div>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-6">
-          {/* Customer Info & Status */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-4 sm:p-6 space-y-8">
+          {/* Main Info Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Customer Info */}
             <div className="space-y-4">
-              <h3 className="text-base sm:text-lg font-medium text-gray-900">Información del Cliente</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center">
-                  <Mail className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                  <span className="text-gray-600 truncate">{order.shipping_address.recipient_name || 'No disponible'}</span>
-                </div>
-                <div className="flex items-center">
-                  <Phone className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                  <span className="text-gray-600">{order.shipping_address.recipient_phone || 'No disponible'}</span>
-                </div>
-                <div className="flex items-start">
-                  <MapPin className="w-4 h-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
-                  <div className="text-gray-600">
-                    <div>{order.shipping_address.street}</div>
-                    <div>{order.shipping_address.city}, {order.shipping_address.state}</div>
-                    <div>{order.shipping_address.country}</div>
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <User className="w-5 h-5 text-blue-600" />
+                Información del Cliente
+              </h3>
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Mail className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-500">Nombre</div>
+                    <div className="font-medium">{order.shipping_address.recipient_name || 'No disponible'}</div>
                   </div>
                 </div>
+                <div className="flex items-start gap-3">
+                  <Phone className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-500">Teléfono</div>
+                    <div className="font-medium">{order.shipping_address.recipient_phone || 'No disponible'}</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-500">Dirección</div>
+                    <div className="text-sm">
+                      <div>{order.shipping_address.street}</div>
+                      <div>{order.shipping_address.city}, {order.shipping_address.state}</div>
+                      <div>{order.shipping_address.postal_code}</div>
+                      <div>{order.shipping_address.country}</div>
+                    </div>
+                  </div>
+                </div>
+                {order.shipping_address.delivery_instructions && (
+                  <div className="pt-2 border-t border-gray-200">
+                    <div className="text-sm text-gray-500">Instrucciones de entrega</div>
+                    <div className="text-sm">{order.shipping_address.delivery_instructions}</div>
+                  </div>
+                )}
               </div>
             </div>
 
+            {/* Order Status Management */}
             <div className="space-y-4">
-              <h3 className="text-base sm:text-lg font-medium text-gray-900">Estado del Pedido</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Package className="w-5 h-5 text-green-600" />
+                Estado del Pedido
+              </h3>
+              <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                <div className="flex items-center gap-2">
                   {getStatusIcon(order.status)}
-                  <span className="ml-2 font-medium">
+                  <span className="font-medium">
                     {orderStatuses.find(s => s.id === order.status)?.name}
                   </span>
                 </div>
-                <div>
-                  <label className="block text-gray-600 mb-1">Actualizar Estado:</label>
-                  <div className="space-y-2">
-                    <select 
-                      className="px-3 py-2 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-blue-500"
-                      value={selectedStatus}
-                      onChange={(e) => setSelectedStatus(e.target.value)}
-                      disabled={isUpdating}
+                
+                {order.tracking_number && (
+                  <div className="flex items-center justify-between p-3 bg-white rounded border">
+                    <div className="flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-gray-400" />
+                      <div>
+                        <div className="text-sm text-gray-500">Número de seguimiento</div>
+                        <div className="font-medium text-sm">{order.tracking_number}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleCopyToClipboard(order.tracking_number!, 'tracking')}
+                      className="p-2 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50"
+                      title="Copiar tracking"
                     >
-                      {orderStatuses.map(status => (
-                        <option key={status.id} value={status.id}>
-                          {status.name}
-                        </option>
-                      ))}
-                    </select>
-                    
-                    {hasStatusChanged && (
-                      <button
-                        onClick={handleConfirmStatusChange}
-                        disabled={isUpdating}
-                        className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                      >
-                        {isUpdating ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Actualizando...
-                          </>
-                        ) : (
-                          <>
-                            <Check className="w-4 h-4" />
-                            Confirmar Cambio de Estado
-                          </>
-                        )}
-                      </button>
+                      {copiedField === 'tracking' ? <CheckCheck className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Actualizar Estado:</label>
+                  <select 
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    disabled={isUpdating}
+                  >
+                    {orderStatuses.map(status => (
+                      <option key={status.id} value={status.id}>
+                        {status.name}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  {hasStatusChanged && (
+                    <button
+                      onClick={handleConfirmStatusChange}
+                      disabled={isUpdating}
+                      className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                    >
+                      {isUpdating ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Actualizando...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Confirmar Cambio
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Delivery Dates */}
+                {(order.estimated_delivery || order.delivered_at) && (
+                  <div className="space-y-2 pt-3 border-t border-gray-200">
+                    {order.estimated_delivery && (
+                      <div className="text-sm">
+                        <span className="text-gray-500">Entrega estimada: </span>
+                        <span className="font-medium">{formatDate(order.estimated_delivery)}</span>
+                      </div>
+                    )}
+                    {order.delivered_at && (
+                      <div className="text-sm">
+                        <span className="text-gray-500">Entregado: </span>
+                        <span className="font-medium text-green-600">{formatDate(order.delivered_at)}</span>
+                      </div>
                     )}
                   </div>
-                </div>
-                {order.tracking_number && (
-                  <div>
-                    <span className="text-gray-600">Tracking: </span>
-                    <span className="font-medium">{order.tracking_number}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Payment Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-purple-600" />
+                Información de Pago
+              </h3>
+              <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Estado del pago</span>
+                  <div className={getStatusBadge(order.payment_status, 'payment')}>
+                    {order.payment_status}
                   </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Método de pago</span>
+                  <span className="font-medium">{order.payment_method}</span>
+                </div>
+
+                {order.payment_reference && (
+                  <div className="flex items-center justify-between p-3 bg-white rounded border">
+                    <div>
+                      <div className="text-sm text-gray-500">Referencia de pago</div>
+                      <div className="font-medium text-sm">{order.payment_reference}</div>
+                    </div>
+                    <button
+                      onClick={() => handleCopyToClipboard(order.payment_reference, 'payment_ref')}
+                      className="p-2 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50"
+                      title="Copiar referencia"
+                    >
+                      {copiedField === 'payment_ref' ? <CheckCheck className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                )}
+
+                {/* Payment Capture Button */}
+                {order.payment_capture_url && (
+                  <button
+                    onClick={() => window.open(order.payment_capture_url, '_blank', 'noopener,noreferrer')}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    <Receipt className="w-4 h-4" />
+                    Ver Comprobante de Pago
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
                 )}
               </div>
             </div>
@@ -175,62 +353,82 @@ const formatCurrency = (amount: number) => {
 
           {/* Order Items */}
           <div>
-            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-4">Productos</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Package className="w-5 h-5 text-indigo-600" />
+              Productos del Pedido
+            </h3>
+            
             {/* Mobile View */}
             <div className="md:hidden space-y-3">
               {order.items.map((item, index) => (
-                <div key={index} className="bg-gray-50 p-3 rounded-lg flex items-center space-x-3">
+                <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center space-x-4">
                   <img 
                     src={item.product_image} 
                     alt={item.product_name}
-                    className="w-16 h-16 rounded-md object-cover"
+                    className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
                   />
-                  <div className="flex-1 text-sm">
-                    <div className="font-medium text-gray-900">{item.product_name}</div>
-                    <div className="text-gray-500">{item.product_brand}</div>
-                    <div className="mt-1">
-                      {item.quantity} x {formatCurrency(item.unit_price)}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-gray-900 truncate">{item.product_name}</div>
+                    <div className="text-sm text-gray-500">{item.product_brand}</div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      Cantidad: {item.quantity} • {formatCurrency(item.unit_price)} c/u
                     </div>
+                    {item.selected_presentation && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        Presentación: {item.selected_presentation}
+                      </div>
+                    )}
                   </div>
-                  <div className="font-medium text-gray-900 text-sm">
-                    {formatCurrency(item.total_price)}
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-bold text-gray-900">
+                      {formatCurrency(item.total_price)}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Desktop View */}
-            <div className="hidden md:block bg-gray-50 rounded-lg overflow-x-auto">
+            <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-100">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">Producto</th>
-                    <th className="px-4 py-3 text-center font-medium text-gray-600">Cantidad</th>
-                    <th className="px-4 py-3 text-right font-medium text-gray-600">Precio Unit.</th>
-                    <th className="px-4 py-3 text-right font-medium text-gray-600">Total</th>
+                    <th className="px-6 py-4 text-left font-semibold text-gray-900">Producto</th>
+                    <th className="px-6 py-4 text-center font-semibold text-gray-900">Cantidad</th>
+                    <th className="px-6 py-4 text-right font-semibold text-gray-900">Precio Unit.</th>
+                    <th className="px-6 py-4 text-right font-semibold text-gray-900">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {order.items.map((item, index) => (
-                    <tr key={index}>
-                      <td className="px-4 py-3">
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
                         <div className="flex items-center">
                           <img 
                             src={item.product_image} 
                             alt={item.product_name}
-                            className="w-12 h-12 rounded-lg object-cover mr-4"
+                            className="w-16 h-16 rounded-lg object-cover mr-4 flex-shrink-0"
                           />
-                          <div>
+                          <div className="min-w-0">
                             <div className="font-medium text-gray-900">{item.product_name}</div>
                             <div className="text-gray-500">{item.product_brand}</div>
+                            {item.selected_presentation && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                {item.selected_presentation}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-center text-gray-900">{item.quantity}</td>
-                      <td className="px-4 py-3 text-right text-gray-900">
+                      <td className="px-6 py-4 text-center">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {item.quantity}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right font-medium text-gray-900">
                         {formatCurrency(item.unit_price)}
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-gray-900">
+                      <td className="px-6 py-4 text-right font-bold text-gray-900">
                         {formatCurrency(item.total_price)}
                       </td>
                     </tr>
@@ -241,43 +439,51 @@ const formatCurrency = (amount: number) => {
           </div>
 
           {/* Order Summary */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3">Resumen del Pedido</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal:</span>
-                <span>{formatCurrency(order.subtotal)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Envío:</span>
-                <span>{formatCurrency(order.shipping_cost)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Impuestos:</span>
-                <span>{formatCurrency(order.taxes)}</span>
-              </div>
-              <div className="border-t border-gray-200 my-2"></div>
-              <div className="flex justify-between font-bold text-base">
-                <span>Total:</span>
-                <span>{formatCurrency(order.total)}</span>
-              </div>
-              <div className="text-gray-600 pt-2">
-                Método de pago: <span className="font-medium text-gray-900">{order.payment_method}</span>
+          <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-6 border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Receipt className="w-5 h-5 text-green-600" />
+              Resumen del Pedido
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium">{formatCurrency(order.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Envío:</span>
+                  <span className="font-medium">{formatCurrency(order.shipping_cost)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Impuestos:</span>
+                  <span className="font-medium">{formatCurrency(order.taxes)}</span>
+                </div>
+                <div className="border-t border-gray-200 pt-3">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total:</span>
+                    <span className="text-blue-600">{formatCurrency(order.total)} {order.currency}</span>
+                  </div>
+                </div>
               </div>
               
-              {/* Payment Capture Button */}
-              {order.payment_capture_url && (
-                <div className="pt-3 border-t border-gray-200 mt-3">
-                  <button
-                    onClick={() => window.open(order.payment_capture_url, '_blank', 'noopener,noreferrer')}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  >
-                    <Receipt className="w-4 h-4" />
-                    Ver Comprobante de Pago
-                    <ExternalLink className="w-4 h-4" />
-                  </button>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Moneda:</span>
+                  <span className="font-medium">{order.currency}</span>
                 </div>
-              )}
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Método de pago:</span>
+                  <span className="font-medium">{order.payment_method}</span>
+                </div>
+                {order.customer_notes && (
+                  <div className="pt-3 border-t border-gray-200">
+                    <div className="text-gray-600 mb-1">Notas del cliente:</div>
+                    <div className="text-gray-800 text-sm bg-white p-3 rounded border italic">
+                      "{order.customer_notes}"
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
