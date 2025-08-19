@@ -177,10 +177,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </motion.button>
               </div>
               <Link to="/" className="-m-1.5 p-1.5">
-                <span className="sr-only">FarmaPlus</span>
+                <span className="sr-only">Grupo Drozainka</span>
                 <img
                   src={logoSrc}
-                  alt="FarmaPlus Logo"
+                  alt="Grupo Drozainka Logo"
                   className="h-12 lg:h-16 w-auto object-contain"
                 />
               </Link>
@@ -379,9 +379,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex flex-col h-full">
                 <div className="flex justify-between items-center p-6 border-b border-medical-gray-200">
                   <div className="flex items-center space-x-3">
-                    <div className="rounded-xl overflow-hidden"><img src={logoSrc} alt="FarmaPlus Logo" className="h-8 w-auto object-contain" /></div>
+                    <div className="rounded-xl overflow-hidden"><img src={logoSrc} alt="Grupo Drozainka Logo" className="h-8 w-auto object-contain" /></div>
                     <div>
-                      <div className="text-lg font-serif font-bold text-medical-gray-900">FarmaPlus</div>
+                      <div className="text-lg font-serif font-bold text-medical-gray-900">Grupo Drozainka</div>
                       <div className="text-sm text-medical-gray-600">Professional Care</div>
                     </div>
                   </div>

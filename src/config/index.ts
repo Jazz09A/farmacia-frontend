@@ -18,13 +18,13 @@ export const config = {
   // URL Obfuscation
   urlObfuscation: {
     method: (import.meta.env.VITE_OBFUSCATION_METHOD as 'base64' | 'hash' | 'uuid' | 'custom') || 'custom',
-    salt: import.meta.env.VITE_OBFUSCATION_SALT || 'farmaplus_2024_salt',
+    salt: import.meta.env.VITE_OBFUSCATION_SALT || 'grupodrozainka_2024_salt',
     enabled: true,
   },
 
   // App Metadata
   app: {
-    name: 'FarmaPlus',
+    name: 'Grupo Drozainka',
     version: '1.0.0',
     description: 'Professional Medical Care Platform',
   },
@@ -98,7 +98,7 @@ export const config = {
   // Contact Information
   contact: {
     phone: '0800-FARMA',
-    email: 'info@farmaplus.com',
+    email: 'info@grupodrozainka.com',
     emergencyLine: '0800-FARMA',
     whatsapp: '+58-XXX-XXX-XXXX',
   },
@@ -128,19 +128,19 @@ export const isFeatureEnabled = (feature: keyof typeof config.features): boolean
 // Debug logger
 export const debugLog = (message: string, ...args: any[]) => {
   if (config.debug) {
-    console.log(`[FarmaPlus Debug] ${message}`, ...args);
+    console.log(`[Grupo Drozainka Debug] ${message}`, ...args);
   }
 };
 
 export const debugWarn = (message: string, ...args: any[]) => {
   if (config.debug) {
-    console.warn(`[FarmaPlus Warning] ${message}`, ...args);
+    console.warn(`[Grupo Drozainka Warning] ${message}`, ...args);
   }
 };
 
 export const debugError = (message: string, ...args: any[]) => {
   if (config.debug) {
-    console.error(`[FarmaPlus Error] ${message}`, ...args);
+    console.error(`[Grupo Drozainka Error] ${message}`, ...args);
   }
 };
 

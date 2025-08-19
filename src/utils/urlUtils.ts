@@ -4,7 +4,7 @@
  */
 
 // Configuración
-const SALT = 'farmaplus_2024_salt';
+const SALT = 'grupodrozainka_2024_salt';
 const URL_MAPPINGS: Record<string, string> = {};
 const REVERSE_MAPPINGS: Record<string, string> = {};
 
@@ -310,7 +310,7 @@ export class DebugUtils {
         testUrl: (url: string) => DebugUtils.testObfuscation(url)
       };
 
-      console.log('🎯 FarmaPlus Debug Utils loaded! Use window.farmaDebug');
+      console.log('🎯 Grupo Drozainka Debug Utils loaded! Use window.drozainkaDebug');
     }
   }
 }

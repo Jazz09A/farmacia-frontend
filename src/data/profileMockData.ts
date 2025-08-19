@@ -12,18 +12,18 @@ import type {
 
 export const mockAdminProfile: UserProfile = {
   id: 'admin_001',
-  email: 'admin@farmaplus.com',
+  email: 'admin@grupodrozainka.com',
   user_type: 'juridico',
   is_admin: true,
   created_at: '2024-01-01T09:00:00Z',
   last_login: '2024-12-10T16:45:00Z',
   profile_data: {
-    company_name: 'FarmaPlus Distribuciones C.A.',
+    company_name: 'Grupo Drozainka C.A.',
     rif: 'J-30987654-1',
     registro_mercantil: 'RM-2020-005678',
     phone: '+58 212-800-FARMA',
     preferred_currency: 'USD',
-    direccion_establecimiento: 'Torre FarmaPlus, Piso 15, Av. Francisco de Miranda, Caracas',
+    direccion_establecimiento: 'Torre Grupo Drozainka, Piso 15, Av. Francisco de Miranda, Caracas',
     representante_legal_nombre: 'Dr. Roberto Silva',
     representante_legal_cedula: 'V-87654321'
   } as JuridicoProfile
@@ -75,19 +75,19 @@ export const mockOrders: Order[] = [
         {
           date: '2024-12-03T14:30:00Z',
           status: 'Enviado',
-          location: 'Centro de distribución FarmaPlus',
+          location: 'Centro de distribución Grupo Drozainka',
           description: 'El pedido ha sido enviado'
         },
         {
           date: '2024-12-02T09:15:00Z',
           status: 'En preparación',
-          location: 'Centro de distribución FarmaPlus',
+          location: 'Centro de distribución Grupo Drozainka',
           description: 'Los productos están siendo empacados'
         },
         {
           date: '2024-12-01T11:00:00Z',
           status: 'Pedido confirmado',
-          location: 'Centro de distribución FarmaPlus',
+          location: 'Centro de distribución Grupo Drozainka',
           description: 'Su pedido ha sido confirmado y está siendo preparado'
         }
       ]

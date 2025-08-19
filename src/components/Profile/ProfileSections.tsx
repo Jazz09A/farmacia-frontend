@@ -376,7 +376,7 @@ export const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets
             <div className="p-4 bg-purple-50 rounded-xl text-center">
               <Mail className="w-8 h-8 text-purple-600 mx-auto mb-2" />
               <h3 className="font-semibold text-medical-gray-900">Email</h3>
-              <p className="text-sm text-medical-gray-600">soporte@farmaplus.com</p>
+              <p className="text-sm text-medical-gray-600">soporte@grupodrozainka.com</p>
               <p className="text-xs text-medical-gray-500">Respuesta en 24h</p>
             </div>
           </div>

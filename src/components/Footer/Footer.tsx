@@ -87,7 +87,7 @@ export const Footer: React.FC = () => {
           >
             <div>
               <h3 className="text-2xl font-bold font-serif mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-green-200">
-                FarmaPlus
+                Grupo Drozainka
               </h3>
               <p className="text-blue-100 leading-relaxed">
                 Tu farmacia de confianza online. Medicamentos certificados, 
@@ -103,7 +103,7 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center space-x-3 text-blue-100">
                 <Mail className="h-5 w-5 text-blue-300" />
-                <span>info@farmaplus.com</span>
+                <span>info@grupodrozainka.com</span>
               </div>
               <div className="flex items-center space-x-3 text-blue-100">
                 <MapPin className="h-5 w-5 text-blue-300" />
@@ -207,7 +207,7 @@ export const Footer: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-blue-200 text-sm">
-              © 2025 FarmaPlus. Todos los derechos reservados.
+              © 2025 Grupo Drozainka. Todos los derechos reservados.
             </p>
             <div className="flex items-center space-x-6 text-sm text-blue-200">
               <span>Medicamentos con registro sanitario</span>
