@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { authService } from '../services/AuthService';
 import { User, LoginData, JuridicoRegisterData } from '../types/auth';
+import SecurityManager from '../utils/securityUtils';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -21,6 +22,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const verifyUser = useCallback(async () => {
     setLoading(true);
     try {
+      // 🔒 CRÍTICO: Verificar integridad de la sesión antes de hacer requests
+      if (!SecurityManager.verifySessionIntegrity()) {
+        console.warn('🚨 Session integrity compromised - forcing logout');
+        authService.logout();
+        setUser(null);
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
       const currentUser = await authService.getMe();
       if (currentUser) {
         setUser(currentUser);
@@ -91,10 +102,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const logout = useCallback(() => {
+    const currentUserId = user?.id;
+    
+    // 🔒 CRÍTICO: Limpiar datos específicos del usuario antes del logout
+    if (currentUserId) {
+      SecurityManager.cleanUserSpecificData(currentUserId);
+    }
+    
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);
-  }, []);
+    
+    // 🔔 Notificar a otros contextos del logout
+    window.dispatchEvent(new CustomEvent('userLogout', { 
+      detail: { userId: currentUserId } 
+    }));
+    
+    // 🚀 MEJORADO: Solo recargar si estamos en páginas sensibles
+    const currentPath = window.location.pathname;
+    const sensitivePages = ['/admin', '/profile', '/checkout', '/orders'];
+    
+    if (sensitivePages.some(page => currentPath.startsWith(page))) {
+      // En páginas sensibles, redirigir al home en lugar de recargar
+      window.location.href = '/';
+    }
+    
+    // Para otras páginas, no recargar - el nuevo estado se propaga automáticamente
+  }, [user?.id]);
 
   const value = useMemo(() => ({
     isAuthenticated,

@@ -133,6 +133,9 @@ class AuthService {
     this.mePromise = null;
     this.isRequestInProgress = false;
     this.requestAbortController = null;
+    
+    // 🔥 CRÍTICO: Limpiar datos sensibles adicionales
+    this.clearSessionData();
   }
 
   isAuthenticated(): boolean {
@@ -225,6 +228,31 @@ class AuthService {
 
   private removeUser(): void {
     localStorage.removeItem(this.userKey);
+  }
+
+  // 🔥 NUEVO: Método para limpiar datos sensibles adicionales
+  private clearSessionData(): void {
+    // Limpiar localStorage de datos sensibles que puedan quedar
+    const sensitiveKeys = [
+      'cart_cache',
+      'user_preferences', 
+      'temp_order_data',
+      'search_history',
+      'viewed_products',
+      'draft_orders'
+    ];
+    
+    sensitiveKeys.forEach(key => {
+      localStorage.removeItem(key);
+    });
+
+    // Limpiar todo el sessionStorage por seguridad
+    sessionStorage.clear();
+    
+    // Limpiar cookies sensibles si las hay
+    document.cookie.split(";").forEach(function(c) { 
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    });
   }
   
   async addToCart(productId: string, quantity: number): Promise<any> {
@@ -359,19 +387,32 @@ class AuthService {
 
   async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
     const token = this.getToken();
+    
+    // 🔥 CRÍTICO: Verificar que existe token antes de hacer request
+    if (!token) {
+      this.logout();
+      throw new Error('No authentication token - session terminated');
+    }
+
     const headers = {
       'Content-Type': 'application/json',
       ...(options.headers || {}),
-      ...(token && { 'Authorization': `Bearer ${token}` }),
+      'Authorization': `Bearer ${token}`,
     };
 
     const response = await fetch(url, { ...options, headers });
 
-    if (response.status === 401 && token) {
+    // 🔥 MEJORADO: Manejar diferentes códigos de error de autenticación
+    if (response.status === 401 || response.status === 403) {
+      // Token inválido o expirado - hacer logout completo
       this.logout();
-      // Optionally, redirect to login page
-      // window.location.href = '/auth';
-      throw new Error('Session expired');
+      
+      // 🔥 CRÍTICO: Notificar a otros componentes del logout forzado
+      window.dispatchEvent(new CustomEvent('forceLogout', { 
+        detail: { reason: 'Authentication failed', status: response.status }
+      }));
+      
+      throw new Error('Session expired - please login again');
     }
 
     return response;
