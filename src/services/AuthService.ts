@@ -260,6 +260,33 @@ class AuthService {
     }
   }
 
+  async updateCartItem(itemId: string, quantity: number): Promise<any> {
+    const response = await this.authenticatedFetch(`${this.cartUrl}/item/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ quantity }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error updating cart item');
+    }
+    
+    return await response.json();
+  }
+
+  async removeFromCart(itemId: string): Promise<any> {
+    const response = await this.authenticatedFetch(`${this.cartUrl}/item/${itemId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error removing from cart');
+    }
+    
+    return await response.json();
+  }
+
   async createOrder(orderData: {
     shipping_address_id: string;
     payment_method: string;

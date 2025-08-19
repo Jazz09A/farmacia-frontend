@@ -8,7 +8,42 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner';
 
 const CartPage: React.FC = () => {
   const { formatPrice } = useCurrency();
-  const { cart, loading } = useCart();
+  const { cart, loading, updateQuantity, removeFromCart } = useCart();
+
+  const handleIncreaseQuantity = async (itemId: string, currentQuantity: number) => {
+    try {
+      await updateQuantity(itemId, currentQuantity + 1);
+    } catch (error) {
+      console.error('Error increasing quantity:', error);
+      alert('Error al aumentar la cantidad. Por favor, inténtalo de nuevo.');
+    }
+  };
+
+  const handleDecreaseQuantity = async (itemId: string, currentQuantity: number) => {
+    if (currentQuantity <= 1) {
+      // If quantity is 1, remove the item completely
+      handleRemoveItem(itemId);
+      return;
+    }
+    
+    try {
+      await updateQuantity(itemId, currentQuantity - 1);
+    } catch (error) {
+      console.error('Error decreasing quantity:', error);
+      alert('Error al disminuir la cantidad. Por favor, inténtalo de nuevo.');
+    }
+  };
+
+  const handleRemoveItem = async (itemId: string) => {
+    if (confirm('¿Estás seguro de que deseas eliminar este producto del carrito?')) {
+      try {
+        await removeFromCart(itemId);
+      } catch (error) {
+        console.error('Error removing item:', error);
+        alert('Error al eliminar el producto. Por favor, inténtalo de nuevo.');
+      }
+    }
+  };
 
   if (loading) {
     return <LoadingSpinner message="Cargando carrito..." />;
@@ -55,9 +90,19 @@ const CartPage: React.FC = () => {
                   </Link>
                   <p className="text-sm text-medical-gray-500">{item.product.brand}</p>
                   <div className="flex items-center border border-medical-gray-200 rounded-lg mt-4 w-fit">
-                    <button onClick={() => { alert('Función no implementada**'); }} className="p-2 text-medical-gray-500 hover:text-medical-primary"><Minus className="w-4 h-4" /></button>
+                    <button 
+                      onClick={() => handleDecreaseQuantity(item.id, item.quantity)} 
+                      className="p-2 text-medical-gray-500 hover:text-medical-primary transition-colors"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
                     <span className="px-3 text-md font-semibold">{item.quantity}</span>
-                    <button onClick={() => { alert('Función no implementada**'); }} className="p-2 text-medical-gray-500 hover:text-medical-primary"><Plus className="w-4 h-4" /></button>
+                    <button 
+                      onClick={() => handleIncreaseQuantity(item.id, item.quantity)} 
+                      className="p-2 text-medical-gray-500 hover:text-medical-primary transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
                 <div className="text-right">
@@ -67,7 +112,11 @@ const CartPage: React.FC = () => {
                   <p className="text-sm text-medical-gray-500">
                     {formatPrice(item.subtotal_ref, 'REF')}
                   </p>
-                  <button onClick={() => { alert('Función no implementada**'); }} className="text-medical-gray-400 hover:text-red-500 mt-4">
+                  <button 
+                    onClick={() => handleRemoveItem(item.id)} 
+                    className="text-medical-gray-400 hover:text-red-500 mt-4 transition-colors"
+                    title="Eliminar producto del carrito"
+                  >
                     <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
