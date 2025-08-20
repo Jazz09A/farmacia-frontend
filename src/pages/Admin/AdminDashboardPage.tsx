@@ -7,7 +7,6 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Plus,
-  BarChart3,
   MoreVertical,
   RefreshCw,
   AlertCircle
@@ -199,7 +198,6 @@ const AdminDashboardPage: React.FC = () => {
   const QuickActions: React.FC = () => {
     const actions = [
       { title: 'Nuevo Producto', icon: Plus, action: () => navigate('/admin/products/new') },
-      { title: 'Ver Reportes', icon: BarChart3, action: () => navigate('/admin/analytics') },
       { title: 'Gestionar Pedidos', icon: ShoppingCart, action: () => navigate('/admin/orders') },
     ];
 
