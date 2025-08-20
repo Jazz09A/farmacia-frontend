@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Users, 
   Search, 
@@ -6,102 +6,20 @@ import {
   Plus, 
   Trash2, 
   Building,
-  User,
-  DollarSign,
   UserCheck,
   UserX,
   Download,
   Upload,
+  Eye,
+  Loader2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
+import CustomerStatsModal from '../../components/Admin/CustomerStatsModal';
+import { Customer } from '../../types';
+import { adminService } from '../../services/AdminService';
 
-// Mock data para clientes (extender el mockData existente)
-interface Customer {
-  id: string;
-  user_type: 'juridico';
-  email: string;
-  status: 'active' | 'inactive' | 'pending';
-  created_at: string;
-  last_login: string;
-  total_orders: number;
-  total_spent: number;
-  // Para usuarios naturales
-  first_name?: string;
-  last_name?: string;
-  phone?: string;
-  birth_date?: string;
-  address?: string;
-  // Para usuarios jurídicos
-  company_name?: string;
-  rif?: string;
-  company_phone?: string;
-  company_address?: string;
-  contact_person?: string;
-}
 
-const mockCustomers: Customer[] = [
-  {
-    id: '1',
-    user_type: 'juridico',
-    email: 'admin@farmaciasalud.com',
-    status: 'active',
-    created_at: '2024-01-15',
-    last_login: '2024-03-10',
-    total_orders: 45,
-    total_spent: 125000,
-    company_name: 'Farmacia Salud Total',
-    rif: 'J-40123456-7',
-    company_phone: '+58-212-1234567',
-    company_address: 'Av. Libertador, Caracas',
-    contact_person: 'María González'
-  },
-  {
-    id: '2',
-    user_type: 'juridico',
-    email: 'carlos.martinez@gmail.com',
-    status: 'active',
-    created_at: '2024-02-01',
-    last_login: '2024-03-09',
-    total_orders: 12,
-    total_spent: 35000,
-    first_name: 'Carlos',
-    last_name: 'Martínez',
-    phone: '+58-414-1234567',
-    birth_date: '1985-08-15',
-    address: 'Calle 123, Valencia'
-  },
-  {
-    id: '3',
-    user_type: 'juridico',
-    email: 'info@farmavida.com',
-    status: 'pending',
-    created_at: '2024-03-01',
-    last_login: '2024-03-08',
-    total_orders: 3,
-    total_spent: 15000,
-    company_name: 'Farmacia Vida Nueva',
-    rif: 'J-30987654-3',
-    company_phone: '+58-251-9876543',
-    company_address: 'Centro Comercial Plaza, Maracay',
-    contact_person: 'Ana Rodríguez'
-  },
-  {
-    id: '4',
-    user_type: 'juridico',
-    email: 'lucia.fernandez@hotmail.com',
-    status: 'inactive',
-    created_at: '2023-11-20',
-    last_login: '2024-01-15',
-    total_orders: 8,
-    total_spent: 22000,
-    first_name: 'Lucía',
-    last_name: 'Fernández',
-    phone: '+58-426-7890123',
-    birth_date: '1990-12-03',
-    address: 'Urbanización El Rosal, Caracas'
-  }
-];
 
 const AdminCustomersPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -111,25 +29,53 @@ const AdminCustomersPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [statsModalOpen, setStatsModalOpen] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
 
   const itemsPerPage = 10;
 
+  // Cargar clientes al montar el componente
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await adminService.getCustomers();
+      setCustomers(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar clientes');
+      console.error('Error fetching customers:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filtrar clientes
   const filteredCustomers = useMemo(() => {
-    return mockCustomers.filter(customer => {
+    return customers.filter(customer => {
       const matchesSearch = 
         customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (customer.first_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (customer.last_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (customer.company_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (customer.rif?.toLowerCase().includes(searchTerm.toLowerCase()));
+        (customer.rif?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (customer.phone?.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      const matchesStatus = statusFilter === 'all' || customer.status === statusFilter;
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'active' && customer.is_active) ||
+        (statusFilter === 'inactive' && !customer.is_active) ||
+        (statusFilter === 'verified' && customer.is_verified) ||
+        (statusFilter === 'unverified' && !customer.is_verified);
+
       const matchesType = typeFilter === 'all' || customer.user_type === typeFilter;
 
       return matchesSearch && matchesStatus && matchesType;
     });
-  }, [searchTerm, statusFilter, typeFilter]);
+  }, [customers, searchTerm, statusFilter, typeFilter]);
 
   // Paginación
   const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
@@ -137,14 +83,6 @@ const AdminCustomersPage: React.FC = () => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-VE', {
-      style: 'currency',
-      currency: 'VES',
-      minimumFractionDigits: 2
-    }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-VE', {
@@ -154,24 +92,45 @@ const AdminCustomersPage: React.FC = () => {
     });
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      active: { label: 'Activo', class: 'bg-green-100 text-green-800' },
-      inactive: { label: 'Inactivo', class: 'bg-gray-100 text-gray-800' },
-      pending: { label: 'Pendiente', class: 'bg-yellow-100 text-yellow-800' }
-    };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.inactive;
-    
-    return (
-      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${config.class}`}>
-        {config.label}
-      </span>
-    );
+  const getStatusBadge = (customer: Customer) => {
+    if (customer.is_active) {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+          Activo
+        </span>
+      );
+    } else {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+          Inactivo
+        </span>
+      );
+    }
+  };
+
+  const getVerificationBadge = (customer: Customer) => {
+    if (customer.is_verified) {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+          Verificado
+        </span>
+      );
+    } else {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+          Sin verificar
+        </span>
+      );
+    }
   };
 
   const getCustomerDisplayName = (customer: Customer) => {
-    return customer.company_name || 'Sin nombre';
+    return customer.company_name || customer.email || 'Sin nombre';
+  };
+
+  const handleViewStats = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    setStatsModalOpen(true);
   };
 
   const handleSelectCustomer = (customerId: string) => {
@@ -204,10 +163,10 @@ const AdminCustomersPage: React.FC = () => {
 
   // Estadísticas
   const stats = {
-    total: mockCustomers.length,
-    active: mockCustomers.filter(c => c.status === 'active').length,
-    pending: mockCustomers.filter(c => c.status === 'pending').length,
-    totalRevenue: mockCustomers.reduce((sum, c) => sum + c.total_spent, 0)
+    total: customers.length,
+    active: customers.filter(c => c.is_active).length,
+    verified: customers.filter(c => c.is_verified).length,
+    unverified: customers.filter(c => !c.is_verified).length
   };
 
   return (
@@ -304,11 +263,11 @@ const AdminCustomersPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Pendientes</p>
-              <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+              <p className="text-sm font-medium text-gray-600">Verificados</p>
+              <p className="text-2xl font-bold text-blue-600">{stats.verified}</p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-full">
-              <UserX className="w-6 h-6 text-yellow-600" />
+            <div className="p-3 bg-blue-100 rounded-full">
+              <UserCheck className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -316,11 +275,11 @@ const AdminCustomersPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
-              <p className="text-2xl font-bold text-blue-600">{formatCurrency(stats.totalRevenue)}</p>
+              <p className="text-sm font-medium text-gray-600">Sin Verificar</p>
+              <p className="text-2xl font-bold text-yellow-600">{stats.unverified}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <DollarSign className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-yellow-100 rounded-full">
+              <UserX className="w-6 h-6 text-yellow-600" />
             </div>
           </div>
         </div>
@@ -363,7 +322,8 @@ const AdminCustomersPage: React.FC = () => {
                   <option value="all">Todos los estados</option>
                   <option value="active">Activos</option>
                   <option value="inactive">Inactivos</option>
-                  <option value="pending">Pendientes</option>
+                  <option value="verified">Verificados</option>
+                  <option value="unverified">Sin verificar</option>
                 </select>
               </div>
 
@@ -416,8 +376,42 @@ const AdminCustomersPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="bg-white rounded-lg shadow-sm p-12">
+          <div className="flex items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-500" />
+              <p className="text-gray-500">Cargando clientes...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-white rounded-lg shadow-sm p-12">
+          <div className="flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <UserX className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Error al cargar clientes</h3>
+              <p className="text-gray-500 mb-4">{error}</p>
+              <button
+                onClick={fetchCustomers}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Reintentar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Customers List/Table */}
-      <div className="bg-white rounded-lg shadow-sm">
+      {!loading && !error && (
+        <div className="bg-white rounded-lg shadow-sm">
         <div className="p-4 border-b flex justify-between items-center">
           <h3 className="text-lg font-semibold">Clientes ({filteredCustomers.length})</h3>
           {selectedCustomers.length > 0 && (
@@ -439,23 +433,32 @@ const AdminCustomersPage: React.FC = () => {
                 className="p-4"
               >
                 <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-full bg-green-100`}>
-                    <Building className="w-6 h-6 text-green-600" />
+                  <div className={`p-3 rounded-full ${customer.is_active ? 'bg-green-100' : 'bg-gray-100'}`}>
+                    <Building className={`w-6 h-6 ${customer.is_active ? 'text-green-600' : 'text-gray-600'}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800 truncate">{getCustomerDisplayName(customer)}</p>
                     <p className="text-sm text-gray-500">{customer.email}</p>
+                    <p className="text-xs text-gray-400">RIF: {customer.rif || 'N/A'}</p>
                   </div>
-                  <div className="text-right">
-                    {getStatusBadge(customer.status)}
+                  <div className="text-right space-y-1">
+                    {getStatusBadge(customer)}
+                    {getVerificationBadge(customer)}
                   </div>
                 </div>
                  <div className="flex justify-between items-end mt-4">
                     <div className="text-sm text-gray-600">
-                      <p>Gastado:</p>
-                      <p className="font-semibold text-gray-900">{formatCurrency(customer.total_spent)}</p>
+                      <p>Registrado: {formatDate(customer.created_at)}</p>
+                      <p className="text-xs">Último acceso: {formatDate(customer.last_login)}</p>
                     </div>
                     <div className="flex items-center space-x-2">
+                      <button 
+                        onClick={() => handleViewStats(customer.id)}
+                        className="p-2 text-blue-500 rounded-full hover:bg-blue-100"
+                        title="Ver Estadísticas"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                        <button 
                         onClick={(e) => handleDeleteRequest(e, customer)}
                         className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
@@ -488,9 +491,9 @@ const AdminCustomersPage: React.FC = () => {
                   </div>
                 </th>
                 <th scope="col" className="px-6 py-3">Cliente</th>
-                <th scope="col" className="px-6 py-3">Tipo</th>
+                <th scope="col" className="px-6 py-3">RIF</th>
                 <th scope="col" className="px-6 py-3">Estado</th>
-                <th scope="col" className="px-6 py-3">Total Gastado</th>
+                <th scope="col" className="px-6 py-3">Verificación</th>
                 <th scope="col" className="px-6 py-3">Registro</th>
                 <th scope="col" className="px-6 py-3 text-center">Acciones</th>
               </tr>
@@ -515,26 +518,41 @@ const AdminCustomersPage: React.FC = () => {
                     </div>
                   </td>
                   <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center space-x-3">
-                    <div className={`p-3 rounded-full bg-green-100`}>
-                      <Building className="w-6 h-6 text-green-600" />
+                    <div className={`p-3 rounded-full ${customer.is_active ? 'bg-green-100' : 'bg-gray-100'}`}>
+                      <Building className={`w-6 h-6 ${customer.is_active ? 'text-green-600' : 'text-gray-600'}`} />
                     </div>
                     <div>
                       <div className="text-base font-semibold">{getCustomerDisplayName(customer)}</div>
                       <div className="text-sm text-gray-500">{customer.email}</div>
+                      <div className="text-xs text-gray-400">{customer.phone || 'Sin teléfono'}</div>
                     </div>
                   </th>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800`}>
-                      Jurídico
+                    <span className="font-mono text-sm text-gray-900">
+                      {customer.rif || 'N/A'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    {getStatusBadge(customer.status)}
+                    {getStatusBadge(customer)}
                   </td>
-                  <td className="px-6 py-4 font-semibold">{formatCurrency(customer.total_spent)}</td>
-                  <td className="px-6 py-4">{formatDate(customer.created_at)}</td>
+                  <td className="px-6 py-4">
+                    {getVerificationBadge(customer)}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div>
+                      <div className="text-sm text-gray-900">{formatDate(customer.created_at)}</div>
+                      <div className="text-xs text-gray-500">Último: {formatDate(customer.last_login)}</div>
+                    </div>
+                  </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center space-x-1">
+                      <button
+                        onClick={() => handleViewStats(customer.id)}
+                        className="p-2 text-blue-500 rounded-full hover:bg-blue-100"
+                        title="Ver Estadísticas"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={(e) => handleDeleteRequest(e, customer)}
                         className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
@@ -574,7 +592,15 @@ const AdminCustomersPage: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      )}
+
+      {/* Customer Stats Modal */}
+      <CustomerStatsModal
+        isOpen={statsModalOpen}
+        onClose={() => setStatsModalOpen(false)}
+        customerId={selectedCustomerId}
+      />
 
       {customerToDelete && (
         <ConfirmationModal

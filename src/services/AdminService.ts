@@ -1,6 +1,6 @@
 // 🏥 Servicio para el panel de administración
 import { authService } from './AuthService';
-import { Order } from '../types';
+import { Order, Customer, CustomerStats } from '../types';
 
 export interface DashboardStats {
   total_revenue: number;
@@ -185,6 +185,44 @@ class AdminService {
       return await response.json();
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
+      throw error;
+    }
+  }
+
+  // 👥 Obtener lista de clientes
+  async getCustomers(): Promise<Customer[]> {
+    try {
+      const response = await authService.authenticatedFetch(
+        `${this.baseUrl}/customers`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching customers: ${response.status}`);
+      }
+      
+      const data: Customer[] = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch customers:', error);
+      throw error;
+    }
+  }
+
+  // 📊 Obtener estadísticas de un cliente específico
+  async getCustomerStats(userId: string): Promise<CustomerStats> {
+    try {
+      const response = await authService.authenticatedFetch(
+        `${this.baseUrl}/customers/${userId}/stats`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching customer stats: ${response.status}`);
+      }
+      
+      const data: CustomerStats = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch customer stats:', error);
       throw error;
     }
   }

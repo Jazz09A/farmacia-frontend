@@ -234,3 +234,78 @@ export interface ProductWithStats extends Product {
   stock_status: 'in_stock' | 'low_stock' | 'out_of_stock';
   last_updated: string;
 }
+
+// 👥 Customer interface from API
+export interface Customer {
+  id: string;
+  email: string;
+  phone: string;
+  is_active: boolean;
+  is_verified: boolean;
+  role: string;
+  created_at: string;
+  last_login: string;
+  preferred_currency: string;
+  user_type: string;
+  company_name: string;
+  rif: string;
+  registro_mercantil: string;
+  representante_legal_cedula: string;
+  representante_legal_nombre: string;
+  representantes_adicionales: string[];
+  referencia_comercial_proveedor: string;
+  referencia_bancaria: string;
+  direccion_establecimiento: string;
+  dueno_telefono: string;
+  dueno_email: string;
+  dueno_cumpleanos: string;
+  encargado_compra_telefono: string;
+  encargado_compra_email: string;
+  encargado_compra_cumpleanos: string;
+  encargado_cobranza_telefono: string;
+  encargado_cobranza_email: string;
+  encargado_cobranza_cumpleanos: string;
+  redes_sociales: string;
+  pagina_web: string;
+  codigo_sicm: string;
+  fotos_establecimiento: string[];
+}
+
+// 📊 Customer statistics from API
+export interface CustomerStats {
+  user_info: Customer;
+  general_stats: {
+    total_orders: number;
+    total_spent: number;
+    average_order_value: number;
+    first_order_date: string;
+    last_order_date: string;
+    days_as_customer: number;
+    order_frequency_days: number;
+    preferred_payment_method: string;
+    most_used_shipping_zone: string;
+  };
+  top_purchased_products: {
+    product_id: string;
+    product_name: string;
+    product_brand: string;
+    total_quantity: number;
+    times_purchased: number;
+    total_spent: number;
+    last_purchase_date: string;
+    average_quantity_per_order: number;
+  }[];
+  order_status_distribution: {
+    status: string;
+    count: number;
+    percentage: number;
+  }[];
+  monthly_stats: {
+    month: string;
+    order_count: number;
+    total_spent: number;
+    total_items: number;
+  }[];
+  favorite_categories: Record<string, any>[];
+  purchase_trends: Record<string, any>;
+}
