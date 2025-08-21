@@ -72,14 +72,9 @@ const trafficSources: TrafficSource[] = [
 const AdminAnalyticsPage: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [selectedDateRange, setSelectedDateRange] = useState('last_30_days');
+  const { formatPrice } = useAdminCurrency();
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-VE', {
-      style: 'currency',
-      currency: 'VES',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
+
 
   const formatPercentage = (value: number) => {
     return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
@@ -111,7 +106,7 @@ const AdminAnalyticsPage: React.FC = () => {
     color = 'blue' 
   }: {
     title: string;
-    value: string | number;
+    value: string | number | React.ReactNode;
     growth: { value: number; isPositive: boolean; formatted: string };
     icon: any;
     color?: string;
@@ -124,7 +119,7 @@ const AdminAnalyticsPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <div className="text-2xl font-bold text-gray-900">{value}</div>
             <div className={`flex items-center mt-2 text-sm ${
               growth.isPositive ? 'text-green-600' : 'text-red-600'
             }`}>
@@ -181,9 +176,9 @@ const AdminAnalyticsPage: React.FC = () => {
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          <MetricCard
+                    <MetricCard
             title="Ingresos Totales"
-          value={formatCurrency(currentData.revenue)}
+            value={<SmartPriceDisplay amount={currentData.revenue} />}
             growth={revenueGrowth}
             icon={DollarSign}
             color="green"

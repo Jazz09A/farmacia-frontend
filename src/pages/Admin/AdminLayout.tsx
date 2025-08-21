@@ -6,7 +6,6 @@ import {
   BookOpen, 
   Users, 
   Package, 
-  Settings,
   Bell,
   Search,
   LogOut,
@@ -14,9 +13,12 @@ import {
   Activity,
   Menu,
   X,
+  ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Transition } from '@headlessui/react';
+import CurrencyToggle from '../../components/Admin/CurrencyToggle';
+import { AdminCurrencyProvider } from '../../contexts/AdminCurrencyContext';
 
 const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const { logout } = useAuth();
@@ -35,14 +37,14 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
   return (
     <>
       {/* Mobile-first sidebar: fixed, with transition */}
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col h-full transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`admin-sidebar fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
               <Activity className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">FarmaAdmin</h2>
+              <h2 className="text-xl font-bold text-gray-800">GRUPO DROZAINKA</h2>
               <p className="text-sm text-gray-600">Panel de Control</p>
             </div>
           </div>
@@ -94,7 +96,17 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 space-y-2">
+          <button 
+            onClick={() => { 
+              window.open('/', '_blank'); 
+              onClose(); 
+            }}
+            className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors"
+          >
+            <ExternalLink className="w-5 h-5 mr-3" />
+            Ir al Sitio Web
+          </button>
           <button 
             onClick={handleLogout}
             className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors"
@@ -164,6 +176,9 @@ const AdminHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => 
             </span>
           </button>
 
+          {/* Currency Toggle */}
+          <CurrencyToggle />
+
           <div className="flex items-center space-x-3">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-gray-900 truncate">{getUserDisplayName()}</p>
@@ -198,35 +213,37 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="h-screen flex bg-gray-50 overflow-hidden">
-      <Transition.Root show={isSidebarOpen} as={Fragment}>
-        <div className="lg:hidden">
-          <Transition.Child
-            as={Fragment}
-            enter="transition-opacity ease-linear duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="transition-opacity ease-linear duration-300"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div 
-              className="fixed inset-0 bg-gray-600 bg-opacity-75" 
-              onClick={() => setSidebarOpen(false)} 
-            />
-          </Transition.Child>
+    <AdminCurrencyProvider>
+      <div className="admin-layout bg-gray-50">
+        <Transition.Root show={isSidebarOpen} as={Fragment}>
+          <div className="lg:hidden">
+            <Transition.Child
+              as={Fragment}
+              enter="transition-opacity ease-linear duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="transition-opacity ease-linear duration-300"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div 
+                className="fixed inset-0 bg-gray-600 bg-opacity-75" 
+                onClick={() => setSidebarOpen(false)} 
+              />
+            </Transition.Child>
+          </div>
+        </Transition.Root>
+        
+        <AdminSidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+        
+        <div className="admin-content">
+          <AdminHeader onMenuClick={() => setSidebarOpen(true)} />
+          <main className="admin-main p-6 bg-gray-50">
+            {children || <Outlet />}
+          </main>
         </div>
-      </Transition.Root>
-      
-      <AdminSidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <div className="flex-1 flex flex-col min-w-0">
-        <AdminHeader onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-6 bg-gray-50 overflow-y-auto">
-          {children || <Outlet />}
-        </main>
       </div>
-    </div>
+    </AdminCurrencyProvider>
   );
 };
 

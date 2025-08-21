@@ -4,10 +4,8 @@ import { Star, CheckCircle, AlertTriangle, ChevronRight, ShoppingCart, Plus, Min
 import { motion } from 'framer-motion';
 
 import { Product } from '../types';
-import { Cart } from '../types';
 import { useCurrency } from '../hooks/useCurrency';
 import { useCart } from '../contexts/CartContext';
-import { authService } from '../services/AuthService';
 import { getProductById } from '../data/products';
 import { ProductDetailSkeleton } from '../components/Skeleton';
 
@@ -37,7 +35,7 @@ const ProductDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('description');
   const [activeImage, setActiveImage] = useState('');
 
-  const { formatPrice } = useCurrency();
+  const { formatPrice, getPriceInCurrency, currency } = useCurrency();
   const { addToCart } = useCart();
   const [addingToCart, setAddingToCart] = useState(false);
 
@@ -155,18 +153,30 @@ const ProductDetailPage: React.FC = () => {
             <div className="bg-medical-blue-50/50 rounded-2xl p-4 sm:p-6">
               {product.is_offer && product.original_price ? (
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
-                  <span className="text-3xl lg:text-4xl font-bold text-medical-accent">{formatPrice(product.price_ves, 'VES')}</span>
-                  <span className="text-lg lg:text-xl font-medium text-medical-gray-500 line-through">{formatPrice(product.original_price, 'VES')}</span>
+                  <span className="text-3xl lg:text-4xl font-bold text-medical-accent">
+                    {formatPrice(getPriceInCurrency(product.price_ves, product.price_ref))}
+                  </span>
+                  <span className="text-lg lg:text-xl font-medium text-medical-gray-500 line-through">
+                    {formatPrice(currency === 'VES' ? product.original_price : (product.original_price / 36.5))}
+                  </span>
                   <span className="text-base lg:text-lg font-bold text-red-500 bg-red-100 px-3 py-1 rounded-full">
                     - {Math.round(((product.original_price - product.price_ves) / product.original_price) * 100)}%
                   </span>
                 </div>
               ) : (
-                <span className="text-3xl lg:text-4xl font-bold text-medical-primary">{formatPrice(product.price_ves, 'VES')}</span>
+                <span className="text-3xl lg:text-4xl font-bold text-medical-primary">
+                  {formatPrice(getPriceInCurrency(product.price_ves, product.price_ref))}
+                </span>
               )}
-              <p className="text-base lg:text-lg text-medical-gray-600 mt-2">
-                Aprox. {formatPrice(product.price_ref, 'REF')}
-              </p>
+              {currency === 'VES' ? (
+                <p className="text-base lg:text-lg text-medical-gray-600 mt-2">
+                  Aprox. {formatPrice(product.price_ref, 'USD')}
+                </p>
+              ) : (
+                <p className="text-base lg:text-lg text-medical-gray-600 mt-2">
+                  Aprox. {formatPrice(product.price_ves, 'VES')}
+                </p>
+              )}
             </div>
             
             {/* Stock & Prescription */}

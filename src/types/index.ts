@@ -66,7 +66,7 @@ export interface SearchFilters {
   sortOrder?: 'asc' | 'desc';
 }
 
-export type Currency = 'VES' | 'REF';
+export type Currency = 'VES' | 'REF' | 'USD';
 
 export interface FlashOffer {
   id: string;

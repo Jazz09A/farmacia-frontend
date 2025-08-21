@@ -20,6 +20,7 @@ import { RecentOrder, adminService } from '../../services/AdminService';
 import { Order } from '../../types';
 import DashboardSkeleton from '../../components/Skeleton/DashboardSkeleton';
 import OrderModalSkeleton from '../../components/Skeleton/OrderModalSkeleton';
+import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
 
 const AdminDashboardPage: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState(7);
@@ -28,6 +29,8 @@ const AdminDashboardPage: React.FC = () => {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
   const navigate = useNavigate();
+  // Contexto de divisas disponible para uso futuro
+  // const { currency } = useAdminCurrency();
 
   // 🎯 Hook para datos del dashboard con API real
   const { data, loading, error, refreshData, updateOrderStatus } = useAdminDashboard(selectedTimeRange);
@@ -70,14 +73,7 @@ const AdminDashboardPage: React.FC = () => {
     return colors[status as keyof typeof colors] || 'gray';
   };
 
-  // 💰 Formatear moneda
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-VE', {
-      style: 'currency',
-      currency: 'VES',
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
+
 
   // 👁️ Ver detalles de orden con carga completa
   const handleViewOrderDetails = async (order: RecentOrder) => {
@@ -165,7 +161,7 @@ const AdminDashboardPage: React.FC = () => {
     changeType 
   }: {
     title: string;
-    value: string | number;
+    value: string | number | React.ReactNode;
     icon: React.ElementType;
     change?: string;
     changeType?: 'up' | 'down';
@@ -197,7 +193,7 @@ const AdminDashboardPage: React.FC = () => {
 
   const QuickActions: React.FC = () => {
     const actions = [
-      { title: 'Nuevo Producto', icon: Plus, action: () => navigate('/admin/products/new') },
+      { title: 'Nuevo Producto', icon: Plus, action: () => navigate('/admin/products/create') },
       { title: 'Gestionar Pedidos', icon: ShoppingCart, action: () => navigate('/admin/orders') },
     ];
 
@@ -233,7 +229,7 @@ const AdminDashboardPage: React.FC = () => {
               <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
             )}
           </div>
-          <p className="mt-1 text-gray-600">Resumen del rendimiento de tu farmacia.</p>
+          <p className="mt-1 text-gray-600">Resumen del rendimiento de GRUPO DROZAINKA.</p>
           
           {/* Error Message */}
           {error && (
@@ -273,7 +269,7 @@ const AdminDashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatCard 
           title="Ingresos Totales" 
-          value={formatCurrency(stats.total_revenue)} 
+          value={<SmartPriceDisplay amount={stats.total_revenue} />} 
           icon={DollarSign} 
           change="+8.2%" 
           changeType="up" 
@@ -344,7 +340,7 @@ const AdminDashboardPage: React.FC = () => {
                           })}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap font-medium">
-                          {formatCurrency(order.total)}
+                          <SmartPriceDisplay amount={order.total} />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-${statusColor}-100 text-${statusColor}-800`}>

@@ -34,7 +34,7 @@ const CatalogPage: React.FC = () => {
   const [totalProducts, setTotalProducts] = useState(0);
   const [productsPerPage] = useState(8);
   const [cart, setCart] = useState<Cart | null>(null);
-  const { currency } = useCurrency();
+  const { currency, formatPrice: formatCurrencyPrice, getPriceInCurrency } = useCurrency();
   
   const [filters, setFilters] = useState<SearchFilters>({
     category: '',
@@ -153,12 +153,15 @@ const CatalogPage: React.FC = () => {
     return filtered;
   }, [products, searchTerm, filters]);
 
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('es-VE', {
-      style: 'currency',
-      currency: 'VES',
-      minimumFractionDigits: 0
-    }).format(price);
+  // Función para formatear precios individuales (para filtros)
+  const formatSinglePrice = (price: number): string => {
+    return formatCurrencyPrice(price);
+  };
+
+  // Función para formatear precios del ProductCard (recibe ambos precios)
+  const formatProductPrice = (priceVes: number, priceRef: number): string => {
+    const selectedPrice = getPriceInCurrency(priceVes, priceRef);
+    return formatCurrencyPrice(selectedPrice);
   };
 
   useEffect(() => {
@@ -297,8 +300,8 @@ const CatalogPage: React.FC = () => {
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                     />
                     <div className="flex justify-between text-sm text-gray-600">
-                      <span>{formatPrice(filters.priceRange[0])}</span>
-                      <span>{formatPrice(filters.priceRange[1])}</span>
+                      <span>{formatSinglePrice(filters.priceRange[0])}</span>
+                      <span>{formatSinglePrice(filters.priceRange[1])}</span>
                     </div>
                   </div>
                 </div>
@@ -402,7 +405,7 @@ const CatalogPage: React.FC = () => {
                     : 'grid-cols-1'
                 }`}>
                   {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} currency={currency} formatPrice={formatPrice}  />
+                    <ProductCard key={product.id} product={product} currency={currency} formatPrice={formatProductPrice}  />
                   ))}
                 </div>
               ) : (

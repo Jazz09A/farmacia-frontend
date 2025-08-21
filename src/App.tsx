@@ -74,7 +74,7 @@ const AppLayout = () => {
       <Navbar
         isScrolled={isScrolled}
         cartItemsCount={cart?.total_items || 0}
-        currency={currency.currency}
+        currency={currency.currency as 'VES' | 'REF'  }
         onCurrencyToggle={currency.toggleCurrency}
       />
       <div className="flex-1 flex flex-col w-full max-w-full">
@@ -181,6 +181,22 @@ const AdminRoutes = () => (
   </AdminRoute>
 );
 
+// Component to handle different container styles for admin vs public routes
+const AppContainer = () => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  
+  return (
+    <div className={`App w-full flex flex-col bg-medical-gray-50 relative ${
+      isAdminRoute 
+        ? 'h-screen overflow-hidden' // Admin: fixed height, no scroll on body
+        : 'min-h-screen pb-16'        // Public: expandable height with footer space
+    }`}>
+      <AppLayout />
+    </div>
+  );
+};
+
 function App() {
   return (
     <Router>
@@ -188,9 +204,7 @@ function App() {
         <ScrollProvider>
           <CartProvider>
             <ScrollToTop />
-            <div className="App min-h-screen w-full flex flex-col bg-medical-gray-50 relative pb-16">
-              <AppLayout />
-            </div>
+            <AppContainer />
           </CartProvider>
         </ScrollProvider>
       </AuthProvider>

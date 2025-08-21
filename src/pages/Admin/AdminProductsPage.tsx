@@ -21,11 +21,14 @@ import ProductModal from '../../components/Admin/ProductModal';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { ProductPlaceholder } from '../../components/common';
 import { getProducts } from '../../data/products';
+import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
+import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
 
 const listProducts = await getProducts();
 
 const AdminProductsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { getPriceInCurrency, formatPrice } = useAdminCurrency();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -36,7 +39,7 @@ const AdminProductsPage: React.FC = () => {
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
+
 
   useEffect(() => {
     const body = document.body;
@@ -82,13 +85,7 @@ const AdminProductsPage: React.FC = () => {
     currentPage * itemsPerPage
   );
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-VE', {
-      style: 'currency',
-      currency: 'VES',
-      minimumFractionDigits: 2
-    }).format(amount);
-  };
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-VE', {
@@ -160,7 +157,7 @@ const AdminProductsPage: React.FC = () => {
     inStock: listProducts.filter(p => p.in_stock).length,
     lowStock: listProducts.filter(p => !p.in_stock).length,
     outOfStock: listProducts.filter(p => !p.in_stock).length,
-    totalRevenue: listProducts.reduce((sum, p) => sum + p.price_ves, 0),
+    totalRevenue: listProducts.reduce((sum, p) => sum + getPriceInCurrency(p.price_ves, p.price_ref), 0),
     totalSales: 0
   };
 
@@ -299,7 +296,7 @@ const AdminProductsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
                 <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
+                <p className="text-2xl font-bold text-gray-900">{formatPrice(stats.totalRevenue)}</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-full">
                 <DollarSign className="w-6 h-6 text-purple-600" />
@@ -405,7 +402,13 @@ const AdminProductsPage: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800">{product.name}</p>
                     <p className="text-sm text-gray-500">{product.brand}</p>
-                    <p className="font-semibold text-base text-gray-900 mt-2">{formatCurrency(product.price_ves)}</p>
+                    <div className="mt-2">
+                      <SmartPriceDisplay 
+                        priceVes={product.price_ves} 
+                        priceRef={product.price_ref} 
+                        className="font-semibold text-base text-gray-900"
+                      />
+                    </div>
                     <div className="mt-2">
                       {getStockStatusBadge(product.in_stock ? 'in_stock' : 'out_of_stock')}
                     </div>
@@ -496,7 +499,13 @@ const AdminProductsPage: React.FC = () => {
                     </div>
                   </th>
                   <td className="px-6 py-4">{product.category}</td>
-                  <td className="px-6 py-4 font-semibold">{formatCurrency(product.price_ves)}</td>
+                  <td className="px-6 py-4">
+                    <SmartPriceDisplay 
+                      priceVes={product.price_ves} 
+                      priceRef={product.price_ref} 
+                      className="font-semibold"
+                    />
+                  </td>
                   <td className="px-6 py-4">
                       {getStockStatusBadge(product.in_stock ? 'in stock' : 'out of stock')}
                     </td>

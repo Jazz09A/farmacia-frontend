@@ -49,7 +49,7 @@ const CheckoutPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const { cart, clearCart } = useCart();
   const { user, loading: userLoading } = useAuth();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, getPriceInCurrency } = useCurrency();
   const { uploadImage, isUploading } = useUploadImage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -136,9 +136,7 @@ const CheckoutPage: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, metodoPago: e.target.value }));
-  };
+
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -374,14 +372,18 @@ const CheckoutPage: React.FC = () => {
                         <p className="text-gray-500">Cant: {item.quantity}</p>
                       </div>
                     </div>
-                    <span className="font-semibold">{formatPrice(item.subtotal_ves, 'VES')}</span>
+                    <span className="font-semibold">
+                      {formatPrice(getPriceInCurrency(item.subtotal_ves, item.subtotal_ref))}
+                    </span>
                   </div>
                 ))}
               </div>
               <div className="space-y-3 text-medical-gray-700 border-t mt-4 pt-4">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span className="font-semibold">{formatPrice(cart?.total_ves || 0, 'VES')}</span>
+                  <span className="font-semibold">
+                    {formatPrice(getPriceInCurrency(cart?.total_ves || 0, cart?.total_ref || 0))}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Logística</span>
@@ -389,7 +391,9 @@ const CheckoutPage: React.FC = () => {
                 </div>
                 <div className="flex justify-between font-bold text-lg text-medical-gray-900 border-t pt-3 mt-3">
                   <span>Total</span>
-                  <span>{formatPrice((cart?.total_ref || 0), 'REF')}</span>
+                  <span>
+                    {formatPrice(getPriceInCurrency(cart?.total_ves || 0, cart?.total_ref || 0))}
+                  </span>
                 </div>
               </div>
             </div>
