@@ -33,9 +33,9 @@ interface AnalyticsData {
 }
 
 const mockAnalyticsData: AnalyticsData[] = [
-  { period: '2024-01', revenue: 150000, orders: 245, customers: 89, products_sold: 567, conversion_rate: 3.2, avg_order_value: 612 },
-  { period: '2024-02', revenue: 180000, orders: 298, customers: 112, products_sold: 698, conversion_rate: 3.8, avg_order_value: 604 },
-  { period: '2024-03', revenue: 220000, orders: 356, customers: 145, products_sold: 823, conversion_rate: 4.1, avg_order_value: 618 },
+      { period: '2024-01', revenue: 150000, orders: 245, customers: 89, products_sold: 567, conversion_rate: 3.2, avg_order_value: 612 },
+      { period: '2024-02', revenue: 180000, orders: 298, customers: 112, products_sold: 698, conversion_rate: 3.8, avg_order_value: 604 },
+      { period: '2024-03', revenue: 220000, orders: 356, customers: 145, products_sold: 823, conversion_rate: 4.1, avg_order_value: 618 },
 ];
 
 interface TopProduct {
@@ -125,17 +125,17 @@ const AdminAnalyticsPage: React.FC = () => {
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
           <p className="text-2xl font-bold text-gray-900">{value}</p>
-          <div className={`flex items-center mt-2 text-sm ${
-            growth.isPositive ? 'text-green-600' : 'text-red-600'
-          }`}>
-            {growth.isPositive ? (
-              <ArrowUpRight className="w-4 h-4 mr-1" />
-            ) : (
-              <ArrowDownRight className="w-4 h-4 mr-1" />
-            )}
-            <span>{growth.formatted}</span>
+            <div className={`flex items-center mt-2 text-sm ${
+              growth.isPositive ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {growth.isPositive ? (
+                <ArrowUpRight className="w-4 h-4 mr-1" />
+              ) : (
+                <ArrowDownRight className="w-4 h-4 mr-1" />
+              )}
+              <span>{growth.formatted}</span>
             <span className="text-gray-500 ml-1">vs mes anterior</span>
-          </div>
+            </div>
         </div>
         <div className={`p-3 bg-${color}-100 rounded-full`}>
           <Icon className={`w-6 h-6 text-${color}-600`} />
@@ -144,8 +144,8 @@ const AdminAnalyticsPage: React.FC = () => {
     </motion.div>
   );
 
-  return (
-    <div className="space-y-6">
+    return (
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <div>
@@ -179,73 +179,73 @@ const AdminAnalyticsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <MetricCard
-          title="Ingresos Totales"
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <MetricCard
+            title="Ingresos Totales"
           value={formatCurrency(currentData.revenue)}
-          growth={revenueGrowth}
-          icon={DollarSign}
-          color="green"
-        />
-        <MetricCard
-          title="Pedidos"
+            growth={revenueGrowth}
+            icon={DollarSign}
+            color="green"
+          />
+          <MetricCard
+            title="Pedidos"
           value={currentData.orders}
-          growth={ordersGrowth}
-          icon={ShoppingCart}
-          color="blue"
-        />
-        <MetricCard
-          title="Nuevos Clientes"
+            growth={ordersGrowth}
+            icon={ShoppingCart}
+            color="blue"
+          />
+          <MetricCard
+            title="Nuevos Clientes"
           value={currentData.customers}
-          growth={customersGrowth}
-          icon={Users}
-          color="purple"
-        />
-        <MetricCard
-          title="Tasa de Conversión"
+            growth={customersGrowth}
+            icon={Users}
+            color="purple"
+          />
+          <MetricCard
+            title="Tasa de Conversión"
           value={`${currentData.conversion_rate}%`}
-          growth={conversionGrowth}
-          icon={Target}
-          color="orange"
-        />
-      </div>
+            growth={conversionGrowth}
+            icon={Target}
+            color="orange"
+          />
+        </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Revenue Chart */}
+          {/* Revenue Chart */}
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Ingresos por Mes</h3>
             <div className="flex items-center space-x-2">
               <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
                 <Filter className="w-4 h-4" />
               </button>
             </div>
-          </div>
-          <div className="h-80 flex items-end justify-center space-x-4">
+            </div>
+            <div className="h-80 flex items-end justify-center space-x-4">
             {mockAnalyticsData.map((data, index) => {
               const maxRevenue = Math.max(...mockAnalyticsData.map(d => d.revenue));
-              const height = (data.revenue / maxRevenue) * 100;
-              return (
-                <div key={data.period} className="flex flex-col items-center">
-                  <div className="text-xs text-gray-600 mb-2">
-                    {formatCurrency(data.revenue)}
+                const height = (data.revenue / maxRevenue) * 100;
+                return (
+                  <div key={data.period} className="flex flex-col items-center">
+                    <div className="text-xs text-gray-600 mb-2">
+                      {formatCurrency(data.revenue)}
+                    </div>
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: `${height}%` }}
+                      transition={{ delay: index * 0.1, duration: 0.5 }}
+                      className="w-16 bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg min-h-8"
+                    />
+                    <div className="text-xs text-gray-500 mt-2">
+                      {new Date(data.period).toLocaleDateString('es-VE', { month: 'short' })}
+                    </div>
                   </div>
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: `${height}%` }}
-                    transition={{ delay: index * 0.1, duration: 0.5 }}
-                    className="w-16 bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg min-h-8"
-                  />
-                  <div className="text-xs text-gray-500 mt-2">
-                    {new Date(data.period).toLocaleDateString('es-VE', { month: 'short' })}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
 
         {/* Orders Chart */}
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
@@ -345,45 +345,45 @@ const AdminAnalyticsPage: React.FC = () => {
                 </div>
               </motion.div>
             ))}
+            </div>
           </div>
-        </div>
 
-        {/* Real-time Stats */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+          {/* Real-time Stats */}
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Estadísticas en Tiempo Real</h3>
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Usuarios Activos</span>
+            <div className="space-y-6">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Usuarios Activos</span>
                 <span className="text-lg font-bold text-green-600">47</span>
+                </div>
+                <div className="flex items-center text-xs text-gray-500">
+                  <Globe className="w-3 h-3 mr-1" />
+                  <span>En los últimos 30 minutos</span>
+                </div>
               </div>
-              <div className="flex items-center text-xs text-gray-500">
-                <Globe className="w-3 h-3 mr-1" />
-                <span>En los últimos 30 minutos</span>
-              </div>
-            </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Ventas Hoy</span>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Ventas Hoy</span>
                 <span className="text-lg font-bold text-blue-600">12</span>
-              </div>
-              <div className="flex items-center text-xs text-gray-500">
-                <ShoppingCart className="w-3 h-3 mr-1" />
+                </div>
+                <div className="flex items-center text-xs text-gray-500">
+                  <ShoppingCart className="w-3 h-3 mr-1" />
                 <span>{formatCurrency(18500)} en ingresos</span>
+                </div>
               </div>
-            </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Páginas Vistas</span>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Páginas Vistas</span>
                 <span className="text-lg font-bold text-purple-600">2,347</span>
+                </div>
+                <div className="flex items-center text-xs text-gray-500">
+                  <Eye className="w-3 h-3 mr-1" />
+                  <span>Hoy</span>
+                </div>
               </div>
-              <div className="flex items-center text-xs text-gray-500">
-                <Eye className="w-3 h-3 mr-1" />
-                <span>Hoy</span>
-              </div>
-            </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -393,22 +393,22 @@ const AdminAnalyticsPage: React.FC = () => {
               <div className="flex items-center text-xs text-gray-500">
                 <Clock className="w-3 h-3 mr-1" />
                 <span>En el sitio</span>
+                </div>
               </div>
-            </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Tráfico Móvil</span>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Tráfico Móvil</span>
                 <span className="text-lg font-bold text-pink-600">68%</span>
-              </div>
-              <div className="flex items-center text-xs text-gray-500">
-                <Smartphone className="w-3 h-3 mr-1" />
-                <span>Del total de visitas</span>
+                </div>
+                <div className="flex items-center text-xs text-gray-500">
+                  <Smartphone className="w-3 h-3 mr-1" />
+                  <span>Del total de visitas</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
       {/* Additional Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -456,69 +456,69 @@ const AdminAnalyticsPage: React.FC = () => {
       </div>
 
       {/* Goals and Targets */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Objetivos del Mes</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Objetivos del Mes</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="text-center">
-            <div className="relative w-20 h-20 mx-auto mb-3">
-              <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  stroke="currentColor"
-                  strokeWidth="10"
-                  fill="transparent"
-                  className="text-gray-200"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  stroke="currentColor"
-                  strokeWidth="10"
-                  fill="transparent"
-                  strokeDasharray={`${2 * Math.PI * 40}`}
+                <div className="relative w-20 h-20 mx-auto mb-3">
+                  <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      stroke="currentColor"
+                      strokeWidth="10"
+                      fill="transparent"
+                      className="text-gray-200"
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      stroke="currentColor"
+                      strokeWidth="10"
+                      fill="transparent"
+                      strokeDasharray={`${2 * Math.PI * 40}`}
                   strokeDashoffset={`${2 * Math.PI * 40 * (1 - 0.73)}`}
                   className="text-blue-600"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-sm font-bold text-gray-900">73%</span>
-              </div>
-            </div>
+                  </div>
+                </div>
             <p className="text-sm font-medium text-gray-900">Ingresos</p>
             <p className="text-xs text-gray-500">{formatCurrency(220000)} / {formatCurrency(300000)}</p>
-          </div>
+        </div>
 
-          <div className="text-center">
+              <div className="text-center">
             <div className="relative w-20 h-20 mx-auto mb-3">
               <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  stroke="currentColor"
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      stroke="currentColor"
                   strokeWidth="10"
-                  fill="transparent"
+                      fill="transparent"
                   className="text-gray-200"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  stroke="currentColor"
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      stroke="currentColor"
                   strokeWidth="10"
-                  fill="transparent"
+                      fill="transparent"
                   strokeDasharray={`${2 * Math.PI * 40}`}
                   strokeDashoffset={`${2 * Math.PI * 40 * (1 - 0.89)}`}
-                  className="text-green-600"
-                />
-              </svg>
+                      className="text-green-600"
+                    />
+                  </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-sm font-bold text-gray-900">89%</span>
-              </div>
-            </div>
+                  </div>
+                </div>
             <p className="text-sm font-medium text-gray-900">Pedidos</p>
             <p className="text-xs text-gray-500">356 / 400</p>
           </div>
@@ -549,8 +549,8 @@ const AdminAnalyticsPage: React.FC = () => {
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-sm font-bold text-gray-900">58%</span>
-              </div>
-            </div>
+                    </div>
+                  </div>
             <p className="text-sm font-medium text-gray-900">Nuevos Clientes</p>
             <p className="text-xs text-gray-500">145 / 250</p>
           </div>
@@ -581,15 +581,15 @@ const AdminAnalyticsPage: React.FC = () => {
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-sm font-bold text-gray-900">82%</span>
-              </div>
             </div>
+          </div>
             <p className="text-sm font-medium text-gray-900">Conversión</p>
             <p className="text-xs text-gray-500">4.1% / 5.0%</p>
+            </div>
           </div>
         </div>
-      </div>
     </div>
   );
 };
 
-export default AdminAnalyticsPage; 
+export default AdminAnalyticsPage;

@@ -37,6 +37,7 @@ const CreateBlogPostPage = lazy(() => import('./pages/Admin/CreateBlogPostPage')
 const EditBlogPostPage = lazy(() => import('./pages/Admin/EditBlogPostPage'));
 const AdminCustomersPage = lazy(() => import('./pages/Admin/AdminCustomersPage'));
 const AdminProductsPage = lazy(() => import('./pages/Admin/AdminProductsPage'));
+const CreateProductPage = lazy(() => import('./pages/Admin/CreateProductPage'));
 const AdminEditProductPage = lazy(() => import('./pages/Admin/AdminEditProductPage'));
 const AdminAnalyticsPage = lazy(() => import('./pages/Admin/AdminAnalyticsPage'));
 
@@ -168,6 +169,7 @@ const AdminRoutes = () => (
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="customers" element={<AdminCustomersPage />} />
           <Route path="products" element={<AdminProductsPage />} />
+          <Route path="products/create" element={<CreateProductPage />} />
           <Route path="products/edit/:id" element={<AdminEditProductPage />} />
           <Route path="analytics" element={<AdminAnalyticsPage />} />
           <Route path="blog" element={<AdminBlogPage />} />

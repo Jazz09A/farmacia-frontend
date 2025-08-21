@@ -218,18 +218,6 @@ const AdminCustomersPage: React.FC = () => {
             <Filter className="w-4 h-4 mr-2" />
             Filtros
           </button>
-            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              <Upload className="w-4 h-4 mr-2" />
-              Importar
-            </button>
-            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-            <Download className="w-4 h-4 mr-2" />
-            Exportar
-          </button>
-            <button className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-            <Plus className="w-4 h-4 mr-2" />
-            Nuevo Cliente
-          </button>
           </div>
         </div>
       </div>

@@ -226,6 +226,132 @@ class AdminService {
       throw error;
     }
   }
+
+  // 📦 Carga masiva de productos - Subir archivo para validación
+  async bulkUploadProducts(file: File): Promise<BulkUploadResponse> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await authService.authenticatedFetch(
+        `${this.baseUrl}/products/bulk-upload`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error uploading file: ${response.status}`);
+      }
+      
+      const data: BulkUploadResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to upload products file:', error);
+      throw error;
+    }
+  }
+
+  // 📦 Crear productos masivamente después de validación
+  async bulkCreateProducts(products: BulkProduct[]): Promise<BulkCreateResponse> {
+    try {
+      const response = await authService.authenticatedFetch(
+        `${this.baseUrl}/products/bulk-create`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ products })
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error creating products: ${response.status}`);
+      }
+      
+      const data: BulkCreateResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to create products:', error);
+      throw error;
+    }
+  }
+
+  // 📦 Crear producto individual
+  async createProduct(product: Omit<BulkProduct, 'row_number'>): Promise<any> {
+    try {
+      const response = await authService.authenticatedFetch(
+        `${this.baseUrl}/products`,
+        {
+          method: 'POST',
+          body: JSON.stringify(product)
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error creating product: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to create product:', error);
+      throw error;
+    }
+  }
+}
+
+// Interfaces para carga masiva de productos
+export interface BulkUploadResponse {
+  total_rows: number;
+  valid_products: BulkProduct[];
+  validation_errors: ValidationError[];
+  processed_count: number;
+  error_count: number;
+  warnings: string[];
+}
+
+export interface BulkProduct {
+  name: string;
+  price_ves: number;
+  price_ref: number;
+  description: string;
+  brand: string;
+  category: string;
+  subcategory: string;
+  patology: string;
+  image: string;
+  images: string[];
+  ingredients: string[];
+  in_stock: boolean;
+  stock: number;
+  prescription: boolean;
+  dosage: string;
+  presentation: string;
+  laboratorio: string;
+  registro_sanitario: string;
+  contraindicaciones: string;
+  efectos_secundarios: string;
+  sku: string;
+  featured: boolean;
+  is_offer: boolean;
+  original_price: number;
+  row_number: number;
+}
+
+export interface ValidationError {
+  row_number: number;
+  field: string;
+  value: string;
+  error_message: string;
+}
+
+export interface BulkCreateResponse {
+  status: string;
+  message: string;
+  created_products: any[];
+  created_count: number;
+  error_count: number;
+  errors: string[];
 }
 
 export const adminService = new AdminService();

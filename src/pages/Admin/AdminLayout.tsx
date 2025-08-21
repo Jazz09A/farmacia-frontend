@@ -91,17 +91,6 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
             </NavLink>
           </div>
 
-
-
-          <div className="mb-4">
-            <p className="px-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              Sistema
-            </p>
-            <NavLink to="/admin/settings" className={navLinkClass} onClick={onClose}>
-              <Settings className="w-5 h-5 mr-3" />
-              Configuración
-            </NavLink>
-          </div>
         </nav>
 
         {/* Footer */}

@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { Product } from '../../types';
 import ProductModal from '../../components/Admin/ProductModal';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
+import { ProductPlaceholder } from '../../components/common';
 import { getProducts } from '../../data/products';
 
 const listProducts = await getProducts();
@@ -480,15 +481,19 @@ const AdminProductsPage: React.FC = () => {
                     </div>
                     </td>
                   <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center space-x-3">
-                          <img
-                      src={product.images?.[0] || product.image || 'https://placehold.co/400x400/png'} 
-                            alt={product.name}
-                      className="w-12 h-12 rounded-lg object-cover border" 
-                    />
+                    {product.images?.[0] || product.image ? (
+                      <img
+                        src={product.images?.[0] || product.image} 
+                        alt={product.name}
+                        className="w-12 h-12 rounded-lg object-cover border" 
+                      />
+                    ) : (
+                      <ProductPlaceholder size="sm" className="w-12 h-12" />
+                    )}
                     <div>
                       <div className="text-base font-semibold">{product.name}</div>
-                          <div className="text-sm text-gray-500">{product.brand}</div>
-                        </div>
+                      <div className="text-sm text-gray-500">{product.brand}</div>
+                    </div>
                   </th>
                   <td className="px-6 py-4">{product.category}</td>
                   <td className="px-6 py-4 font-semibold">{formatCurrency(product.price_ves)}</td>
