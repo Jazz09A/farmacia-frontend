@@ -25,11 +25,11 @@ class AuthService {
       });
       const result = await response.json();
       if (!response.ok) {
-        return { success: false, message: result.message || 'Error en el registro', errors: result.errors || {} };
+        throw new Error(result.message || 'Error en el registro');
       }
       return { success: true, message: result.message || 'Registro exitoso', data: result.data };
     } catch (error) {
-      return { success: false, message: 'Error de conexión. Por favor, intenta nuevamente.', errors: {} };
+      throw new Error('Error de conexión. Por favor, intenta nuevamente.');
     }
   }
 
@@ -43,7 +43,7 @@ class AuthService {
       });
       const result = await response.json();
       if (!response.ok) {
-        return { success: false, message: result.message || 'Credenciales inválidas', errors: result.errors || {} };
+        throw new Error(result.message || 'Credenciales inválidas');
       }
       if (result.access_token) {
         this.setToken(result.access_token);
@@ -51,13 +51,13 @@ class AuthService {
         if (user) {
           return { success: true, message: 'Login exitoso', data: { token: result.access_token, user } };
         } else {
-          return { success: false, message: 'No se pudieron obtener los datos del usuario.', errors: {} };
+            throw new Error('No se pudieron obtener los datos del usuario.');
         }
       } else {
-        return { success: false, message: 'Respuesta del servidor inválida', errors: {} };
+        throw new Error('Respuesta del servidor inválida');
       }
     } catch (error) {
-      return { success: false, message: 'Error de conexión. Por favor, intenta nuevamente.', errors: {} };
+      throw new Error('Error de conexión. Por favor, intenta nuevamente.');
     }
   }
 
@@ -373,8 +373,9 @@ class AuthService {
   }
 
   async resendVerificationEmail(): Promise<any> {
-    const response = await this.authenticatedFetch('/api/v1/auth/resend-verification-email', {
+    const response = await this.authenticatedFetch('/api/v1/auth/resend-verification', {
       method: 'POST',
+      body: JSON.stringify({ email: this.getCurrentUser()?.email }),
     });
 
     if (!response.ok) {
