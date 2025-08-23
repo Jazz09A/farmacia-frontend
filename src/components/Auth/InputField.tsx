@@ -12,6 +12,7 @@ interface InputFieldProps {
   placeholder?: string;
   isTextArea?: boolean;
   required?: boolean;
+  icon?: React.ReactNode;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -24,6 +25,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   placeholder,
   isTextArea = false,
   required = false,
+  icon,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === 'password';
@@ -45,6 +47,11 @@ export const InputField: React.FC<InputFieldProps> = ({
       <label htmlFor={id} className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
+      {icon && (
+        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          {icon}
+        </div>
+      )}
       <div className="relative">
         {isTextArea ? (
           <textarea {...commonProps} rows={3} />

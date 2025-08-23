@@ -18,6 +18,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { FormStepper } from './FormStepper';
 import { FormNavigation } from './FormNavigation';
 import { InputField } from './InputField';
+import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 
 interface JuridicoRegisterFormProps {
   onSuccess: () => void;
@@ -97,6 +98,7 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
 
   const validateCurrentStep = (): boolean => {
     const newErrors: Record<string, string[]> = {};
+    
     if (currentStep === 1) {
       if (!formData.company_name.trim()) newErrors.company_name = ['El nombre de la empresa es requerido'];
       if (!formData.rif.trim()) newErrors.rif = ['El RIF es requerido'];
@@ -105,9 +107,40 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
       else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = ['Email inválido'];
       if (!formData.phone.trim()) newErrors.phone = ['El teléfono es requerido'];
       if (!formData.direccion_establecimiento.trim()) newErrors.direccion_establecimiento = ['La dirección es requerida'];
-      if (!formData.password) newErrors.password = ['La contraseña es requerida'];
-      else if (formData.password.length < 8) newErrors.password = ['La contraseña debe tener al menos 8 caracteres'];
-      if (formData.password !== formData.confirm_password) newErrors.confirm_password = ['Las contraseñas no coinciden'];
+      
+      // Validación mejorada de contraseña
+      if (!formData.password) {
+        newErrors.password = ['La contraseña es requerida'];
+      } else {
+        const passwordErrors: string[] = [];
+        
+        if (formData.password.length < 8) {
+          passwordErrors.push('La contraseña debe tener al menos 8 caracteres');
+        }
+        if (!/[A-Z]/.test(formData.password)) {
+          passwordErrors.push('Debe contener al menos una mayúscula');
+        }
+        if (!/[a-z]/.test(formData.password)) {
+          passwordErrors.push('Debe contener al menos una minúscula');
+        }
+        if (!/\d/.test(formData.password)) {
+          passwordErrors.push('Debe contener al menos un número');
+        }
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password)) {
+          passwordErrors.push('Debe contener al menos un carácter especial');
+        }
+        
+        if (passwordErrors.length > 0) {
+          newErrors.password = passwordErrors;
+        }
+      }
+      
+      // Validación de confirmación de contraseña
+      if (!formData.confirm_password) {
+        newErrors.confirm_password = ['Confirma tu contraseña'];
+      } else if (formData.password !== formData.confirm_password) {
+        newErrors.confirm_password = ['Las contraseñas no coinciden'];
+      }
     } else if (currentStep === 2) {
       if (!formData.representante_legal_cedula.trim()) newErrors.representante_legal_cedula = ['La cédula del representante es requerida'];
       if (!formData.representante_legal_nombre.trim()) newErrors.representante_legal_nombre = ['El nombre del representante es requerido'];
@@ -115,6 +148,7 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
         if (!formData.referencia_comercial_proveedor.trim()) newErrors.referencia_comercial_proveedor = ['La referencia comercial es requerida'];
         if (!formData.referencia_bancaria.trim()) newErrors.referencia_bancaria = ['La referencia bancaria es requerida'];
     }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -247,18 +281,100 @@ interface Step5Props extends StepProps {
 }
 
 const Step1BasicInfo: React.FC<StepProps> = ({ formData, onChange, errors }) => (
+  <div className="space-y-6">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <InputField id="company_name" label="Nombre de la Empresa" value={formData.company_name} onChange={onChange} error={errors.company_name?.[0]} required />
-      <InputField id="rif" label="RIF" value={formData.rif} onChange={onChange} error={errors.rif?.[0]} required />
-      <InputField id="registro_mercantil" label="Registro Mercantil" value={formData.registro_mercantil} onChange={onChange} error={errors.registro_mercantil?.[0]} required />
-      <InputField id="email" label="Email" type="email" value={formData.email} onChange={onChange} error={errors.email?.[0]} required />
-      <InputField id="phone" label="Teléfono Principal" type="tel" value={formData.phone} onChange={onChange} error={errors.phone?.[0]} required />
+      <InputField 
+        id="company_name" 
+        label="Nombre de la Empresa" 
+        value={formData.company_name} 
+        onChange={onChange} 
+        error={errors.company_name?.[0]} 
+        required 
+      />
+      <InputField 
+        id="rif" 
+        label="RIF" 
+        value={formData.rif} 
+        onChange={onChange} 
+        error={errors.rif?.[0]} 
+        required 
+      />
+      <InputField 
+        id="registro_mercantil" 
+        label="Registro Mercantil" 
+        value={formData.registro_mercantil} 
+        onChange={onChange} 
+        error={errors.registro_mercantil?.[0]} 
+        required 
+      />
+      <InputField 
+        icon={<Mail className="w-4 h-4 text-gray-400" />}
+        id="email" 
+        label="Email" 
+        type="email" 
+        value={formData.email} 
+        onChange={onChange} 
+        error={errors.email?.[0]} 
+        required 
+      />
+      <InputField 
+        icon={<Phone className="w-4 h-4 text-gray-400" />}
+        id="phone" 
+        label="Teléfono Principal" 
+        type="tel" 
+        value={formData.phone} 
+        onChange={onChange} 
+        error={errors.phone?.[0]} 
+        required 
+      />
       <div className="md:col-span-2">
-        <InputField id="direccion_establecimiento" label="Dirección del Establecimiento" value={formData.direccion_establecimiento} onChange={onChange} error={errors.direccion_establecimiento?.[0]} isTextArea required />
+        <InputField 
+          icon={<Building className="w-4 h-4 text-gray-400" />}
+          id="direccion_establecimiento" 
+          label="Dirección del Establecimiento" 
+          value={formData.direccion_establecimiento} 
+          onChange={onChange} 
+          error={errors.direccion_establecimiento?.[0]} 
+          isTextArea 
+          required 
+        />
       </div>
-      <InputField id="password" label="Contraseña" type="password" value={formData.password} onChange={onChange} error={errors.password?.[0]} required />
-      <InputField id="confirm_password" label="Confirmar Contraseña" type="password" value={formData.confirm_password} onChange={onChange} error={errors.confirm_password?.[0]} required />
     </div>
+
+    {/* Sección de contraseñas con validación */}
+    <div className="border-t border-gray-200 pt-6">
+      <h4 className="text-lg font-medium text-gray-800 mb-4">Configuración de Contraseña</h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <InputField 
+          icon={<Lock className="w-4 h-4 text-gray-400" />}
+          id="password" 
+          label="Contraseña" 
+          type="password" 
+          value={formData.password} 
+          onChange={onChange} 
+          error={errors.password?.[0]} 
+          required 
+        />
+        <InputField 
+          icon={<Lock className="w-4 h-4 text-gray-400" />}
+          id="confirm_password" 
+          label="Confirmar Contraseña" 
+          type="password" 
+          value={formData.confirm_password} 
+          onChange={onChange} 
+          error={errors.confirm_password?.[0]} 
+          required 
+        />
+      </div>
+      
+      {/* Indicador de fortaleza de contraseña */}
+      <PasswordStrengthIndicator 
+        password={formData.password}
+        confirmPassword={formData.confirm_password}
+        showRequirements={formData.password.length > 0}
+      />
+    </div>
+  </div>
 );
 
 const Step2Representatives: React.FC<StepProps> = ({ formData, onChange, errors }) => (

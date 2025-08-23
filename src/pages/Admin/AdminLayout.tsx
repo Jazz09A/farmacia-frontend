@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Dialog, Transition } from '@headlessui/react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import CurrencyToggle from '../../components/Admin/CurrencyToggle';
 import { AdminCurrencyProvider } from '../../contexts/AdminCurrencyContext';
 
