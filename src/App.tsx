@@ -162,24 +162,22 @@ OptimizedScrollToTopButton.displayName = 'OptimizedScrollToTopButton';
 
 const AdminRoutes = () => (
   <AdminRoute>
-    <AdminLayout>
-      <Suspense fallback={<LoadingSpinner message="Cargando página..." />}>
-        <Routes>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboardPage />} />
-          <Route path="orders" element={<AdminOrdersPage />} />
-          <Route path="customers" element={<AdminCustomersPage />} />
-          <Route path="products" element={<AdminProductsPage />} />
-          <Route path="products/create" element={<CreateProductPage />} />
-          <Route path="products/edit/:id" element={<AdminEditProductPage />} />
-          <Route path="flash-offers" element={<AdminFlashOffersPage />} />
-          <Route path="analytics" element={<AdminAnalyticsPage />} />
-          <Route path="blog" element={<AdminBlogPage />} />
-          <Route path="blog/new" element={<CreateBlogPostPage />} />
-          <Route path="blog/edit/:id" element={<EditBlogPostPage />} />
-        </Routes>
-      </Suspense>
-    </AdminLayout>
+    <Routes>
+      <Route path="/*" element={<AdminLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboardPage />} />
+        <Route path="orders" element={<AdminOrdersPage />} />
+        <Route path="customers" element={<AdminCustomersPage />} />
+        <Route path="products" element={<AdminProductsPage />} />
+        <Route path="products/create" element={<CreateProductPage />} />
+        <Route path="products/edit/:id" element={<AdminEditProductPage />} />
+        <Route path="flash-offers" element={<AdminFlashOffersPage />} />
+        <Route path="analytics" element={<AdminAnalyticsPage />} />
+        <Route path="blog" element={<AdminBlogPage />} />
+        <Route path="blog/new" element={<CreateBlogPostPage />} />
+        <Route path="blog/edit/:id" element={<EditBlogPostPage />} />
+      </Route>
+    </Routes>
   </AdminRoute>
 );
 
@@ -191,7 +189,7 @@ const AppContainer = () => {
   return (
     <div className={`App w-full flex flex-col bg-medical-gray-50 relative ${
       isAdminRoute 
-        ? 'h-screen overflow-hidden' // Admin: fixed height, no scroll on body
+        ? '' // Admin: fixed height, no scroll on body
         : 'min-h-screen pb-16'        // Public: expandable height with footer space
     }`}>
       <AppLayout />

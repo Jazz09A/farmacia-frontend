@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/AuthService';
 import { motion } from 'framer-motion';
-import { Package, ChevronDown, Eye, Truck, DollarSign, Hash, RefreshCw } from 'lucide-react';
+import { Eye, Truck, DollarSign, Hash, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import OrderDetailsModal from './OrderDetailsModal';
 import { LoadingSpinner } from '../common/LoadingSpinner';

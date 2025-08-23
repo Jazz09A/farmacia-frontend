@@ -1,5 +1,5 @@
-import React, { useState, Fragment } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import React, { useState, Fragment, Suspense } from 'react';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, 
   ShoppingCart, 
@@ -17,7 +17,8 @@ import {
   Zap,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Transition } from '@headlessui/react';
+import { Dialog, Transition } from '@headlessui/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import CurrencyToggle from '../../components/Admin/CurrencyToggle';
 import { AdminCurrencyProvider } from '../../contexts/AdminCurrencyContext';
 
@@ -211,19 +212,24 @@ const AdminHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => 
 };
 
 
-interface AdminLayoutProps {
-  children?: React.ReactNode;
-}
-
-const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+const AdminLayout: React.FC = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
 
   return (
     <AdminCurrencyProvider>
-      <div className="admin-layout bg-gray-50">
-        <Transition.Root show={isSidebarOpen} as={Fragment}>
-          <div className="lg:hidden">
-            <Transition.Child
+      <div className="admin-layout bg-gray-50 flex h-screen overflow-hidden">
+        {/* Static sidebar for desktop */}
+        <div className="hidden lg:flex lg:flex-shrink-0">
+          <div className="flex flex-col w-72">
+            {/* Sidebar component, swap this element with another sidebar if you like */}
+            <AdminSidebar isOpen={true} onClose={() => setSidebarOpen(false)} />
+          </div>
+        </div>
+
+        <Transition show={isSidebarOpen} as={Fragment}>
+          <Dialog as="div" className="relative z-40 lg:hidden" onClose={setSidebarOpen}>
+            <Transition
               as={Fragment}
               enter="transition-opacity ease-linear duration-300"
               enterFrom="opacity-0"
@@ -232,21 +238,43 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <div 
-                className="fixed inset-0 bg-gray-600 bg-opacity-75" 
-                onClick={() => setSidebarOpen(false)} 
-              />
-            </Transition.Child>
-          </div>
-        </Transition.Root>
+              <div className="fixed inset-0 bg-gray-600 bg-opacity-75" />
+            </Transition>
+
+            <div className="fixed inset-0 flex z-40">
+              <Transition
+                as={Fragment}
+                enter="transition ease-in-out duration-300 transform"
+                enterFrom="-translate-x-full"
+                enterTo="translate-x-0"
+                leave="transition ease-in-out duration-300 transform"
+                leaveFrom="translate-x-0"
+                leaveTo="-translate-x-full"
+              >
+                <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+                  <AdminSidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+                </div>
+              </Transition>
+            </div>
+          </Dialog>
+        </Transition>
         
-        <AdminSidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
-        
-        <div className="admin-content lg:ml-72">
+        <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
           <AdminHeader onMenuClick={() => setSidebarOpen(true)} />
-          <main className="admin-main p-3 sm:p-4 lg:p-6 xl:p-8 bg-gray-50 min-h-screen">
-            {children || <Outlet />}
-          </main>
+          <AnimatePresence mode="wait">
+            <motion.main
+              key={location.pathname}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="flex-1 relative overflow-y-auto focus:outline-none p-3 sm:p-4 lg:p-6 xl:p-8"
+            >
+              <Suspense fallback={<div>Loading...</div>}>
+                <Outlet />
+              </Suspense>
+            </motion.main>
+          </AnimatePresence>
         </div>
       </div>
     </AdminCurrencyProvider>

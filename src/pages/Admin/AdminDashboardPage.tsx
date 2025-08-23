@@ -219,7 +219,7 @@ const AdminDashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-full admin-page-container">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 lg:gap-4">
         <div className="min-w-0 flex-1">

@@ -15,7 +15,7 @@ import {
   CreditCard,
   ShoppingBag
 } from 'lucide-react';
-import type { Order as ApiOrder, OrderItem as ApiOrderItem } from '../types';
+import type { Order as ApiOrder} from '../types';
 import { authService } from '../services/AuthService';
 
 // Tipo híbrido para compatibilidad con la UI existente
