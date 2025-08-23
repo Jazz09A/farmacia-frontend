@@ -214,7 +214,15 @@ const AdminHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => 
 
 const AdminLayout: React.FC = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const location = useLocation();
+
+  // Handle route changes with animation
+  React.useEffect(() => {
+    setIsTransitioning(true);
+    const timer = setTimeout(() => setIsTransitioning(false), 100);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   return (
     <AdminCurrencyProvider>
@@ -261,20 +269,17 @@ const AdminLayout: React.FC = () => {
         
         <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
           <AdminHeader onMenuClick={() => setSidebarOpen(true)} />
-          <AnimatePresence mode="wait">
-            <motion.main
-              key={location.pathname}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="flex-1 relative overflow-y-auto focus:outline-none p-3 sm:p-4 lg:p-6 xl:p-8"
-            >
-              <Suspense fallback={<div>Loading...</div>}>
-                <Outlet />
-              </Suspense>
-            </motion.main>
-          </AnimatePresence>
+          <motion.main
+            key={location.pathname}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isTransitioning ? 0 : 1, y: isTransitioning ? 20 : 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="flex-1 relative overflow-y-auto focus:outline-none p-3 sm:p-4 lg:p-6 xl:p-8"
+          >
+            <Suspense fallback={<div>Loading...</div>}>
+              <Outlet />
+            </Suspense>
+          </motion.main>
         </div>
       </div>
     </AdminCurrencyProvider>
