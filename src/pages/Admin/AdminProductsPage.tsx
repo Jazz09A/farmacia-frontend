@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-// import { mockProducts } from '../../data/mockData';
 import { Product } from '../../types';
 import ProductModal from '../../components/Admin/ProductModal';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
@@ -23,8 +22,6 @@ import { ProductPlaceholder } from '../../components/common';
 import { getProducts } from '../../data/products';
 import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
 import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
-
-const listProducts = await getProducts();
 
 const AdminProductsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -39,7 +36,26 @@ const AdminProductsPage: React.FC = () => {
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [listProducts, setListProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
+
+  // Cargar productos
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        const products = await getProducts();
+        setListProducts(products);
+      } catch (error) {
+        console.error('Error loading products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadProducts();
+  }, []);
 
   useEffect(() => {
     const body = document.body;
@@ -76,7 +92,7 @@ const AdminProductsPage: React.FC = () => {
 
       return matchesSearch && matchesCategory && matchesStatus && matchesStock;
     });
-  }, [searchTerm, categoryFilter, statusFilter, stockFilter]);
+  }, [listProducts, searchTerm, categoryFilter, statusFilter, stockFilter]);
 
   // Paginación
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);

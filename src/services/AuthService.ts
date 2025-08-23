@@ -15,6 +15,30 @@ class AuthService {
   private isRequestInProgress = false;
   private requestAbortController: AbortController | null = null;
 
+  // Verificación de email
+  async checkEmailAvailability(email: string): Promise<{ available: boolean; message: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/get-email-verification/${email}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        // Si la respuesta es exitosa, significa que el email está disponible
+        return { available: true, message: 'Email disponible' };
+      } else {
+        // Si hay error, probablemente el email ya está registrado
+        return { available: false, message: result.message || 'Este email ya está registrado' };
+      }
+    } catch (error) {
+      // En caso de error de conexión, asumimos que el email está disponible para no bloquear al usuario
+      console.warn('Error verificando email, asumiendo disponible:', error);
+      return { available: true, message: 'Email disponible' };
+    }
+  }
+
   // Registro de usuario jurídico
   async registerJuridico(data: JuridicoRegisterData): Promise<AuthResponse> {
     try {

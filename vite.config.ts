@@ -36,7 +36,7 @@ export default defineConfig({
     }
   },
   build: {
-    target: 'es2018',
+    target: 'es2022',
     // Activar minificación avanzada
     minify: 'terser',
     terserOptions: {

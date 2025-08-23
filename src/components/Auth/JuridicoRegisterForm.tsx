@@ -19,6 +19,8 @@ import { FormStepper } from './FormStepper';
 import { FormNavigation } from './FormNavigation';
 import { InputField } from './InputField';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
+import { authService } from '../../services/AuthService';
+import { LoadingSpinner } from '../common/LoadingSpinner';
 
 interface JuridicoRegisterFormProps {
   onSuccess: () => void;
@@ -44,6 +46,11 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [emailVerificationStatus, setEmailVerificationStatus] = useState<{
+    checked: boolean;
+    available: boolean;
+    message: string;
+  }>({ checked: false, available: true, message: '' });
 
   const [formData, setFormData] = useState<JuridicoFormData>({
     email: '',
@@ -80,6 +87,11 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: [] }));
+    }
+    
+    // Si se cambia el email, resetear el estado de verificación
+    if (field === 'email') {
+      setEmailVerificationStatus({ checked: false, available: true, message: '' });
     }
   };
 
@@ -153,10 +165,50 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
     return Object.keys(newErrors).length === 0;
   };
 
-  const nextStep = () => {
-    if (validateCurrentStep()) {
-      setCurrentStep(Math.min(currentStep + 1, steps.length));
+  const nextStep = async () => {
+    if (!validateCurrentStep()) return;
+    
+    // Si estamos en el paso 1 y hay email, verificar disponibilidad
+    if (currentStep === 1 && formData.email.trim()) {
+      setIsLoading(true);
+      try {
+        const emailCheck = await authService.checkEmailAvailability(formData.email.trim());
+        setEmailVerificationStatus({
+          checked: true,
+          available: emailCheck.available,
+          message: emailCheck.message
+        });
+        
+        if (!emailCheck.available) {
+          // Si el email no está disponible, mostrar error y no avanzar
+          setErrors(prev => ({
+            ...prev,
+            email: [emailCheck.message]
+          }));
+          // Solo mostrar el icono de error, sin mensaje duplicado
+          setEmailVerificationStatus({
+            checked: true,
+            available: false,
+            message: ''
+          });
+          setIsLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error('Error verificando email:', error);
+        // En caso de error, permitir continuar
+        setEmailVerificationStatus({
+          checked: true,
+          available: true,
+          message: 'No se pudo verificar el email, continuando...'
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
+    
+    // Si todo está bien, avanzar al siguiente paso
+    setCurrentStep(Math.min(currentStep + 1, steps.length));
   };
 
   const prevStep = () => setCurrentStep(Math.max(currentStep - 1, 1));
@@ -231,7 +283,7 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
                 transition={{ duration: 0.3 }}
               >
                 <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">{steps[currentStep - 1].title}</h3>
-                {currentStep === 1 && <Step1BasicInfo formData={formData} onChange={handleInputChange} errors={errors} />}
+                {currentStep === 1 && <Step1BasicInfo formData={formData} onChange={handleInputChange} errors={errors} emailVerificationStatus={emailVerificationStatus} isLoading={isLoading} currentStep={currentStep} />}
                 {currentStep === 2 && <Step2Representatives formData={formData} onChange={handleInputChange} errors={errors} />}
                 {currentStep === 3 && <Step3References formData={formData} onChange={handleInputChange} errors={errors} />}
                 {currentStep === 4 && <Step4AdditionalContacts formData={formData} onChange={handleInputChange} errors={errors} />}
@@ -276,11 +328,21 @@ type StepProps = {
   errors: Record<string, string[]>;
 };
 
+interface Step1Props extends StepProps {
+  emailVerificationStatus: {
+    checked: boolean;
+    available: boolean;
+    message: string;
+  };
+  isLoading: boolean;
+  currentStep: number;
+}
+
 interface Step5Props extends StepProps {
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const Step1BasicInfo: React.FC<StepProps> = ({ formData, onChange, errors }) => (
+const Step1BasicInfo: React.FC<Step1Props> = ({ formData, onChange, errors, emailVerificationStatus, isLoading, currentStep }) => (
   <div className="space-y-6">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <InputField 
@@ -307,16 +369,39 @@ const Step1BasicInfo: React.FC<StepProps> = ({ formData, onChange, errors }) => 
         error={errors.registro_mercantil?.[0]} 
         required 
       />
-      <InputField 
-        icon={<Mail className="w-4 h-4 text-gray-400" />}
-        id="email" 
-        label="Email" 
-        type="email" 
-        value={formData.email} 
-        onChange={onChange} 
-        error={errors.email?.[0]} 
-        required 
-      />
+      <div className="relative">
+        <InputField 
+          icon={<Mail className="w-4 h-4 text-gray-400" />}
+          id="email" 
+          label="Email" 
+          type="email" 
+          value={formData.email} 
+          onChange={onChange} 
+          error={errors.email?.[0]} 
+          required 
+        />
+        {isLoading && currentStep === 1 && formData.email.trim() && !emailVerificationStatus.checked && (
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <LoadingSpinner variant="button" size="sm" />
+          </div>
+        )}
+        {emailVerificationStatus.checked && formData.email.trim() && (
+          <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center ${
+            emailVerificationStatus.available ? 'text-green-600' : 'text-red-600'
+          }`}>
+            {emailVerificationStatus.available ? (
+              <CheckCircle className="w-5 h-5" />
+            ) : (
+              <AlertCircle className="w-5 h-5" />
+            )}
+          </div>
+        )}
+        {emailVerificationStatus.checked && formData.email.trim() && emailVerificationStatus.available && (
+          <div className="mt-1 text-xs text-green-600">
+            {emailVerificationStatus.message}
+          </div>
+        )}
+      </div>
       <InputField 
         icon={<Phone className="w-4 h-4 text-gray-400" />}
         id="phone" 
