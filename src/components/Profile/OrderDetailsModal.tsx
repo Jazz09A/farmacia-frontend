@@ -2,9 +2,56 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Truck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCurrency } from '../../hooks/useCurrency';
 
-const OrderDetailsModal = ({ order, onClose }) => {
+interface OrderDetailsModalProps {
+  order: any;
+  onClose: () => void;
+}
+
+const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose }) => {
+  const { currency, formatPrice, convertPrice } = useCurrency();
+  
   if (!order) return null;
+
+  // Función para traducir estados
+  const translateOrderStatus = (status: string): string => {
+    const statusTranslations: Record<string, string> = {
+      'pending': 'Pendiente',
+      'confirmed': 'Confirmado',
+      'processing': 'Procesando',
+      'shipped': 'Enviado',
+      'in_transit': 'En Tránsito',
+      'delivered': 'Entregado',
+      'cancelled': 'Cancelado',
+      'refunded': 'Reembolsado'
+    };
+    return statusTranslations[status] || status;
+  };
+
+  const translatePaymentStatus = (status: string): string => {
+    const paymentStatusTranslations: Record<string, string> = {
+      'pending': 'Pendiente',
+      'paid': 'Pagado',
+      'failed': 'Fallido',
+      'processing': 'Procesando',
+      'cancelled': 'Cancelado',
+      'refunded': 'Reembolsado'
+    };
+    return paymentStatusTranslations[status] || status;
+  };
+
+  // Función para formatear precios (simplificada para VES/REF)
+  const formatOrderPrice = (amount: number, orderCurrency: string) => {
+    const cleanAmount = Math.round(amount * 100) / 100;
+    
+    // Si la moneda del pedido es diferente a la seleccionada, convertir
+    if (orderCurrency !== currency) {
+      const convertedPrice = convertPrice(cleanAmount, orderCurrency as any, currency);
+      return formatPrice(convertedPrice, currency);
+    }
+    return formatPrice(cleanAmount, currency);
+  };
 
   return (
     <AnimatePresence>
@@ -38,10 +85,10 @@ const OrderDetailsModal = ({ order, onClose }) => {
             
             {/* Order Info */}
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div><strong>Estado:</strong> {order.status}</div>
-              <div><strong>Total:</strong> {order.total} {order.currency}</div>
+              <div><strong>Estado:</strong> {translateOrderStatus(order.status)}</div>
+              <div><strong>Total:</strong> {formatOrderPrice(order.total, order.currency)}</div>
               <div><strong>Método de Pago:</strong> {order.payment_method}</div>
-              <div><strong>Estado del Pago:</strong> {order.payment_status}</div>
+              <div><strong>Estado del Pago:</strong> {translatePaymentStatus(order.payment_status)}</div>
             </div>
 
             {/* Shipping Address */}
@@ -55,7 +102,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
             {/* Items */}
             <div>
               <h4 className="font-bold mb-2">Artículos</h4>
-              {order.items.map(item => (
+              {order.items.map((item: any) => (
                 <div key={item.id} className="flex items-center space-x-4 border-b py-2">
                   <img src={item.product_image} alt={item.product_name} className="w-16 h-16 rounded-md"/>
                   <div className="flex-grow">
@@ -63,7 +110,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
                     <p className="text-sm text-gray-500">Cantidad: {item.quantity}</p>
                   </div>
                   <div className="text-right">
-                    <p>{item.total_price} {order.currency}</p>
+                    <p>{formatOrderPrice(item.total_price, order.currency)}</p>
                   </div>
                 </div>
               ))}
