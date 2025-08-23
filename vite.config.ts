@@ -25,7 +25,7 @@ export default defineConfig({
     })
   ],
   server: {
-    allowedHosts: ['speeches-acids-assist-shopping.trycloudflare.com'],
+    allowedHosts: ['us-atmospheric-jamaica-pine.trycloudflare.com'],
     host: true,
     proxy: {
       '/api': {

@@ -27,6 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isNavbarVisible, setIsNavbarVisible] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
@@ -79,6 +80,21 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
   }, [isMobileMenuOpen, isDesktopMenuOpen]);
 
+  // Ocultar/mostrar navbar cuando se abre/cierra el sidebar móvil
+  // Esto mejora la UX al evitar que el navbar interfiera con el sidebar
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      setIsNavbarVisible(false);
+    } else {
+      // Delay para que la animación del sidebar termine antes de mostrar el navbar
+      // Esto crea una transición más suave y natural
+      const timer = setTimeout(() => {
+        setIsNavbarVisible(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isMobileMenuOpen]);
+
   useEffect(() => {
     const checkIsMobile = () => setIsMobile(window.innerWidth < 1024);
     checkIsMobile();
@@ -106,10 +122,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   const getNavbarClasses = () => {
+    const baseClasses = 'bg-white/95 backdrop-blur-xl border-b border-medical-gray-200/50';
+    const shadowClass = isNavbarVisible ? 'shadow-medical' : 'shadow-none';
+    
     if (isLightBackgroundPage || isScrolled) {
-      return 'bg-white/95 backdrop-blur-xl shadow-medical border-b border-medical-gray-200/50';
+      return `${baseClasses} ${shadowClass}`;
     }
-    return 'bg-white/95 backdrop-blur-xl shadow-medical border-b border-medical-gray-200/50';
+    return `${baseClasses} ${shadowClass}`;
   };
 
   const getNavItemClasses = (isActive: boolean) => {
@@ -126,15 +145,25 @@ export const Navbar: React.FC<NavbarProps> = ({
     <>
       <motion.nav
         data-navbar
-        className={`fixed top-0 left-0 right-0 z-50 w-full ${getNavbarClasses()}`}
+        className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${getNavbarClasses()} ${
+          !isNavbarVisible ? 'pointer-events-none' : ''
+        }`}
         style={{ 
           transitionDuration: isMobile ? '200ms' : '600ms',
           willChange: 'transform',
           maxWidth: '100vw'
         }}
         initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={getMobileOptimizedTransition({ type: "spring", stiffness: 300, damping: 30 })}
+        animate={{ 
+          y: isNavbarVisible ? 0 : -100,
+          opacity: isNavbarVisible ? 1 : 0,
+          filter: isNavbarVisible ? 'blur(0px)' : 'blur(4px)'
+        }}
+        transition={{
+          y: { type: "spring", stiffness: 300, damping: 30, duration: 0.3 },
+          opacity: { duration: 0.2, ease: "easeInOut" },
+          filter: { duration: 0.2, ease: "easeInOut" }
+        }}
       >
         <div className='bg-medical-blue-gradient'>
           {!(shouldHideSearchBar && isMobile) && (
@@ -346,23 +375,28 @@ export const Navbar: React.FC<NavbarProps> = ({
             <motion.div className="fixed inset-0 bg-black/60 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsDesktopMenuOpen(false)} />
             <motion.div className="fixed left-0 top-0 h-full w-80 max-w-sm glass-card shadow-elegant border-r border-white/30" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
               <div className="flex flex-col h-full">
-                <div className="flex justify-between items-center p-6 border-b border-medical-gray-200">
+                {/* Header fijo */}
+                <div className="flex justify-between items-center p-6 border-b border-medical-gray-200 flex-shrink-0">
                   <div className="text-lg font-serif font-bold text-medical-gray-900">Menú</div>
                   <motion.button onClick={() => setIsDesktopMenuOpen(false)} className="p-2 rounded-full text-medical-gray-600 hover:bg-medical-gray-100 transition-colors" aria-label="Cerrar menú" whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }}>
                     <X className="h-6 w-6" />
                   </motion.button>
                 </div>
-                <div className="flex-1 p-6 space-y-2 overflow-y-auto">
-                  {menuItems.map((item, index) => (
-                    <Link to={item.href} key={item.name} onClick={() => setIsDesktopMenuOpen(false)}>
-                      <motion.div className="flex items-center space-x-3 p-4 rounded-xl text-medical-gray-700 hover:text-medical-blue-700 hover:bg-medical-blue-50 transition-all duration-200 group" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}>
-                        <div className="p-2 bg-medical-blue-50 text-medical-blue-600 rounded-lg group-hover:bg-medical-blue-100 transition-colors duration-200">
-                          <item.icon className="h-4 w-4" />
-                        </div>
-                        <span className="font-medium">{item.name}</span>
-                      </motion.div>
-                    </Link>
-                  ))}
+                
+                {/* Contenido scrolleable */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  <div className="p-6 space-y-2">
+                    {menuItems.map((item, index) => (
+                      <Link to={item.href} key={item.name} onClick={() => setIsDesktopMenuOpen(false)}>
+                        <motion.div className="flex items-center space-x-3 p-4 rounded-xl text-medical-gray-700 hover:text-medical-blue-700 hover:bg-medical-blue-50 transition-all duration-200 group" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}>
+                          <div className="p-2 bg-medical-blue-50 text-medical-blue-600 rounded-lg group-hover:bg-medical-blue-100 transition-colors duration-200">
+                            <item.icon className="h-4 w-4" />
+                          </div>
+                          <span className="font-medium">{item.name}</span>
+                        </motion.div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -377,7 +411,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <motion.div className="fixed inset-0 bg-black/60 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsMobileMenuOpen(false)} />
             <motion.div className="fixed right-0 top-0 h-full w-80 max-w-sm glass-card shadow-elegant border-l border-white/30" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
               <div className="flex flex-col h-full">
-                <div className="flex justify-between items-center p-6 border-b border-medical-gray-200">
+                {/* Header fijo */}
+                <div className="flex justify-between items-center p-6 border-b border-medical-gray-200 flex-shrink-0">
                   <div className="flex items-center space-x-3">
                     <div className="rounded-xl overflow-hidden"><img src={logoSrc} alt="Grupo Drozainka Logo" className="h-8 w-auto object-contain" /></div>
                     <div>
@@ -389,23 +424,31 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <X className="h-6 w-6" />
                   </motion.button>
                 </div>
-                <div className="flex-1 p-6 space-y-2">
-                  {menuItems.map((item, index) => (
-                    <motion.a key={item.name} href={item.href} className="flex items-center space-x-3 p-4 rounded-xl text-medical-gray-700 hover:text-medical-blue-700 hover:bg-medical-blue-50 transition-all duration-200 group" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.1 }} onClick={() => setIsMobileMenuOpen(false)}>
-                      <div className="p-2 bg-medical-blue-50 text-medical-blue-600 rounded-lg group-hover:bg-medical-blue-100 transition-colors duration-200">
-                        <item.icon className="h-4 w-4" />
-                      </div>
-                      <span className="font-medium">{item.name}</span>
-                    </motion.a>
-                  ))}
+                
+                {/* Contenido scrolleable */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  <div className="p-6 space-y-2">
+                    {menuItems.map((item, index) => (
+                      <motion.a key={item.name} href={item.href} className="flex items-center space-x-3 p-4 rounded-xl text-medical-gray-700 hover:text-medical-blue-700 hover:bg-medical-blue-50 transition-all duration-200 group" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.1 }} onClick={() => setIsMobileMenuOpen(false)}>
+                        <div className="p-2 bg-medical-blue-50 text-medical-blue-600 rounded-lg group-hover:bg-medical-blue-100 transition-colors duration-200">
+                          <item.icon className="h-4 w-4" />
+                        </div>
+                        <span className="font-medium">{item.name}</span>
+                      </motion.a>
+                    ))}
+                  </div>
                 </div>
-                <div className="p-6 border-t border-medical-gray-200">
-                  <CurrencyToggle currency={currency} onToggle={onCurrencyToggle} isScrolled={true} />
-                </div>
-                <div className="p-6 border-t border-medical-gray-200 bg-medical-blue-50">
-                  <div className="text-center">
-                    <p className="text-sm text-medical-gray-600 mb-2">¿Necesitas asesoría comercial?</p>
-                    <motion.button className="btn-medical-primary w-full" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>Contacto Comercial 24/7</motion.button>
+                
+                {/* Footer fijo */}
+                <div className="flex-shrink-0">
+                  <div className="p-6 border-t border-medical-gray-200">
+                    <CurrencyToggle currency={currency} onToggle={onCurrencyToggle} isScrolled={true} />
+                  </div>
+                  <div className="p-6 border-t border-medical-gray-200 bg-medical-blue-50">
+                    <div className="text-center">
+                      <p className="text-sm text-medical-gray-600 mb-2">¿Necesitas asesoría comercial?</p>
+                      <motion.button className="btn-medical-primary w-full" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>Contacto Comercial 24/7</motion.button>
+                    </div>
                   </div>
                 </div>
               </div>
