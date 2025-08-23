@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/AuthService';
 import { motion } from 'framer-motion';
-import { Package, ChevronRight, Eye } from 'lucide-react';
+import { Package, ChevronRight, Eye, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import OrderDetailsModal from './OrderDetailsModal';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
@@ -73,9 +74,19 @@ const OrdersSection: React.FC = () => {
                 </span>
                 <p className="font-semibold mt-1">{order.total} {order.currency}</p>
               </div>
-              <button onClick={() => handleViewDetails(order.id)} className="p-2 rounded-full hover:bg-gray-100">
-                <Eye className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleViewDetails(order.id)} className="p-2 rounded-full hover:bg-gray-100" title="Ver Detalles">
+                  <Eye className="w-5 h-5" />
+                </button>
+                <Link 
+                  to={`/tracking/${order.id}`} 
+                  className="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition-colors" 
+                  title="Ver Tracking"
+                  onClick={() => console.log('Navegando a tracking:', `/tracking/${order.id}`)}
+                >
+                  <Truck className="w-5 h-5" />
+                </Link>
+              </div>
             </motion.div>
           ))}
         </div>

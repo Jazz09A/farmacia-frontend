@@ -89,7 +89,7 @@ const AppLayout = () => {
               <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
               <Route path="/order-success" element={<ProtectedRoute><OrderSuccessPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-              <Route path="/tracking" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />
+              <Route path="/tracking/:orderId" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogPostDetailPage />} />
               <Route path="/verify-account" element={<VerificationRequiredPage />} />

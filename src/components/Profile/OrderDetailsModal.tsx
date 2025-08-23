@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const OrderDetailsModal = ({ order, onClose }) => {
   if (!order) return null;
@@ -17,9 +18,22 @@ const OrderDetailsModal = ({ order, onClose }) => {
           <div className="p-6">
             <div className="flex justify-between items-center border-b pb-4 mb-4">
               <h3 className="text-xl font-bold">Detalles del Pedido #{order.order_number}</h3>
-              <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-200">
-                <X size={24} />
-              </button>
+              <div className="flex items-center gap-2">
+                <Link 
+                  to={`/tracking/${order.id}`} 
+                  className="btn-medical-primary flex items-center gap-2 px-3 py-2 text-sm"
+                  onClick={() => {
+                    console.log('Navegando a tracking desde modal:', `/tracking/${order.id}`);
+                    onClose();
+                  }}
+                >
+                  <Truck className="w-4 h-4" />
+                  Ver Tracking
+                </Link>
+                <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-200">
+                  <X size={24} />
+                </button>
+              </div>
             </div>
             
             {/* Order Info */}
