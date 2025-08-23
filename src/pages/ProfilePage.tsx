@@ -116,10 +116,10 @@ const ProfilePage: React.FC = () => {
             </div>
 
             {/* Estadísticas rápidas con datos reales */}
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 lg:ml-8">
+            <div className="w-full mt-6 lg:mt-0 lg:ml-8">
               {/* Indicador de estado */}
               {statsError && (
-                <div className="col-span-full mb-2">
+                <div className="mb-4">
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
                     <p className="text-sm text-red-700">
                       {statsError}. Los datos mostrados pueden no estar actualizados.
@@ -127,107 +127,112 @@ const ProfilePage: React.FC = () => {
                   </div>
                 </div>
               )}
-              {/* Total de Pedidos */}
-              <div className="text-center p-3 lg:p-4 bg-medical-blue-50 rounded-xl border border-medical-blue-100 relative group">
-                <div className="flex items-center justify-center mb-2">
-                  <Package className="w-5 h-5 lg:w-6 lg:h-6 text-medical-blue-600" />
-                </div>
-                <div className="text-xl lg:text-2xl font-bold text-medical-blue-700">
-                  {statsLoading ? (
-                    <Loader2 className="w-5 h-5 lg:w-6 lg:h-6 animate-spin mx-auto" />
-                  ) : statsError ? (
-                    <span className="text-sm text-red-500">Error</span>
-                  ) : (
-                    userStats?.total_orders || 0
+              
+              {/* Grid de estadísticas */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                {/* Total de Pedidos */}
+                <div className="text-center p-4 lg:p-6 bg-medical-blue-50 rounded-xl border border-medical-blue-100 relative group hover:shadow-md transition-all">
+                  <div className="flex items-center justify-center mb-3">
+                    <Package className="w-6 h-6 lg:w-8 lg:h-8 text-medical-blue-600" />
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-bold text-medical-blue-700 mb-2">
+                    {statsLoading ? (
+                      <Loader2 className="w-6 h-6 lg:w-8 lg:h-8 animate-spin mx-auto" />
+                    ) : statsError ? (
+                      <span className="text-sm text-red-500">Error</span>
+                    ) : (
+                      userStats?.total_orders || 0
+                    )}
+                  </div>
+                  <div className="text-sm lg:text-base text-medical-gray-600 font-medium">Total Pedidos</div>
+                  {statsError && (
+                    <button 
+                      onClick={() => window.location.reload()}
+                      className="absolute top-3 right-3 p-2 text-red-500 hover:text-red-700 transition-colors bg-white rounded-full shadow-sm"
+                      title="Reintentar"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
                   )}
                 </div>
-                <div className="text-xs lg:text-sm text-medical-gray-600">Total Pedidos</div>
-                {statsError && (
-                  <button 
-                    onClick={() => window.location.reload()}
-                    className="absolute top-2 right-2 p-1 text-red-500 hover:text-red-700 transition-colors"
-                    title="Reintentar"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  </button>
-                )}
-              </div>
 
-              {/* Total Gastado */}
-              <div className="text-center p-3 lg:p-4 bg-green-50 rounded-xl border border-green-100">
-                <div className="flex items-center justify-center mb-2">
-                  <DollarSign className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
+                {/* Total Gastado */}
+                <div className="text-center p-4 lg:p-6 bg-green-50 rounded-xl border border-green-100 hover:shadow-md transition-all">
+                  <div className="flex items-center justify-center mb-3">
+                    <DollarSign className="w-6 h-6 lg:w-8 lg:h-8 text-green-600" />
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-bold text-green-700 mb-2">
+                    {statsLoading ? (
+                      <Loader2 className="w-6 h-6 lg:w-8 lg:h-8 animate-spin mx-auto" />
+                    ) : statsError ? (
+                      <span className="text-sm text-red-500">Error</span>
+                    ) : (
+                      formatCurrency(userStats?.total_spent || 0, user.preferred_currency || 'VES')
+                    )}
+                  </div>
+                  <div className="text-sm lg:text-base text-medical-gray-600 font-medium">Total Gastado</div>
                 </div>
-                <div className="text-xl lg:text-2xl font-bold text-green-700">
-                  {statsLoading ? (
-                    <Loader2 className="w-5 h-5 lg:w-6 lg:h-6 animate-spin mx-auto" />
-                  ) : statsError ? (
-                    <span className="text-sm text-red-500">Error</span>
-                  ) : (
-                    formatCurrency(userStats?.total_spent || 0, user.preferred_currency || 'VES')
-                  )}
-                </div>
-                <div className="text-xs lg:text-sm text-medical-gray-600">Total Gastado</div>
-              </div>
 
-              {/* Total Productos Comprados */}
-              <div className="text-center p-3 lg:p-4 bg-purple-50 rounded-xl border border-purple-100 sm:col-span-2 lg:col-span-1">
-                <div className="flex items-center justify-center mb-2">
-                  <ShoppingBag className="w-5 h-5 lg:w-6 lg:h-6 text-purple-600" />
+                {/* Total Productos Comprados */}
+                <div className="text-center p-4 lg:p-6 bg-purple-50 rounded-xl border border-purple-100 hover:shadow-md transition-all sm:col-span-2 lg:col-span-1">
+                  <div className="flex items-center justify-center mb-3">
+                    <ShoppingBag className="w-6 h-6 lg:w-8 lg:h-8 text-purple-600" />
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-bold text-purple-700 mb-2">
+                    {statsLoading ? (
+                      <Loader2 className="w-6 h-6 lg:w-8 lg:h-8 animate-spin mx-auto" />
+                    ) : statsError ? (
+                      <span className="text-sm text-red-500">Error</span>
+                    ) : (
+                      userStats?.total_products_purchased || 0
+                    )}
+                  </div>
+                  <div className="text-sm lg:text-base text-medical-gray-600 font-medium">Productos Comprados</div>
                 </div>
-                <div className="text-xl lg:text-2xl font-bold text-purple-700">
-                  {statsLoading ? (
-                    <Loader2 className="w-5 h-5 lg:w-6 lg:h-6 animate-spin mx-auto" />
-                  ) : statsError ? (
-                    <span className="text-sm text-red-500">Error</span>
-                  ) : (
-                    userStats?.total_products_purchased || 0
-                  )}
-                </div>
-                <div className="text-xs lg:text-sm text-medical-gray-600">Productos Comprados</div>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Navegación por pestañas */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl shadow-soft mb-6 lg:mb-8 overflow-hidden"
-        >
-          <div className="flex flex-wrap border-b border-medical-gray-200">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as TabType)}
-                className={`flex items-center gap-2 lg:gap-3 px-4 lg:px-6 py-3 lg:py-4 font-medium transition-all relative text-sm lg:text-base ${
-                  activeTab === tab.id
-                    ? 'text-medical-blue-700 bg-medical-blue-50'
-                    : 'text-medical-gray-600 hover:text-medical-gray-900 hover:bg-medical-gray-50'
-                }`}
-              >
-                <tab.icon className="w-4 h-4 lg:w-5 lg:h-5" />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
-                {tab.count !== null && tab.count > 0 && (
-                  <span className="bg-medical-red-500 text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
-                    {tab.count}
-                  </span>
-                )}
-                {activeTab === tab.id && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-medical-blue-600"
-                  />
-                )}
-              </button>
-            ))}
-          </div>
-        </motion.div>
+                 {/* Navegación por pestañas */}
+         <motion.div
+           initial={{ opacity: 0, y: -10 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ delay: 0.1 }}
+           className="bg-white rounded-2xl shadow-soft mb-6 lg:mb-8 overflow-hidden"
+         >
+           {/* Tabs responsivos */}
+           <div className="flex flex-col sm:flex-row border-b border-medical-gray-200">
+             {tabs.map((tab) => (
+               <button
+                 key={tab.id}
+                 onClick={() => setActiveTab(tab.id as TabType)}
+                 className={`flex items-center justify-center sm:justify-start gap-2 lg:gap-3 px-4 lg:px-6 py-4 lg:py-5 font-medium transition-all relative text-sm lg:text-base min-h-[60px] sm:min-h-0 ${
+                   activeTab === tab.id
+                     ? 'text-medical-blue-700 bg-medical-blue-50 border-b-2 sm:border-b-0 border-medical-blue-600'
+                     : 'text-medical-gray-600 hover:text-medical-gray-900 hover:bg-medical-gray-50'
+                 }`}
+               >
+                 <tab.icon className="w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0" />
+                 <span className="hidden sm:inline font-semibold">{tab.label}</span>
+                 <span className="sm:hidden font-semibold">{tab.label.split(' ')[0]}</span>
+                 {tab.count !== null && tab.count > 0 && (
+                   <span className="bg-medical-red-500 text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center ml-auto sm:ml-0">
+                     {tab.count}
+                   </span>
+                 )}
+                 {activeTab === tab.id && (
+                   <motion.div
+                     layoutId="activeTab"
+                     className="absolute bottom-0 left-0 right-0 h-1 bg-medical-blue-600 hidden sm:block"
+                   />
+                 )}
+               </button>
+             ))}
+           </div>
+         </motion.div>
 
         {/* Contenido de las pestañas */}
         <AnimatePresence mode="wait">
@@ -253,115 +258,132 @@ const ProfilePage: React.FC = () => {
 const AccountSection: React.FC<{ user: User }> = ({ user }) => {
   return (
     <div className="space-y-6 lg:space-y-8">
-      {/* Información de la cuenta */}
-      <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
-            <UserIcon className="w-5 h-5" />
-            Información de la Cuenta
-          </h2>
-          <button className="btn-medical-secondary self-start sm:self-auto">
-            <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline ml-2">Editar</span>
-          </button>
-        </div>
+             {/* Información de la cuenta */}
+       <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
+         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 lg:mb-8">
+           <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
+             <UserIcon className="w-5 h-5 lg:w-6 lg:h-6" />
+             Información de la Cuenta
+           </h2>
+           <button className="btn-medical-secondary self-start sm:self-auto px-4 py-2 lg:px-6 lg:py-3">
+             <Settings className="w-4 h-4 lg:w-5 lg:h-5" />
+             <span className="hidden sm:inline ml-2">Editar</span>
+             <span className="sm:hidden">Editar</span>
+           </button>
+         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-          <div className="space-y-3 lg:space-y-4">
-            <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
-              <Building className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-xs lg:text-sm text-medical-gray-500">Empresa</div>
-                <div className="font-semibold text-sm lg:text-base truncate">
-                  {user.company_name || 'Nombre de Empresa'}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
-              <Mail className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-xs lg:text-sm text-medical-gray-500">Email</div>
-                <div className="font-semibold text-sm lg:text-base truncate">{user.email}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
-              <Phone className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-xs lg:text-sm text-medical-gray-500">Teléfono</div>
-                <div className="font-semibold text-sm lg:text-base">
-                  {user.phone || 'Teléfono no disponible'}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-3 lg:space-y-4">
-            <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
-              <CreditCard className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-xs lg:text-sm text-medical-gray-500">RIF</div>
-                <div className="font-semibold text-sm lg:text-base">
-                  {user.rif || 'RIF no disponible'}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
-              <Shield className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-xs lg:text-sm text-medical-gray-500">Representante Legal</div>
-                <div className="font-semibold text-sm lg:text-base truncate">
-                  {user.representante_legal_nombre || 'No disponible'}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
-              <MapPin className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-xs lg:text-sm text-medical-gray-500">Dirección</div>
-                <div className="font-semibold text-sm lg:text-base truncate">
-                  {user.direccion_establecimiento || 'No disponible'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+           <div className="space-y-4 lg:space-y-5">
+             <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
+               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-medical-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                 <Building className="w-5 h-5 lg:w-6 lg:h-6 text-medical-blue-600" />
+               </div>
+               <div className="min-w-0 flex-1">
+                 <div className="text-xs lg:text-sm text-medical-gray-500 mb-1">Empresa</div>
+                 <div className="font-semibold text-sm lg:text-base truncate">
+                   {user.company_name || 'Nombre de Empresa'}
+                 </div>
+               </div>
+             </div>
+             <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
+               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                 <Mail className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
+               </div>
+               <div className="min-w-0 flex-1">
+                 <div className="text-xs lg:text-sm text-medical-gray-500 mb-1">Email</div>
+                 <div className="font-semibold text-sm lg:text-base truncate">{user.email}</div>
+               </div>
+             </div>
+             <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
+               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                 <Phone className="w-5 h-5 lg:w-6 lg:h-6 text-purple-600" />
+               </div>
+               <div className="min-w-0 flex-1">
+                 <div className="text-xs lg:text-sm text-medical-gray-500 mb-1">Teléfono</div>
+                 <div className="font-semibold text-sm lg:text-base">
+                   {user.phone || 'Teléfono no disponible'}
+                 </div>
+               </div>
+             </div>
+           </div>
+           <div className="space-y-4 lg:space-y-5">
+             <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
+               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                 <CreditCard className="w-5 h-5 lg:w-6 lg:h-6 text-orange-600" />
+               </div>
+               <div className="min-w-0 flex-1">
+                 <div className="text-xs lg:text-sm text-medical-gray-500 mb-1">RIF</div>
+                 <div className="font-semibold text-sm lg:text-base">
+                   {user.rif || 'RIF no disponible'}
+                 </div>
+               </div>
+             </div>
+             <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
+               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                 <Shield className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-600" />
+               </div>
+               <div className="min-w-0 flex-1">
+                 <div className="text-xs lg:text-sm text-medical-gray-500 mb-1">Representante Legal</div>
+                 <div className="font-semibold text-sm lg:text-base truncate">
+                   {user.representante_legal_nombre || 'No disponible'}
+                 </div>
+               </div>
+             </div>
+             <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
+               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                 <MapPin className="w-5 h-5 lg:w-6 lg:h-6 text-red-600" />
+               </div>
+               <div className="min-w-0 flex-1">
+                 <div className="text-xs lg:text-sm text-medical-gray-500 mb-1">Dirección</div>
+                 <div className="font-semibold text-sm lg:text-base truncate">
+                   {user.direccion_establecimiento || 'No disponible'}
+                 </div>
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
 
-      {/* Seguridad */}
-      <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
-            <Key className="w-5 h-5" />
-            Seguridad
-          </h2>
-          <button className="btn-medical-secondary self-start sm:self-auto">
-            <span className="hidden sm:inline">Cambiar Contraseña</span>
-            <span className="sm:hidden">Contraseña</span>
-          </button>
-        </div>
+             {/* Seguridad */}
+       <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
+         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 lg:mb-8">
+           <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
+             <Key className="w-5 h-5 lg:w-6 lg:h-6" />
+             Seguridad
+           </h2>
+           <button className="btn-medical-secondary self-start sm:self-auto px-4 py-2 lg:px-6 lg:py-3">
+             <span className="hidden sm:inline">Cambiar Contraseña</span>
+             <span className="sm:hidden">Contraseña</span>
+           </button>
+         </div>
 
-        <div className="space-y-3 lg:space-y-4">
-          <div className="flex items-center gap-3 p-3 lg:p-4 bg-green-50 rounded-xl border border-green-200">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-            <div className="min-w-0 flex-1">
-              <div className="font-semibold text-green-800 text-sm lg:text-base">
-                Cuenta {user.is_verified ? 'verificada' : 'no verificada'}
-              </div>
-              <div className="text-xs lg:text-sm text-green-600">
-                Tu cuenta está {user.is_active ? 'activa' : 'inactiva'}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
-            <Calendar className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
-            <div className="min-w-0 flex-1">
-              <div className="text-xs lg:text-sm text-medical-gray-500">Último acceso</div>
-              <div className="font-semibold text-sm lg:text-base">
-                {user.last_login ? new Date(user.last_login).toLocaleString('es-VE') : 'No registrado'}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+         <div className="space-y-4 lg:space-y-5">
+           <div className="flex items-center gap-4 p-4 lg:p-5 bg-green-50 rounded-xl border border-green-200 hover:shadow-sm transition-all">
+             <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+               <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
+             </div>
+             <div className="min-w-0 flex-1">
+               <div className="font-semibold text-green-800 text-sm lg:text-base mb-1">
+                 Cuenta {user.is_verified ? 'verificada' : 'no verificada'}
+               </div>
+               <div className="text-xs lg:text-sm text-green-600">
+                 Tu cuenta está {user.is_active ? 'activa' : 'inactiva'}
+               </div>
+             </div>
+           </div>
+           <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
+             <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+               <Calendar className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
+             </div>
+             <div className="min-w-0 flex-1">
+               <div className="text-xs lg:text-sm text-medical-gray-500 mb-1">Último acceso</div>
+               <div className="font-semibold text-sm lg:text-base">
+                 {user.last_login ? new Date(user.last_login).toLocaleString('es-VE') : 'No registrado'}
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
     </div>
   );
 };
