@@ -68,12 +68,44 @@ export interface SearchFilters {
 
 export type Currency = 'VES' | 'REF' | 'USD';
 
+// 🔥 Flash Offer interfaces - API compliant and extensible
 export interface FlashOffer {
-  id: string;
-  productId: string;
-  discount: number;
-  endTime: Date;
-  active: boolean;
+  id?: string;
+  product_id: string;
+  discount_type: 'percentage' | 'fixed_amount';
+  discount_value: number;
+  start_time: string;
+  end_time: string;
+  max_quantity?: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// 🔥 Flash Offer with populated product data
+export interface FlashOfferWithProduct extends FlashOffer {
+  product: Product;
+  remaining_time?: number; // milliseconds until expiry
+  claimed_quantity?: number;
+  availability_percentage?: number; // 0-100 based on max_quantity vs claimed
+}
+
+// 🔥 Flash Offer creation payload
+export interface CreateFlashOfferPayload {
+  product_id: string;
+  discount_type: 'percentage' | 'fixed_amount';
+  discount_value: number;
+  start_time: string;
+  end_time: string;
+  max_quantity?: number;
+  is_active?: boolean;
+}
+
+// 🔥 Flash Offer response from API
+export interface FlashOfferResponse {
+  flash_offers: FlashOfferWithProduct[];
+  total_count: number;
+  active_count: number;
 }
 
 export interface Brand {

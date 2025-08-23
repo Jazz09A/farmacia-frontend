@@ -167,25 +167,25 @@ const AdminDashboardPage: React.FC = () => {
     changeType?: 'up' | 'down';
   }) => (
     <motion.div 
-      className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
-      whileHover={{ y: -5, boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)' }}
+      className="bg-white rounded-lg shadow-md p-4 lg:p-6 border border-gray-200"
+      whileHover={{ y: -2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
       transition={{ duration: 0.2 }}
     >
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs lg:text-sm font-medium text-gray-600 mb-1 truncate">{title}</p>
+          <p className="text-xl lg:text-2xl font-bold text-gray-900 truncate">{value}</p>
           {change && (
-            <div className={`flex items-center mt-2 text-sm ${
+            <div className={`flex items-center mt-1 lg:mt-2 text-xs lg:text-sm ${
               changeType === 'up' ? 'text-green-600' : 'text-red-600'
             }`}>
-              {changeType === 'up' ? <ArrowUpRight className="w-4 h-4 mr-1" /> : <ArrowDownRight className="w-4 h-4 mr-1" />}
-              <span>{change} vs. semana pasada</span>
+              {changeType === 'up' ? <ArrowUpRight className="w-3 h-3 lg:w-4 lg:h-4 mr-1" /> : <ArrowDownRight className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />}
+              <span className="truncate">{change} vs. semana pasada</span>
             </div>
           )}
         </div>
-        <div className="p-3 bg-blue-100 rounded-full">
-          <Icon className="w-6 h-6 text-blue-600" />
+        <div className="p-2 lg:p-3 bg-blue-100 rounded-full flex-shrink-0 ml-2">
+          <Icon className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
         </div>
       </div>
     </motion.div>
@@ -198,14 +198,14 @@ const AdminDashboardPage: React.FC = () => {
     ];
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-2 lg:space-y-3">
         {actions.map((action) => (
           <button
             key={action.title}
-            className="w-full flex items-center p-3 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg transition-colors"
+            className="w-full flex items-center p-2.5 lg:p-3 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 text-gray-700 rounded-lg transition-colors"
             onClick={action.action}
           >
-            <action.icon className="w-5 h-5 mr-3 text-gray-500" />
+            <action.icon className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-gray-500 flex-shrink-0" />
             <span className="font-medium text-sm">{action.title}</span>
           </button>
         ))}
@@ -221,34 +221,34 @@ const AdminDashboardPage: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 lg:gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-3 lg:gap-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
             {loading && (
-              <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
+              <RefreshCw className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500 animate-spin" />
             )}
           </div>
-          <p className="mt-1 text-gray-600">Resumen del rendimiento de GRUPO DROZAINKA.</p>
+          <p className="mt-1 text-sm lg:text-base text-gray-600">Resumen del rendimiento de GRUPO DROZAINKA.</p>
           
           {/* Error Message */}
           {error && (
-            <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-md">
-              <AlertCircle className="w-4 h-4 text-red-500" />
+            <div className="mt-2 flex items-start gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-md">
+              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
               <span className="text-sm text-red-700">{error}</span>
             </div>
           )}
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:gap-3 w-full sm:w-auto">
           {/* Refresh Button */}
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Actualizar
+            <span className="hidden sm:inline">Actualizar</span>
           </button>
           
           {/* Time Range Selector */}
@@ -256,7 +256,7 @@ const AdminDashboardPage: React.FC = () => {
             value={selectedTimeRange}
             onChange={(e) => setSelectedTimeRange(Number(e.target.value))}
             disabled={loading}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed bg-white"
           >
             <option value={7}>Últimos 7 días</option>
             <option value={30}>Últimos 30 días</option>
@@ -266,7 +266,7 @@ const AdminDashboardPage: React.FC = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
         <StatCard 
           title="Ingresos Totales" 
           value={<SmartPriceDisplay amount={stats.total_revenue} />} 
@@ -297,14 +297,14 @@ const AdminDashboardPage: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Recent Orders Table */}
         <div className="lg:col-span-2 bg-white rounded-lg shadow-md border border-gray-200">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Pedidos Recientes</h3>
+          <div className="p-4 lg:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <h3 className="text-base lg:text-lg font-semibold text-gray-900">Pedidos Recientes</h3>
             <button
               onClick={() => navigate('/admin/orders')}
-              className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+              className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors px-2 py-1 rounded hover:bg-blue-50"
             >
               Ver todos
             </button>
@@ -313,11 +313,11 @@ const AdminDashboardPage: React.FC = () => {
             <table className="w-full text-sm text-left text-gray-500">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3">Cliente</th>
-                  <th scope="col" className="px-6 py-3 hidden md:table-cell">Fecha</th>
-                  <th scope="col" className="px-6 py-3">Total</th>
-                  <th scope="col" className="px-6 py-3">Estado</th>
-                  <th scope="col" className="px-6 py-3"><span className="sr-only">Acciones</span></th>
+                  <th scope="col" className="px-3 lg:px-6 py-3">Cliente</th>
+                  <th scope="col" className="px-3 lg:px-6 py-3 hidden md:table-cell">Fecha</th>
+                  <th scope="col" className="px-3 lg:px-6 py-3">Total</th>
+                  <th scope="col" className="px-3 lg:px-6 py-3">Estado</th>
+                  <th scope="col" className="px-3 lg:px-6 py-3"><span className="sr-only">Acciones</span></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -326,38 +326,38 @@ const AdminDashboardPage: React.FC = () => {
                     const statusColor = getStatusColor(order.status);
                     return (
                       <tr key={order.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-medium text-gray-900">
+                        <td className="px-3 lg:px-6 py-3 lg:py-4">
+                          <div className="font-medium text-gray-900 text-sm truncate">
                             {order.customer_name || 'Cliente desconocido'}
                           </div>
-                          <div className="text-xs text-gray-500">#{order.id}</div>
+                          <div className="text-xs text-gray-500 truncate">#{order.id.substring(0, 8)}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                        <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap hidden md:table-cell text-sm">
                           {new Date(order.date).toLocaleDateString('es-VE', { 
                             day: '2-digit', 
                             month: 'short', 
                             year: 'numeric' 
                           })}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap font-medium">
-                          <SmartPriceDisplay amount={order.total} />
+                        <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap font-medium">
+                          <SmartPriceDisplay amount={order.total} className="text-sm lg:text-base" />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-${statusColor}-100 text-${statusColor}-800`}>
-                            <span className={`w-2 h-2 mr-2 bg-${statusColor}-500 rounded-full`}></span>
-                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        <td className="px-3 lg:px-6 py-3 lg:py-4">
+                          <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-${statusColor}-100 text-${statusColor}-800`}>
+                            <span className={`w-1.5 h-1.5 mr-1.5 bg-${statusColor}-500 rounded-full`}></span>
+                            <span className="truncate">{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
                           <button 
                             onClick={() => handleViewOrderDetails(order)} 
                             disabled={loadingOrderDetails}
-                            className="text-gray-400 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="text-gray-400 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed p-1 rounded hover:bg-gray-100"
                           >
                             {loadingOrderDetails && selectedOrder?.id === order.id ? (
-                              <RefreshCw className="w-5 h-5 animate-spin" />
+                              <RefreshCw className="w-4 h-4 animate-spin" />
                             ) : (
-                              <MoreVertical className="w-5 h-5" />
+                              <MoreVertical className="w-4 h-4" />
                             )}
                           </button>
                         </td>
@@ -366,11 +366,11 @@ const AdminDashboardPage: React.FC = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center">
+                    <td colSpan={5} className="px-3 lg:px-6 py-8 text-center">
                       <div className="flex flex-col items-center">
-                        <ShoppingCart className="w-12 h-12 text-gray-300 mb-4" />
+                        <ShoppingCart className="w-8 h-8 lg:w-12 lg:h-12 text-gray-300 mb-3 lg:mb-4" />
                         <h3 className="text-sm font-medium text-gray-900 mb-1">No hay órdenes recientes</h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-xs lg:text-sm text-gray-500 px-4">
                           {loading ? 'Cargando datos...' : 'Las órdenes aparecerán aquí cuando los clientes realicen compras.'}
                         </p>
                       </div>
@@ -383,43 +383,43 @@ const AdminDashboardPage: React.FC = () => {
         </div>
 
         {/* Quick Actions & Status */}
-        <div className="space-y-8">
+        <div className="space-y-6 lg:space-y-8">
           <div className="bg-white rounded-lg shadow-md border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Acciones Rápidas</h3>
+            <div className="p-4 lg:p-6 border-b border-gray-200">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900">Acciones Rápidas</h3>
             </div>
-            <div className="p-6">
+            <div className="p-4 lg:p-6">
               <QuickActions />
             </div>
           </div>
           <div className="bg-white rounded-lg shadow-md border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Resumen de Estado</h3>
+            <div className="p-4 lg:p-6 border-b border-gray-200">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900">Resumen de Estado</h3>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-4 lg:p-6 space-y-3 lg:space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600">Pendientes</span>
-                <span className="text-sm font-bold text-yellow-600">{orderStatusSummary.pending}</span>
+                <span className="text-xs lg:text-sm font-medium text-gray-600">Pendientes</span>
+                <span className="text-sm lg:text-base font-bold text-yellow-600">{orderStatusSummary.pending}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600">Confirmados</span>
-                <span className="text-sm font-bold text-green-600">{orderStatusSummary.confirmed}</span>
+                <span className="text-xs lg:text-sm font-medium text-gray-600">Confirmados</span>
+                <span className="text-sm lg:text-base font-bold text-green-600">{orderStatusSummary.confirmed}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600">Procesando</span>
-                <span className="text-sm font-bold text-blue-600">{orderStatusSummary.processing}</span>
+                <span className="text-xs lg:text-sm font-medium text-gray-600">Procesando</span>
+                <span className="text-sm lg:text-base font-bold text-blue-600">{orderStatusSummary.processing}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600">Enviados</span>
-                <span className="text-sm font-bold text-purple-600">{orderStatusSummary.shipped}</span>
+                <span className="text-xs lg:text-sm font-medium text-gray-600">Enviados</span>
+                <span className="text-sm lg:text-base font-bold text-purple-600">{orderStatusSummary.shipped}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600">Entregados</span>
-                <span className="text-sm font-bold text-green-600">{orderStatusSummary.delivered}</span>
+                <span className="text-xs lg:text-sm font-medium text-gray-600">Entregados</span>
+                <span className="text-sm lg:text-base font-bold text-green-600">{orderStatusSummary.delivered}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600">Cancelados</span>
-                <span className="text-sm font-bold text-red-600">{orderStatusSummary.cancelled}</span>
+                <span className="text-xs lg:text-sm font-medium text-gray-600">Cancelados</span>
+                <span className="text-sm lg:text-base font-bold text-red-600">{orderStatusSummary.cancelled}</span>
               </div>
             </div>
           </div>

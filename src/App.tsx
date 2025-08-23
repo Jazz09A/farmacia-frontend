@@ -39,6 +39,7 @@ const AdminCustomersPage = lazy(() => import('./pages/Admin/AdminCustomersPage')
 const AdminProductsPage = lazy(() => import('./pages/Admin/AdminProductsPage'));
 const CreateProductPage = lazy(() => import('./pages/Admin/CreateProductPage'));
 const AdminEditProductPage = lazy(() => import('./pages/Admin/AdminEditProductPage'));
+const AdminFlashOffersPage = lazy(() => import('./pages/Admin/AdminFlashOffersPage'));
 const AdminAnalyticsPage = lazy(() => import('./pages/Admin/AdminAnalyticsPage'));
 
 // Hooks
@@ -171,6 +172,7 @@ const AdminRoutes = () => (
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="products/create" element={<CreateProductPage />} />
           <Route path="products/edit/:id" element={<AdminEditProductPage />} />
+          <Route path="flash-offers" element={<AdminFlashOffersPage />} />
           <Route path="analytics" element={<AdminAnalyticsPage />} />
           <Route path="blog" element={<AdminBlogPage />} />
           <Route path="blog/new" element={<CreateBlogPostPage />} />

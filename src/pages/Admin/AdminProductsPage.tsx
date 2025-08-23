@@ -164,39 +164,39 @@ const AdminProductsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <Package className="w-8 h-8 mr-3 text-blue-600" />
-            Gestión de Productos
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+            <Package className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+            <span className="truncate">Gestión de Productos</span>
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
             Administra tu inventario, precios y disponibilidad de productos.
           </p>
         </div>
-        <div className="w-full sm:w-auto mt-4 sm:mt-0">
+        <div className="w-full sm:w-auto">
           {/* Mobile Buttons */}
           <div className="sm:hidden">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 mb-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center justify-center px-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium"
               >
                 <Filter className="w-4 h-4 mr-1" />
-                Filtros
+                <span className="truncate">Filtros</span>
               </button>
-              <button className="flex items-center justify-center px-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+              <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
                 <Upload className="w-4 h-4 mr-1" />
-                Importar
+                <span className="truncate">Importar</span>
               </button>
-              <button className="flex items-center justify-center px-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+              <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
                 <Download className="w-4 h-4 mr-1" />
-                Exportar
+                <span className="truncate">Exportar</span>
               </button>
             </div>
             <button 
               onClick={() => navigate('/admin/products/create')}
-              className="mt-2 w-full flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="w-full flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition-colors font-medium"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Producto
@@ -231,75 +231,75 @@ const AdminProductsPage: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-6">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Productos</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Total Productos</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-900 truncate">{stats.total}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Package className="w-6 h-6 text-blue-600" />
+            <div className="p-2 lg:p-3 bg-blue-100 rounded-full flex-shrink-0">
+              <Package className="w-4 h-4 lg:w-6 lg:h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">En Stock</p>
-              <p className="text-2xl font-bold text-green-600">{stats.inStock}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">En Stock</p>
+              <p className="text-lg lg:text-2xl font-bold text-green-600 truncate">{stats.inStock}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <CheckCircle className="w-6 h-6 text-green-600" />
+            <div className="p-2 lg:p-3 bg-green-100 rounded-full flex-shrink-0">
+              <CheckCircle className="w-4 h-4 lg:w-6 lg:h-6 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Stock Bajo</p>
-              <p className="text-2xl font-bold text-yellow-600">{stats.lowStock}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Stock Bajo</p>
+              <p className="text-lg lg:text-2xl font-bold text-yellow-600 truncate">{stats.lowStock}</p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-full">
-              <AlertTriangle className="w-6 h-6 text-yellow-600" />
+            <div className="p-2 lg:p-3 bg-yellow-100 rounded-full flex-shrink-0">
+              <AlertTriangle className="w-4 h-4 lg:w-6 lg:h-6 text-yellow-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Agotados</p>
-              <p className="text-2xl font-bold text-red-600">{stats.outOfStock}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Agotados</p>
+              <p className="text-lg lg:text-2xl font-bold text-red-600 truncate">{stats.outOfStock}</p>
             </div>
-            <div className="p-3 bg-red-100 rounded-full">
-              <XCircle className="w-6 h-6 text-red-600" />
+            <div className="p-2 lg:p-3 bg-red-100 rounded-full flex-shrink-0">
+              <XCircle className="w-4 h-4 lg:w-6 lg:h-6 text-red-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Ventas Totales</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.totalSales}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Ventas Totales</p>
+              <p className="text-lg lg:text-2xl font-bold text-blue-600 truncate">{stats.totalSales}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <ShoppingCart className="w-6 h-6 text-blue-600" />
+            <div className="p-2 lg:p-3 bg-blue-100 rounded-full flex-shrink-0">
+              <ShoppingCart className="w-4 h-4 lg:w-6 lg:h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 xl:col-span-2">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200 col-span-2 xl:col-span-2">
           <div className="flex items-center justify-between">
-            <div>
-                <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
-                <p className="text-2xl font-bold text-gray-900">{formatPrice(stats.totalRevenue)}</p>
+            <div className="min-w-0 flex-1">
+                <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Ingresos Totales</p>
+                <p className="text-lg lg:text-2xl font-bold text-gray-900 truncate">{formatPrice(stats.totalRevenue)}</p>
               </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <DollarSign className="w-6 h-6 text-purple-600" />
+              <div className="p-2 lg:p-3 bg-purple-100 rounded-full flex-shrink-0">
+                <DollarSign className="w-4 h-4 lg:w-6 lg:h-6 text-purple-600" />
             </div>
           </div>
         </div>
@@ -311,7 +311,7 @@ const AdminProductsPage: React.FC = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-200"
             >
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
@@ -372,12 +372,12 @@ const AdminProductsPage: React.FC = () => {
 
       {/* Products List/Table */}
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Productos ({filteredProducts.length})</h3>
+        <div className="p-3 lg:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <h3 className="text-base lg:text-lg font-semibold">Productos ({filteredProducts.length})</h3>
           {selectedProducts.length > 0 && (
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500">{selectedProducts.length} seleccionados</span>
-              <button className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50">
+              <span className="text-xs lg:text-sm text-gray-500">{selectedProducts.length} seleccionados</span>
+              <button className="text-red-600 hover:text-red-800 active:text-red-900 p-2 rounded-full hover:bg-red-50 active:bg-red-100 transition-colors">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
@@ -390,46 +390,46 @@ const AdminProductsPage: React.FC = () => {
             {paginatedProducts.map((product) => (
               <div 
                 key={product.id} 
-                className="p-4 active:bg-gray-100"
+                className="p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer"
                 onClick={() => handleViewProduct(product)}
               >
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start space-x-3">
                   <img 
                     src={product.image} 
                     alt={product.name} 
-                    className="w-20 h-20 rounded-lg object-cover border flex-shrink-0"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border flex-shrink-0"
                     />
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-800">{product.name}</p>
-                    <p className="text-sm text-gray-500">{product.brand}</p>
-                    <div className="mt-2">
+                    <p className="font-bold text-gray-800 text-sm sm:text-base truncate">{product.name}</p>
+                    <p className="text-xs sm:text-sm text-gray-500 truncate">{product.brand}</p>
+                    <div className="mt-1 sm:mt-2">
                       <SmartPriceDisplay 
                         priceVes={product.price_ves} 
                         priceRef={product.price_ref} 
-                        className="font-semibold text-base text-gray-900"
+                        className="font-semibold text-sm sm:text-base text-gray-900"
                       />
                     </div>
-                    <div className="mt-2">
+                    <div className="mt-1 sm:mt-2">
                       {getStockStatusBadge(product.in_stock ? 'in_stock' : 'out_of_stock')}
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-end items-center mt-3 pt-3 border-t border-gray-100 space-x-2">
+                <div className="flex justify-end items-center mt-3 pt-3 border-t border-gray-100 space-x-1">
                   <button
                     onClick={(e) => handleEditProduct(e, product.id)}
-                    className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 p-2 -m-2"
+                    className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 active:text-blue-900 p-2 -m-1 rounded-md hover:bg-blue-50"
                     title="Editar Producto"
                   >
                     <Edit className="w-4 h-4 mr-1"/>
-                    Editar
+                    <span className="hidden sm:inline">Editar</span>
                   </button>
                   <button
                     onClick={(e) => handleDeleteRequest(e, product)}
-                    className="flex items-center text-sm font-medium text-red-600 hover:text-red-800 p-2 -m-2"
+                    className="flex items-center text-sm font-medium text-red-600 hover:text-red-800 active:text-red-900 p-2 -m-1 rounded-md hover:bg-red-50"
                     title="Eliminar Producto"
                   >
                     <Trash2 className="w-4 h-4 mr-1" />
-                    Eliminar
+                    <span className="hidden sm:inline">Eliminar</span>
                   </button>
                 </div>
               </div>
@@ -537,22 +537,22 @@ const AdminProductsPage: React.FC = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-          <div className="p-4 border-t flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
-            <span className="text-sm text-gray-700">
+          <div className="p-3 lg:p-4 border-t flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+            <span className="text-xs lg:text-sm text-gray-700">
               Página <span className="font-semibold">{currentPage}</span> de <span className="font-semibold">{totalPages}</span>
             </span>
               <div className="flex items-center space-x-2">
                 <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                className="px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 lg:px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Anterior
                 </button>
                 <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                className="px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 lg:px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Siguiente
                 </button>

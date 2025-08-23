@@ -168,25 +168,25 @@ const AdminOrdersPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Pedidos</h1>
-          <p className="mt-2 text-gray-600">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Pedidos</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
             Administra todos los pedidos de tu farmacia ({total} total)
           </p>
         </div>
-        <div className="mt-4 sm:mt-0 flex space-x-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
           <button 
             onClick={handleRefresh}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors flex items-center"
+            className="px-3 lg:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-400 transition-colors flex items-center justify-center font-medium text-sm"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Actualizar
+            <span className="hidden sm:inline">Actualizar</span>
           </button>
-          <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+          <button className="px-3 lg:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 transition-colors flex items-center justify-center font-medium text-sm">
             <Download className="w-4 h-4 mr-2" />
-            Exportar
+            <span className="hidden sm:inline">Exportar</span>
           </button>
         </div>
       </div>
@@ -202,22 +202,22 @@ const AdminOrdersPage: React.FC = () => {
       )}
 
       {/* Filters & Search */}
-      <div className="p-4 bg-white rounded-lg shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      <div className="p-3 lg:p-4 bg-white rounded-lg shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+          <div className="relative sm:col-span-2 lg:col-span-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Buscar por ID, cliente, tracking..."
+              placeholder="Buscar por ID, cliente..."
               value={filters.search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="pl-9 pr-4 py-2 w-full text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
             />
           </div>
           <select
             value={filters.status}
             onChange={(e) => handleStatusFilterChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
             <option value="all">Todos los estados</option>
             <option value="pending">Pendiente</option>
@@ -233,7 +233,7 @@ const AdminOrdersPage: React.FC = () => {
               const [sortBy, sortOrder] = e.target.value.split('_');
               setFilters({ sortBy, sortOrder: sortOrder as 'asc' | 'desc' });
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
             <option value="created_at_desc">Más recientes</option>
             <option value="created_at_asc">Más antiguos</option>
@@ -241,11 +241,11 @@ const AdminOrdersPage: React.FC = () => {
             <option value="total_asc">Menor valor</option>
             <option value="status_asc">Estado A-Z</option>
           </select>
-          <div className="flex space-x-2">
+          <div className="sm:col-span-2 lg:col-span-1">
             <button 
               onClick={handleRefresh}
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:bg-gray-50 transition-colors flex items-center justify-center"
+              className="w-full px-3 lg:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 active:bg-gray-300 disabled:bg-gray-50 transition-colors flex items-center justify-center text-sm font-medium"
             >
               <Filter className="w-4 h-4 mr-2" />
               {loading ? 'Cargando...' : 'Aplicar'}
@@ -256,18 +256,18 @@ const AdminOrdersPage: React.FC = () => {
 
       {/* Orders List/Table */}
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Pedidos ({orders.length})</h3>
-          <div className="text-sm text-gray-500">
+        <div className="p-3 lg:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <h3 className="text-base lg:text-lg font-semibold">Pedidos ({orders.length})</h3>
+          <div className="text-xs lg:text-sm text-gray-500">
             Página {currentPage} de {pages}
           </div>
         </div>
         
         {orders.length === 0 ? (
-          <div className="p-12 text-center text-gray-500">
-            <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-lg font-medium mb-2">No se encontraron pedidos</p>
-            <p>Intenta ajustar los filtros de búsqueda</p>
+          <div className="p-8 lg:p-12 text-center text-gray-500">
+            <Package className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-3 lg:mb-4 text-gray-300" />
+            <p className="text-base lg:text-lg font-medium mb-1 lg:mb-2">No se encontraron pedidos</p>
+            <p className="text-sm lg:text-base">Intenta ajustar los filtros de búsqueda</p>
           </div>
         ) : (
           <>
@@ -278,19 +278,19 @@ const AdminOrdersPage: React.FC = () => {
                   <div 
                     key={order.id} 
                     onClick={() => handleViewOrder(order)}
-                    className="p-4 hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
+                    className="p-3 lg:p-4 hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors"
                   >
                     <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className="font-bold text-gray-900">#{order.order_number || order.id.substring(0, 8)}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <div className="font-bold text-gray-900 text-sm">#{order.order_number || order.id.substring(0, 8)}</div>
                           <div className={getStatusBadge(order.status)}>
                             {getStatusIcon(order.status)}
-                            <span className="capitalize">{order.status}</span>
+                            <span className="capitalize text-xs">{order.status}</span>
                           </div>
                         </div>
-                        <div className="text-sm text-gray-600">{order.shipping_address.recipient_name}</div>
-                        <div className="text-xs text-gray-500 flex items-center gap-4 mt-1">
+                        <div className="text-sm text-gray-600 truncate">{order.shipping_address.recipient_name}</div>
+                        <div className="text-xs text-gray-500 flex items-center gap-3 mt-1 flex-wrap">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {formatDate(order.created_at)}
@@ -302,7 +302,7 @@ const AdminOrdersPage: React.FC = () => {
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0 ml-2">
-                        <div className="font-bold text-gray-900 text-lg">
+                        <div className="font-bold text-gray-900 text-base lg:text-lg">
                           {formatCurrency(order.total, order.currency)}
                         </div>
                         <div className={getPaymentStatusBadge(order.payment_status)}>
@@ -313,30 +313,30 @@ const AdminOrdersPage: React.FC = () => {
                     
                     {order.tracking_number && (
                       <div className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-                        <Truck className="w-3 h-3" />
-                        Tracking: {order.tracking_number}
+                        <Truck className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">Tracking: {order.tracking_number}</span>
                       </div>
                     )}
                     
-                    <div className="flex justify-between items-center pt-3 border-t">
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <CreditCard className="w-3 h-3" />
-                        {order.payment_method}
+                    <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-2 text-xs text-gray-500 min-w-0">
+                        <CreditCard className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">{order.payment_method}</span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             handleViewOrder(order);
                           }}
-                          className="text-blue-600 hover:text-blue-800 flex items-center text-sm font-medium p-1"
+                          className="text-blue-600 hover:text-blue-800 active:text-blue-900 flex items-center text-sm font-medium p-2 rounded-md hover:bg-blue-50"
                           title="Ver detalles"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={(e) => handleDeleteRequest(e, order)} 
-                          className="text-red-600 hover:text-red-800 flex items-center text-sm font-medium p-1"
+                          className="text-red-600 hover:text-red-800 active:text-red-900 flex items-center text-sm font-medium p-2 rounded-md hover:bg-red-50"
                           title="Eliminar pedido"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -490,30 +490,30 @@ const AdminOrdersPage: React.FC = () => {
 
         {/* Pagination */}
         {pages > 1 && (
-          <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
-            <div className="text-sm text-gray-700">
+          <div className="px-3 lg:px-6 py-3 lg:py-4 border-t bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-xs lg:text-sm text-gray-700">
               Mostrando {((currentPage - 1) * filters.limit) + 1} a {Math.min(currentPage * filters.limit, total)} de {total} pedidos
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+                className="px-2 lg:px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               
-              <div className="flex items-center gap-1">
+              <div className="hidden sm:flex items-center gap-1">
                 {Array.from({ length: Math.min(5, pages) }, (_, i) => {
                   const pageNum = i + 1;
                   return (
                     <button
                       key={pageNum}
                       onClick={() => setPage(pageNum)}
-                      className={`px-3 py-2 text-sm font-medium rounded-md ${
+                      className={`px-2 lg:px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         currentPage === pageNum
                           ? 'bg-blue-600 text-white'
-                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 active:bg-gray-100'
                       }`}
                     >
                       {pageNum}
@@ -521,11 +521,15 @@ const AdminOrdersPage: React.FC = () => {
                   );
                 })}
               </div>
+              
+              <div className="sm:hidden text-xs text-gray-500">
+                {currentPage} / {pages}
+              </div>
 
               <button
                 onClick={() => setPage(currentPage + 1)}
                 disabled={currentPage === pages}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+                className="px-2 lg:px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

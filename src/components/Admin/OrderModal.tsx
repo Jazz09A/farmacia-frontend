@@ -129,75 +129,75 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="bg-white rounded-lg max-w-md md:max-w-6xl w-full max-h-[95vh] overflow-y-auto">
+      <div className="bg-white rounded-lg w-full max-w-xs sm:max-w-md lg:max-w-6xl max-h-[95vh] overflow-y-auto">
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+        <div className="p-3 sm:p-4 lg:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="flex justify-between items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 truncate">
                   Pedido #{order.order_number || order.id.substring(0, 8)}
                 </h2>
                 <div className={getStatusBadge(order.status, 'order')}>
                   {getStatusIcon(order.status)}
-                  <span className="ml-1 capitalize">{orderStatuses.find(s => s.id === order.status)?.name}</span>
+                  <span className="ml-1 capitalize text-xs sm:text-sm">{orderStatuses.find(s => s.id === order.status)?.name}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-sm text-gray-600">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                 <span className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  {formatDate(order.created_at)}
+                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="truncate">{formatDate(order.created_at)}</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <Package className="w-4 h-4" />
+                  <Package className="w-3 h-3 sm:w-4 sm:h-4" />
                   {order.item_count} items
                 </span>
                 <span className="flex items-center gap-1">
-                  <DollarSign className="w-4 h-4" />
-                  {formatCurrency(order.total)} {order.currency}
+                  <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="truncate">{formatCurrency(order.total)} {order.currency}</span>
                 </span>
               </div>
             </div>
             <button 
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 flex-shrink-0 p-1"
+              className="text-gray-400 hover:text-gray-600 active:text-gray-800 flex-shrink-0 p-1 rounded-full hover:bg-gray-100 transition-colors"
             >
-              <XCircle className="w-6 h-6" />
+              <XCircle className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-8">
+        <div className="p-3 sm:p-4 lg:p-6 space-y-4 lg:space-y-8">
           {/* Main Info Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
             {/* Customer Info */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-600" />
-                Información del Cliente
+            <div className="space-y-3 lg:space-y-4">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <User className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600" />
+                <span className="truncate">Información del Cliente</span>
               </h3>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <div className="bg-gray-50 rounded-lg p-3 lg:p-4 space-y-3">
                 <div className="flex items-start gap-3">
                   <Mail className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-500">Nombre</div>
-                    <div className="font-medium">{order.shipping_address.recipient_name || 'No disponible'}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs lg:text-sm text-gray-500">Nombre</div>
+                    <div className="font-medium text-sm lg:text-base truncate">{order.shipping_address.recipient_name || 'No disponible'}</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Phone className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-500">Teléfono</div>
-                    <div className="font-medium">{order.shipping_address.recipient_phone || 'No disponible'}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs lg:text-sm text-gray-500">Teléfono</div>
+                    <div className="font-medium text-sm lg:text-base break-words">{order.shipping_address.recipient_phone || 'No disponible'}</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-500">Dirección</div>
-                    <div className="text-sm">
-                      <div>{order.shipping_address.street}</div>
-                      <div>{order.shipping_address.city}, {order.shipping_address.state}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs lg:text-sm text-gray-500">Dirección</div>
+                    <div className="text-xs lg:text-sm space-y-1">
+                      <div className="break-words">{order.shipping_address.street}</div>
+                      <div className="break-words">{order.shipping_address.city}, {order.shipping_address.state}</div>
                       <div>{order.shipping_address.postal_code}</div>
                       <div>{order.shipping_address.country}</div>
                     </div>
@@ -205,39 +205,39 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
                 </div>
                 {order.shipping_address.delivery_instructions && (
                   <div className="pt-2 border-t border-gray-200">
-                    <div className="text-sm text-gray-500">Instrucciones de entrega</div>
-                    <div className="text-sm">{order.shipping_address.delivery_instructions}</div>
+                    <div className="text-xs lg:text-sm text-gray-500">Instrucciones de entrega</div>
+                    <div className="text-xs lg:text-sm break-words">{order.shipping_address.delivery_instructions}</div>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Order Status Management */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Package className="w-5 h-5 text-green-600" />
-                Estado del Pedido
+            <div className="space-y-3 lg:space-y-4">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Package className="w-4 h-4 lg:w-5 lg:h-5 text-green-600" />
+                <span className="truncate">Estado del Pedido</span>
               </h3>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+              <div className="bg-gray-50 rounded-lg p-3 lg:p-4 space-y-3 lg:space-y-4">
                 <div className="flex items-center gap-2">
                   {getStatusIcon(order.status)}
-                  <span className="font-medium">
+                  <span className="font-medium text-sm lg:text-base">
                     {orderStatuses.find(s => s.id === order.status)?.name}
                   </span>
                 </div>
                 
                 {order.tracking_number && (
-                  <div className="flex items-center justify-between p-3 bg-white rounded border">
-                    <div className="flex items-center gap-2">
-                      <Truck className="w-4 h-4 text-gray-400" />
-                      <div>
-                        <div className="text-sm text-gray-500">Número de seguimiento</div>
-                        <div className="font-medium text-sm">{order.tracking_number}</div>
+                  <div className="flex items-center justify-between p-2 lg:p-3 bg-white rounded border">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <Truck className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-xs lg:text-sm text-gray-500">Número de seguimiento</div>
+                        <div className="font-medium text-xs lg:text-sm truncate">{order.tracking_number}</div>
                       </div>
                     </div>
                     <button
                       onClick={() => handleCopyToClipboard(order.tracking_number!, 'tracking')}
-                      className="p-2 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50"
+                      className="p-2 text-gray-400 hover:text-blue-600 active:text-blue-800 rounded-full hover:bg-blue-50 transition-colors flex-shrink-0"
                       title="Copiar tracking"
                     >
                       {copiedField === 'tracking' ? <CheckCheck className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
@@ -246,9 +246,9 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Actualizar Estado:</label>
+                  <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">Actualizar Estado:</label>
                   <select 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
                     disabled={isUpdating}
@@ -264,17 +264,17 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
                     <button
                       onClick={handleConfirmStatusChange}
                       disabled={isUpdating}
-                      className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-400 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                     >
                       {isUpdating ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Actualizando...
+                          <span className="text-xs lg:text-sm">Actualizando...</span>
                         </>
                       ) : (
                         <>
                           <Check className="w-4 h-4" />
-                          Confirmar Cambio
+                          <span className="text-xs lg:text-sm">Confirmar Cambio</span>
                         </>
                       )}
                     </button>
@@ -285,15 +285,15 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
                 {(order.estimated_delivery || order.delivered_at) && (
                   <div className="space-y-2 pt-3 border-t border-gray-200">
                     {order.estimated_delivery && (
-                      <div className="text-sm">
+                      <div className="text-xs lg:text-sm">
                         <span className="text-gray-500">Entrega estimada: </span>
-                        <span className="font-medium">{formatDate(order.estimated_delivery)}</span>
+                        <span className="font-medium break-words">{formatDate(order.estimated_delivery)}</span>
                       </div>
                     )}
                     {order.delivered_at && (
-                      <div className="text-sm">
+                      <div className="text-xs lg:text-sm">
                         <span className="text-gray-500">Entregado: </span>
-                        <span className="font-medium text-green-600">{formatDate(order.delivered_at)}</span>
+                        <span className="font-medium text-green-600 break-words">{formatDate(order.delivered_at)}</span>
                       </div>
                     )}
                   </div>
@@ -302,33 +302,33 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
             </div>
 
             {/* Payment Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-purple-600" />
-                Información de Pago
+            <div className="space-y-3 lg:space-y-4">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 lg:w-5 lg:h-5 text-purple-600" />
+                <span className="truncate">Información de Pago</span>
               </h3>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+              <div className="bg-gray-50 rounded-lg p-3 lg:p-4 space-y-3 lg:space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Estado del pago</span>
+                  <span className="text-xs lg:text-sm text-gray-500">Estado del pago</span>
                   <div className={getStatusBadge(order.payment_status, 'payment')}>
-                    {order.payment_status}
+                    <span className="text-xs">{order.payment_status}</span>
                   </div>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Método de pago</span>
-                  <span className="font-medium">{order.payment_method}</span>
+                  <span className="text-xs lg:text-sm text-gray-500">Método de pago</span>
+                  <span className="font-medium text-xs lg:text-sm truncate">{order.payment_method}</span>
                 </div>
 
                 {order.payment_reference && (
-                  <div className="flex items-center justify-between p-3 bg-white rounded border">
-                    <div>
-                      <div className="text-sm text-gray-500">Referencia de pago</div>
-                      <div className="font-medium text-sm">{order.payment_reference}</div>
+                  <div className="flex items-center justify-between p-2 lg:p-3 bg-white rounded border gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs lg:text-sm text-gray-500">Referencia de pago</div>
+                      <div className="font-medium text-xs lg:text-sm truncate">{order.payment_reference}</div>
                     </div>
                     <button
                       onClick={() => handleCopyToClipboard(order.payment_reference, 'payment_ref')}
-                      className="p-2 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50"
+                      className="p-2 text-gray-400 hover:text-blue-600 active:text-blue-800 rounded-full hover:bg-blue-50 transition-colors flex-shrink-0"
                       title="Copiar referencia"
                     >
                       {copiedField === 'payment_ref' ? <CheckCheck className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
@@ -340,10 +340,11 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
                 {order.payment_capture_url && (
                   <button
                     onClick={() => window.open(order.payment_capture_url, '_blank', 'noopener,noreferrer')}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="w-full flex items-center justify-center gap-2 px-3 lg:px-4 py-2 lg:py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs lg:text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
                     <Receipt className="w-4 h-4" />
-                    Ver Comprobante de Pago
+                    <span className="hidden sm:inline">Ver Comprobante de Pago</span>
+                    <span className="sm:hidden">Comprobante</span>
                     <ExternalLink className="w-4 h-4" />
                   </button>
                 )}
@@ -353,24 +354,24 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
 
           {/* Order Items */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Package className="w-5 h-5 text-indigo-600" />
-              Productos del Pedido
+            <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-3 lg:mb-4 flex items-center gap-2">
+              <Package className="w-4 h-4 lg:w-5 lg:h-5 text-indigo-600" />
+              <span className="truncate">Productos del Pedido</span>
             </h3>
             
             {/* Mobile View */}
-            <div className="md:hidden space-y-3">
+            <div className="lg:hidden space-y-2 lg:space-y-3">
               {order.items.map((item, index) => (
-                <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center space-x-4">
+                <div key={index} className="bg-white border border-gray-200 rounded-lg p-3 lg:p-4 flex items-center space-x-3 lg:space-x-4">
                   <img 
                     src={item.product_image} 
                     alt={item.product_name}
-                    className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                    className="w-12 h-12 lg:w-16 lg:h-16 rounded-lg object-cover flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 truncate">{item.product_name}</div>
-                    <div className="text-sm text-gray-500">{item.product_brand}</div>
-                    <div className="text-sm text-gray-600 mt-1">
+                    <div className="font-medium text-gray-900 text-sm lg:text-base truncate">{item.product_name}</div>
+                    <div className="text-xs lg:text-sm text-gray-500">{item.product_brand}</div>
+                    <div className="text-xs lg:text-sm text-gray-600 mt-1">
                       Cantidad: {item.quantity} • {formatCurrency(item.unit_price)} c/u
                     </div>
                     {item.selected_presentation && (
@@ -380,7 +381,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
                     )}
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="font-bold text-gray-900">
+                    <div className="font-bold text-gray-900 text-sm lg:text-base">
                       {formatCurrency(item.total_price)}
                     </div>
                   </div>
@@ -389,7 +390,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
             </div>
 
             {/* Desktop View */}
-            <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="hidden lg:block bg-white border border-gray-200 rounded-lg overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
@@ -439,46 +440,46 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
           </div>
 
           {/* Order Summary */}
-          <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-6 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-green-600" />
-              Resumen del Pedido
+          <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-3 lg:p-6 border border-gray-200">
+            <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-3 lg:mb-4 flex items-center gap-2">
+              <Receipt className="w-4 h-4 lg:w-5 lg:h-5 text-green-600" />
+              <span className="truncate">Resumen del Pedido</span>
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+              <div className="space-y-2 lg:space-y-3">
+                <div className="flex justify-between text-xs lg:text-sm">
                   <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-medium">{formatCurrency(order.subtotal)}</span>
+                  <span className="font-medium truncate">{formatCurrency(order.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs lg:text-sm">
                   <span className="text-gray-600">Envío:</span>
-                  <span className="font-medium">{formatCurrency(order.shipping_cost)}</span>
+                  <span className="font-medium truncate">{formatCurrency(order.shipping_cost)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs lg:text-sm">
                   <span className="text-gray-600">Impuestos:</span>
-                  <span className="font-medium">{formatCurrency(order.taxes)}</span>
+                  <span className="font-medium truncate">{formatCurrency(order.taxes)}</span>
                 </div>
-                <div className="border-t border-gray-200 pt-3">
-                  <div className="flex justify-between text-lg font-bold">
+                <div className="border-t border-gray-200 pt-2 lg:pt-3">
+                  <div className="flex justify-between text-sm lg:text-lg font-bold">
                     <span>Total:</span>
-                    <span className="text-blue-600">{formatCurrency(order.total)} {order.currency}</span>
+                    <span className="text-blue-600 truncate">{formatCurrency(order.total)} {order.currency}</span>
                   </div>
                 </div>
               </div>
               
-              <div className="space-y-3 text-sm">
+              <div className="space-y-2 lg:space-y-3 text-xs lg:text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Moneda:</span>
                   <span className="font-medium">{order.currency}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Método de pago:</span>
-                  <span className="font-medium">{order.payment_method}</span>
+                  <span className="font-medium truncate">{order.payment_method}</span>
                 </div>
                 {order.customer_notes && (
-                  <div className="pt-3 border-t border-gray-200">
+                  <div className="pt-2 lg:pt-3 border-t border-gray-200">
                     <div className="text-gray-600 mb-1">Notas del cliente:</div>
-                    <div className="text-gray-800 text-sm bg-white p-3 rounded border italic">
+                    <div className="text-gray-800 text-xs lg:text-sm bg-white p-2 lg:p-3 rounded border italic break-words">
                       "{order.customer_notes}"
                     </div>
                   </div>

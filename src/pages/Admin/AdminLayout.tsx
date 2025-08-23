@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   ExternalLink,
+  Zap,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Transition } from '@headlessui/react';
@@ -30,22 +31,22 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ${
+    `flex items-center px-3 lg:px-4 py-2 lg:py-3 text-sm lg:text-base text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ${
       isActive ? 'bg-blue-100 text-blue-700 font-semibold border-r-4 border-blue-600' : 'font-medium'
     }`;
 
   return (
     <>
       {/* Mobile-first sidebar: fixed, with transition */}
-      <aside className={`admin-sidebar fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Activity className="w-6 h-6 text-white" />
+      <aside className={`admin-sidebar fixed inset-y-0 left-0 z-40 w-72 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:shadow-none ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-4 lg:p-6 border-b border-gray-200 flex items-center justify-between">
+          <div className="flex items-center space-x-2 lg:space-x-3">
+            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Activity className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-800">GRUPO DROZAINKA</h2>
-              <p className="text-sm text-gray-600">Panel de Control</p>
+            <div className="min-w-0">
+              <h2 className="text-lg lg:text-xl font-bold text-gray-800 truncate">GRUPO DROZAINKA</h2>
+              <p className="text-xs lg:text-sm text-gray-600">Panel de Control</p>
             </div>
           </div>
           <button onClick={onClose} className="lg:hidden text-gray-500 hover:text-gray-700">
@@ -54,65 +55,69 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 p-3 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto">
           <div className="mb-4">
-            <p className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            <p className="px-3 lg:px-4 pt-3 lg:pt-4 pb-1 lg:pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Principal
             </p>
             <NavLink to="/admin/dashboard" className={navLinkClass} onClick={onClose}>
-              <Home className="w-5 h-5 mr-3" />
-              Dashboard
+              <Home className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
+              <span className="truncate">Dashboard</span>
             </NavLink>
           </div>
 
           <div className="mb-4">
-            <p className="px-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            <p className="px-3 lg:px-4 pb-1 lg:pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Gestión
             </p>
             <NavLink to="/admin/orders" className={navLinkClass} onClick={onClose}>
-              <ShoppingCart className="w-5 h-5 mr-3" />
-              Pedidos
+              <ShoppingCart className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
+              <span className="truncate">Pedidos</span>
             </NavLink>
             <NavLink to="/admin/products" className={navLinkClass} onClick={onClose}>
-              <Package className="w-5 h-5 mr-3" />
-              Productos
+              <Package className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
+              <span className="truncate">Productos</span>
+            </NavLink>
+            <NavLink to="/admin/flash-offers" className={navLinkClass} onClick={onClose}>
+              <Zap className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
+              <span className="truncate">Ofertas Flash</span>
             </NavLink>
             <NavLink to="/admin/customers" className={navLinkClass} onClick={onClose}>
-              <Users className="w-5 h-5 mr-3" />
-              Clientes
+              <Users className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
+              <span className="truncate">Clientes</span>
             </NavLink>
           </div>
 
           <div className="mb-4">
-            <p className="px-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            <p className="px-3 lg:px-4 pb-1 lg:pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Contenido
             </p>
             <NavLink to="/admin/blog" className={navLinkClass} onClick={onClose}>
-              <BookOpen className="w-5 h-5 mr-3" />
-              Blog
+              <BookOpen className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
+              <span className="truncate">Blog</span>
             </NavLink>
           </div>
 
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 space-y-2">
+        <div className="p-3 lg:p-4 border-t border-gray-200 space-y-1 lg:space-y-2">
           <button 
             onClick={() => { 
               window.open('/', '_blank'); 
               onClose(); 
             }}
-            className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors"
+            className="w-full flex items-center px-3 lg:px-4 py-2 lg:py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors text-sm lg:text-base"
           >
-            <ExternalLink className="w-5 h-5 mr-3" />
-            Ir al Sitio Web
+            <ExternalLink className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
+            <span className="truncate">Ir al Sitio Web</span>
           </button>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors"
+            className="w-full flex items-center px-3 lg:px-4 py-2 lg:py-3 text-gray-700 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors text-sm lg:text-base"
           >
-            <LogOut className="w-5 h-5 mr-3" />
-            Cerrar Sesión
+            <LogOut className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
+            <span className="truncate">Cerrar Sesión</span>
           </button>
         </div>
       </aside>
@@ -137,41 +142,42 @@ const AdminHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => 
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-4 flex-shrink-0">
+    <header className="bg-white shadow-sm border-b border-gray-200 px-3 sm:px-4 lg:px-6 xl:px-8 py-3 lg:py-4 flex-shrink-0">
       <div className="flex justify-between items-center">
         {/* Left part: Menu button and Search */}
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded"
+            className="lg:hidden p-2 -ml-1 text-gray-600 hover:bg-gray-100 rounded-lg active:bg-gray-200 transition-colors"
+            aria-label="Abrir menú"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-5 h-5 lg:w-6 lg:h-6" />
           </button>
           <div className="hidden md:block">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
                 placeholder="Buscar..."
-                className="pl-10 pr-4 py-2 w-full max-w-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="pl-9 pr-4 py-2 w-full max-w-xs text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
           </div>
         </div>
 
         {/* Right part: Actions and User Menu */}
-        <div className="flex items-center space-x-2 sm:space-x-4">
+        <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
           <button
             onClick={() => navigate('/admin/blog/new')}
-            className="hidden sm:flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium text-sm"
+            className="hidden sm:flex items-center px-2 lg:px-3 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition-colors font-medium text-xs lg:text-sm"
           >
-            <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+            <Plus className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
             <span className="hidden md:inline">Nuevo Artículo</span>
           </button>
 
-          <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100">
-            <Bell className="w-6 h-6" />
-            <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+          <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100 active:bg-gray-200">
+            <Bell className="w-5 h-5 lg:w-6 lg:h-6" />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
               3
             </span>
           </button>
@@ -179,24 +185,24 @@ const AdminHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => 
           {/* Currency Toggle */}
           <CurrencyToggle />
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 lg:space-x-3">
             <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium text-gray-900 truncate">{getUserDisplayName()}</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-900 truncate max-w-24 lg:max-w-32">{getUserDisplayName()}</p>
               <p className="text-xs text-gray-500">Administrador</p>
             </div>
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-xs lg:text-sm flex-shrink-0">
               {getUserInitials()}
             </div>
           </div>
         </div>
       </div>
-      <div className="md:hidden mt-4">
+      <div className="md:hidden mt-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
             placeholder="Buscar pedidos, productos..."
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="pl-9 pr-4 py-2 w-full text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
           />
         </div>
       </div>
@@ -236,9 +242,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         
         <AdminSidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
         
-        <div className="admin-content">
+        <div className="admin-content lg:ml-72">
           <AdminHeader onMenuClick={() => setSidebarOpen(true)} />
-          <main className="admin-main p-6 bg-gray-50">
+          <main className="admin-main p-3 sm:p-4 lg:p-6 xl:p-8 bg-gray-50 min-h-screen">
             {children || <Outlet />}
           </main>
         </div>

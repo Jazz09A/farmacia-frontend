@@ -96,9 +96,9 @@ const HomePage: React.FC = () => {
           />
         ) : (
           <FlashOffersSection
-            currency={currency.currency}
-            onAddToCart={handleAddToCart}
-            formatPrice={formatPrice}
+            maxItems={6}
+            refreshInterval={1000}
+            className="animate-fade-in"
           />
         )}
 
@@ -112,7 +112,7 @@ const HomePage: React.FC = () => {
           />
         ) : (
           <ProductsSection
-            currency={currency.currency}
+            currency={currency.currency as 'VES' | 'REF'}
             onAddToCart={handleAddToCart}
             formatPrice={formatPrice}
           />
@@ -164,7 +164,7 @@ const HomePage: React.FC = () => {
       <CartModal
         isOpen={cartModalOpen}
         onClose={() => setCartModalOpen(false)}
-        currency={currency.currency}
+        currency={currency.currency as 'VES' | 'REF'}
         formatPrice={formatPrice}
         totalPrice={0} // Cart state is now managed by CartContext, so this will be updated automatically
         onUpdateQuantity={() => {}}

@@ -150,54 +150,54 @@ const IndividualProductForm: React.FC<IndividualProductFormProps> = ({ onSuccess
   };
 
   const renderGeneralTab = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-4 lg:space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
             Nombre del Producto *
           </label>
           <input
             type="text"
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Ej: Ibuprofeno 600mg"
           />
           {errors.name && (
-            <p className="text-red-500 text-sm mt-1 flex items-center">
-              <AlertCircle className="w-4 h-4 mr-1" />
-              {errors.name}
+            <p className="text-red-500 text-xs lg:text-sm mt-1 flex items-center">
+              <AlertCircle className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+              <span>{errors.name}</span>
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
             Marca *
           </label>
           <input
             type="text"
             value={formData.brand}
             onChange={(e) => handleInputChange('brand', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Ej: Bayer"
           />
           {errors.brand && (
-            <p className="text-red-500 text-sm mt-1 flex items-center">
-              <AlertCircle className="w-4 h-4 mr-1" />
-              {errors.brand}
+            <p className="text-red-500 text-xs lg:text-sm mt-1 flex items-center">
+              <AlertCircle className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+              <span>{errors.brand}</span>
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
             Categoría *
           </label>
           <select
             value={formData.category}
             onChange={(e) => handleInputChange('category', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
             <option value="">Seleccionar categoría</option>
             {categories.map(cat => (
@@ -205,48 +205,48 @@ const IndividualProductForm: React.FC<IndividualProductFormProps> = ({ onSuccess
             ))}
           </select>
           {errors.category && (
-            <p className="text-red-500 text-sm mt-1 flex items-center">
-              <AlertCircle className="w-4 h-4 mr-1" />
-              {errors.category}
+            <p className="text-red-500 text-xs lg:text-sm mt-1 flex items-center">
+              <AlertCircle className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+              <span>{errors.category}</span>
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
             SKU
           </label>
           <input
             type="text"
             value={formData.sku}
             onChange={(e) => handleInputChange('sku', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Código único del producto"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
             Subcategoría
           </label>
           <input
             type="text"
             value={formData.subcategory}
             onChange={(e) => handleInputChange('subcategory', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Ej: Antiinflamatorios"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
             Patología
           </label>
           <input
             type="text"
             value={formData.patology}
             onChange={(e) => handleInputChange('patology', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Ej: Dolor e inflamación"
           />
         </div>
@@ -321,72 +321,72 @@ const IndividualProductForm: React.FC<IndividualProductFormProps> = ({ onSuccess
   );
 
   const renderPricingTab = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-4 lg:space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
             Precio en VES *
           </label>
           <input
             type="number"
             value={formData.price_ves}
             onChange={(e) => handleInputChange('price_ves', parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             min="0"
             step="0.01"
             placeholder="0.00"
           />
           {errors.price_ves && (
-            <p className="text-red-500 text-sm mt-1 flex items-center">
-              <AlertCircle className="w-4 h-4 mr-1" />
-              {errors.price_ves}
+            <p className="text-red-500 text-xs lg:text-sm mt-1 flex items-center">
+              <AlertCircle className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+              <span>{errors.price_ves}</span>
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
             Precio en REF *
           </label>
           <input
             type="number"
             value={formData.price_ref}
             onChange={(e) => handleInputChange('price_ref', parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             min="0"
             step="0.01"
             placeholder="0.00"
           />
           {errors.price_ref && (
-            <p className="text-red-500 text-sm mt-1 flex items-center">
-              <AlertCircle className="w-4 h-4 mr-1" />
-              {errors.price_ref}
+            <p className="text-red-500 text-xs lg:text-sm mt-1 flex items-center">
+              <AlertCircle className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+              <span>{errors.price_ref}</span>
             </p>
           )}
         </div>
       </div>
 
-      <div className="border-t pt-6">
-        <label className="flex items-center mb-4">
+      <div className="border-t pt-4 lg:pt-6">
+        <label className="flex items-center mb-3 lg:mb-4">
           <input
             type="checkbox"
             checked={formData.is_offer}
             onChange={(e) => handleInputChange('is_offer', e.target.checked)}
             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
           />
-          <span className="ml-2 text-sm font-medium text-gray-700">Este producto está en oferta</span>
+          <span className="ml-2 text-xs lg:text-sm font-medium text-gray-700">Este producto está en oferta</span>
         </label>
 
         {formData.is_offer && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
               Precio Original (antes de la oferta)
             </label>
             <input
               type="number"
               value={formData.original_price}
               onChange={(e) => handleInputChange('original_price', parseFloat(e.target.value) || 0)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               min="0"
               step="0.01"
               placeholder="0.00"
@@ -398,23 +398,23 @@ const IndividualProductForm: React.FC<IndividualProductFormProps> = ({ onSuccess
   );
 
   const renderMedicalTab = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-4 lg:space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
             Laboratorio
           </label>
           <input
             type="text"
             value={formData.laboratorio}
             onChange={(e) => handleInputChange('laboratorio', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Ej: Laboratorios Bayer"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
             Registro Sanitario
           </label>
           <input
@@ -554,13 +554,13 @@ const IndividualProductForm: React.FC<IndividualProductFormProps> = ({ onSuccess
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-6">
       {/* Error general */}
       {errors.general && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 lg:p-4">
           <div className="flex items-center">
-            <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-            <p className="text-red-700">{errors.general}</p>
+            <AlertCircle className="w-4 h-4 lg:w-5 lg:h-5 text-red-500 mr-2" />
+            <p className="text-red-700 text-sm lg:text-base">{errors.general}</p>
           </div>
         </div>
       )}
@@ -568,7 +568,7 @@ const IndividualProductForm: React.FC<IndividualProductFormProps> = ({ onSuccess
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow-md border border-gray-200">
         <div className="border-b border-gray-200">
-          <div className="flex space-x-0 overflow-x-auto">
+          <div className="flex space-x-0 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -576,21 +576,21 @@ const IndividualProductForm: React.FC<IndividualProductFormProps> = ({ onSuccess
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                  className={`flex items-center space-x-1 lg:space-x-2 px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.name}</span>
+                  <Icon className="w-3 h-3 lg:w-4 lg:h-4" />
+                  <span className="hidden sm:inline lg:inline">{tab.name}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-3 sm:p-4 lg:p-6">
           <motion.div
             key={activeTab}
             initial={{ opacity: 0, x: 20 }}
@@ -603,18 +603,18 @@ const IndividualProductForm: React.FC<IndividualProductFormProps> = ({ onSuccess
       </div>
 
       {/* Submit Button */}
-      <div className="flex justify-end space-x-4">
+      <div className="flex justify-end">
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
+          className="flex items-center px-4 lg:px-6 py-2 lg:py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-400 text-white text-sm lg:text-base rounded-lg transition-colors"
         >
           {loading ? (
-            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            <Loader2 className="w-4 h-4 lg:w-5 lg:h-5 mr-2 animate-spin" />
           ) : (
-            <Save className="w-5 h-5 mr-2" />
+            <Save className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
           )}
-          {loading ? 'Creando...' : 'Crear Producto'}
+          <span>{loading ? 'Creando...' : 'Crear Producto'}</span>
         </button>
       </div>
     </form>

@@ -18,7 +18,7 @@ class AuthService {
   // Registro de usuario jurídico
   async registerJuridico(data: JuridicoRegisterData): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/register/juridico`, {
+      const response = await fetch(`${this.baseUrl}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

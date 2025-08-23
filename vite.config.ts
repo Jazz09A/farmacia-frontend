@@ -25,7 +25,7 @@ export default defineConfig({
     })
   ],
   server: {
-    allowedHosts: ['plymouth-adjacent-tuner-absolute.trycloudflare.com'],
+    allowedHosts: ['speeches-acids-assist-shopping.trycloudflare.com'],
     host: true,
     proxy: {
       '/api': {

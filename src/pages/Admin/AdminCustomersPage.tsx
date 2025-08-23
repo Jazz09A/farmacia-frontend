@@ -170,40 +170,40 @@ const AdminCustomersPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <Users className="w-8 h-8 mr-3 text-blue-600" />
-            Gestión de Clientes
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+            <Users className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+            <span className="truncate">Gestión de Clientes</span>
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
             Administra y supervisa todos los clientes registrados en tu plataforma.
           </p>
         </div>
-        <div className="w-full sm:w-auto mt-4 sm:mt-0">
+        <div className="w-full sm:w-auto">
            {/* Mobile Buttons */}
            <div className="sm:hidden">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 mb-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center justify-center px-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium"
               >
                 <Filter className="w-4 h-4 mr-1" />
-                Filtros
+                <span className="truncate">Filtros</span>
               </button>
-              <button className="flex items-center justify-center px-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+              <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
                 <Upload className="w-4 h-4 mr-1" />
-                Importar
+                <span className="truncate">Importar</span>
               </button>
-              <button className="flex items-center justify-center px-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+              <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
                 <Download className="w-4 h-4 mr-1" />
-                Exportar
+                <span className="truncate">Exportar</span>
               </button>
             </div>
             <button 
-              className="mt-2 w-full flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="w-full flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition-colors font-medium"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Cliente
@@ -213,7 +213,7 @@ const AdminCustomersPage: React.FC = () => {
           <div className="hidden sm:flex items-center space-x-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center px-3 lg:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors font-medium"
           >
             <Filter className="w-4 h-4 mr-2" />
             Filtros
@@ -223,51 +223,51 @@ const AdminCustomersPage: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Clientes</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Total Clientes</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-900">{stats.total}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="p-2 lg:p-3 bg-blue-100 rounded-full flex-shrink-0">
+              <Users className="w-4 h-4 lg:w-6 lg:h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Clientes Activos</p>
-              <p className="text-2xl font-bold text-green-600">{stats.active}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Clientes Activos</p>
+              <p className="text-lg lg:text-2xl font-bold text-green-600">{stats.active}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <UserCheck className="w-6 h-6 text-green-600" />
+            <div className="p-2 lg:p-3 bg-green-100 rounded-full flex-shrink-0">
+              <UserCheck className="w-4 h-4 lg:w-6 lg:h-6 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Verificados</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.verified}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Verificados</p>
+              <p className="text-lg lg:text-2xl font-bold text-blue-600">{stats.verified}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <UserCheck className="w-6 h-6 text-blue-600" />
+            <div className="p-2 lg:p-3 bg-blue-100 rounded-full flex-shrink-0">
+              <UserCheck className="w-4 h-4 lg:w-6 lg:h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Sin Verificar</p>
-              <p className="text-2xl font-bold text-yellow-600">{stats.unverified}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Sin Verificar</p>
+              <p className="text-lg lg:text-2xl font-bold text-yellow-600">{stats.unverified}</p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-full">
-              <UserX className="w-6 h-6 text-yellow-600" />
+            <div className="p-2 lg:p-3 bg-yellow-100 rounded-full flex-shrink-0">
+              <UserX className="w-4 h-4 lg:w-6 lg:h-6 text-yellow-600" />
             </div>
           </div>
         </div>
@@ -275,18 +275,18 @@ const AdminCustomersPage: React.FC = () => {
 
       {/* Search and Filters */}
       <div className="bg-white rounded-lg shadow-md border border-gray-200">
-        <div className="p-6">
+        <div className="p-3 lg:p-6">
           {/* Search Bar */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 mb-3 lg:mb-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Buscar por nombre, email, RIF..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="pl-9 pr-4 py-2 w-full text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
               </div>
             </div>

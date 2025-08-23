@@ -105,35 +105,35 @@ const AdminBlogPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Blog</h1>
-          <p className="mt-2 text-gray-600">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Blog</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
             Administra todos los artículos de tu blog farmacéutico.
           </p>
         </div>
-        <div className="w-full sm:w-auto mt-4 sm:mt-0">
+        <div className="w-full sm:w-auto">
           {/* Mobile Buttons */}
           <div className="sm:hidden">
-            <div className="grid grid-cols-3 gap-2">
-               <button className="flex items-center justify-center px-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+            <div className="grid grid-cols-3 gap-2 mb-3">
+               <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
                 <Filter className="w-4 h-4 mr-1" />
-                Filtros
+                <span className="truncate">Filtros</span>
               </button>
-              <button className="flex items-center justify-center px-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+              <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
                 <Upload className="w-4 h-4 mr-1" />
-                Importar
+                <span className="truncate">Importar</span>
               </button>
-              <button className="flex items-center justify-center px-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+              <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
                 <Download className="w-4 h-4 mr-1" />
-                Exportar
+                <span className="truncate">Exportar</span>
               </button>
             </div>
             <Link
               to="/admin/blog/create"
-              className="mt-2 w-full flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="w-full flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition-colors font-medium"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Artículo
@@ -141,17 +141,17 @@ const AdminBlogPage: React.FC = () => {
           </div>
           {/* Desktop Buttons */}
           <div className="hidden sm:flex items-center space-x-3">
-             <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+             <button className="flex items-center px-3 lg:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors font-medium">
               <Upload className="w-4 h-4 mr-2" />
               Importar
             </button>
-            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <button className="flex items-center px-3 lg:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors font-medium">
               <Download className="w-4 h-4 mr-2" />
               Exportar
             </button>
             <Link
               to="/admin/blog/create"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              className="px-3 lg:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors flex items-center font-medium"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Artículo
@@ -161,52 +161,52 @@ const AdminBlogPage: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Artículos</p>
-              <p className="text-2xl font-bold text-gray-900">{blogPosts.length}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Total Artículos</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-900">{blogPosts.length}</p>
             </div>
-             <div className="p-3 bg-blue-100 rounded-full">
-               <FileText className="w-6 h-6 text-blue-600" />
+             <div className="p-2 lg:p-3 bg-blue-100 rounded-full flex-shrink-0">
+               <FileText className="w-4 h-4 lg:w-6 lg:h-6 text-blue-600" />
              </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Publicados</p>
-              <p className="text-2xl font-bold text-green-600">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Publicados</p>
+              <p className="text-lg lg:text-2xl font-bold text-green-600">
                 {blogPosts.filter(post => post.published).length}
               </p>
             </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <CheckCircle className="w-6 h-6 text-green-600" />
+            <div className="p-2 lg:p-3 bg-green-100 rounded-full flex-shrink-0">
+              <CheckCircle className="w-4 h-4 lg:w-6 lg:h-6 text-green-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Borradores</p>
-              <p className="text-2xl font-bold text-yellow-600">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Borradores</p>
+              <p className="text-lg lg:text-2xl font-bold text-yellow-600">
                 {blogPosts.filter(post => !post.published).length}
               </p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-full">
-              <Clock className="w-6 h-6 text-yellow-600" />
+            <div className="p-2 lg:p-3 bg-yellow-100 rounded-full flex-shrink-0">
+              <Clock className="w-4 h-4 lg:w-6 lg:h-6 text-yellow-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Categorías</p>
-              <p className="text-2xl font-bold text-gray-900">{categories.length}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Categorías</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-900">{categories.length}</p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-full">
-              <Tag className="w-6 h-6 text-purple-600" />
+            <div className="p-2 lg:p-3 bg-purple-100 rounded-full flex-shrink-0">
+              <Tag className="w-4 h-4 lg:w-6 lg:h-6 text-purple-600" />
             </div>
           </div>
         </div>
@@ -214,14 +214,14 @@ const AdminBlogPage: React.FC = () => {
 
       {/* Blog Posts List */}
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-4 border-b flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Artículos ({filteredPosts.length})</h3>
+        <div className="p-3 lg:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <h3 className="text-base lg:text-lg font-semibold">Artículos ({filteredPosts.length})</h3>
             {selectedPosts.length > 0 && (
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-500">{selectedPosts.length} seleccionados</span>
+                <span className="text-xs lg:text-sm text-gray-500">{selectedPosts.length} seleccionados</span>
                 <button 
                   onClick={handleBulkDelete}
-                  className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50"
+                  className="text-red-600 hover:text-red-800 active:text-red-900 p-2 rounded-full hover:bg-red-50 active:bg-red-100 transition-colors"
                   title={`Eliminar ${selectedPosts.length} artículos`}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -236,17 +236,17 @@ const AdminBlogPage: React.FC = () => {
             {filteredPosts.map(post => (
               <div 
                 key={post.id} 
-                className="p-4"
+                className="p-3 lg:p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer"
                 onClick={() => navigate(`/admin/blog/edit/${post.id}`)}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-800 truncate">{post.title}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-bold text-gray-800 text-sm lg:text-base truncate">{post.title}</p>
+                    <p className="text-xs lg:text-sm text-gray-500">
                       Por {post.author} en <span className="font-medium text-blue-600">{post.category}</span>
                     </p>
                   </div>
-                  <div className="text-right ml-4 flex-shrink-0">
+                  <div className="text-right ml-3 flex-shrink-0">
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       post.published ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                     }`}>
