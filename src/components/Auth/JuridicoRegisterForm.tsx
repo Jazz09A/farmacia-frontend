@@ -208,7 +208,7 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
     }
     
     // Si todo está bien, avanzar al siguiente paso
-    setCurrentStep(Math.min(currentStep + 1, steps.length));
+      setCurrentStep(Math.min(currentStep + 1, steps.length));
   };
 
   const prevStep = () => setCurrentStep(Math.max(currentStep - 1, 1));
@@ -370,16 +370,16 @@ const Step1BasicInfo: React.FC<Step1Props> = ({ formData, onChange, errors, emai
         required 
       />
       <div className="relative">
-        <InputField 
-          icon={<Mail className="w-4 h-4 text-gray-400" />}
-          id="email" 
-          label="Email" 
-          type="email" 
-          value={formData.email} 
-          onChange={onChange} 
-          error={errors.email?.[0]} 
-          required 
-        />
+      <InputField 
+        icon={<Mail className="w-4 h-4 text-gray-400" />}
+        id="email" 
+        label="Email" 
+        type="email" 
+        value={formData.email} 
+        onChange={onChange} 
+        error={errors.email?.[0]} 
+        required 
+      />
         {isLoading && currentStep === 1 && formData.email.trim() && !emailVerificationStatus.checked && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
             <LoadingSpinner variant="button" size="sm" />

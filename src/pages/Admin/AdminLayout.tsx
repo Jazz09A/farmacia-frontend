@@ -50,7 +50,11 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
               <p className="text-xs lg:text-sm text-gray-600">Panel de Control</p>
             </div>
           </div>
-          <button onClick={onClose} className="lg:hidden text-gray-500 hover:text-gray-700">
+          <button 
+            onClick={onClose} 
+            className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Cerrar menú"
+          >
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -224,6 +228,27 @@ const AdminLayout: React.FC = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
+  // Handle escape key to close sidebar
+  React.useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isSidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+
+    if (isSidebarOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isSidebarOpen]);
+
   return (
     <AdminCurrencyProvider>
       <div className="admin-layout bg-gray-50 flex h-screen overflow-hidden">
@@ -235,37 +260,25 @@ const AdminLayout: React.FC = () => {
           </div>
         </div>
 
-        <Transition show={isSidebarOpen} as={Fragment}>
-          <Dialog as="div" className="relative z-40 lg:hidden" onClose={setSidebarOpen}>
-            <Transition
-              as={Fragment}
-              enter="transition-opacity ease-linear duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="transition-opacity ease-linear duration-300"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <div className="fixed inset-0 bg-gray-600 bg-opacity-75" />
-            </Transition>
-
-            <div className="fixed inset-0 flex z-40">
-              <Transition
-                as={Fragment}
-                enter="transition ease-in-out duration-300 transform"
-                enterFrom="-translate-x-full"
-                enterTo="translate-x-0"
-                leave="transition ease-in-out duration-300 transform"
-                leaveFrom="translate-x-0"
-                leaveTo="-translate-x-full"
-              >
-                <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-                  <AdminSidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
-                </div>
-              </Transition>
-            </div>
-          </Dialog>
-        </Transition>
+        {/* Mobile Sidebar Overlay - Mejorado para funcionamiento correcto en mobile */}
+        <div className={`fixed inset-0 z-40 lg:hidden transition-opacity duration-300 ${
+          isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}>
+          {/* Backdrop */}
+          <div 
+            className={`fixed inset-0 bg-gray-600 transition-opacity duration-300 ${
+              isSidebarOpen ? 'bg-opacity-75' : 'bg-opacity-0'
+            }`}
+            onClick={() => setSidebarOpen(false)}
+          />
+          
+          {/* Sidebar */}
+          <div className={`fixed inset-y-0 left-0 flex flex-col w-72 max-w-xs bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
+            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}>
+            <AdminSidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+          </div>
+        </div>
         
         <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
           <AdminHeader onMenuClick={() => setSidebarOpen(true)} />
