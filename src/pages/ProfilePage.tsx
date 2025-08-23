@@ -5,14 +5,11 @@ import {
   User as UserIcon, 
   Package, 
   Gift, 
-  Bell, 
   MessageCircle, 
   Settings, 
   Key,
-  Download,
   Clock,
   CheckCircle,
-  AlertTriangle,
   Shield,
   CreditCard,
   Phone,
@@ -20,19 +17,20 @@ import {
   MapPin,
   Building,
   Calendar,
-  Loader2
+  Loader2,
+  DollarSign,
+  ShoppingBag
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import type { 
-  Order, 
+import type {  
   UserPromotion, 
-  UserNotification, 
   SupportTicket 
 } from '../types/profile';
 import { User } from '../types/auth';
 import OrdersSection from '../components/Profile/OrdersSection';
+import { useUserStats } from '../hooks/useUserStats';
 
-type TabType = 'cuenta' | 'pedidos' | 'promociones' | 'notificaciones' | 'soporte';
+type TabType = 'cuenta' | 'pedidos' | 'promociones' | 'soporte';
 
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('pedidos');
@@ -40,8 +38,8 @@ const ProfilePage: React.FC = () => {
   const location = useLocation();
   
   const [promotions] = useState<UserPromotion[]>([]);
-  const [notifications] = useState<UserNotification[]>([]);
   const [supportTickets] = useState<SupportTicket[]>([]);
+  const { stats: userStats, loading: statsLoading, error: statsError } = useUserStats();
 
   useEffect(() => {
     if (location.state?.defaultTab) {
@@ -52,13 +50,12 @@ const ProfilePage: React.FC = () => {
   const tabs = [
     { id: 'cuenta', label: 'Mi Cuenta', icon: UserIcon, count: null },
     { id: 'pedidos', label: 'Pedidos', icon: Package, count: null },
-    { id: 'promociones', label: 'Promociones', icon: Gift, count: promotions.filter(p => !p.is_used).length },
-    { id: 'notificaciones', label: 'Notificaciones', icon: Bell, count: notifications.filter(n => !n.is_read).length },
-    { id: 'soporte', label: 'Soporte', icon: MessageCircle, count: supportTickets.filter(t => t.status === 'open').length }
+    // { id: 'promociones', label: 'Promociones', icon: Gift, count: promotions.filter(p => !p.is_used).length },
+    // { id: 'soporte', label: 'Soporte', icon: MessageCircle, count: supportTickets.filter(t => t.status === 'open').length }
   ];
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'Fecha no disponible**';
+    if (!dateString) return 'Fecha no disponible';
     return new Date(dateString).toLocaleDateString('es-VE', {
       year: 'numeric',
       month: 'long',
@@ -89,24 +86,24 @@ const ProfilePage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-soft p-8 mb-8"
+          className="bg-white rounded-2xl shadow-soft p-6 lg:p-8 mb-6 lg:mb-8"
         >
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
             {/* Avatar y info básica */}
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-medical-blue-gradient rounded-full flex items-center justify-center text-white text-2xl font-bold">
+            <div className="flex items-center gap-4 lg:gap-6">
+              <div className="w-16 h-16 lg:w-20 lg:h-20 bg-medical-blue-gradient rounded-full flex items-center justify-center text-white text-xl lg:text-2xl font-bold flex-shrink-0">
                 {user.user_type === 'juridico' && user.company_name
                   ? user.company_name.charAt(0).toUpperCase()
                   : 'U'
                 }
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-medical-gray-900">
+              <div className="min-w-0">
+                <h1 className="text-xl lg:text-2xl font-bold text-medical-gray-900 truncate">
                   {user.company_name || 'Usuario'}
                 </h1>
-                <p className="text-medical-gray-600">{user.email}</p>
-                <div className="flex items-center gap-4 mt-2">
-                  <span className="text-sm text-medical-gray-500">
+                <p className="text-sm lg:text-base text-medical-gray-600 truncate">{user.email}</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mt-2">
+                  <span className="text-xs lg:text-sm text-medical-gray-500">
                     Miembro desde {formatDate(user.created_at)}
                   </span>
                   {user.user_type === 'admin' && (
@@ -118,25 +115,78 @@ const ProfilePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Estadísticas rápidas (datos de ejemplo) */}
-            <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-4 lg:ml-8">
-              <div className="text-center p-4 bg-medical-blue-50 rounded-xl">
-                <div className="text-2xl font-bold text-medical-blue-700">0**</div>
-                <div className="text-sm text-medical-gray-600">Pedidos</div>
-              </div>
-              <div className="text-center p-4 bg-green-50 rounded-xl">
-                <div className="text-2xl font-bold text-green-700">
-                  {formatCurrency(0, user.preferred_currency || 'VES')}**
+            {/* Estadísticas rápidas con datos reales */}
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 lg:ml-8">
+              {/* Indicador de estado */}
+              {statsError && (
+                <div className="col-span-full mb-2">
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                    <p className="text-sm text-red-700">
+                      {statsError}. Los datos mostrados pueden no estar actualizados.
+                    </p>
+                  </div>
                 </div>
-                <div className="text-sm text-medical-gray-600">Total gastado</div>
+              )}
+              {/* Total de Pedidos */}
+              <div className="text-center p-3 lg:p-4 bg-medical-blue-50 rounded-xl border border-medical-blue-100 relative group">
+                <div className="flex items-center justify-center mb-2">
+                  <Package className="w-5 h-5 lg:w-6 lg:h-6 text-medical-blue-600" />
+                </div>
+                <div className="text-xl lg:text-2xl font-bold text-medical-blue-700">
+                  {statsLoading ? (
+                    <Loader2 className="w-5 h-5 lg:w-6 lg:h-6 animate-spin mx-auto" />
+                  ) : statsError ? (
+                    <span className="text-sm text-red-500">Error</span>
+                  ) : (
+                    userStats?.total_orders || 0
+                  )}
+                </div>
+                <div className="text-xs lg:text-sm text-medical-gray-600">Total Pedidos</div>
+                {statsError && (
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="absolute top-2 right-2 p-1 text-red-500 hover:text-red-700 transition-colors"
+                    title="Reintentar"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
+                )}
               </div>
-              <div className="text-center p-4 bg-purple-50 rounded-xl">
-                <div className="text-2xl font-bold text-purple-700">0**</div>
-                <div className="text-sm text-medical-gray-600">Puntos</div>
+
+              {/* Total Gastado */}
+              <div className="text-center p-3 lg:p-4 bg-green-50 rounded-xl border border-green-100">
+                <div className="flex items-center justify-center mb-2">
+                  <DollarSign className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
+                </div>
+                <div className="text-xl lg:text-2xl font-bold text-green-700">
+                  {statsLoading ? (
+                    <Loader2 className="w-5 h-5 lg:w-6 lg:h-6 animate-spin mx-auto" />
+                  ) : statsError ? (
+                    <span className="text-sm text-red-500">Error</span>
+                  ) : (
+                    formatCurrency(userStats?.total_spent || 0, user.preferred_currency || 'VES')
+                  )}
+                </div>
+                <div className="text-xs lg:text-sm text-medical-gray-600">Total Gastado</div>
               </div>
-              <div className="text-center p-4 bg-orange-50 rounded-xl">
-                <div className="text-2xl font-bold text-orange-700">0**</div>
-                <div className="text-sm text-medical-gray-600">Notificaciones</div>
+
+              {/* Total Productos Comprados */}
+              <div className="text-center p-3 lg:p-4 bg-purple-50 rounded-xl border border-purple-100 sm:col-span-2 lg:col-span-1">
+                <div className="flex items-center justify-center mb-2">
+                  <ShoppingBag className="w-5 h-5 lg:w-6 lg:h-6 text-purple-600" />
+                </div>
+                <div className="text-xl lg:text-2xl font-bold text-purple-700">
+                  {statsLoading ? (
+                    <Loader2 className="w-5 h-5 lg:w-6 lg:h-6 animate-spin mx-auto" />
+                  ) : statsError ? (
+                    <span className="text-sm text-red-500">Error</span>
+                  ) : (
+                    userStats?.total_products_purchased || 0
+                  )}
+                </div>
+                <div className="text-xs lg:text-sm text-medical-gray-600">Productos Comprados</div>
               </div>
             </div>
           </div>
@@ -147,21 +197,22 @@ const ProfilePage: React.FC = () => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl shadow-soft mb-8 overflow-hidden"
+          className="bg-white rounded-2xl shadow-soft mb-6 lg:mb-8 overflow-hidden"
         >
           <div className="flex flex-wrap border-b border-medical-gray-200">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabType)}
-                className={`flex items-center gap-3 px-6 py-4 font-medium transition-all relative ${
+                className={`flex items-center gap-2 lg:gap-3 px-4 lg:px-6 py-3 lg:py-4 font-medium transition-all relative text-sm lg:text-base ${
                   activeTab === tab.id
                     ? 'text-medical-blue-700 bg-medical-blue-50'
                     : 'text-medical-gray-600 hover:text-medical-gray-900 hover:bg-medical-gray-50'
                 }`}
               >
-                <tab.icon className="w-5 h-5" />
-                <span>{tab.label}</span>
+                <tab.icon className="w-4 h-4 lg:w-5 lg:h-5" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
                 {tab.count !== null && tab.count > 0 && (
                   <span className="bg-medical-red-500 text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
                     {tab.count}
@@ -190,7 +241,6 @@ const ProfilePage: React.FC = () => {
             {activeTab === 'cuenta' && <AccountSection user={user} />}
             {activeTab === 'pedidos' && <OrdersSection />}
             {activeTab === 'promociones' && <PromotionsSection promotions={promotions} />}
-            {activeTab === 'notificaciones' && <NotificationsSection notifications={notifications} />}
             {activeTab === 'soporte' && <SupportSection tickets={supportTickets} />}
           </motion.div>
         </AnimatePresence>
@@ -201,66 +251,75 @@ const ProfilePage: React.FC = () => {
 
 // Componente para la sección de cuenta
 const AccountSection: React.FC<{ user: User }> = ({ user }) => {
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       {/* Información de la cuenta */}
-      <div className="bg-white rounded-2xl shadow-soft p-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-medical-gray-900 flex items-center gap-2">
+      <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
             <UserIcon className="w-5 h-5" />
             Información de la Cuenta
           </h2>
-          <button className="btn-medical-secondary">
+          <button className="btn-medical-secondary self-start sm:self-auto">
             <Settings className="w-4 h-4" />
-            Editar
+            <span className="hidden sm:inline ml-2">Editar</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 bg-medical-gray-50 rounded-xl">
-              <Building className="w-5 h-5 text-medical-gray-500" />
-              <div>
-                <div className="text-sm text-medical-gray-500">Empresa</div>
-                <div className="font-semibold">{user.company_name || 'Nombre de Empresa**'}</div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+          <div className="space-y-3 lg:space-y-4">
+            <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
+              <Building className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="text-xs lg:text-sm text-medical-gray-500">Empresa</div>
+                <div className="font-semibold text-sm lg:text-base truncate">
+                  {user.company_name || 'Nombre de Empresa'}
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-medical-gray-50 rounded-xl">
-              <Mail className="w-5 h-5 text-medical-gray-500" />
-              <div>
-                <div className="text-sm text-medical-gray-500">Email</div>
-                <div className="font-semibold">{user.email}</div>
+            <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
+              <Mail className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="text-xs lg:text-sm text-medical-gray-500">Email</div>
+                <div className="font-semibold text-sm lg:text-base truncate">{user.email}</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-medical-gray-50 rounded-xl">
-              <Phone className="w-5 h-5 text-medical-gray-500" />
-              <div>
-                <div className="text-sm text-medical-gray-500">Teléfono</div>
-                <div className="font-semibold">{user.phone || 'Teléfono no disponible**'}</div>
+            <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
+              <Phone className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="text-xs lg:text-sm text-medical-gray-500">Teléfono</div>
+                <div className="font-semibold text-sm lg:text-base">
+                  {user.phone || 'Teléfono no disponible'}
+                </div>
               </div>
             </div>
           </div>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 bg-medical-gray-50 rounded-xl">
-              <CreditCard className="w-5 h-5 text-medical-gray-500" />
-              <div>
-                <div className="text-sm text-medical-gray-500">RIF</div>
-                <div className="font-semibold">{user.rif || 'RIF no disponible**'}</div>
+          <div className="space-y-3 lg:space-y-4">
+            <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
+              <CreditCard className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="text-xs lg:text-sm text-medical-gray-500">RIF</div>
+                <div className="font-semibold text-sm lg:text-base">
+                  {user.rif || 'RIF no disponible'}
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-medical-gray-50 rounded-xl">
-              <Shield className="w-5 h-5 text-medical-gray-500" />
-              <div>
-                <div className="text-sm text-medical-gray-500">Representante Legal</div>
-                <div className="font-semibold">{user.representante_legal_nombre || 'No disponible**'}</div>
+            <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
+              <Shield className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="text-xs lg:text-sm text-medical-gray-500">Representante Legal</div>
+                <div className="font-semibold text-sm lg:text-base truncate">
+                  {user.representante_legal_nombre || 'No disponible'}
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-medical-gray-50 rounded-xl">
-              <MapPin className="w-5 h-5 text-medical-gray-500" />
-              <div>
-                <div className="text-sm text-medical-gray-500">Dirección</div>
-                <div className="font-semibold text-sm">{user.direccion_establecimiento || 'No disponible**'}</div>
+            <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
+              <MapPin className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="text-xs lg:text-sm text-medical-gray-500">Dirección</div>
+                <div className="font-semibold text-sm lg:text-base truncate">
+                  {user.direccion_establecimiento || 'No disponible'}
+                </div>
               </div>
             </div>
           </div>
@@ -268,30 +327,37 @@ const AccountSection: React.FC<{ user: User }> = ({ user }) => {
       </div>
 
       {/* Seguridad */}
-      <div className="bg-white rounded-2xl shadow-soft p-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-medical-gray-900 flex items-center gap-2">
+      <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
             <Key className="w-5 h-5" />
             Seguridad
           </h2>
-          <button className="btn-medical-secondary">
-            Cambiar Contraseña
+          <button className="btn-medical-secondary self-start sm:self-auto">
+            <span className="hidden sm:inline">Cambiar Contraseña</span>
+            <span className="sm:hidden">Contraseña</span>
           </button>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            <div>
-              <div className="font-semibold text-green-800">Cuenta {user.is_verified ? 'verificada' : 'no verificada'}</div>
-              <div className="text-sm text-green-600">Tu cuenta está {user.is_active ? 'activa' : 'inactiva'}</div>
+        <div className="space-y-3 lg:space-y-4">
+          <div className="flex items-center gap-3 p-3 lg:p-4 bg-green-50 rounded-xl border border-green-200">
+            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold text-green-800 text-sm lg:text-base">
+                Cuenta {user.is_verified ? 'verificada' : 'no verificada'}
+              </div>
+              <div className="text-xs lg:text-sm text-green-600">
+                Tu cuenta está {user.is_active ? 'activa' : 'inactiva'}
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 p-4 bg-medical-gray-50 rounded-xl">
-            <Calendar className="w-5 h-5 text-medical-gray-500" />
-            <div>
-              <div className="text-sm text-medical-gray-500">Último acceso</div>
-              <div className="font-semibold">{user.last_login ? new Date(user.last_login).toLocaleString('es-VE') : 'No registrado**'}</div>
+          <div className="flex items-center gap-3 p-3 lg:p-4 bg-medical-gray-50 rounded-xl border border-medical-gray-100">
+            <Calendar className="w-5 h-5 text-medical-gray-500 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs lg:text-sm text-medical-gray-500">Último acceso</div>
+              <div className="font-semibold text-sm lg:text-base">
+                {user.last_login ? new Date(user.last_login).toLocaleString('es-VE') : 'No registrado'}
+              </div>
             </div>
           </div>
         </div>
@@ -325,9 +391,9 @@ const PromotionsSection: React.FC<{ promotions: UserPromotion[] }> = ({ promotio
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl shadow-soft p-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-medical-gray-900 flex items-center gap-2">
+      <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
             <Gift className="w-5 h-5" />
             Promociones Disponibles
           </h2>
@@ -336,20 +402,20 @@ const PromotionsSection: React.FC<{ promotions: UserPromotion[] }> = ({ promotio
           </span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           {promotions.map((promotion) => (
             <motion.div
               key={promotion.id}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className={`relative p-6 rounded-2xl border-2 ${
+              className={`relative p-4 lg:p-6 rounded-2xl border-2 ${
                 promotion.is_used
                   ? 'bg-medical-gray-50 border-medical-gray-200 opacity-60'
                   : 'bg-gradient-to-br from-medical-blue-50 to-purple-50 border-medical-blue-200'
               }`}
             >
               {/* Badge de descuento */}
-              <div className={`absolute -top-3 -right-3 px-4 py-2 rounded-full text-white font-bold text-lg ${
+              <div className={`absolute -top-2 -right-2 lg:-top-3 lg:-right-3 px-3 lg:px-4 py-1 lg:py-2 rounded-full text-white font-bold text-sm lg:text-lg ${
                 promotion.is_used ? 'bg-medical-gray-400' : 'bg-medical-blue-gradient'
               }`}>
                 {getDiscountText(promotion)}
@@ -357,31 +423,31 @@ const PromotionsSection: React.FC<{ promotions: UserPromotion[] }> = ({ promotio
 
               {/* Estado usado */}
               {promotion.is_used && (
-                <div className="absolute top-4 left-4 px-3 py-1 bg-medical-gray-500 text-white text-xs font-medium rounded-full">
+                <div className="absolute top-3 lg:top-4 left-3 lg:left-4 px-2 lg:px-3 py-1 bg-medical-gray-500 text-white text-xs font-medium rounded-full">
                   USADO
                 </div>
               )}
 
-              <div className="mt-4">
-                <h3 className="text-lg font-bold text-medical-gray-900 mb-2">
+              <div className="mt-3 lg:mt-4">
+                <h3 className="text-base lg:text-lg font-bold text-medical-gray-900 mb-2">
                   {promotion.title}
                 </h3>
-                <p className="text-medical-gray-600 text-sm mb-4">
+                <p className="text-medical-gray-600 text-sm mb-3 lg:mb-4">
                   {promotion.description}
                 </p>
 
                 {/* Código de promoción */}
-                <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-medical-gray-200 mb-4">
-                  <div className="flex items-center justify-between">
-                    <div>
+                <div className="bg-white/80 backdrop-blur-sm p-3 lg:p-4 rounded-xl border border-medical-gray-200 mb-3 lg:mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex-1">
                       <div className="text-xs text-medical-gray-500 mb-1">Código de promoción</div>
-                      <div className="font-mono font-bold text-medical-gray-900 text-lg">
+                      <div className="font-mono font-bold text-medical-gray-900 text-base lg:text-lg break-all">
                         {promotion.code}
                       </div>
                     </div>
                     <button
                       onClick={() => copyToClipboard(promotion.code)}
-                      className="px-3 py-2 bg-medical-blue-100 text-medical-blue-700 rounded-lg hover:bg-medical-blue-200 transition-colors text-sm font-medium"
+                      className="px-3 py-2 bg-medical-blue-100 text-medical-blue-700 rounded-lg hover:bg-medical-blue-200 transition-colors text-sm font-medium self-start sm:self-auto"
                       disabled={promotion.is_used}
                     >
                       Copiar
@@ -390,28 +456,28 @@ const PromotionsSection: React.FC<{ promotions: UserPromotion[] }> = ({ promotio
                 </div>
 
                 {/* Detalles de la promoción */}
-                <div className="space-y-2 text-sm text-medical-gray-600">
+                <div className="space-y-2 text-xs lg:text-sm text-medical-gray-600">
                   {promotion.min_amount && (
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4 text-green-500 flex-shrink-0" />
                       <span>Compra mínima: ${promotion.min_amount}</span>
                     </div>
                   )}
                   {promotion.max_discount && (
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4 text-green-500 flex-shrink-0" />
                       <span>Descuento máximo: ${promotion.max_discount}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-orange-500" />
+                    <Clock className="w-3 h-3 lg:w-4 lg:h-4 text-orange-500 flex-shrink-0" />
                     <span>Válido hasta: {formatDate(promotion.valid_until)}</span>
                   </div>
                 </div>
 
                 {/* Botón de acción */}
                 {!promotion.is_used && (
-                  <button className="w-full mt-4 btn-medical-primary">
+                  <button className="w-full mt-3 lg:mt-4 btn-medical-primary text-sm lg:text-base">
                     Usar promoción
                   </button>
                 )}
@@ -421,160 +487,13 @@ const PromotionsSection: React.FC<{ promotions: UserPromotion[] }> = ({ promotio
         </div>
 
         {promotions.length === 0 && (
-          <div className="text-center py-12">
-            <Gift className="w-16 h-16 text-medical-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-medical-gray-500 mb-2">
+          <div className="text-center py-8 lg:py-12">
+            <Gift className="w-12 h-12 lg:w-16 lg:h-16 text-medical-gray-300 mx-auto mb-4" />
+            <h3 className="text-base lg:text-lg font-semibold text-medical-gray-500 mb-2">
               No hay promociones disponibles
             </h3>
-            <p className="text-medical-gray-400">
+            <p className="text-sm lg:text-base text-medical-gray-400">
               Las promociones aparecerán aquí cuando estén disponibles
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Sección de Notificaciones
-const NotificationsSection: React.FC<{ notifications: UserNotification[] }> = ({ notifications }) => {
-  const [notifs, setNotifs] = useState(notifications);
-
-  const getNotificationIcon = (type: string) => {
-    const icons = {
-      order_confirmed: CheckCircle,
-      order_shipped: Package,
-      order_delivered: CheckCircle,
-      promotion_available: Gift,
-      account_update: UserIcon,
-      system_message: Bell,
-      payment_received: CreditCard,
-      low_stock_alert: AlertTriangle
-    };
-    const IconComponent = icons[type as keyof typeof icons] || Bell;
-    return IconComponent;
-  };
-
-  const getNotificationColor = (type: string) => {
-    const colors = {
-      order_confirmed: 'text-blue-600 bg-blue-100',
-      order_shipped: 'text-indigo-600 bg-indigo-100',
-      order_delivered: 'text-green-600 bg-green-100',
-      promotion_available: 'text-purple-600 bg-purple-100',
-      account_update: 'text-orange-600 bg-orange-100',
-      system_message: 'text-gray-600 bg-gray-100',
-      payment_received: 'text-emerald-600 bg-emerald-100',
-      low_stock_alert: 'text-red-600 bg-red-100'
-    };
-    return colors[type as keyof typeof colors] || 'text-gray-600 bg-gray-100';
-  };
-
-  const markAsRead = (notificationId: string) => {
-    setNotifs(prev => prev.map(n => 
-      n.id === notificationId ? { ...n, is_read: true } : n
-    ));
-  };
-
-  const markAllAsRead = () => {
-    setNotifs(prev => prev.map(n => ({ ...n, is_read: true })));
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Hace menos de 1 hora';
-    if (diffInHours < 24) return `Hace ${diffInHours} hora${diffInHours === 1 ? '' : 's'}`;
-    if (diffInHours < 48) return 'Ayer';
-    return date.toLocaleDateString('es-VE');
-  };
-
-  const unreadCount = notifs.filter(n => !n.is_read).length;
-
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl shadow-soft p-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-medical-gray-900 flex items-center gap-2">
-            <Bell className="w-5 h-5" />
-            Notificaciones
-            {unreadCount > 0 && (
-              <span className="bg-medical-red-500 text-white text-xs px-2 py-1 rounded-full">
-                {unreadCount}
-              </span>
-            )}
-          </h2>
-          {unreadCount > 0 && (
-            <button
-              onClick={markAllAsRead}
-              className="text-sm text-medical-blue-600 hover:text-medical-blue-700 font-medium"
-            >
-              Marcar todas como leídas
-            </button>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          {notifs.map((notification) => {
-            const IconComponent = getNotificationIcon(notification.type);
-            const iconColor = getNotificationColor(notification.type);
-            
-            return (
-              <motion.div
-                key={notification.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                  notification.is_read
-                    ? 'bg-white border-medical-gray-200'
-                    : 'bg-medical-blue-50 border-medical-blue-200 shadow-sm'
-                }`}
-                onClick={() => markAsRead(notification.id)}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`p-2 rounded-full ${iconColor}`}>
-                    <IconComponent className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <h4 className={`font-semibold ${
-                        notification.is_read ? 'text-medical-gray-700' : 'text-medical-gray-900'
-                      }`}>
-                        {notification.title}
-                      </h4>
-                      <span className="text-xs text-medical-gray-500 whitespace-nowrap ml-4">
-                        {formatDate(notification.created_at)}
-                      </span>
-                    </div>
-                    <p className={`text-sm mt-1 ${
-                      notification.is_read ? 'text-medical-gray-500' : 'text-medical-gray-700'
-                    }`}>
-                      {notification.message}
-                    </p>
-                    {notification.action_url && (
-                      <button className="text-sm text-medical-blue-600 hover:text-medical-blue-700 mt-2 font-medium">
-                        Ver detalles →
-                      </button>
-                    )}
-                  </div>
-                  {!notification.is_read && (
-                    <div className="w-2 h-2 bg-medical-blue-600 rounded-full flex-shrink-0 mt-2"></div>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {notifs.length === 0 && (
-          <div className="text-center py-12">
-            <Bell className="w-16 h-16 text-medical-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-medical-gray-500 mb-2">
-              No hay notificaciones
-            </h3>
-            <p className="text-medical-gray-400">
-              Tus notificaciones aparecerán aquí
             </p>
           </div>
         )}
@@ -625,56 +544,57 @@ const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => 
     <div className="space-y-6">
       {/* Nuevo ticket */}
       {!showNewTicketForm ? (
-        <div className="bg-white rounded-2xl shadow-soft p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-medical-gray-900 flex items-center gap-2">
+        <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
               <MessageCircle className="w-5 h-5" />
               Centro de Soporte
             </h2>
             <button
               onClick={() => setShowNewTicketForm(true)}
-              className="btn-medical-primary flex items-center gap-2"
+              className="btn-medical-primary flex items-center gap-2 self-start sm:self-auto"
             >
               <MessageCircle className="w-4 h-4" />
-              Nuevo ticket
+              <span className="hidden sm:inline">Nuevo ticket</span>
+              <span className="sm:hidden">Nuevo</span>
             </button>
           </div>
 
           {/* Contacto rápido */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-            <div className="p-4 bg-medical-blue-50 rounded-xl text-center">
-              <Phone className="w-8 h-8 text-medical-blue-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-medical-gray-900">Teléfono</h3>
-              <p className="text-sm text-medical-gray-600">+58 212-800-FARMA</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 mb-6 lg:mb-8">
+            <div className="p-3 lg:p-4 bg-medical-blue-50 rounded-xl text-center border border-medical-blue-100">
+              <Phone className="w-6 h-6 lg:w-8 lg:h-8 text-medical-blue-600 mx-auto mb-2" />
+              <h3 className="font-semibold text-medical-gray-900 text-sm lg:text-base">Teléfono</h3>
+              <p className="text-xs lg:text-sm text-medical-gray-600">+58 212-800-FARMA</p>
               <p className="text-xs text-medical-gray-500">Lun-Vie 8AM-6PM</p>
             </div>
-            <div className="p-4 bg-green-50 rounded-xl text-center">
-              <MessageCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-medical-gray-900">WhatsApp</h3>
-              <p className="text-sm text-medical-gray-600">+58 414-FARMA-VE</p>
+            <div className="p-3 lg:p-4 bg-green-50 rounded-xl text-center border border-green-100">
+              <MessageCircle className="w-6 h-6 lg:w-8 lg:h-8 text-green-600 mx-auto mb-2" />
+              <h3 className="font-semibold text-medical-gray-900 text-sm lg:text-base">WhatsApp</h3>
+              <p className="text-xs lg:text-sm text-medical-gray-600">+58 414-FARMA-VE</p>
               <p className="text-xs text-medical-gray-500">24/7 Disponible</p>
             </div>
-            <div className="p-4 bg-purple-50 rounded-xl text-center">
-              <Mail className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-medical-gray-900">Email</h3>
-              <p className="text-sm text-medical-gray-600">soporte@grupodrozainka.com</p>
+            <div className="p-3 lg:p-4 bg-purple-50 rounded-xl text-center border border-purple-100 sm:col-span-2 lg:col-span-1">
+              <Mail className="w-6 h-6 lg:w-8 lg:h-8 text-purple-600 mx-auto mb-2" />
+              <h3 className="font-semibold text-medical-gray-900 text-sm lg:text-base">Email</h3>
+              <p className="text-xs lg:text-sm text-medical-gray-600">soporte@grupodrozainka.com</p>
               <p className="text-xs text-medical-gray-500">Respuesta en 24h</p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-soft p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-medical-gray-900">Crear Nuevo Ticket</h2>
+        <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900">Crear Nuevo Ticket</h2>
             <button
               onClick={() => setShowNewTicketForm(false)}
-              className="btn-medical-secondary"
+              className="btn-medical-secondary self-start sm:self-auto"
             >
               Cancelar
             </button>
           </div>
 
-          <form onSubmit={handleSubmitTicket} className="space-y-6">
+          <form onSubmit={handleSubmitTicket} className="space-y-4 lg:space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-medical-gray-700 mb-2">
@@ -736,7 +656,7 @@ const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => 
               />
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
               <button type="submit" className="btn-medical-primary flex-1">
                 Enviar ticket
               </button>
@@ -754,21 +674,23 @@ const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => 
 
       {/* Historial de tickets */}
       {!showNewTicketForm && (
-        <div className="bg-white rounded-2xl shadow-soft p-8">
+        <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
           <h3 className="text-lg font-bold text-medical-gray-900 mb-6">Mis Tickets</h3>
           
-          <div className="space-y-4">
+          <div className="space-y-3 lg:space-y-4">
             {tickets.map((ticket) => (
               <motion.div
                 key={ticket.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 border border-medical-gray-200 rounded-xl hover:shadow-md transition-all"
+                className="p-3 lg:p-4 border border-medical-gray-200 rounded-xl hover:shadow-md transition-all"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className="font-semibold text-medical-gray-900">{ticket.subject}</h4>
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 lg:gap-3 mb-2">
+                      <h4 className="font-semibold text-medical-gray-900 text-sm lg:text-base truncate">
+                        {ticket.subject}
+                      </h4>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
                         {ticket.status === 'open' ? 'Abierto' : 
                          ticket.status === 'in_progress' ? 'En progreso' : 
@@ -780,13 +702,13 @@ const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => 
                          ticket.priority === 'high' ? 'Alta' : 'Urgente'}
                       </span>
                     </div>
-                    <p className="text-sm text-medical-gray-600 mb-2">{ticket.message}</p>
-                    <div className="flex items-center gap-4 text-xs text-medical-gray-500">
+                    <p className="text-sm text-medical-gray-600 mb-2 line-clamp-2">{ticket.message}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-medical-gray-500">
                       <span>Creado: {new Date(ticket.created_at).toLocaleDateString('es-VE')}</span>
                       <span>#{ticket.id.slice(0, 8)}</span>
                     </div>
                   </div>
-                  <button className="btn-medical-secondary text-sm">
+                  <button className="btn-medical-secondary text-sm self-start sm:self-auto">
                     Ver detalles
                   </button>
                 </div>
@@ -795,12 +717,12 @@ const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => 
           </div>
 
           {tickets.length === 0 && (
-            <div className="text-center py-12">
-              <MessageCircle className="w-16 h-16 text-medical-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-medical-gray-500 mb-2">
+            <div className="text-center py-8 lg:py-12">
+              <MessageCircle className="w-12 h-12 lg:w-16 lg:h-16 text-medical-gray-300 mx-auto mb-4" />
+              <h3 className="text-base lg:text-lg font-semibold text-medical-gray-500 mb-2">
                 No hay tickets de soporte
               </h3>
-              <p className="text-medical-gray-400">
+              <p className="text-sm lg:text-base text-medical-gray-400">
                 Crea tu primer ticket para contactar a nuestro equipo de soporte
               </p>
             </div>
