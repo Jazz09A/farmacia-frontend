@@ -18,7 +18,9 @@ import {
   User,
   DollarSign,
   Copy,
-  CheckCheck
+  CheckCheck,
+  Shield,
+  X
 } from 'lucide-react';
 
 const orderStatuses = [
@@ -41,6 +43,7 @@ interface OrderModalProps {
   order: Order | null;
   onClose: () => void;
   onUpdateStatus: (orderId: string, newStatus: string) => Promise<void>;
+  onUpdatePaymentStatus?: (orderId: string, paymentStatus: 'completed' | 'failed') => Promise<void>;
 }
 
 const getStatusIcon = (status: string) => {
@@ -70,12 +73,22 @@ const formatCurrency = (amount: number) => {
     }).format(amount);
 };
 
-const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus }) => {
+const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus, onUpdatePaymentStatus }) => {
   const [selectedStatus, setSelectedStatus] = useState(order?.status || 'pending');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isUpdatingPayment, setIsUpdatingPayment] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   
   if (!order) return null;
+
+  // Debug: mostrar información del estado de pago
+  console.log('OrderModal Debug:', {
+    payment_status: order.payment_status,
+    payment_capture_url: order.payment_capture_url,
+    onUpdatePaymentStatus: !!onUpdatePaymentStatus,
+    order_id: order.id,
+    order_number: order.order_number
+  });
   
   const handleConfirmStatusChange = async () => {
     if (selectedStatus === order.status) return;
@@ -126,6 +139,21 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
   };
 
   const hasStatusChanged = selectedStatus !== order.status;
+
+  const handlePaymentVerification = async (status: 'completed' | 'failed') => {
+    if (!onUpdatePaymentStatus) return;
+    
+    setIsUpdatingPayment(true);
+    try {
+      await onUpdatePaymentStatus(order.id, status);
+      // Update order state locally if needed
+      // This should trigger a refresh of the order data
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+    } finally {
+      setIsUpdatingPayment(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
@@ -347,6 +375,78 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus 
                     <span className="sm:hidden">Comprobante</span>
                     <ExternalLink className="w-4 h-4" />
                   </button>
+                )}
+
+                {/* Payment Verification Status and Buttons */}
+                {order.payment_capture_url && (
+                  <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="text-sm font-medium text-blue-900 flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      Verificación de Comprobante de Pago
+                    </div>
+                    {/* Mostrar estado actual */}
+                    <div className="p-3 bg-white rounded border">
+                      <div className="text-xs text-gray-600 mb-1">Estado Actual:</div>
+                      <div className={`text-sm font-medium ${
+                        order.payment_status === 'completed' ? 'text-green-700' :
+                        order.payment_status === 'failed' ? 'text-red-700' :
+                        'text-yellow-700'
+                      }`}>
+                        {order.payment_status === 'completed' ? '✅ Pago Confirmado' :
+                         order.payment_status === 'failed' ? '❌ Pago Rechazado' :
+                         '⏳ Pendiente de Verificación'}
+                      </div>
+                    </div>
+                    
+                    {/* Botones de verificación solo si el pago está pendiente */}
+                    {onUpdatePaymentStatus && order.payment_status === 'pending' && (
+                      <div className="space-y-2">
+                        <div className="text-xs text-gray-600">Acciones disponibles:</div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handlePaymentVerification('completed')}
+                            disabled={isUpdatingPayment}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-green-400 text-white text-xs lg:text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                          >
+                            {isUpdatingPayment ? (
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <Check className="w-4 h-4" />
+                            )}
+                            <span>Confirmar Pago</span>
+                          </button>
+                          <button
+                            onClick={() => handlePaymentVerification('failed')}
+                            disabled={isUpdatingPayment}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:bg-red-400 text-white text-xs lg:text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                          >
+                            {isUpdatingPayment ? (
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <X className="w-4 h-4" />
+                            )}
+                            <span>Rechazar Pago</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Mensaje cuando el pago ya fue verificado */}
+                    {onUpdatePaymentStatus && order.payment_status !== 'pending' && (
+                      <div className="p-3 bg-gray-50 rounded border">
+                        <div className="text-xs text-gray-600 mb-1">Estado de Verificación:</div>
+                        <div className={`text-sm font-medium ${
+                          order.payment_status === 'completed' ? 'text-green-700' :
+                          order.payment_status === 'failed' ? 'text-red-700' :
+                          'text-gray-700'
+                        }`}>
+                          {order.payment_status === 'completed' ? '✅ Pago ya fue confirmado' :
+                           order.payment_status === 'failed' ? '❌ Pago ya fue rechazado' :
+                           'Estado de pago verificado'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

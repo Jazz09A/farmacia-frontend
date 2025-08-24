@@ -14,6 +14,7 @@ interface OrdersHookState {
   filters: OrderFilters;
   refreshOrders: () => Promise<void>;
   updateOrderStatus: (orderId: string, newStatus: string) => Promise<void>;
+  updatePaymentStatus: (orderId: string, paymentStatus: 'completed' | 'failed') => Promise<void>;
   deleteOrder: (orderId: string) => Promise<void>;
   setFilters: (filters: Partial<OrderFilters>) => void;
   setPage: (page: number) => void;
@@ -130,6 +131,35 @@ export const useOrders = (): OrdersHookState => {
     }
   }, [orders]);
 
+  // 💳 Actualizar estado de pago con actualización optimista
+  const updatePaymentStatus = useCallback(async (orderId: string, paymentStatus: 'completed' | 'failed') => {
+    const originalOrder = orders.find(o => o.id === orderId);
+    if (!originalOrder) return;
+
+    try {
+      // 🔄 Actualización optimista en el estado local
+      setOrders(prevOrders => 
+        prevOrders.map(order =>
+          order.id === orderId ? { ...order, payment_status: paymentStatus } : order
+        )
+      );
+
+      // 🌐 Actualizar en el servidor
+      await adminService.updatePaymentStatus(orderId, paymentStatus);
+      
+    } catch (err: any) {
+      console.error('Error updating payment status:', err);
+      setError(`Error actualizando estado de pago: ${err.message}`);
+      
+      // 🔄 Revertir cambios optimistas en caso de error
+      setOrders(prevOrders => 
+        prevOrders.map(order =>
+          order.id === orderId ? originalOrder : order
+        )
+      );
+    }
+  }, [orders]);
+
   // 🗑️ Eliminar orden
   const deleteOrder = useCallback(async (orderId: string) => {
     const originalOrders = [...orders];
@@ -205,6 +235,7 @@ export const useOrders = (): OrdersHookState => {
     filters,
     refreshOrders,
     updateOrderStatus,
+    updatePaymentStatus,
     deleteOrder,
     setFilters,
     setPage

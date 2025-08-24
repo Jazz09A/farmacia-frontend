@@ -13,6 +13,7 @@ interface Order {
   id: string;
   order_number: string;
   status: string;
+  payment_status: string;
   total: number;
   total_ref?: number;
   currency: string;
@@ -116,11 +117,28 @@ const OrdersSection: React.FC = () => {
                 <p className="text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString()}</p>
               </div>
               <div>
-                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                  order.status === 'delivered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {order.status}
-                </span>
+                <div className="flex gap-2 mb-2">
+                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                    order.status === 'delivered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {order.status}
+                  </span>
+                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                    order.payment_status === 'paid' || order.payment_status === 'confirmed'
+                      ? 'bg-green-100 text-green-800' 
+                      : order.payment_status === 'pending'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : order.payment_status === 'rejected'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {order.payment_status === 'paid' ? 'Pagado' : 
+                     order.payment_status === 'pending' ? 'Pago Pendiente' : 
+                     order.payment_status === 'confirmed' ? 'Pago Confirmado' :
+                     order.payment_status === 'rejected' ? 'Pago Rechazado' :
+                     order.payment_status}
+                  </span>
+                </div>
                 <p className="font-semibold mt-1">
                   {formatOrderPrice(order)}
                 </p>

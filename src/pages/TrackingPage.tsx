@@ -13,7 +13,8 @@ import {
   Info,
   User,
   CreditCard,
-  ShoppingBag
+  ShoppingBag,
+  Receipt
 } from 'lucide-react';
 import type { Order as ApiOrder} from '../types';
 import { authService } from '../services/AuthService';
@@ -693,14 +694,17 @@ const TrackingPage: React.FC = () => {
                   <div className="text-sm text-medical-gray-600 mb-1">Estado del pago</div>
                   <div className="font-semibold text-medical-gray-900">
                     <span className={`px-2 py-1 text-xs rounded-full ${
-                      order.payment_status === 'paid' 
+                      order.payment_status === 'completed' 
                         ? 'bg-green-100 text-green-800' 
                         : order.payment_status === 'pending'
                         ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
+                        : order.payment_status === 'failed'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {order.payment_status === 'paid' ? 'Pagado' : 
-                       order.payment_status === 'pending' ? 'Pendiente' : 
+                      {order.payment_status === 'completed' ? '✅ Pago Confirmado' : 
+                       order.payment_status === 'pending' ? '⏳ Pendiente de Verificación' : 
+                       order.payment_status === 'failed' ? '❌ Pago Rechazado' :
                        order.payment_status}
                     </span>
                   </div>
@@ -711,6 +715,36 @@ const TrackingPage: React.FC = () => {
                     <div className="text-sm text-medical-gray-600 mb-1">Referencia de pago</div>
                     <div className="font-mono font-semibold text-medical-gray-900 text-sm">
                       {order.payment_reference}
+                    </div>
+                  </div>
+                )}
+
+                {/* Información de verificación de pago */}
+                {order.payment_capture_url && (
+                  <div className="p-3 bg-medical-blue-50 rounded-xl border border-medical-blue-200">
+                    <div className="text-sm text-medical-gray-600 mb-2">Comprobante de Pago</div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => window.open(order.payment_capture_url, '_blank', 'noopener,noreferrer')}
+                        className="btn-medical-primary flex items-center gap-2 text-sm px-3 py-2"
+                      >
+                        <Receipt className="w-4 h-4" />
+                        Ver Comprobante
+                      </button>
+                    </div>
+                    
+                    {/* Estado de verificación */}
+                    <div className="mt-3 p-2 bg-white rounded border">
+                      <div className="text-xs text-medical-gray-600 mb-1">Estado de Verificación:</div>
+                      <div className={`text-xs font-medium ${
+                        order.payment_status === 'completed' ? 'text-green-700' :
+                        order.payment_status === 'failed' ? 'text-red-700' :
+                        'text-yellow-700'
+                      }`}>
+                        {order.payment_status === 'completed' ? '✅ Verificado y Confirmado' :
+                         order.payment_status === 'failed' ? '❌ Verificado y Rechazado' :
+                         '⏳ Pendiente de Verificación por Administrador'}
+                      </div>
                     </div>
                   </div>
                 )}

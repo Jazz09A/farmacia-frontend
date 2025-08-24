@@ -42,9 +42,9 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
 
   const translatePaymentStatus = (status: string): string => {
     const paymentStatusTranslations: Record<string, string> = {
-      'pending': 'Pendiente',
-      'paid': 'Pagado',
-      'failed': 'Fallido',
+      'pending': '⏳ Pendiente de Verificación',
+      'completed': '✅ Pago Confirmado',
+      'failed': '❌ Pago Rechazado',
       'processing': 'Procesando',
       'cancelled': 'Cancelado',
       'refunded': 'Reembolsado'
@@ -137,6 +137,16 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
                 </div>
                 <p className="text-sm"><strong>Método:</strong> {order.payment_method}</p>
                 <p className="text-sm"><strong>Estado:</strong> {translatePaymentStatus(order.payment_status)}</p>
+                {(order.payment_status === 'completed' || order.payment_status === 'confirmed') && (
+                  <div className="text-xs text-green-600 mt-1 font-medium">
+                    ✓ Pago verificado y confirmado
+                  </div>
+                )}
+                {order.payment_status === 'failed' && (
+                  <div className="text-xs text-red-600 mt-1 font-medium">
+                    ✗ Pago rechazado
+                  </div>
+                )}
                 {order.payment_reference && (
                   <p className="text-sm"><strong>Referencia:</strong> {order.payment_reference}</p>
                 )}
@@ -167,6 +177,40 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
                 </div>
               </div>
             </div>
+
+            {/* Payment Verification Status */}
+            {order.payment_capture_url && (
+              <div className="bg-medical-blue-50 p-4 rounded-xl mb-6 border border-medical-blue-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <CreditCard className="w-5 h-5 text-medical-blue-600" />
+                  <h5 className="font-semibold text-medical-gray-900">Estado de Verificación de Pago</h5>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => window.open(order.payment_capture_url, '_blank', 'noopener,noreferrer')}
+                      className="btn-medical-primary flex items-center gap-2 text-sm px-3 py-2"
+                    >
+                      Ver Comprobante de Pago
+                    </button>
+                  </div>
+                  
+                  {/* Estado de verificación */}
+                  <div className="p-3 bg-white rounded border">
+                    <div className="text-sm text-medical-gray-600 mb-1">Estado de Verificación:</div>
+                    <div className={`text-sm font-medium ${
+                      order.payment_status === 'completed' ? 'text-green-700' :
+                      order.payment_status === 'failed' ? 'text-red-700' :
+                      'text-yellow-700'
+                    }`}>
+                      {order.payment_status === 'completed' ? '✅ Verificado y Confirmado por Administrador' :
+                       order.payment_status === 'failed' ? '❌ Verificado y Rechazado por Administrador' :
+                       '⏳ Pendiente de Verificación por Administrador'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Shipping Address */}
             <div className="bg-medical-gray-50 p-4 rounded-xl mb-6">

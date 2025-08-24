@@ -40,6 +40,7 @@ const AdminOrdersPage: React.FC = () => {
     filters,
     refreshOrders,
     updateOrderStatus,
+    updatePaymentStatus,
     deleteOrder,
     setFilters,
     setPage
@@ -126,6 +127,25 @@ const AdminOrdersPage: React.FC = () => {
     
     if (selectedOrder && selectedOrder.id === orderId) {
       setSelectedOrder({ ...selectedOrder, status: newStatus });
+    }
+  };
+
+  const handleUpdatePaymentStatus = async (orderId: string, paymentStatus: 'completed' | 'failed') => {
+    try {
+      await updatePaymentStatus(orderId, paymentStatus);
+      
+      // Update local state for the modal
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({ 
+          ...selectedOrder, 
+          payment_status: paymentStatus
+        });
+      }
+      
+      // Refresh orders to get updated data
+      await refreshOrders();
+    } catch (error) {
+      console.error('Error updating payment status:', error);
     }
   };
   
@@ -544,6 +564,7 @@ const AdminOrdersPage: React.FC = () => {
           order={selectedOrder}
           onClose={() => setShowOrderModal(false)}
           onUpdateStatus={handleUpdateStatus}
+          onUpdatePaymentStatus={handleUpdatePaymentStatus}
         />
       )}
 

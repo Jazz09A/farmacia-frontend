@@ -93,6 +93,30 @@ class AdminService {
     }
   }
 
+  // 💳 Actualizar estado de pago
+  async updatePaymentStatus(orderId: string, paymentStatus: 'completed' | 'failed'): Promise<void> {
+    try {
+      const response = await authService.authenticatedFetch(
+        `${this.baseUrl}/payments/status`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({ 
+            order_id: orderId,
+            status: paymentStatus 
+          })
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Error updating payment status: ${errorData.message || response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Failed to update payment status:', error);
+      throw error;
+    }
+  }
+
   // 📋 Obtener detalles de una orden específica
   async getOrderDetails(orderId: string): Promise<Order> {
     try {
