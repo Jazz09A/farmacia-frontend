@@ -4,7 +4,7 @@ import { Product, SearchFilters } from '../types';
 import { getProductsPaginated } from '../data/products';
 import { Cart } from '../types';
 import { ProductCard } from '../components/Products/ProductCard';
-import { useCurrency } from '../hooks/useCurrency';
+import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import Pagination from '../components/common/Pagination';
 import { ProductCardSkeleton } from '../components/Skeleton/ProductCardSkeleton';
 import { authService } from '../services/AuthService';
@@ -34,7 +34,7 @@ const CatalogPage: React.FC = () => {
   const [totalProducts, setTotalProducts] = useState(0);
   const [productsPerPage] = useState(8);
   const [cart, setCart] = useState<Cart | null>(null);
-  const { currency, formatPrice: formatCurrencyPrice, getPriceInCurrency } = useCurrency();
+  const { currency, formatPrice: formatCurrencyPrice, getPriceInCurrency } = useGlobalCurrency();
   
   const [filters, setFilters] = useState<SearchFilters>({
     category: '',
@@ -117,7 +117,9 @@ const CatalogPage: React.FC = () => {
       const matchesSubcategory = !filters.subcategory || product.subcategory === filters.subcategory;
       const matchesPatology = !filters.patology || product.patology === filters.patology;
       const matchesBrand = !filters.brand || product.brand.toLowerCase().includes(filters.brand.toLowerCase());
-      const matchesPrice = product.price_ves >= filters.priceRange[0] && product.price_ves <= filters.priceRange[1];
+      // Use the appropriate price field based on current currency
+      const currentPrice = currency === 'VES' ? product.price_ves : product.price_ref;
+      const matchesPrice = currentPrice >= filters.priceRange[0] && currentPrice <= filters.priceRange[1];
       const matchesStock = !filters.inStock || product.in_stock;
       const matchesPrescription = !filters.prescription || product.prescription;
       const matchesRating = product.rating >= filters.rating;
@@ -132,7 +134,9 @@ const CatalogPage: React.FC = () => {
       
       switch (filters.sortBy) {
         case 'price':
-          comparison = a.price_ves - b.price_ves;
+          const priceA = currency === 'VES' ? a.price_ves : a.price_ref;
+          const priceB = currency === 'VES' ? b.price_ves : b.price_ref;
+          comparison = priceA - priceB;
           break;
         case 'rating':
           comparison = a.rating - b.rating;

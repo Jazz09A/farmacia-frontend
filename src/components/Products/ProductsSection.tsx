@@ -5,7 +5,7 @@ import { ProductCard } from './ProductCard';
 import { Product } from '../../types/index';
 
 interface ProductsSectionProps {
-  currency: 'VES' | 'REF';
+  currency: 'VES' | 'USD' | 'REF';
   onAddToCart: (product: Product, quantity: number) => void;
   formatPrice: (priceVES: number, priceREF: number) => string;
 }

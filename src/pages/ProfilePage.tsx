@@ -22,12 +22,14 @@ import {
   ShoppingBag
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import type {  
   UserPromotion, 
   SupportTicket 
 } from '../types/profile';
 import { User } from '../types/auth';
 import OrdersSection from '../components/Profile/OrdersSection';
+import ProfileCurrencyToggle from '../components/Profile/ProfileCurrencyToggle';
 import { useUserStats } from '../hooks/useUserStats';
 
 type TabType = 'cuenta' | 'pedidos' | 'promociones' | 'soporte';
@@ -35,6 +37,7 @@ type TabType = 'cuenta' | 'pedidos' | 'promociones' | 'soporte';
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('pedidos');
   const { user, loading } = useAuth();
+  const { formatPrice } = useGlobalCurrency();
   const location = useLocation();
   
   const [promotions] = useState<UserPromotion[]>([]);
@@ -63,13 +66,6 @@ const ProfilePage: React.FC = () => {
     });
   };
 
-  const formatCurrency = (amount: number, currency: 'VES' | 'USD') => {
-    const formatters = {
-      USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }),
-      VES: new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES' })
-    };
-    return formatters[currency].format(amount);
-  };
 
   if (loading || !user) {
     return (
@@ -88,6 +84,11 @@ const ProfilePage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl shadow-soft p-6 lg:p-8 mb-6 lg:mb-8"
         >
+          {/* Currency Toggle - Top Right */}
+          <div className="flex justify-end mb-4">
+            <ProfileCurrencyToggle />
+          </div>
+          
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
             {/* Avatar y info básica */}
             <div className="flex items-center gap-4 lg:gap-6">
@@ -169,7 +170,7 @@ const ProfilePage: React.FC = () => {
                     ) : statsError ? (
                       <span className="text-sm text-red-500">Error</span>
                     ) : (
-                      formatCurrency(userStats?.total_spent || 0, user.preferred_currency || 'VES')
+                      formatPrice(userStats?.total_spent || 0)
                     )}
                   </div>
                   <div className="text-sm lg:text-base text-medical-gray-600 font-medium">Total Gastado</div>

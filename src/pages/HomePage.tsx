@@ -18,12 +18,12 @@ import {
 
 // Hooks
 
-import { useCurrency } from '../hooks/useCurrency';
+import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import { Cart, Product } from '../types';
 import { useCart } from '../contexts/CartContext';
 
 const HomePage: React.FC = () => {
-  const currency = useCurrency();
+  const { currency, formatPrice: globalFormatPrice } = useGlobalCurrency();
   const { addToCart } = useCart();
   const [cartModalOpen, setCartModalOpen] = useState(false);
   // Loading states for different sections
@@ -70,10 +70,9 @@ const HomePage: React.FC = () => {
 
   // Wrapper function to match component expectations
   const formatPrice = (priceVES: number, priceREF: number) => {
-    return currency.formatPrice(
-      currency.currency === 'VES' ? priceVES : priceREF, 
-      currency.currency
-    );
+    return currency === 'VES' 
+      ? `Bs. ${priceVES.toLocaleString('es-VE')}` 
+      : `$ ${priceREF.toFixed(2)}`;
   };
 
   return (
@@ -112,7 +111,7 @@ const HomePage: React.FC = () => {
           />
         ) : (
           <ProductsSection
-            currency={currency.currency as 'VES' | 'REF'}
+            currency={currency as 'VES' | 'USD' | 'REF'}
             onAddToCart={handleAddToCart}
             formatPrice={formatPrice}
           />
@@ -164,7 +163,7 @@ const HomePage: React.FC = () => {
       <CartModal
         isOpen={cartModalOpen}
         onClose={() => setCartModalOpen(false)}
-        currency={currency.currency as 'VES' | 'REF'}
+        currency={currency as 'VES' | 'USD' | 'REF'}
         formatPrice={formatPrice}
         totalPrice={0} // Cart state is now managed by CartContext, so this will be updated automatically
         onUpdateQuantity={() => {}}

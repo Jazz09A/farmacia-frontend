@@ -6,7 +6,7 @@ import { Product } from '../../types';
 
 interface ProductCardProps {
   product: Product;
-  currency: 'VES' | 'REF';
+  currency: 'VES' | 'USD' | 'REF';
   formatPrice: (priceVES: number, priceREF: number) => string;
   className?: string;
 }
@@ -94,12 +94,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 <span className="text-sm text-gray-400 line-through">
                   {currency === 'VES' 
                     ? `Bs. ${product.original_price.toLocaleString('es-VE')}`
-                    : `$ ${(product.original_price / 36.5).toFixed(2)}`
+                    : `$ ${product.original_price.toFixed(2)}`
                   }
                 </span>
               )}
               <span className="text-xl font-bold text-gray-900">
-                {formatPrice(product.price_ves, product.price_ref)}
+                {currency === 'VES' 
+                  ? `Bs. ${product.price_ves.toLocaleString('es-VE')}` 
+                  : `$ ${product.price_ref.toFixed(2)}`
+                }
               </span>
             </div>
             {product.is_offer && (

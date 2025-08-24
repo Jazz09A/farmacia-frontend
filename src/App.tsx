@@ -43,17 +43,19 @@ const AdminFlashOffersPage = lazy(() => import('./pages/Admin/AdminFlashOffersPa
 const AdminAnalyticsPage = lazy(() => import('./pages/Admin/AdminAnalyticsPage'));
 
 // Hooks
-import { useCurrency } from './hooks/useCurrency';
+import { useGlobalCurrency } from './contexts/GlobalCurrencyContext';
 import { useCart } from './contexts/CartContext'; 
 
 // Contexts
 import { ScrollProvider, useScrollContext } from './contexts/ScrollContext';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { GlobalCurrencyProvider } from './contexts/GlobalCurrencyContext';
 
 const AppLayout = () => {
-  const { isScrolled, showScrollTop, currency } = useApp();
+  const { isScrolled, showScrollTop } = useApp();
   const { cart } = useCart();
+  const { currency, toggleCurrency } = useGlobalCurrency();
   const location = useLocation();
   const isAuthRoute = location.pathname.startsWith('/auth');
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -75,8 +77,8 @@ const AppLayout = () => {
       <Navbar
         isScrolled={isScrolled}
         cartItemsCount={cart?.total_items || 0}
-        currency={currency.currency as 'VES' | 'REF'  }
-        onCurrencyToggle={currency.toggleCurrency}
+        currency={currency as 'VES' | 'REF'  }
+        onCurrencyToggle={toggleCurrency}
       />
       <div className="flex-1 flex flex-col w-full max-w-full">
         <PageLayout>
@@ -108,8 +110,6 @@ const AppLayout = () => {
 const useApp = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  
-  const currency = useCurrency();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -122,7 +122,7 @@ const useApp = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  return { isScrolled, showScrollTop, currency };
+  return { isScrolled, showScrollTop };
 }
 
 // Optimized component for scroll button to avoid re-renders
@@ -201,12 +201,14 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <ScrollProvider>
-          <CartProvider>
-            <ScrollToTop />
-            <AppContainer />
-          </CartProvider>
-        </ScrollProvider>
+        <GlobalCurrencyProvider>
+          <ScrollProvider>
+            <CartProvider>
+              <ScrollToTop />
+              <AppContainer />
+            </CartProvider>
+          </ScrollProvider>
+        </GlobalCurrencyProvider>
       </AuthProvider>
     </Router>
   );

@@ -5,7 +5,7 @@ import { Clock, Flame, ShoppingCart, Zap } from 'lucide-react';
 import { FlashOfferWithProduct } from '../../types';
 import { useFlashOfferCountdown } from '../../hooks/useFlashOffers';
 import { flashOfferService } from '../../services/FlashOfferService';
-import { useCurrency } from '../../hooks/useCurrency';
+import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
 import { useCart } from '../../contexts/CartContext';
 
 interface FlashOfferCardProps {
@@ -23,7 +23,7 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
   showQuantity = true,
   className = '',
 }) => {
-  const { currency } = useCurrency();
+  const { currency } = useGlobalCurrency();
   const { addToCart } = useCart();
   const { formattedTime, isExpired } = useFlashOfferCountdown(offer.end_time);
 
@@ -151,14 +151,23 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <span className={`${config.price} font-bold text-red-600`}>
-              {currency === 'VES' ? 'Bs' : 'REF'} {discountedPrice.toFixed(2)}
+              {currency === 'VES' 
+                ? `Bs. ${discountedPrice.toLocaleString('es-VE')}` 
+                : `$ ${discountedPrice.toFixed(2)}`
+              }
             </span>
             <span className={`${config.originalPrice} text-gray-500 line-through`}>
-              {currency === 'VES' ? 'Bs' : 'REF'} {originalPrice.toFixed(2)}
+              {currency === 'VES' 
+                ? `Bs. ${originalPrice.toLocaleString('es-VE')}` 
+                : `$ ${originalPrice.toFixed(2)}`
+              }
             </span>
           </div>
           <p className="text-sm text-green-600 font-medium">
-            Ahorra {currency === 'VES' ? 'Bs' : 'REF'} {savings.toFixed(2)}
+            Ahorra {currency === 'VES' 
+              ? `Bs. ${savings.toLocaleString('es-VE')}` 
+              : `$ ${savings.toFixed(2)}`
+            }
           </p>
         </div>
 
