@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Truck } from 'lucide-react';
+import { X, Truck, Package, CreditCard, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useCurrency } from '../../hooks/useCurrency';
+import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
+import type { Currency } from '../../types';
 
 interface OrderDetailsModalProps {
   order: any;
@@ -10,7 +11,7 @@ interface OrderDetailsModalProps {
 }
 
 const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose }) => {
-  const { currency, formatPrice, convertPrice } = useCurrency();
+  const { currency, formatPrice, getPriceInCurrency } = useGlobalCurrency();
   
   if (!order) return null;
 
@@ -41,26 +42,48 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
     return paymentStatusTranslations[status] || status;
   };
 
-  // Función para formatear precios (simplificada para VES/REF)
-  const formatOrderPrice = (amount: number, orderCurrency: string) => {
-    const cleanAmount = Math.round(amount * 100) / 100;
-    
-    // Si la moneda del pedido es diferente a la seleccionada, convertir
-    if (orderCurrency !== currency) {
-      const convertedPrice = convertPrice(cleanAmount, orderCurrency as any, currency);
-      return formatPrice(convertedPrice, currency);
+  // Función para formatear precios usando los nuevos campos del endpoint
+  const formatOrderPrice = (vesAmount: number, refAmount?: number) => {
+    switch (currency) {
+      case 'VES':
+        return formatPrice(vesAmount, 'VES');
+      case 'USD':
+      case 'REF':
+        if (refAmount !== undefined) {
+          return formatPrice(refAmount, 'USD');
+        }
+        // Fallback: usar getPriceInCurrency si no hay refAmount
+        return formatPrice(getPriceInCurrency(vesAmount, refAmount || 0), currency);
+      default:
+        return formatPrice(vesAmount, order.currency as Currency);
     }
-    return formatPrice(cleanAmount, currency);
+  };
+
+  // Función para formatear precios de items individuales
+  const formatItemPrice = (item: any) => {
+    switch (currency) {
+      case 'VES':
+        return formatPrice(item.total_price, 'VES');
+      case 'USD':
+      case 'REF':
+        if (item.total_price_ref !== undefined) {
+          return formatPrice(item.total_price_ref, 'USD');
+        }
+        return formatPrice(getPriceInCurrency(item.total_price, item.total_price_ref || 0), currency);
+      default:
+        return formatPrice(item.total_price, order.currency as Currency);
+    }
   };
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-start pt-24 lg:pt-28">
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+          initial={{ scale: 0.9, opacity: 0, y: -50 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: -50 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto mx-4 my-4"
         >
           <div className="p-6">
             <div className="flex justify-between items-center border-b pb-4 mb-4">
@@ -84,37 +107,129 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
             </div>
             
             {/* Order Info */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div><strong>Estado:</strong> {translateOrderStatus(order.status)}</div>
-              <div><strong>Total:</strong> {formatOrderPrice(order.total, order.currency)}</div>
-              <div><strong>Método de Pago:</strong> {order.payment_method}</div>
-              <div><strong>Estado del Pago:</strong> {translatePaymentStatus(order.payment_status)}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-medical-gray-50 p-4 rounded-xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <Package className="w-5 h-5 text-medical-blue-600" />
+                  <h5 className="font-semibold text-medical-gray-900">Estado del Pedido</h5>
+                </div>
+                <p className="text-lg font-bold text-medical-blue-700">{translateOrderStatus(order.status)}</p>
+                {order.tracking_number && (
+                  <p className="text-sm text-medical-gray-600 mt-1">
+                    <strong>Número de seguimiento:</strong> {order.tracking_number}
+                  </p>
+                )}
+              </div>
+              <div className="bg-medical-gray-50 p-4 rounded-xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <CreditCard className="w-5 h-5 text-green-600" />
+                  <h5 className="font-semibold text-medical-gray-900">Información de Pago</h5>
+                </div>
+                <p className="text-sm"><strong>Método:</strong> {order.payment_method}</p>
+                <p className="text-sm"><strong>Estado:</strong> {translatePaymentStatus(order.payment_status)}</p>
+                {order.payment_reference && (
+                  <p className="text-sm"><strong>Referencia:</strong> {order.payment_reference}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Price Breakdown */}
+            <div className="bg-medical-blue-50 p-4 rounded-xl mb-6">
+              <h5 className="font-semibold text-medical-gray-900 mb-3">Desglose de Precios</h5>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span>{formatOrderPrice(order.subtotal, order.subtotal_ref)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Envío:</span>
+                  <span>{formatOrderPrice(order.shipping_cost, order.shipping_cost_ref)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Impuestos:</span>
+                  <span>{formatOrderPrice(order.taxes, order.taxes_ref)}</span>
+                </div>
+                <div className="border-t border-medical-gray-300 pt-2 mt-2">
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total:</span>
+                    <span className="text-medical-blue-700">{formatOrderPrice(order.total, order.total_ref)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Shipping Address */}
-            <div className="mb-6">
-              <h4 className="font-bold mb-2">Dirección de Envío</h4>
-              <p>{order.shipping_address.recipient_name}</p>
-              <p>{order.shipping_address.street}, {order.shipping_address.city}, {order.shipping_address.state}</p>
-              <p>{order.shipping_address.recipient_phone}</p>
+            <div className="bg-medical-gray-50 p-4 rounded-xl mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin className="w-5 h-5 text-medical-blue-600" />
+                <h5 className="font-semibold text-medical-gray-900">Dirección de Envío</h5>
+              </div>
+              <div className="space-y-1 text-sm">
+                <p><strong>{order.shipping_address.recipient_name}</strong></p>
+                <p>{order.shipping_address.street}</p>
+                <p>{order.shipping_address.city}, {order.shipping_address.state}</p>
+                <p>Código Postal: {order.shipping_address.postal_code}</p>
+                <p>Teléfono: {order.shipping_address.recipient_phone}</p>
+                {order.shipping_address.delivery_instructions && (
+                  <p className="mt-2 text-medical-gray-600">
+                    <strong>Instrucciones:</strong> {order.shipping_address.delivery_instructions}
+                  </p>
+                )}
+              </div>
+              {order.estimated_delivery && (
+                <div className="mt-3 pt-3 border-t border-medical-gray-200">
+                  <p className="text-sm">
+                    <strong>Entrega estimada:</strong> {new Date(order.estimated_delivery).toLocaleDateString('es-VE', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Items */}
             <div>
-              <h4 className="font-bold mb-2">Artículos</h4>
-              {order.items.map((item: any) => (
-                <div key={item.id} className="flex items-center space-x-4 border-b py-2">
-                  <img src={item.product_image} alt={item.product_name} className="w-16 h-16 rounded-md"/>
-                  <div className="flex-grow">
-                    <p className="font-semibold">{item.product_name}</p>
-                    <p className="text-sm text-gray-500">Cantidad: {item.quantity}</p>
+              <h4 className="font-bold mb-3">Artículos ({order.item_count})</h4>
+              <div className="space-y-3">
+                {order.items.map((item: any) => (
+                  <div key={item.id} className="bg-white border border-medical-gray-200 rounded-xl p-4">
+                    <div className="flex items-center space-x-4">
+                      <img 
+                        src={item.product_image} 
+                        alt={item.product_name} 
+                        className="w-16 h-16 rounded-lg object-cover"
+                      />
+                      <div className="flex-grow">
+                        <h6 className="font-semibold text-medical-gray-900">{item.product_name}</h6>
+                        {item.product_brand && (
+                          <p className="text-sm text-medical-gray-500">Marca: {item.product_brand}</p>
+                        )}
+                        {item.selected_presentation && (
+                          <p className="text-sm text-medical-gray-500">Presentación: {item.selected_presentation}</p>
+                        )}
+                        <p className="text-sm text-medical-gray-600 mt-1">Cantidad: {item.quantity}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-lg">{formatItemPrice(item)}</p>
+                        <p className="text-sm text-medical-gray-500">
+                          {formatOrderPrice(item.unit_price, item.unit_price_ref)} c/u
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p>{formatOrderPrice(item.total_price, order.currency)}</p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+
+            {/* Customer Notes */}
+            {order.customer_notes && (
+              <div className="mt-6 bg-yellow-50 border border-yellow-200 p-4 rounded-xl">
+                <h5 className="font-semibold text-yellow-800 mb-2">Notas del Cliente</h5>
+                <p className="text-sm text-yellow-700">{order.customer_notes}</p>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

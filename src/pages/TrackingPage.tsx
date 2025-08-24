@@ -17,10 +17,17 @@ import {
 } from 'lucide-react';
 import type { Order as ApiOrder} from '../types';
 import { authService } from '../services/AuthService';
+import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
+import type { Currency } from '../types';
 
 // Tipo híbrido para compatibilidad con la UI existente
 interface TrackingOrder extends Omit<ApiOrder, 'shipping_address'> {
   shipping_address: string | ApiOrder['shipping_address'];
+  // Add missing _ref fields for currency conversion
+  subtotal_ref?: number;
+  shipping_cost_ref?: number;
+  taxes_ref?: number;
+  total_ref?: number;
   tracking_info?: {
     tracking_number: string;
     carrier: string;
@@ -43,6 +50,7 @@ const TrackingPage: React.FC = () => {
   const [order, setOrder] = useState<TrackingOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { currency, formatPrice, getPriceInCurrency } = useGlobalCurrency();
 
   useEffect(() => {
     const loadOrder = async () => {
@@ -127,12 +135,37 @@ const TrackingPage: React.FC = () => {
     return statusMap[status as keyof typeof statusMap] || statusMap.pending;
   };
 
-  const formatCurrency = (amount: number, currency: string) => {
-    const formatters: Record<string, Intl.NumberFormat> = {
-      USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }),
-      VES: new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES' })
-    };
-    return formatters[currency]?.format(amount) || `${amount} ${currency}`;
+  // Función para formatear precios usando los nuevos campos del endpoint
+  const formatOrderPrice = (vesAmount: number, refAmount?: number) => {
+    switch (currency) {
+      case 'VES':
+        return formatPrice(vesAmount, 'VES');
+      case 'USD':
+      case 'REF':
+        if (refAmount !== undefined) {
+          return formatPrice(refAmount, 'USD');
+        }
+        // Fallback: usar getPriceInCurrency si no hay refAmount
+        return formatPrice(getPriceInCurrency(vesAmount, refAmount || 0), currency);
+      default:
+        return formatPrice(vesAmount, order?.currency as Currency);
+    }
+  };
+
+  // Función para formatear precios de items individuales
+  const formatItemPrice = (item: any) => {
+    switch (currency) {
+      case 'VES':
+        return formatPrice(item.total_price, 'VES');
+      case 'USD':
+      case 'REF':
+        if (item.total_price_ref !== undefined) {
+          return formatPrice(item.total_price_ref, 'USD');
+        }
+        return formatPrice(getPriceInCurrency(item.total_price, item.total_price_ref || 0), currency);
+      default:
+        return formatPrice(item.total_price, order?.currency as Currency);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -540,10 +573,10 @@ const TrackingPage: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <div className="font-bold text-medical-gray-900">
-                        {formatCurrency(item.total_price, order.currency)}
+                        {formatItemPrice(item)}
                       </div>
                       <div className="text-sm text-medical-gray-600">
-                        {formatCurrency(item.unit_price, order.currency)} c/u
+                        {formatOrderPrice(item.unit_price, item.unit_price_ref)} c/u
                       </div>
                     </div>
                   </div>
@@ -555,7 +588,7 @@ const TrackingPage: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-medical-gray-600">Subtotal:</span>
                     <span className="font-medium text-medical-gray-900">
-                      {formatCurrency(order.subtotal, order.currency)}
+                      {formatOrderPrice(order.subtotal, order.subtotal_ref)}
                     </span>
                   </div>
                   
@@ -563,7 +596,7 @@ const TrackingPage: React.FC = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-medical-gray-600">Envío:</span>
                       <span className="font-medium text-medical-gray-900">
-                        {formatCurrency(order.shipping_cost, order.currency)}
+                        {formatOrderPrice(order.shipping_cost, order.shipping_cost_ref)}
                       </span>
                     </div>
                   )}
@@ -572,7 +605,7 @@ const TrackingPage: React.FC = () => {
                 <div className="flex justify-between items-center">
                       <span className="text-medical-gray-600">Impuestos:</span>
                       <span className="font-medium text-medical-gray-900">
-                        {formatCurrency(order.taxes, order.currency)}
+                        {formatOrderPrice(order.taxes, order.taxes_ref)}
                       </span>
                     </div>
                   )}
@@ -580,7 +613,7 @@ const TrackingPage: React.FC = () => {
                   <div className="flex justify-between items-center pt-3 border-t border-medical-gray-200">
                   <span className="text-lg font-semibold text-medical-gray-900">Total del pedido:</span>
                   <span className="text-xl font-bold text-medical-blue-700">
-                    {formatCurrency(order.total, order.currency)}
+                    {formatOrderPrice(order.total, order.total_ref)}
                   </span>
                   </div>
                 </div>

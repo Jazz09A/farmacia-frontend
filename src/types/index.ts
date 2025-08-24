@@ -240,6 +240,7 @@ export interface Order {
   shipping_address: ShippingAddress;
   item_count: number;
   payment_capture_url: string;
+  shipping_address_id?: string;
 }
 
 export interface BlogPost {
