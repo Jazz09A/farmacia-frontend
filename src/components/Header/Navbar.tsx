@@ -4,6 +4,7 @@ import { ShoppingCart, User as UserIcon, Menu, X, Stethoscope, Phone, LogOut, He
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; // Updated import
+import { useNavbar } from '../../contexts/NavbarContext';
 import type { User } from '../../types/auth';
 import { SearchBar } from './SearchBar';
 import { CurrencyToggle } from './CurrencyToggle';
@@ -27,10 +28,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isNavbarVisible, setIsNavbarVisible] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+  const { isNavbarVisible } = useNavbar();
 
   // Don't render Navbar on admin routes
   if (location.pathname.startsWith('/admin')) {
@@ -80,20 +81,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
   }, [isMobileMenuOpen, isDesktopMenuOpen]);
 
-  // Ocultar/mostrar navbar cuando se abre/cierra el sidebar móvil
-  // Esto mejora la UX al evitar que el navbar interfiera con el sidebar
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      setIsNavbarVisible(false);
-    } else {
-      // Delay para que la animación del sidebar termine antes de mostrar el navbar
-      // Esto crea una transición más suave y natural
-      const timer = setTimeout(() => {
-        setIsNavbarVisible(true);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isMobileMenuOpen]);
 
   useEffect(() => {
     const checkIsMobile = () => setIsMobile(window.innerWidth < 1024);

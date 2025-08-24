@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Truck, Package, CreditCard, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
+import { useNavbar } from '../../contexts/NavbarContext';
 import type { Currency } from '../../types';
 
 interface OrderDetailsModalProps {
@@ -12,6 +13,15 @@ interface OrderDetailsModalProps {
 
 const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose }) => {
   const { currency, formatPrice, getPriceInCurrency } = useGlobalCurrency();
+  const { hideNavbar, showNavbar } = useNavbar();
+  
+  // Hide navbar when modal opens and show it when modal closes
+  useEffect(() => {
+    hideNavbar();
+    return () => {
+      showNavbar();
+    };
+  }, [hideNavbar, showNavbar]);
   
   if (!order) return null;
 
@@ -77,13 +87,13 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-start pt-24 lg:pt-28">
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
         <motion.div
           initial={{ scale: 0.9, opacity: 0, y: -50 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: -50 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto mx-4 my-4"
+          className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
         >
           <div className="p-6">
             <div className="flex justify-between items-center border-b pb-4 mb-4">

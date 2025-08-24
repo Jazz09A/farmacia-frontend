@@ -51,6 +51,7 @@ import { ScrollProvider, useScrollContext } from './contexts/ScrollContext';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { GlobalCurrencyProvider } from './contexts/GlobalCurrencyContext';
+import { NavbarProvider } from './contexts/NavbarContext';
 
 const AppLayout = () => {
   const { isScrolled, showScrollTop } = useApp();
@@ -203,10 +204,12 @@ function App() {
       <AuthProvider>
         <GlobalCurrencyProvider>
           <ScrollProvider>
-            <CartProvider>
-              <ScrollToTop />
-              <AppContainer />
-            </CartProvider>
+            <NavbarProvider>
+              <CartProvider>
+                <ScrollToTop />
+                <AppContainer />
+              </CartProvider>
+            </NavbarProvider>
           </ScrollProvider>
         </GlobalCurrencyProvider>
       </AuthProvider>
