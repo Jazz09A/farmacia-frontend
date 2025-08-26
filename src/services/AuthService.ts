@@ -7,6 +7,7 @@ import {
 import { Cart } from '../types';
 
 class AuthService {
+  private url = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   private baseUrl = '/api/v1/auth';
   private tokenKey = 'auth_token';
   private userKey = 'auth_user';
@@ -18,7 +19,7 @@ class AuthService {
   // Verificación de email
   async checkEmailAvailability(email: string): Promise<{ available: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/get-email-verification/${email}`, {
+      const response = await fetch(`${this.url}${this.baseUrl}/get-email-verification/${email}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -42,7 +43,7 @@ class AuthService {
   // Registro de usuario jurídico
   async registerJuridico(data: JuridicoRegisterData): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/register`, {
+      const response = await fetch(`${this.url}${this.baseUrl}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -60,7 +61,7 @@ class AuthService {
   // Login
   async login(data: LoginData): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/login`, {
+      const response = await fetch(`${this.url}${this.baseUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -81,6 +82,7 @@ class AuthService {
         throw new Error('Respuesta del servidor inválida');
       }
     } catch (error) {
+      console.error('Error en login:', error);
       throw new Error('Error de conexión. Por favor, intenta nuevamente.');
     }
   }
@@ -120,7 +122,7 @@ class AuthService {
 
   private async fetchUserData(signal: AbortSignal): Promise<User | null> {
     try {
-      const response = await this.authenticatedFetch(`${this.baseUrl}/me`, {
+      const response = await this.authenticatedFetch(`${this.url}${this.baseUrl}/me`, {
         signal
       });
       
@@ -182,7 +184,7 @@ class AuthService {
         throw new Error('No token available');
       }
 
-      const response = await fetch(`${this.baseUrl}/refresh`, {
+      const response = await fetch(`${this.url}${this.baseUrl}/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -280,7 +282,7 @@ class AuthService {
   }
   
   async addToCart(productId: string, quantity: number): Promise<any> {
-    const response = await this.authenticatedFetch(`${this.cartUrl}/add`, {
+    const response = await this.authenticatedFetch(`${this.url}${this.cartUrl}/add`, {
       method: 'POST',
       body: JSON.stringify({ product_id: productId, quantity }),
     });
@@ -303,7 +305,7 @@ class AuthService {
   }
 
   async clearCart(): Promise<void> {
-    const response = await this.authenticatedFetch(`${this.cartUrl}/clear`, {
+    const response = await this.authenticatedFetch(`${this.url}${this.cartUrl}/clear`, {
       method: 'POST',
     });
 
@@ -313,7 +315,7 @@ class AuthService {
   }
 
   async updateCartItem(itemId: string, quantity: number): Promise<any> {
-    const response = await this.authenticatedFetch(`${this.cartUrl}/item/${itemId}`, {
+    const response = await this.authenticatedFetch(`${this.url}${this.cartUrl}/item/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify({ quantity }),
     });
@@ -327,7 +329,7 @@ class AuthService {
   }
 
   async removeFromCart(itemId: string): Promise<any> {
-    const response = await this.authenticatedFetch(`${this.cartUrl}/item/${itemId}`, {
+    const response = await this.authenticatedFetch(`${this.url}${this.cartUrl}/item/${itemId}`, {
       method: 'DELETE',
     });
 
@@ -345,7 +347,7 @@ class AuthService {
     payment_capture_url: string;
     customer_notes: string;
   }): Promise<any> {
-    const response = await this.authenticatedFetch('/api/v1/user/orders', {
+    const response = await this.authenticatedFetch(`${this.url}/api/v1/user/orders`, {
       method: 'POST',
       body: JSON.stringify(orderData),
     });
@@ -359,7 +361,7 @@ class AuthService {
   }
 
   async getUserOrders(): Promise<any[]> {
-    const response = await this.authenticatedFetch('/api/v1/user/orders');
+    const response = await this.authenticatedFetch(`${this.url}/api/v1/user/orders`);
     if (!response.ok) {
       throw new Error('Failed to fetch user orders');
     }
@@ -367,7 +369,7 @@ class AuthService {
   }
 
   async getOrderDetails(orderId: string): Promise<any> {
-    const response = await this.authenticatedFetch(`/api/v1/user/orders/${orderId}`);
+    const response = await this.authenticatedFetch(`${this.url}/api/v1/user/orders/${orderId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch order details');
     }
@@ -425,7 +427,7 @@ class AuthService {
       'Authorization': `Bearer ${token}`,
     };
 
-    const response = await fetch(url, { ...options, headers });
+    const response = await fetch(`${this.url}${url}`, { ...options, headers });
 
     // 🔥 MEJORADO: Manejar diferentes códigos de error de autenticación
     if (response.status === 401 || response.status === 403) {

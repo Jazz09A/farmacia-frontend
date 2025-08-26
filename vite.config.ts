@@ -29,11 +29,12 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: process.env.VITE_API_URL || 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       }
-    }
+    },
+    
   },
   build: {
     target: 'es2022',
@@ -69,4 +70,5 @@ export default defineConfig({
     include: ['react', 'react-dom', 'react-router-dom'],
     exclude: ['lucide-react'],
   },
+  
 });
