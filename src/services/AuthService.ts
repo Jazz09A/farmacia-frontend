@@ -125,7 +125,8 @@ class AuthService {
     const fullUrl = `${this.url}${this.baseUrl}/me`;
     console.log("fullUrl: ", fullUrl);
     try {
-      const response = await this.authenticatedFetch(fullUrl, {
+      // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
+      const response = await this.authenticatedFetch(`${this.baseUrl}/me`, {
         signal
       });
       
@@ -285,7 +286,8 @@ class AuthService {
   }
   
   async addToCart(productId: string, quantity: number): Promise<any> {
-    const response = await this.authenticatedFetch(`${this.url}${this.cartUrl}/add`, {
+    // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
+    const response = await this.authenticatedFetch(`${this.cartUrl}/add`, {
       method: 'POST',
       body: JSON.stringify({ product_id: productId, quantity }),
     });
@@ -308,7 +310,8 @@ class AuthService {
   }
 
   async clearCart(): Promise<void> {
-    const response = await this.authenticatedFetch(`${this.url}${this.cartUrl}/clear`, {
+    // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
+    const response = await this.authenticatedFetch(`${this.cartUrl}/clear`, {
       method: 'POST',
     });
 
@@ -318,7 +321,8 @@ class AuthService {
   }
 
   async updateCartItem(itemId: string, quantity: number): Promise<any> {
-    const response = await this.authenticatedFetch(`${this.url}${this.cartUrl}/item/${itemId}`, {
+    // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
+    const response = await this.authenticatedFetch(`${this.cartUrl}/item/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify({ quantity }),
     });
@@ -332,7 +336,8 @@ class AuthService {
   }
 
   async removeFromCart(itemId: string): Promise<any> {
-    const response = await this.authenticatedFetch(`${this.url}${this.cartUrl}/item/${itemId}`, {
+    // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
+    const response = await this.authenticatedFetch(`${this.cartUrl}/item/${itemId}`, {
       method: 'DELETE',
     });
 
@@ -350,7 +355,8 @@ class AuthService {
     payment_capture_url: string;
     customer_notes: string;
   }): Promise<any> {
-    const response = await this.authenticatedFetch(`${this.url}/api/v1/user/orders`, {
+    // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
+    const response = await this.authenticatedFetch(`/api/v1/user/orders`, {
       method: 'POST',
       body: JSON.stringify(orderData),
     });
@@ -364,7 +370,8 @@ class AuthService {
   }
 
   async getUserOrders(): Promise<any[]> {
-    const response = await this.authenticatedFetch(`${this.url}/api/v1/user/orders`);
+    // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
+    const response = await this.authenticatedFetch(`/api/v1/user/orders`);
     if (!response.ok) {
       throw new Error('Failed to fetch user orders');
     }
@@ -372,7 +379,8 @@ class AuthService {
   }
 
   async getOrderDetails(orderId: string): Promise<any> {
-    const response = await this.authenticatedFetch(`${this.url}/api/v1/user/orders/${orderId}`);
+    // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
+    const response = await this.authenticatedFetch(`/api/v1/user/orders/${orderId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch order details');
     }
