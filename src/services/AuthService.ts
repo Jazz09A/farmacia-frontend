@@ -62,7 +62,6 @@ class AuthService {
   async login(data: LoginData): Promise<AuthResponse> {
     try {
       const response = await fetch(`${this.url}${this.baseUrl}/login`, {
-        
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -72,6 +71,7 @@ class AuthService {
         throw new Error(result.message || 'Credenciales inválidas');
       }
       if (result.access_token) {
+        console.log(result.access_token);
         this.setToken(result.access_token);
         const user = await this.getMe(); // Fetch user data after setting token
         if (user) {
@@ -122,8 +122,10 @@ class AuthService {
   }
 
   private async fetchUserData(signal: AbortSignal): Promise<User | null> {
+    const fullUrl = `${this.url}${this.baseUrl}/me`;
+    console.log("fullUrl: ", fullUrl);
     try {
-      const response = await this.authenticatedFetch(`${this.url}${this.baseUrl}/me`, {
+      const response = await this.authenticatedFetch(fullUrl, {
         signal
       });
       
