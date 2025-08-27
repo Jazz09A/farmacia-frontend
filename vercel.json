@@ -2,10 +2,6 @@
     "version": 2,
     "rewrites": [
       {
-        "source": "/api/:path*",
-        "destination": "https://backend-farmacia-a7yi.onrender.com/:path*"
-      },
-      {
         "source": "/(.*)",
         "destination": "/index.html"
       }
