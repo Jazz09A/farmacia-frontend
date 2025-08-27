@@ -269,8 +269,8 @@ class AdminService {
       );
       
       if (!response.ok) {
-        console.log(response.body);
-        throw new Error(`Error uploading file: ${response.status} ${response.statusText} ${response.body}`);
+        const errorData = await response.json();
+        throw new Error(`Error uploading file: ${response.status} ${errorData.message}`);
       }
       
       const data: BulkUploadResponse = await response.json();
