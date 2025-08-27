@@ -267,7 +267,7 @@ class AdminService {
           }
         }
       );
-      
+      console.log(await response.json());
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(`Error uploading file: ${response.status} ${errorData.message}`);
