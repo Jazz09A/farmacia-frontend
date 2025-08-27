@@ -263,7 +263,7 @@ class AdminService {
           method: 'POST',
           body: formData,
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'application/json'
           }
         }
       );
