@@ -261,7 +261,10 @@ class AdminService {
         `${this.baseUrl}/products/bulk-upload`,
         {
           method: 'POST',
-          body: formData
+          body: formData,
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
         }
       );
       
