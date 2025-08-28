@@ -198,7 +198,7 @@ const AdminProductsPage: React.FC = () => {
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium"
               >
-                <Filter className="w-4 h-4 mr-1" />
+                {/* <Filter className="w-4 h-4 mr-1" />
                 <span className="truncate">Filtros</span>
               </button>
               <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
@@ -207,7 +207,7 @@ const AdminProductsPage: React.FC = () => {
               </button>
               <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
                 <Download className="w-4 h-4 mr-1" />
-                <span className="truncate">Exportar</span>
+                <span className="truncate">Exportar</span> */}
               </button>
             </div>
             <button 
