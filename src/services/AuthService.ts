@@ -395,6 +395,26 @@ class AuthService {
     return await response.json();
   }
 
+  // Verificar email por token (no requiere autenticación)
+  async verifyEmailToken(token: string): Promise<{ success: boolean; message: string }>{
+    try {
+      const response = await fetch(`${this.url}${this.baseUrl}/verify-email/${token}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result?.message || 'No se pudo verificar el correo');
+      }
+
+      return { success: true, message: result?.message || 'Correo verificado correctamente' };
+    } catch (error: any) {
+      return { success: false, message: error?.message || 'Error verificando correo' };
+    }
+  }
+
   async createUserAddress(addressData: any): Promise<any> {
     const response = await this.authenticatedFetch('/api/v1/user/addresses', {
       method: 'POST',

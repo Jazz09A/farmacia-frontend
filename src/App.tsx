@@ -23,6 +23,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const TrackingPage = lazy(() => import('./pages/TrackingPage'));
 const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'));
 const VerificationRequiredPage = lazy(() => import('./pages/VerificationRequiredPage'));
+const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage'));
 
 // Blog Pages with Lazy Loading
 const BlogPage = lazy(() => import('./pages/BlogPage'));
@@ -67,6 +68,7 @@ const AppLayout = () => {
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/verify-account" element={<VerificationRequiredPage />} />
+          <Route path="/verify-email/:token" element={<EmailVerificationPage />} />
           <Route path="/admin/*" element={<AdminRoutes />} />
         </Routes>
       </Suspense>
