@@ -98,6 +98,7 @@ const AppLayout = () => {
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogPostDetailPage />} />
               <Route path="/verify-account" element={<VerificationRequiredPage />} />
+              <Route path="/verify-email/:token" element={<EmailVerificationPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
