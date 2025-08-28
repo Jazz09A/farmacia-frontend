@@ -1,4 +1,4 @@
-import React, { useState, Fragment, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, 
@@ -10,18 +10,16 @@ import {
   Search,
   LogOut,
   Plus,
-  Activity,
   Menu,
   X,
   ExternalLink,
   Zap,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Dialog, Transition } from '@headlessui/react';
 import { motion } from 'framer-motion';
 import CurrencyToggle from '../../components/Admin/CurrencyToggle';
 import { AdminCurrencyProvider } from '../../contexts/AdminCurrencyContext';
-
+import logo from '../../public/logo/Logo.webp';
 const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -42,8 +40,12 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
       <aside className={`admin-sidebar fixed inset-y-0 left-0 z-40 w-72 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:shadow-none ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-4 lg:p-6 border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center space-x-2 lg:space-x-3">
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Activity className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+            <div className="w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center flex-shrink-0">
+              <img 
+                src={logo} 
+                alt="Logo Grupo Drozainka" 
+                className="w-6 h-6 lg:w-8 lg:h-8 object-contain"
+              />
             </div>
             <div className="min-w-0">
               <h2 className="text-lg lg:text-xl font-bold text-gray-800 truncate">GRUPO DROZAINKA</h2>
