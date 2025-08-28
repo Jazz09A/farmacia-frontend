@@ -432,11 +432,15 @@ class AuthService {
       throw new Error('No authentication token - session terminated');
     }
 
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
+    const headers: HeadersInit = {
       'Authorization': `Bearer ${token}`,
+      ...(options.headers || {}),
     };
+
+    // Si NO es FormData, agregar Content-Type por defecto
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type' as keyof HeadersInit] = 'application/json';
+    }
 
     const response = await fetch(`${this.url}${url}`, { ...options, headers });
 
