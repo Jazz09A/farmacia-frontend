@@ -395,7 +395,7 @@ class AuthService {
     return await response.json();
   }
 
-  // Verificar email por token (no requiere autenticación)
+
   async verifyEmailToken(token: string): Promise<{ success: boolean; message: string }>{
     try {
       const response = await fetch(`${this.url}${this.baseUrl}/verify-email/${token}`, {
