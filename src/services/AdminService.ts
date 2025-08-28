@@ -285,7 +285,7 @@ class AdminService {
         `${this.baseUrl}/products/bulk-create`,
         {
           method: 'POST',
-          body: JSON.stringify({ products })
+          body: JSON.stringify(products)
         }
       );
       
