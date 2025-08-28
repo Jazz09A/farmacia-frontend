@@ -1,5 +1,6 @@
 import { Product } from "../types/index";
 
+const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // Interface for paginated response matching the backend structure
 interface PaginatedResponse {
   products: Product[];
@@ -85,7 +86,7 @@ const fetchProductsPaginated = async (page: number = 1, limit: number = 20): Pro
   try {
     
     // Build the API URL with pagination parameters
-    const apiUrl = `/api/v1/public/products?page=${page}&limit=${limit}&sort_by=name`;
+    const apiUrl = `${baseUrl}/api/v1/public/products?page=${page}&limit=${limit}&sort_by=name`;
     
     const response = await fetch(apiUrl);
     
@@ -131,7 +132,7 @@ export const getProductsPaginated = async (page: number = 1, limit: number = 20)
 // Export function for backward compatibility - gets first page of products
 export const getProducts = async (): Promise<Product[]> => {
   const response = await fetchProductsPaginated(1, 100);
-  console.log(response);
+  console.log("response: ", response);
   if (response.products.length === 0) {
     return [];
   }
@@ -139,13 +140,13 @@ export const getProducts = async (): Promise<Product[]> => {
 };
 
 export const getProductById = async (id: string): Promise<Product | null> => {
-  const response = await fetch(`/api/v1/public/products/${id}`);
+  const response = await fetch(`${baseUrl}/api/v1/public/products/${id}`);
   const data = await response.json();
   return data || null;
 };
 
 export const updateProduct = async (id: string, product: Product, token: string): Promise<Product | null> => {
-  const response = await fetch(`/api/v1/admin/products/${id}`, {
+  const response = await fetch(`${baseUrl}/api/v1/admin/products/${id}`, {
     method: 'PUT',
     body: JSON.stringify(product),
     headers: {
@@ -158,7 +159,7 @@ export const updateProduct = async (id: string, product: Product, token: string)
 };
 
 export const deleteImage = async (id: string, image_url: string, token: string): Promise<Product | null> => {
-  const response = await fetch(`/api/v1/admin/products/${id}/image/${image_url}`, {
+  const response = await fetch(`${baseUrl}/api/v1/admin/products/${id}/image/${image_url}`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
