@@ -131,6 +131,10 @@ export const getProductsPaginated = async (page: number = 1, limit: number = 20)
 // Export function for backward compatibility - gets first page of products
 export const getProducts = async (): Promise<Product[]> => {
   const response = await fetchProductsPaginated(1, 100);
+  console.log(response);
+  if (response.products.length === 0) {
+    return [];
+  }
   return response.products;
 };
 
