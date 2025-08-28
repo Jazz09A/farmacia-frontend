@@ -125,11 +125,7 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onSuccess }) => {
   };
 
   const downloadTemplate = () => {
-    const csvContent = `name,brand,category,subcategory,patology,price_ves,price_ref,description,stock,prescription,dosage,presentation,laboratorio,registro_sanitario,contraindicaciones,efectos_secundarios,sku,image
-Ibuprofeno 600mg,Bayer,Analgésicos,Antiinflamatorios,Dolor e inflamación,15.50,2.25,"Analgésico y antiinflamatorio para el alivio del dolor",100,false,"1 tableta cada 8 horas","Caja con 20 tabletas",Laboratorios Bayer,RS-12345,"Hipersensibilidad al ibuprofeno","Náuseas, vómitos",IBU600,https://example.com/ibuprofeno.jpg`;
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
+    const url = new URL("../../public/products/template_products.csv", import.meta.url).href;
     const a = document.createElement('a');
     a.href = url;
     a.download = 'plantilla_productos.csv';
