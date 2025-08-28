@@ -134,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         data-navbar
         className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${getNavbarClasses()} ${
           !isNavbarVisible ? 'pointer-events-none' : ''
-        }`}
+        } ${isMobileMenuOpen ? 'lg:block hidden' : 'block'}`} 
         style={{ 
           transitionDuration: isMobile ? '200ms' : '600ms',
           willChange: 'transform',

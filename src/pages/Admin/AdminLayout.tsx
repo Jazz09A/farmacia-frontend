@@ -160,7 +160,7 @@ const AdminHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => 
           >
             <Menu className="w-5 h-5 lg:w-6 lg:h-6" />
           </button>
-          <div className="hidden md:block">
+          {/* <div className="hidden md:block">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
@@ -169,7 +169,7 @@ const AdminHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => 
                 className="pl-9 pr-4 py-2 w-full max-w-xs text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Right part: Actions and User Menu */}
