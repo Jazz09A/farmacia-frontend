@@ -47,10 +47,7 @@ const AdminCustomersPage: React.FC = () => {
     setError(null);
     try {
       const data = await adminService.getCustomers();
-      if (data.length === 0) {
-        setError('No se encontraron clientes');
-        setCustomers([]);
-      }
+      console.log("data: ", data);
       setCustomers(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar clientes');
