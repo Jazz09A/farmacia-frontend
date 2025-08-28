@@ -24,8 +24,11 @@ import OrderModal from '../../components/Admin/OrderModal';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useOrders } from '../../hooks/useOrders';
+import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
+import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
 
 const AdminOrdersPage: React.FC = () => {
+  const { formatPrice } = useAdminCurrency();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
@@ -99,13 +102,7 @@ const AdminOrdersPage: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number, currency: string = 'VES') => {
-    return new Intl.NumberFormat('es-VE', {
-      style: 'currency',
-      currency: currency === 'VES' ? 'VES' : 'USD',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
+
 
   const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat('es-VE', {
@@ -323,7 +320,10 @@ const AdminOrdersPage: React.FC = () => {
                       </div>
                       <div className="text-right flex-shrink-0 ml-2">
                         <div className="font-bold text-gray-900 text-base lg:text-lg">
-                          {formatCurrency(order.total, order.currency)}
+                          <SmartPriceDisplay 
+                            amount={order.total}
+                            className="font-bold text-gray-900 text-base lg:text-lg"
+                          />
                         </div>
                         <div className={getPaymentStatusBadge(order.payment_status)}>
                           {order.payment_status}
@@ -458,7 +458,10 @@ const AdminOrdersPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="font-medium text-gray-900">
-                          {formatCurrency(order.total, order.currency)}
+                          <SmartPriceDisplay 
+                            amount={order.total}
+                            className="font-medium text-gray-900"
+                          />
                         </div>
                         <div className="text-xs text-gray-500">
                           {order.currency}

@@ -158,7 +158,7 @@ class AdminService {
 
       const url = `${this.baseUrl}/orders${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
       const response = await authService.authenticatedFetch(url);
-      
+      console.log(url);
       if (!response.ok) {
         throw new Error(`Error fetching orders: ${response.status}`);
       }
