@@ -523,7 +523,7 @@ const AdminProductsPage: React.FC = () => {
                     />
                   </td>
                   <td className="px-6 py-4">
-                      {getStockStatusBadge(product.in_stock ? 'in stock' : 'out of stock')}
+                    {getStockStatusBadge(product.in_stock ? 'in_stock' : 'out_of_stock')}
                     </td>
                   <td className="px-6 py-4">{0}</td>
                   <td className="px-6 py-4">{formatDate(product.created_at)}</td>
