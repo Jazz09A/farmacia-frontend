@@ -262,9 +262,6 @@ class AdminService {
         {
           method: 'POST',
           body: formData,
-          headers: {
-            'Content-Type': 'formData'
-          }
         }
       );
       // console.log(await response.json());
