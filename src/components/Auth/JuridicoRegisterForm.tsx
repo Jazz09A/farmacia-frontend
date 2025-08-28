@@ -159,6 +159,18 @@ const JuridicoRegisterForm: React.FC<JuridicoRegisterFormProps> = ({ onSuccess, 
     } else if (currentStep === 3) {
         if (!formData.referencia_comercial_proveedor.trim()) newErrors.referencia_comercial_proveedor = ['La referencia comercial es requerida'];
         if (!formData.referencia_bancaria.trim()) newErrors.referencia_bancaria = ['La referencia bancaria es requerida'];
+    } else if (currentStep === 4) {
+      if (!formData.dueno_telefono.trim()) newErrors.dueno_telefono = ['El teléfono del dueño es requerido'];
+      if (!formData.dueno_email.trim()) newErrors.dueno_email = ['El email del dueño es requerido'];
+      if (!formData.dueno_cumpleanos.trim()) newErrors.dueno_cumpleanos = ['El cumpleaños del dueño es requerido'];
+      if (!formData.encargado_compra_telefono.trim()) newErrors.encargado_compra_telefono = ['El teléfono del encargado de compra es requerido'];
+      if (!formData.encargado_compra_email.trim()) newErrors.encargado_compra_email = ['El email del encargado de compra es requerido'];
+      if (!formData.encargado_cobranza_telefono.trim()) newErrors.encargado_cobranza_telefono = ['El teléfono del encargado de cobranza es requerido'];
+      if (!formData.encargado_cobranza_email.trim()) newErrors.encargado_cobranza_email = ['El email del encargado de cobranza es requerido'];
+      if (!formData.encargado_cobranza_cumpleanos.trim()) newErrors.encargado_cobranza_cumpleanos = ['El cumpleaños del encargado de cobranza es requerido'];
+      if (!formData.redes_sociales.trim()) newErrors.redes_sociales = ['Las redes sociales son requeridas'];
+      if (!formData.pagina_web.trim()) newErrors.pagina_web = ['La página web es requerida'];
+      if (!formData.codigo_sicm.trim()) newErrors.codigo_sicm = ['El código SICM es requerido'];
     }
     
     setErrors(newErrors);
@@ -484,25 +496,25 @@ const Step4AdditionalContacts: React.FC<StepProps> = ({ formData, onChange }) =>
       <div>
         <h4 className="font-medium text-gray-800 mb-2">Información del Dueño</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 border p-4 rounded-lg">
-            <InputField id="dueno_telefono" label="Teléfono" type="tel" value={formData.dueno_telefono} onChange={onChange} />
-            <InputField id="dueno_email" label="Email" type="email" value={formData.dueno_email} onChange={onChange} />
-            <InputField id="dueno_cumpleanos" label="Cumpleaños" type="date" value={formData.dueno_cumpleanos} onChange={onChange} />
+            <InputField id="dueno_telefono" label="Teléfono" type="tel" value={formData.dueno_telefono} onChange={onChange} required />
+            <InputField id="dueno_email" label="Email" type="email" value={formData.dueno_email} onChange={onChange} required />
+            <InputField id="dueno_cumpleanos" label="Cumpleaños" type="date" value={formData.dueno_cumpleanos} onChange={onChange} required />
         </div>
       </div>
       <div>
         <h4 className="font-medium text-gray-800 mb-2">Encargado de Compra</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 border p-4 rounded-lg">
-            <InputField id="encargado_compra_telefono" label="Teléfono" type="tel" value={formData.encargado_compra_telefono} onChange={onChange} />
-            <InputField id="encargado_compra_email" label="Email" type="email" value={formData.encargado_compra_email} onChange={onChange} />
-            <InputField id="encargado_compra_cumpleanos" label="Cumpleaños" type="date" value={formData.encargado_compra_cumpleanos} onChange={onChange} />
+            <InputField id="encargado_compra_telefono" label="Teléfono" type="tel" value={formData.encargado_compra_telefono} onChange={onChange} required />
+            <InputField id="encargado_compra_email" label="Email" type="email" value={formData.encargado_compra_email} onChange={onChange} required />
+            <InputField id="encargado_compra_cumpleanos" label="Cumpleaños" type="date" value={formData.encargado_compra_cumpleanos} onChange={onChange} required />
         </div>
       </div>
       <div>
         <h4 className="font-medium text-gray-800 mb-2">Encargado de Cobranza</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 border p-4 rounded-lg">
-            <InputField id="encargado_cobranza_telefono" label="Teléfono" type="tel" value={formData.encargado_cobranza_telefono} onChange={onChange} />
-            <InputField id="encargado_cobranza_email" label="Email" type="email" value={formData.encargado_cobranza_email} onChange={onChange} />
-            <InputField id="encargado_cobranza_cumpleanos" label="Cumpleaños" type="date" value={formData.encargado_cobranza_cumpleanos} onChange={onChange} />
+            <InputField id="encargado_cobranza_telefono" label="Teléfono" type="tel" value={formData.encargado_cobranza_telefono} onChange={onChange} required />
+            <InputField id="encargado_cobranza_email" label="Email" type="email" value={formData.encargado_cobranza_email} onChange={onChange} required />
+            <InputField id="encargado_cobranza_cumpleanos" label="Cumpleaños" type="date" value={formData.encargado_cobranza_cumpleanos} onChange={onChange} required />
         </div>
       </div>
     </div>
