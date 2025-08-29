@@ -47,6 +47,7 @@ interface FormData {
 
 const CheckoutPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isConfirming, setIsConfirming] = useState(false); // ✅ Agregar estado de carga
   const { cart, clearCart } = useCart();
   const { user, loading: userLoading } = useAuth();
   const { formatPrice, getPriceInCurrency } = useCurrency();
@@ -157,6 +158,7 @@ const CheckoutPage: React.FC = () => {
     };
   
     try {
+      setIsConfirming(true); // ✅ Activar estado de carga
       await authService.createOrder(orderData);
       
       localStorage.removeItem('checkoutFormData');
@@ -166,6 +168,8 @@ const CheckoutPage: React.FC = () => {
     } catch (error) {
       console.error('Failed to create order:', error);
       alert('Hubo un error al procesar tu pedido. Por favor, intenta de nuevo.');
+    } finally {
+      setIsConfirming(false); // ✅ Desactivar estado de carga
     }
   };
   
@@ -351,8 +355,22 @@ const CheckoutPage: React.FC = () => {
                   Siguiente <ChevronRight className="w-4 h-4" />
                 </button>
               ) : (
-                <button onClick={handleConfirmOrder} className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-xl">
-                  Confirmar Pedido <ShieldCheck className="w-4 h-4" />
+                <button 
+                  onClick={handleConfirmOrder} 
+                  disabled={isConfirming}
+                  className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-400 text-white rounded-xl transition-colors disabled:cursor-not-allowed"
+                >
+                  {isConfirming ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Procesando Pedido...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Confirmar Pedido</span>
+                    </>
+                  )}
                 </button>
               )}
             </div>

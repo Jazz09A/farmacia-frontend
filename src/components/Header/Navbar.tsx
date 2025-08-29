@@ -152,32 +152,35 @@ export const Navbar: React.FC<NavbarProps> = ({
           filter: { duration: 0.2, ease: "easeInOut" }
         }}
       >
-        <div className='bg-medical-blue-gradient'>
-          {!(shouldHideSearchBar && isMobile) && (
-            <motion.div
-              className={`transition-all ${isScrolled ? 'text-white py-1 px-4' : 'text-white py-2 px-4'}`}
-              style={{ transitionDuration: isMobile ? '200ms' : '500ms' }}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              transition={getMobileOptimizedTransition({ duration: 0.3 })}
-            >
-            <div className="medical-container text-center">
-              <motion.p 
-                className={`font-medium transition-all ${isScrolled ? 'text-xs' : 'text-sm'}`}
-                style={{ transitionDuration: isMobile ? '200ms' : '300ms' }}
-                initial={{ y: -10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={getMobileOptimizedTransition({ delay: 0.1 })}
+        {/* Banner de distribución nacional - Solo visible en home page */}
+        {location.pathname === '/' && (
+          <div className='bg-medical-blue-gradient'>
+            {!(shouldHideSearchBar && isMobile) && (
+              <motion.div
+                className={`transition-all ${isScrolled ? 'text-white py-1 px-4' : 'text-white py-2 px-4'}`}
+                style={{ transitionDuration: isMobile ? '200ms' : '500ms' }}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                transition={getMobileOptimizedTransition({ duration: 0.3 })}
               >
-                {isScrolled 
-                  ? '🚚 Distribución NACIONAL | 📞 0800-DROZAINKA'
-                  : '🚚 Distribución Nacional para Farmacias | 📞 Atención comercial 24/7: 0800-DROZAINKA'
-                }
-              </motion.p>
-            </div>
-          </motion.div>
-          )}
-        </div>
+              <div className="medical-container text-center">
+                <motion.p 
+                  className={`font-medium transition-all ${isScrolled ? 'text-xs' : 'text-sm'}`}
+                  style={{ transitionDuration: isMobile ? '200ms' : '300ms' }}
+                  initial={{ y: -10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={getMobileOptimizedTransition({ delay: 0.1 })}
+                >
+                  {isScrolled 
+                    ? '🚚 Distribución NACIONAL | 📞 0800-DROZAINKA'
+                    : '🚚 Distribución Nacional para Farmacias | 📞 Atención comercial 24/7: 0800-DROZAINKA'
+                  }
+                </motion.p>
+              </div>
+            </motion.div>
+            )}
+          </div>
+        )}
 
         <div className="medical-container">
           <div className="flex justify-between items-center h-14 lg:h-18">
