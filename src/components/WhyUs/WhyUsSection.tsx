@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Clock, Truck, Award, Users, Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const WhyUsSection: React.FC = () => {
   const features = [
@@ -216,20 +217,24 @@ export const WhyUsSection: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex flex-col gap-3">
-                <motion.button
-                  className="btn-medical-primary w-full px-6 py-3 text-base font-semibold shadow-lg hover:shadow-xl"
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  🎯 Convierte en Cliente Ahora
-                </motion.button>
-                <motion.button
-                  className="btn-medical-secondary w-full px-6 py-3 text-base font-semibold border-2 hover:border-medical-blue-300"
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  📋 Ver Catálogo Completo
-                </motion.button>
+                <Link to="/why-us">
+                  <motion.button
+                    className="btn-medical-primary w-full px-6 py-3 text-base font-semibold shadow-lg hover:shadow-xl"
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    🎯 Conoce Más Sobre Nosotros
+                  </motion.button>
+                </Link>
+                <Link to="/catalog">
+                  <motion.button
+                    className="btn-medical-secondary w-full px-6 py-3 text-base font-semibold border-2 hover:border-medical-blue-300"
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    📋 Ver Catálogo Completo
+                  </motion.button>
+                </Link>
               </div>
 
               {/* Trust Indicators */}

@@ -99,7 +99,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const menuItems = [
     { name: 'Inicio', href: '/', icon: Stethoscope },
     { name: 'Catálogo', href: '/catalog', icon: ShoppingCart },
-    { name: '¿Por qué nosotros?', href: '/porque-nosotros', icon: HelpCircle },
+    { name: '¿Por qué nosotros?', href: '/why-us', icon: HelpCircle },
     { name: 'Convertirse en cliente Drozainka', href: '/cliente-drozainka', icon: UserIcon },
     { name: '¿Quieres ser proveedor Drozainka?', href: '/proveedor-drozainka', icon: Briefcase },
     { name: 'Nuestras marcas', href: '/marcas', icon: Tag },
