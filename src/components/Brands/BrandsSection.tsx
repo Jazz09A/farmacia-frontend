@@ -63,46 +63,7 @@ export const BrandsSection: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Trust Indicators */}
-        <motion.div
-          className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          viewport={{ once: true }}
-        >
-          {[
-            { number: '500+', label: 'Productos Certificados' },
-            { number: '50+', label: 'Marcas Asociadas' },
-            { number: '10k+', label: 'Clientes Satisfechos' },
-            { number: '24/7', label: 'Atención Médica' }
-          ].map((stat, index) => (
-            <motion.div
-              key={index}
-              className="text-center"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 * index }}
-              viewport={{ once: true }}
-            >
-              <motion.div
-                className="text-3xl lg:text-4xl font-bold text-blue-600 mb-2"
-                initial={{ scale: 0 }}
-                whileInView={{ scale: 1 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 500, 
-                  damping: 15,
-                  delay: 0.2 + (0.1 * index)
-                }}
-                viewport={{ once: true }}
-              >
-                {stat.number}
-              </motion.div>
-              <p className="text-gray-600 font-medium">{stat.label}</p>
-            </motion.div>
-          ))}
-        </motion.div>
+
       </div>
     </section>
   );

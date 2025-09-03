@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 // Components
 import { HeroSection } from '../components/Hero/HeroSection';
 import { WhyUsSection } from '../components/WhyUs';
+import { CategoriesSection } from '../components/Categories';
+import { StatsSection } from '../components/Stats';
 import { FlashOffersSection } from '../components/FlashOffers/FlashOffersSection';
 import { ProductsSection } from '../components/Products/ProductsSection';
 import { BrandsSection } from '../components/Brands/BrandsSection';
@@ -31,6 +33,8 @@ const HomePage: React.FC = () => {
   const [loadingStates, setLoadingStates] = useState({
     hero: true,
     whyUs: true,
+    categories: true,
+    stats: true,
     flashOffers: true,
     products: true,
     blog: true,
@@ -44,10 +48,12 @@ const HomePage: React.FC = () => {
       { section: 'hero', delay: 800 },
       { section: 'whyUs', delay: 1000 },
       { section: 'brands', delay: 1200 },
-      { section: 'flashOffers', delay: 1400 },
-      { section: 'products', delay: 1700 },
-      { section: 'blog', delay: 2000 },
-      { section: 'contact', delay: 2200 }
+      { section: 'categories', delay: 1400 },
+      { section: 'stats', delay: 1600 },
+      { section: 'flashOffers', delay: 1800 },
+      { section: 'products', delay: 2100 },
+      { section: 'blog', delay: 2400 },
+      { section: 'contact', delay: 2600 }
     ];
 
     loadingSims.forEach(({ section, delay }) => {
@@ -107,6 +113,30 @@ const HomePage: React.FC = () => {
         />
       ) : (
         <BrandsSection />
+      )}
+
+      {/* Categories Section with Skeleton */}
+      {loadingStates.categories ? (
+        <SectionSkeleton 
+          showTitle={true} 
+          itemsCount={12} 
+          itemsPerRow={4} 
+          className="bg-white" 
+        />
+      ) : (
+        <CategoriesSection />
+      )}
+
+      {/* Stats Section with Skeleton */}
+      {loadingStates.stats ? (
+        <SectionSkeleton 
+          showTitle={false} 
+          itemsCount={4} 
+          itemsPerRow={4} 
+          className="bg-gradient-to-br from-medical-blue-50 to-medical-green-50" 
+        />
+      ) : (
+        <StatsSection />
       )}
 
       <main className="flex-1">
