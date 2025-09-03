@@ -1,26 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, Shield, Clock, Truck, Stethoscope, Heart, Phone } from 'lucide-react';
-import { BenefitCard } from './BenefitCard';
+import { ChevronDown, Stethoscope } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
-  const benefits = [
-    { 
-      icon: Shield, 
-      text: 'Productos Farmacéuticos Certificados',
-      description: 'Medicamentos con registro sanitario garantizado'
-    },
-    { 
-      icon: Clock, 
-      text: 'Distribución Confiable 24/7',
-      description: 'Suministro constante para tu farmacia'
-    },
-    { 
-      icon: Truck, 
-      text: 'Logística Especializada',
-      description: 'Entrega segura en toda Venezuela'
-    }
-  ];
 
   const scrollToProducts = () => {
     // Buscar la sección de productos por su ID o clase
@@ -138,26 +120,7 @@ export const HeroSection: React.FC = () => {
               </span>
             </motion.p>
 
-            {/* Enhanced Benefits */}
-            <div className="mb-12 max-w-5xl mx-auto px-4">
-              <motion.div
-                className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start justify-items-center"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.8 }}
-              >
-                {benefits.map((benefit, index) => (
-                  <div key={index} className="w-full max-w-sm">
-                    <BenefitCard
-                      icon={benefit.icon}
-                      title={benefit.text}
-                      description={benefit.description}
-                      index={index}
-                    />
-                  </div>
-                ))}
-              </motion.div>
-            </div>
+
 
             {/* Trust Indicators */}
             <motion.div
