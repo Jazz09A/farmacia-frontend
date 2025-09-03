@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 // Components
 import { HeroSection } from '../components/Hero/HeroSection';
+import { WhyUsSection } from '../components/WhyUs';
 import { FlashOffersSection } from '../components/FlashOffers/FlashOffersSection';
 import { ProductsSection } from '../components/Products/ProductsSection';
 import { BrandsSection } from '../components/Brands/BrandsSection';
@@ -29,6 +30,7 @@ const HomePage: React.FC = () => {
   // Loading states for different sections
   const [loadingStates, setLoadingStates] = useState({
     hero: true,
+    whyUs: true,
     flashOffers: true,
     products: true,
     blog: true,
@@ -40,6 +42,7 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const loadingSims = [
       { section: 'hero', delay: 800 },
+      { section: 'whyUs', delay: 1000 },
       { section: 'flashOffers', delay: 1200 },
       { section: 'products', delay: 1500 },
       { section: 'blog', delay: 1800 },
@@ -82,6 +85,16 @@ const HomePage: React.FC = () => {
         <HeroSkeleton />
       ) : (
         <HeroSection />
+      )}
+
+      {/* Why Us Section with Skeleton */}
+      {loadingStates.whyUs ? (
+        <SectionSkeleton 
+          showTitle={true}
+          className="bg-gradient-to-br from-gray-50 to-blue-50"
+        />
+      ) : (
+        <WhyUsSection />
       )}
 
       <main className="flex-1">
@@ -163,7 +176,7 @@ const HomePage: React.FC = () => {
       <CartModal
         isOpen={cartModalOpen}
         onClose={() => setCartModalOpen(false)}
-        currency={currency as 'VES' | 'USD' | 'REF'}
+        currency={currency as 'VES' | 'REF'}
         formatPrice={formatPrice}
         totalPrice={0} // Cart state is now managed by CartContext, so this will be updated automatically
         onUpdateQuantity={() => {}}
