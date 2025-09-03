@@ -6,7 +6,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; // Updated import
 import { useNavbar } from '../../contexts/NavbarContext';
 import type { User } from '../../types/auth';
-import { SearchBar } from './SearchBar';
+// import { SearchBar } from './SearchBar';
 import { CurrencyToggle } from './CurrencyToggle';
 import logoSrc from '../../public/logo/Logo.webp';
 
@@ -100,12 +100,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   const menuItems = [
     { name: 'Inicio', href: '/', icon: Stethoscope },
     { name: '¿Por qué nosotros?', href: '/porque-nosotros', icon: HelpCircle },
+    { name: 'Convertirse en cliente Drozainka', href: '/cliente-drozainka', icon: UserIcon },
     { name: 'Catálogo', href: '/catalog', icon: ShoppingCart },
-    { name: 'Cliente Drozainka', href: '/cliente-drozainka', icon: UserIcon },
-    { name: 'Proveedor Drozainka', href: '/proveedor-drozainka', icon: Briefcase },
+    { name: '¿Quieres ser proveedor Drozainka?', href: '/proveedor-drozainka', icon: Briefcase },
     { name: 'Nuestras marcas', href: '/marcas', icon: Tag },
     { name: 'Blog', href: '/blog', icon: BookText },
-    { name: 'Contáctanos', href: '/contacto', icon: Phone },
+    { name: 'Querémos conocerte', href: '/queremos-conocerte', icon: Phone },
   ];
 
   const getNavbarClasses = () => {
@@ -173,7 +173,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   {isScrolled 
                     ? '🚚 Distribución NACIONAL | 📞 0800-DROZAINKA'
-                    : '🚚 Distribución Nacional para Farmacias | 📞 Atención comercial 24/7: 0800-DROZAINKA'
+                    : "🚚 Distribución a Toda Venezuela | 📞 Atención comercial: 0424-XXX-XX-XX"
                   }
                 </motion.p>
               </div>
@@ -200,18 +200,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <img
                   src={logoSrc}
                   alt="Grupo Drozainka Logo"
-                  className="h-12 lg:h-16 w-auto object-contain"
+                  className="h-12 lg:h-18 w-auto object-contain"
                 />
               </Link>
             </div>
 
-            {!shouldHideSearchBar && (
+            {/* {!shouldHideSearchBar && (
               <div className="hidden lg:flex flex-1 justify-center px-8">
                 <div className="w-full max-w-lg">
                   <SearchBar isScrolled={isScrolled || isLightBackgroundPage} />
                 </div>
               </div>
-            )}
+            )} */}
 
             <div className="flex items-center flex-shrink-0 space-x-2 lg:space-x-3">
               <div className="hidden sm:block">
@@ -352,7 +352,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           {!shouldHideSearchBar && (
             <div className="lg:hidden pb-4">
-              <SearchBar isScrolled={isScrolled || isLightBackgroundPage} />
+              {/* <SearchBar isScrolled={isScrolled || isLightBackgroundPage} /> */}
             </div>
           )}
         </div>
