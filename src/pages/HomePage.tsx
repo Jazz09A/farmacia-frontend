@@ -5,6 +5,7 @@ import { HeroSection } from '../components/Hero/HeroSection';
 import { WhyUsSection } from '../components/WhyUs';
 import { CategoriesSection } from '../components/Categories';
 import { StatsSection } from '../components/Stats';
+import { TestimonialsSection } from '../components/Testimonials';
 import { FlashOffersSection } from '../components/FlashOffers/FlashOffersSection';
 import { ProductsSection } from '../components/Products/ProductsSection';
 import { BrandsSection } from '../components/Brands/BrandsSection';
@@ -35,6 +36,7 @@ const HomePage: React.FC = () => {
     whyUs: true,
     categories: true,
     stats: true,
+    testimonials: true,
     flashOffers: true,
     products: true,
     blog: true,
@@ -50,10 +52,11 @@ const HomePage: React.FC = () => {
       { section: 'brands', delay: 1200 },
       { section: 'categories', delay: 1400 },
       { section: 'stats', delay: 1600 },
-      { section: 'flashOffers', delay: 1800 },
-      { section: 'products', delay: 2100 },
-      { section: 'blog', delay: 2400 },
-      { section: 'contact', delay: 2600 }
+      { section: 'testimonials', delay: 1800 },
+      { section: 'flashOffers', delay: 2000 },
+      { section: 'blog', delay: 2300 },
+      { section: 'products', delay: 2600 },
+      { section: 'contact', delay: 2800 }
     ];
 
     loadingSims.forEach(({ section, delay }) => {
@@ -137,6 +140,18 @@ const HomePage: React.FC = () => {
         />
       ) : (
         <StatsSection />
+      )}
+
+      {/* Testimonials Section with Skeleton */}
+      {loadingStates.testimonials ? (
+        <SectionSkeleton 
+          showTitle={true} 
+          itemsCount={3} 
+          itemsPerRow={3} 
+          className="bg-white" 
+        />
+      ) : (
+        <TestimonialsSection />
       )}
 
       <main className="flex-1">
