@@ -43,10 +43,10 @@ const HomePage: React.FC = () => {
     const loadingSims = [
       { section: 'hero', delay: 800 },
       { section: 'whyUs', delay: 1000 },
-      { section: 'flashOffers', delay: 1200 },
-      { section: 'products', delay: 1500 },
-      { section: 'blog', delay: 1800 },
-      { section: 'brands', delay: 2000 },
+      { section: 'brands', delay: 1200 },
+      { section: 'flashOffers', delay: 1400 },
+      { section: 'products', delay: 1700 },
+      { section: 'blog', delay: 2000 },
       { section: 'contact', delay: 2200 }
     ];
 
@@ -95,6 +95,18 @@ const HomePage: React.FC = () => {
         />
       ) : (
         <WhyUsSection />
+      )}
+
+      {/* Brands Section with Skeleton */}
+      {loadingStates.brands ? (
+        <SectionSkeleton 
+          showTitle={true} 
+          itemsCount={6} 
+          itemsPerRow={6} 
+          className="bg-white" 
+        />
+      ) : (
+        <BrandsSection />
       )}
 
       <main className="flex-1">
@@ -147,18 +159,6 @@ const HomePage: React.FC = () => {
           </div>
         ) : (
           <FeaturedBlogPosts />
-        )}
-
-        {/* Brands Section with Skeleton */}
-        {loadingStates.brands ? (
-          <SectionSkeleton 
-            showTitle={true} 
-            itemsCount={6} 
-            itemsPerRow={6} 
-            className="bg-white" 
-          />
-        ) : (
-          <BrandsSection />
         )}
 
         {/* Contact Us Section with Skeleton */}
