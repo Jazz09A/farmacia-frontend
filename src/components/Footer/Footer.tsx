@@ -6,11 +6,7 @@ import {
   MapPin, 
   Facebook, 
   Twitter, 
-  Instagram, 
-  Shield,
-  Clock,
-  Award,
-  Heart
+  Instagram
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
@@ -38,42 +34,10 @@ export const Footer: React.FC = () => {
     'Garantía de Productos'
   ];
 
-  const certifications = [
-    { icon: Shield, text: 'SSL Certificado' },
-    { icon: Award, text: 'ISO Certificado' },
-    { icon: Heart, text: 'Aprobado por Salud' },
-    { icon: Clock, text: 'Servicio 24/7' }
-  ];
+
 
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-blue-900 to-blue-800 text-white">
-      {/* Trust Section */}
-      <div className="bg-blue-800/50 border-b border-blue-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <motion.div
-            className="grid grid-cols-2 md:grid-cols-4 gap-6"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            {certifications.map((cert, index) => (
-              <motion.div
-                key={index}
-                className="flex items-center space-x-3 text-blue-100"
-                whileHover={{ scale: 1.05, y: -2 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <div className="p-2 bg-blue-600/30 rounded-full">
-                  <cert.icon className="h-5 w-5" />
-                </div>
-                <span className="font-medium text-sm">{cert.text}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </div>
-
       {/* Main Footer */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
