@@ -449,3 +449,58 @@ html {
     scrollbar-width: thin;
     scrollbar-color: #888 #f1f1f1;
 }
+
+/* Hero Carousel Specific Styles */
+.hero-carousel {
+  contain: layout style paint;
+}
+
+.hero-carousel img {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Smooth transitions for carousel controls */
+.carousel-control {
+  transition: all var(--duration-normal) var(--ease-medical);
+  will-change: transform, background-color, border-color;
+}
+
+.carousel-control:hover {
+  transform: scale(1.05);
+}
+
+.carousel-indicator {
+  transition: all var(--duration-normal) var(--ease-medical);
+  will-change: transform, background-color;
+}
+
+.carousel-indicator.active {
+  transform: scale(1.2);
+}
+
+/* Performance optimizations for carousel animations */
+.carousel-slide-enter {
+  opacity: 0;
+  transform: scale(1.1);
+}
+
+.carousel-slide-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 800ms ease-in-out, transform 800ms ease-in-out;
+}
+
+.carousel-slide-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.carousel-slide-exit-active {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 800ms ease-in-out, transform 800ms ease-in-out;
+}

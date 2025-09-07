@@ -1,60 +1,29 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, Stethoscope } from 'lucide-react';
+import { Stethoscope } from 'lucide-react';
+import { HeroCarousel } from './HeroCarousel';
+import { heroCarouselImages } from '../../data/heroCarouselData';
 
 export const HeroSection: React.FC = () => {
-
-  const scrollToProducts = () => {
-    // Buscar la sección de productos por su ID o clase
-    const productsSection = document.querySelector('[data-section="products"]') || 
-                          document.querySelector('.products-section') ||
-                          document.querySelector('[id*="products"]') ||
-                          // Fallback: scroll después del hero hacia las ofertas/productos
-                          document.querySelector('main');
-    
-    if (productsSection) {
-      // Calcular offset para navbar fijo
-      const navbarHeight = window.innerWidth >= 1024 ? 80 : 64;
-      const bannerHeight = 40;
-      const offset = navbarHeight + bannerHeight + 20; // +20px de padding extra
-      
-      const elementPosition = productsSection.getBoundingClientRect().top + window.pageYOffset;
-      
-      window.scrollTo({
-        top: elementPosition - offset,
-        behavior: 'smooth'
-      });
-    } else {
-      // Fallback: scroll a la altura de la ventana
-      const navbarHeight = window.innerWidth >= 1024 ? 80 : 64;
-      const bannerHeight = 40;
-      const totalNavHeight = navbarHeight + bannerHeight;
-      
-      window.scrollTo({
-        top: window.innerHeight - totalNavHeight,
-        behavior: 'smooth'
-      });
-    }
-  };
 
   return (
     <div className="relative">
       {/* Hero Container con padding para navbar y banner promocional */}
       <div className="min-h-screen flex items-center justify-center overflow-hidden pt-40 sm:pt-36 lg:pt-32">
-        {/* High Quality Medical Background */}
+        {/* Image Carousel Background */}
         <div className="absolute inset-0">
-          {/* Imagen médica profesional de alta calidad */}
-          <img
-            src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80"
-            alt="Farmacéutico profesional en consulta médica moderna"
-            className="w-full h-full object-cover object-center"
-            loading="eager"
+          <HeroCarousel
+            images={heroCarouselImages}
+            autoPlay={true}
+            autoPlayInterval={6000}
+            showControls={true}
+            showIndicators={true}
+            showThumbnails={false}
+            className="w-full h-full"
           />
           
-          {/* Medical Gradient Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-br from-medical-blue-900/80 via-medical-blue-800/60 to-medical-green-800/70" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-medical-blue-900/30 to-transparent" />
+          {/* Subtle overlay for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
           
           {/* Floating Medical Elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -81,7 +50,7 @@ export const HeroSection: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto py-20">
+        <div className="relative z-5 text-center text-white px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto py-20 pointer-events-none">
           {/* Medical Badge */}
           <motion.div
             className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 mb-8"
@@ -122,53 +91,11 @@ export const HeroSection: React.FC = () => {
 
 
 
-            {/* Trust Indicators */}
-            <motion.div
-              className="flex flex-wrap items-center justify-center gap-8 mb-8 opacity-80"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.8 }}
-              transition={{ duration: 1, delay: 1.2 }}
-            >
-              {[
-                "🏥 +500 Farmacias Asociadas",
-                "⭐ 4.9/5 Confiabilidad",
-                "🚀 Distribución Nacional",
-                "🔒 Crédito Empresarial"
-              ].map((indicator, index) => (
-                <motion.div
-                  key={index}
-                  className="text-sm text-white/80 font-medium"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 1.2 + index * 0.1 }}
-                >
-                  {indicator}
-                </motion.div>
-              ))}
-            </motion.div>
           </motion.div>
-        </div>
-        {/* Enhanced Scroll Indicator - Centered */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex justify-center">
-          <motion.button
-            onClick={scrollToProducts}
-            className="text-white/90 hover:text-white transition-all duration-300 group cursor-pointer"
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <div className="flex flex-col items-center space-y-3">
-              <div className="glass-medical rounded-2xl p-3 border border-white/30 group-hover:glass-card group-hover:text-medical-gray-700 transition-all duration-300">
-                <ChevronDown className="h-6 w-6" />
-              </div>
-              <span className="text-sm font-medium hidden sm:block">Ver Catálogo</span>
-            </div>
-          </motion.button>
         </div>
 
         {/* Background Pattern Overlay */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute inset-0 opacity-10 pointer-events-none z-0">
           <div className="absolute inset-0" style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }} />
