@@ -17,6 +17,7 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const WhyUsPage = lazy(() => import('./pages/WhyUsPage'));
 const ClienteDrozainkaPage = lazy(() => import('./pages/ClienteDrozainkaPage'));
 const ProveedorDrozainkaPage = lazy(() => import('./pages/ProveedorDrozainkaPage'));
+const QueremosConocertePage = lazy(() => import('./pages/QueremosConocertePage'));
 const CatalogPage = lazy(() => import('./pages/CatalogPage'));
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
 const CartPage = lazy(() => import('./pages/CartPage'));
@@ -94,6 +95,7 @@ const AppLayout = () => {
               <Route path="/why-us" element={<WhyUsPage />} />
               <Route path="/cliente-drozainka" element={<ClienteDrozainkaPage />} />
               <Route path="/proveedor-drozainka" element={<ProveedorDrozainkaPage />} />
+              <Route path="/queremos-conocerte" element={<QueremosConocertePage />} />
               <Route path="/catalog" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
               <Route path="/product/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
               <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
