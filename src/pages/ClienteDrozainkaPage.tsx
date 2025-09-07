@@ -44,7 +44,7 @@ const ClienteDrozainkaPage: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="w-full bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Hero Banner Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Background Image */}

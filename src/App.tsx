@@ -78,14 +78,14 @@ const AppLayout = () => {
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Navbar
         isScrolled={isScrolled}
         cartItemsCount={cart?.total_items || 0}
         currency={currency as 'VES' | 'REF'  }
         onCurrencyToggle={toggleCurrency}
       />
-      <div className="flex-1 flex flex-col w-full max-w-full">
+      <main className="flex-1 flex flex-col">
         <PageLayout>
           <Suspense fallback={<LoadingSpinner message="Cargando página..." />}>
             <Routes>
@@ -107,10 +107,10 @@ const AppLayout = () => {
             </Routes>
           </Suspense>
         </PageLayout>
-      </div>
+      </main>
       <Footer />
       <OptimizedScrollToTopButton showScrollTop={showScrollTop} />
-    </>
+    </div>
   );
 };
 
@@ -195,10 +195,8 @@ const AppContainer = () => {
   const isAdminRoute = location.pathname.startsWith('/admin');
   
   return (
-    <div className={`App w-full flex flex-col bg-medical-gray-50 relative ${
-      isAdminRoute 
-        ? '' // Admin: fixed height, no scroll on body
-        : 'min-h-screen pb-16'        // Public: expandable height with footer space
+    <div className={`App w-full bg-medical-gray-50 relative ${
+      isAdminRoute ? '' : 'min-h-screen'
     }`}>
       <AppLayout />
     </div>

@@ -88,12 +88,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
     <div 
       style={{
         paddingTop: navbarHeight > 0 ? `${navbarHeight}px` : undefined,
-        paddingBottom: '6rem', // Added for footer spacing
-        minHeight: '100vh',
         width: '100%',
         maxWidth: '100%'
       }}
-      className="page-content"
+      className="page-content flex-1"
     >
       {children}
     </div>
