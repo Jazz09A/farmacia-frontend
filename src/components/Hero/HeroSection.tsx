@@ -50,7 +50,7 @@ export const HeroSection: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="relative z-5 text-center text-white px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto py-20 pointer-events-none">
+        <div className="relative z-5 text-center text-white px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto py-20 pb-32 pointer-events-none">
           {/* Medical Badge */}
           <motion.div
             className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 mb-8"

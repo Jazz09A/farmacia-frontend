@@ -47,15 +47,27 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
   // Navigation functions
   const goToNext = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-  }, [images.length]);
+    // Reanudar auto-play después de interacción manual
+    if (autoPlay && !isPlaying) {
+      setIsPlaying(true);
+    }
+  }, [images.length, autoPlay, isPlaying]);
 
   const goToPrevious = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
-  }, [images.length]);
+    // Reanudar auto-play después de interacción manual
+    if (autoPlay && !isPlaying) {
+      setIsPlaying(true);
+    }
+  }, [images.length, autoPlay, isPlaying]);
 
   const goToSlide = useCallback((index: number) => {
     setCurrentIndex(index);
-  }, []);
+    // Reanudar auto-play después de interacción manual
+    if (autoPlay && !isPlaying) {
+      setIsPlaying(true);
+    }
+  }, [autoPlay, isPlaying]);
 
   const togglePlayPause = useCallback(() => {
     setIsPlaying((prev) => !prev);
@@ -184,29 +196,27 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
 
       {/* Indicators */}
       {showIndicators && images.length > 1 && (
-        <motion.div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-50"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          style={{ 
-            transform: 'translateX(-50%)',
-            left: '50%'
-          }}
-        >
-          {images.map((_, index) => (
-            <button
-              key={index}
-              className={`carousel-indicator w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${
-                index === currentIndex
-                  ? 'bg-white scale-125 active'
-                  : 'bg-white/50 hover:bg-white/70'
-              }`}
-              onClick={() => goToSlide(index)}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </motion.div>
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center z-50">
+          <motion.div
+            className="flex space-x-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            {images.map((_, index) => (
+              <button
+                key={index}
+                className={`carousel-indicator w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${
+                  index === currentIndex
+                    ? 'bg-white scale-125 active'
+                    : 'bg-white/50 hover:bg-white/70'
+                }`}
+                onClick={() => goToSlide(index)}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </motion.div>
+        </div>
       )}
 
       {/* Thumbnails */}
