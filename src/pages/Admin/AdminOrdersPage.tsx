@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { 
   Search, 
   Filter, 
@@ -20,12 +20,13 @@ import {
   Calendar
 } from 'lucide-react';
 import { Order } from '../../types';
-import OrderModal from '../../components/Admin/OrderModal';
-import ConfirmationModal from '../../components/common/ConfirmationModal';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useOrders } from '../../hooks/useOrders';
 import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
 import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
+
+const OrderModal = lazy(() => import('../../components/Admin/OrderModal'));
+const ConfirmationModal = lazy(() => import('../../components/common/ConfirmationModal'));
 
 const AdminOrdersPage: React.FC = () => {
   const { formatPrice } = useAdminCurrency();
@@ -563,32 +564,36 @@ const AdminOrdersPage: React.FC = () => {
 
       {/* Order Modal */}
       {showOrderModal && (
-        <OrderModal
-          order={selectedOrder}
-          onClose={() => setShowOrderModal(false)}
-          onUpdateStatus={handleUpdateStatus}
-          onUpdatePaymentStatus={handleUpdatePaymentStatus}
-        />
+        <Suspense fallback={<div>Cargando...</div>}>
+          <OrderModal
+            order={selectedOrder}
+            onClose={() => setShowOrderModal(false)}
+            onUpdateStatus={handleUpdateStatus}
+            onUpdatePaymentStatus={handleUpdatePaymentStatus}
+          />
+        </Suspense>
       )}
 
       {/* Delete Confirmation Modal */}
       {orderToDelete && (
-        <ConfirmationModal
-          isOpen={!!orderToDelete}
-          onClose={() => setOrderToDelete(null)}
-          onConfirm={handleConfirmDelete}
-          title="Confirmar Eliminación"
-          message={
-            <span>
-              ¿Estás seguro de que quieres eliminar el pedido{' '}
-              <strong>#{orderToDelete.order_number || orderToDelete.id.substring(0, 8)}</strong>? 
-              <br />
-              Esta acción no se puede deshacer.
-            </span>
-          }
-          confirmText="Sí, eliminar"
-          isDestructive={true}
-        />
+        <Suspense fallback={<div>Cargando...</div>}>
+          <ConfirmationModal
+            isOpen={!!orderToDelete}
+            onClose={() => setOrderToDelete(null)}
+            onConfirm={handleConfirmDelete}
+            title="Confirmar Eliminación"
+            message={
+              <span>
+                ¿Estás seguro de que quieres eliminar el pedido{' '}
+                <strong>#{orderToDelete.order_number || orderToDelete.id.substring(0, 8)}</strong>? 
+                <br />
+                Esta acción no se puede deshacer.
+              </span>
+            }
+            confirmText="Sí, eliminar"
+            isDestructive={true}
+          />
+        </Suspense>
       )}
     </div>
   );

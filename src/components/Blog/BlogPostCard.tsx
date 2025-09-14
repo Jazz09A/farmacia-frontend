@@ -11,7 +11,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   return (
     <Link to={`/blog/${post.slug}`} className="block group bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
       <div className="overflow-hidden">
-        <img src={post.image || '/images/blog/default.jpg'} alt={post.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+        <img src={post.image || '/images/blog/default.jpg'} alt={post.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" decoding="async" height="192" />
       </div>
       <div className="p-6">
         <p className="text-sm text-blue-600 font-semibold">{post.category}</p>

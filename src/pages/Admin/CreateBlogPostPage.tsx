@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BlogPostForm from '../../components/Admin/BlogPostForm';
 import { BlogPost } from '../../types';
+import { BlogPostSkeleton } from '../../components/Skeleton';
+
+const BlogPostForm = lazy(() => import('../../components/Admin/BlogPostForm'));
 
 // En una app real, tendrías un estado global (Zustand, Redux) o un hook para manejar los posts.
 // Por ahora, simularemos la creación.
@@ -30,7 +32,9 @@ const CreateBlogPostPage: React.FC = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Crear Nuevo Artículo</h1>
-      <BlogPostForm onSubmit={handleCreatePost} />
+      <Suspense fallback={<BlogPostSkeleton />}>
+        <BlogPostForm onSubmit={handleCreatePost} />
+      </Suspense>
     </div>
   );
 };

@@ -7,7 +7,10 @@ import {
 import { Cart } from '../types';
 
 class AuthService {
-  private url = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  // En desarrollo usamos rutas relativas para aprovechar el proxy de Vite
+  // En producción usamos la URL completa
+  private isDevelopment = import.meta.env.DEV;
+  private url = this.isDevelopment ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:8000');
   private baseUrl = '/api/v1/auth';
   private tokenKey = 'auth_token';
   private userKey = 'auth_user';
@@ -66,6 +69,7 @@ class AuthService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
+      console.log("response: ", response);
       const result = await response.json();
       if (!response.ok) {
         throw new Error(result.message || 'Credenciales inválidas');
@@ -188,7 +192,8 @@ class AuthService {
         throw new Error('No token available');
       }
 
-      const response = await fetch(`${this.url}${this.baseUrl}/refresh`, {
+      const fullUrl = `${this.url}${this.baseUrl}/refresh`;
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -398,7 +403,8 @@ class AuthService {
 
   async verifyEmailToken(token: string): Promise<{ success: boolean; message: string }>{
     try {
-      const response = await fetch(`${this.url}${this.baseUrl}/verify-email/${token}`, {
+      const fullUrl = `${this.url}${this.baseUrl}/verify-email/${token}`;
+      const response = await fetch(fullUrl, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -462,7 +468,9 @@ class AuthService {
       headers['Content-Type' as keyof HeadersInit] = 'application/json';
     }
 
-    const response = await fetch(`${this.url}${url}`, { ...options, headers });
+    // Construir la URL correcta según el entorno
+    const fullUrl = `${this.url}${url}`;
+    const response = await fetch(fullUrl, { ...options, headers });
 
     // 🔥 MEJORADO: Manejar diferentes códigos de error de autenticación
     if (response.status === 401 || response.status === 403) {

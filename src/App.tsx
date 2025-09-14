@@ -28,6 +28,7 @@ const TrackingPage = lazy(() => import('./pages/TrackingPage'));
 const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'));
 const VerificationRequiredPage = lazy(() => import('./pages/VerificationRequiredPage'));
 const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage'));
+const CreditPage = lazy(() => import('./pages/CreditPage'));
 
 // Blog Pages with Lazy Loading
 const BlogPage = lazy(() => import('./pages/BlogPage'));
@@ -46,6 +47,7 @@ const CreateProductPage = lazy(() => import('./pages/Admin/CreateProductPage'));
 const AdminEditProductPage = lazy(() => import('./pages/Admin/AdminEditProductPage'));
 const AdminFlashOffersPage = lazy(() => import('./pages/Admin/AdminFlashOffersPage'));
 const AdminAnalyticsPage = lazy(() => import('./pages/Admin/AdminAnalyticsPage'));
+const AdminCreditPage = lazy(() => import('./pages/Admin/AdminCreditPage'));
 
 // Hooks
 import { useGlobalCurrency } from './contexts/GlobalCurrencyContext';
@@ -57,6 +59,7 @@ import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { GlobalCurrencyProvider } from './contexts/GlobalCurrencyContext';
 import { NavbarProvider } from './contexts/NavbarContext';
+import { CreditProvider } from './contexts/CreditContext';
 
 const AppLayout = () => {
   const { isScrolled, showScrollTop } = useApp();
@@ -103,6 +106,7 @@ const AppLayout = () => {
               <Route path="/order-success" element={<ProtectedRoute><OrderSuccessPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/tracking/:orderId" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />
+              <Route path="/credit" element={<ProtectedRoute><CreditPage /></ProtectedRoute>} />
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogPostDetailPage />} />
               <Route path="/verify-account" element={<VerificationRequiredPage />} />
@@ -185,6 +189,7 @@ const AdminRoutes = () => (
         <Route path="products/edit/:id" element={<AdminEditProductPage />} />
         <Route path="flash-offers" element={<AdminFlashOffersPage />} />
         <Route path="analytics" element={<AdminAnalyticsPage />} />
+        <Route path="credit" element={<AdminCreditPage />} />
         <Route path="blog" element={<AdminBlogPage />} />
         <Route path="blog/new" element={<CreateBlogPostPage />} />
         <Route path="blog/edit/:id" element={<EditBlogPostPage />} />
@@ -215,8 +220,10 @@ function App() {
           <ScrollProvider>
             <NavbarProvider>
               <CartProvider>
-                <ScrollToTop />
-                <AppContainer />
+                <CreditProvider>
+                  <ScrollToTop />
+                  <AppContainer />
+                </CreditProvider>
               </CartProvider>
             </NavbarProvider>
           </ScrollProvider>

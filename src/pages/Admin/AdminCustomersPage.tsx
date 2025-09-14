@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { 
   Users, 
   Search, 
@@ -14,10 +14,11 @@ import {
   Loader2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import ConfirmationModal from '../../components/common/ConfirmationModal';
-import CustomerStatsModal from '../../components/Admin/CustomerStatsModal';
 import { Customer } from '../../types';
 import { adminService } from '../../services/AdminService';
+
+const ConfirmationModal = lazy(() => import('../../components/common/ConfirmationModal'));
+const CustomerStatsModal = lazy(() => import('../../components/Admin/CustomerStatsModal'));
 
 
 
@@ -588,22 +589,26 @@ const AdminCustomersPage: React.FC = () => {
       )}
 
       {/* Customer Stats Modal */}
-      <CustomerStatsModal
-        isOpen={statsModalOpen}
-        onClose={() => setStatsModalOpen(false)}
-        customerId={selectedCustomerId}
-      />
+      <Suspense fallback={<div>Cargando...</div>}>
+        <CustomerStatsModal
+          isOpen={statsModalOpen}
+          onClose={() => setStatsModalOpen(false)}
+          customerId={selectedCustomerId}
+        />
+      </Suspense>
 
       {customerToDelete && (
-        <ConfirmationModal
-          isOpen={!!customerToDelete}
-          title="Confirmar Eliminación"
-          message={`¿Estás seguro de que deseas eliminar al cliente "${getCustomerDisplayName(customerToDelete)}"? Esta acción no se puede deshacer.`}
-          onConfirm={handleConfirmDelete}
-          onClose={() => setCustomerToDelete(null)}
-          confirmText="Eliminar"
-          cancelText="Cancelar"
-        />
+        <Suspense fallback={<div>Cargando...</div>}>
+          <ConfirmationModal
+            isOpen={!!customerToDelete}
+            title="Confirmar Eliminación"
+            message={`¿Estás seguro de que deseas eliminar al cliente "${getCustomerDisplayName(customerToDelete)}"? Esta acción no se puede deshacer.`}
+            onConfirm={handleConfirmDelete}
+            onClose={() => setCustomerToDelete(null)}
+            confirmText="Eliminar"
+            cancelText="Cancelar"
+          />
+        </Suspense>
       )}
     </div>
   );

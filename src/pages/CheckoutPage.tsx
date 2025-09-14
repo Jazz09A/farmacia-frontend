@@ -9,6 +9,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/AuthService';
 import { useUploadImage } from '../hooks/useUploadImage';
 import { useNavigate } from 'react-router-dom';
+import { useCredit } from '../contexts/CreditContext';
+import { useCreditValidation } from '../hooks/useCreditValidation';
+import { CreditOrderForm } from '../components/Credit/CreditOrderForm';
 
 interface Address {
   id: string;
@@ -32,6 +35,7 @@ const paymentMethods: PaymentMethod[] = [
   { id: 'pago-movil', name: 'Pago Móvil', description: 'pago en Bs. ', icon: '', available: true, currencies: ['VES'], data: 'Cédula: 1234567890\nTeléfono: 04123456789\nBanco: Banco de Venezuela' },
   { id: 'zelle', name: 'Zelle', description: 'Datos para pago en USD.', icon: '', available: true, currencies: ['REF'], data: 'Correo: zelle@zelle.com' },
   { id: 'efectivo', name: 'Efectivo', description: 'Paga al recibir tu pedido.', icon: '', available: true, currencies: ['VES', 'REF']},
+  { id: 'credito', name: 'Pago con Crédito', description: 'Usa tu línea de crédito disponible', icon: '', available: true, currencies: ['REF']},
 ];
 
 interface FormData {
@@ -54,6 +58,12 @@ const CheckoutPage: React.FC = () => {
   const { uploadImage, isUploading } = useUploadImage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  
+  // Credit system hooks
+  const { creditInfo } = useCredit();
+  const { canCreateCreditOrder } = useCreditValidation();
+  const [showCreditForm, setShowCreditForm] = useState(false);
+  const [creditOrderResult, setCreditOrderResult] = useState<any>(null);
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -150,6 +160,15 @@ const CheckoutPage: React.FC = () => {
   };
   
   const handleConfirmOrder = async () => {
+    // Si es pago con crédito, usar el resultado ya creado
+    if (formData.payment_method === 'credito' && creditOrderResult) {
+      localStorage.removeItem('checkoutFormData');
+      clearCart();
+      navigate('/order-success', { state: { order: creditOrderResult } });
+      return;
+    }
+
+    // Para otros métodos de pago, usar el flujo normal
     const orderData = {
       shipping_address_id: formData.shipping_address_id,
       payment_method: formData.payment_method,
@@ -172,8 +191,21 @@ const CheckoutPage: React.FC = () => {
       setIsConfirming(false); // ✅ Desactivar estado de carga
     }
   };
+
+  const handleCreditOrderCreated = (result: any) => {
+    setCreditOrderResult(result);
+    setShowCreditForm(false);
+    // Avanzar al paso de confirmación
+    setCurrentStep(3);
+  };
   
   const nextStep = () => {
+    // Si se selecciona crédito, mostrar el formulario de crédito
+    if (currentStep === 2 && formData.payment_method === 'credito') {
+      setShowCreditForm(true);
+      return;
+    }
+    
     // Save data on step transition
     localStorage.setItem('checkoutFormData', JSON.stringify(formData));
     setCurrentStep(s => Math.min(s + 1, steps.length - 1));
@@ -267,15 +299,62 @@ const CheckoutPage: React.FC = () => {
                   <div>
                     <h2 className="text-2xl font-bold mb-6">3. Método de Pago</h2>
                     <div className="space-y-4">
-                      {paymentMethods.map((method) => (
-                        <label key={method.id} className="flex items-center p-4 rounded-xl border-2 border-gray-200 has-[:checked]:border-medical-primary has-[:checked]:bg-medical-blue-50">
-                          <input type="radio" name="payment_method" value={method.id} checked={formData.payment_method === method.id} onChange={handleChange} className="h-5 w-5 text-medical-primary focus:ring-medical-primary"/>
-                          <div className="ml-4">
-                            <p className="font-semibold">{method.name}</p>
+                      {paymentMethods.map((method) => {
+                        // Verificar si el método de crédito está disponible
+                        const isCreditMethod = method.id === 'credito';
+                        const creditValidation = isCreditMethod ? canCreateCreditOrder(cart?.total_ref || 0) : { canCreate: true };
+                        
+                        return (
+                          <label 
+                            key={method.id} 
+                            className={`flex items-center p-4 rounded-xl border-2 ${
+                              creditValidation.canCreate 
+                                ? 'border-gray-200 has-[:checked]:border-medical-primary has-[:checked]:bg-medical-blue-50' 
+                                : 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed'
+                            }`}
+                          >
+                            <input 
+                              type="radio" 
+                              name="payment_method" 
+                              value={method.id} 
+                              checked={formData.payment_method === method.id} 
+                              onChange={handleChange} 
+                              disabled={!creditValidation.canCreate}
+                              className="h-5 w-5 text-medical-primary focus:ring-medical-primary disabled:cursor-not-allowed"
+                            />
+                            <div className="ml-4 flex-1">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-semibold flex items-center gap-2">
+                                    {method.name}
+                                    {isCreditMethod && creditInfo && (
+                                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                        ${creditInfo.available_credit.toLocaleString()} disponible
+                                      </span>
+                                    )}
+                                  </p>
                             <p className="text-sm text-gray-500">{method.description}</p>
+                                </div>
+                                {isCreditMethod && !creditValidation.canCreate && (
+                                  <span className="text-xs text-red-600 font-medium">
+                                    {creditValidation.reason}
+                                  </span>
+                                )}
+                              </div>
+                              {isCreditMethod && creditValidation.suggestions && creditValidation.suggestions.length > 0 && (
+                                <div className="mt-2 text-xs text-orange-600">
+                                  <p className="font-medium">Sugerencias:</p>
+                                  <ul className="list-disc list-inside">
+                                    {creditValidation.suggestions.map((suggestion, index) => (
+                                      <li key={index}>{suggestion}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
                           </div>
                         </label>
-                      ))}
+                        );
+                      })}
                     </div>
                     
                     {/* Mostrar datos del método de pago seleccionado */}
@@ -340,6 +419,16 @@ const CheckoutPage: React.FC = () => {
                         <div className="bg-white p-6 rounded-2xl shadow-soft border">
                             <h3 className="font-bold text-lg mb-4 border-b pb-2">Método de Pago</h3>
                             <p className="text-sm">{paymentMethods.find(p => p.id === formData.payment_method)?.name}</p>
+                            {formData.payment_method === 'credito' && creditOrderResult && (
+                              <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                                <p className="text-sm text-blue-800">
+                                  <strong>Orden de Crédito:</strong> {creditOrderResult.order_number}
+                                </p>
+                                <p className="text-sm text-blue-800">
+                                  <strong>Crédito Restante:</strong> ${creditOrderResult.credit_remaining.toLocaleString()}
+                                </p>
+                              </div>
+                            )}
                         </div>
                     </div>
                   </div>
@@ -417,6 +506,28 @@ const CheckoutPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de formulario de crédito */}
+      {showCreditForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <CreditOrderForm
+              cartItems={cart?.items || []}
+              cartTotal={cart?.total_ref || 0}
+              selectedShippingAddress={(() => {
+                const selectedAddr = addresses.find(addr => addr.id === formData.shipping_address_id);
+                return selectedAddr ? {
+                  id: selectedAddr.id,
+                  name: selectedAddr.recipient_name || 'Dirección seleccionada',
+                  address: `${selectedAddr.street}, ${selectedAddr.city}, ${selectedAddr.state}`
+                } : undefined;
+              })()}
+              onOrderCreated={handleCreditOrderCreated}
+              onCancel={() => setShowCreditForm(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

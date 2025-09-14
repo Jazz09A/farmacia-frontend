@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { 
   Package, 
   Filter, 
@@ -16,12 +16,13 @@ import {
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Product } from '../../types';
-import ProductModal from '../../components/Admin/ProductModal';
-import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { ProductPlaceholder } from '../../components/common';
 import { getProducts } from '../../data/products';
 import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
 import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
+
+const ProductModal = lazy(() => import('../../components/Admin/ProductModal'));
+const ConfirmationModal = lazy(() => import('../../components/common/ConfirmationModal'));
 
 const AdminProductsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -578,22 +579,26 @@ const AdminProductsPage: React.FC = () => {
         </div>
 
       {showProductModal && selectedProduct && (
-        <ProductModal 
-          product={selectedProduct}
-          onClose={() => setShowProductModal(false)}
-        />
+        <Suspense fallback={<div>Cargando...</div>}>
+          <ProductModal 
+            product={selectedProduct}
+            onClose={() => setShowProductModal(false)}
+          />
+        </Suspense>
       )}
 
       {productToDelete && (
-        <ConfirmationModal
-          isOpen={!!productToDelete}
-          title="Confirmar Eliminación"
-          message={`¿Estás seguro de que deseas eliminar el producto "${productToDelete.name}"? Esta acción no se puede deshacer.`}
-          onConfirm={handleConfirmDelete}
-          onClose={() => setProductToDelete(null)}
-          confirmText="Eliminar"
-          cancelText="Cancelar"
-        />
+        <Suspense fallback={<div>Cargando...</div>}>
+          <ConfirmationModal
+            isOpen={!!productToDelete}
+            title="Confirmar Eliminación"
+            message={`¿Estás seguro de que deseas eliminar el producto "${productToDelete.name}"? Esta acción no se puede deshacer.`}
+            onConfirm={handleConfirmDelete}
+            onClose={() => setProductToDelete(null)}
+            confirmText="Eliminar"
+            cancelText="Cancelar"
+          />
+        </Suspense>
       )}
     </div>
   );

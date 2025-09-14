@@ -14,6 +14,7 @@ import {
   X,
   ExternalLink,
   Zap,
+  CreditCard,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion } from 'framer-motion';
@@ -92,6 +93,10 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
             <NavLink to="/admin/customers" className={navLinkClass} onClick={onClose}>
               <Users className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
               <span className="truncate">Clientes</span>
+            </NavLink>
+            <NavLink to="/admin/credit" className={navLinkClass} onClick={onClose}>
+              <CreditCard className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
+              <span className="truncate">Crédito</span>
             </NavLink>
           </div>
 

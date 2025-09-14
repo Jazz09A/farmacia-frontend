@@ -1,3 +1,5 @@
+import cartCache from '../utils/cartCache';
+
 // 🔒 Utilidades de seguridad para prevenir filtración de datos entre usuarios
 
 export class SecurityManager {
@@ -147,15 +149,10 @@ export class SecurityManager {
     });
 
     // 🧹 Limpiar caché específico del carrito usando su API
-    try {
-      const { cartCache } = await import('../utils/cartCache');
-      if (userId) {
-        cartCache.clearUserCart(userId);
-      } else {
-        cartCache.clearAll();
-      }
-    } catch (error) {
-      console.warn('Could not clear cart cache:', error);
+    if (userId) {
+      cartCache.clearUserCart(userId);
+    } else {
+      cartCache.clearAll();
     }
   }
 }

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import BlogPostForm from '../../components/Admin/BlogPostForm';
 import { BlogPost } from '../../types';
 import { mockBlogPosts } from '../../data/blogMockData';
+import { BlogPostSkeleton } from '../../components/Skeleton';
+
+const BlogPostForm = lazy(() => import('../../components/Admin/BlogPostForm'));
 
 const EditBlogPostPage: React.FC = () => {
   const navigate = useNavigate();
@@ -37,7 +39,9 @@ const EditBlogPostPage: React.FC = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Editar Artículo</h1>
-      <BlogPostForm onSubmit={handleUpdatePost} post={postToEdit} isEditing />
+      <Suspense fallback={<BlogPostSkeleton />}>
+        <BlogPostForm onSubmit={handleUpdatePost} post={postToEdit} isEditing />
+      </Suspense>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { mockBlogPosts } from '../../data/blogMockData';
 import { BlogPost } from '../../types';
@@ -18,7 +18,8 @@ import {
   CheckCircle,
   Clock
 } from 'lucide-react';
-import ConfirmationModal from '../../components/common/ConfirmationModal';
+
+const ConfirmationModal = lazy(() => import('../../components/common/ConfirmationModal'));
 
 const AdminBlogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -372,15 +373,17 @@ const AdminBlogPage: React.FC = () => {
       </div>
       
       {postToDelete && (
-        <ConfirmationModal
-          isOpen={!!postToDelete}
-          title="Confirmar Eliminación"
-          message={`¿Estás seguro de que deseas eliminar el artículo "${postToDelete.title}"? Esta acción no se puede deshacer.`}
-          onConfirm={handleConfirmDelete}
-          onClose={() => setPostToDelete(null)}
-          confirmText="Eliminar"
-          cancelText="Cancelar"
-        />
+        <Suspense fallback={<div>Cargando...</div>}>
+          <ConfirmationModal
+            isOpen={!!postToDelete}
+            title="Confirmar Eliminación"
+            message={`¿Estás seguro de que deseas eliminar el artículo "${postToDelete.title}"? Esta acción no se puede deshacer.`}
+            onConfirm={handleConfirmDelete}
+            onClose={() => setPostToDelete(null)}
+            confirmText="Eliminar"
+            cancelText="Cancelar"
+          />
+        </Suspense>
       )}
     </div>
   );

@@ -30,6 +30,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             src={product.image}
             alt={product.name}
             className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+            decoding="async"
+            height="192"
           />
           
           {/* Overlay */}

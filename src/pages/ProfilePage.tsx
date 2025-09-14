@@ -19,7 +19,8 @@ import {
   Calendar,
   Loader2,
   DollarSign,
-  ShoppingBag
+  ShoppingBag,
+  CreditCard as CreditIcon
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
@@ -29,9 +30,10 @@ import type {
 } from '../types/profile';
 import { User } from '../types/auth';
 import OrdersSection from '../components/Profile/OrdersSection';
+import { CreditDashboard } from '../components/Credit/CreditDashboard';
 import { useUserStats } from '../hooks/useUserStats';
 
-type TabType = 'cuenta' | 'pedidos' | 'promociones' | 'soporte';
+type TabType = 'cuenta' | 'pedidos' | 'credito' | 'promociones' | 'soporte';
 
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('pedidos');
@@ -52,6 +54,7 @@ const ProfilePage: React.FC = () => {
   const tabs = [
     { id: 'cuenta', label: 'Mi Cuenta', icon: UserIcon, count: null },
     { id: 'pedidos', label: 'Pedidos', icon: Package, count: null },
+    { id: 'credito', label: 'Crédito', icon: CreditIcon, count: null },
     // { id: 'promociones', label: 'Promociones', icon: Gift, count: promotions.filter(p => !p.is_used).length },
     // { id: 'soporte', label: 'Soporte', icon: MessageCircle, count: supportTickets.filter(t => t.status === 'open').length }
   ];
@@ -241,6 +244,7 @@ const ProfilePage: React.FC = () => {
           >
             {activeTab === 'cuenta' && <AccountSection user={user} />}
             {activeTab === 'pedidos' && <OrdersSection />}
+            {activeTab === 'credito' && <CreditSection />}
             {activeTab === 'promociones' && <PromotionsSection promotions={promotions} />}
             {activeTab === 'soporte' && <SupportSection tickets={supportTickets} />}
           </motion.div>
@@ -747,6 +751,23 @@ const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => 
           )}
         </div>
       )}
+    </div>
+  );
+};
+
+// Sección de Crédito
+const CreditSection: React.FC = () => {
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
+            <CreditIcon className="w-5 h-5 lg:w-6 lg:h-6" />
+            Gestión de Crédito
+          </h2>
+        </div>
+        <CreditDashboard />
+      </div>
     </div>
   );
 };
