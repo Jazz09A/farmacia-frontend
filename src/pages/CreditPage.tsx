@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { CreditDashboard } from '../components/Credit/CreditDashboard';
 import { PageLayout } from '../components/Layout/PageLayout';
-import { CreditCard, TrendingUp, Shield, Clock } from 'lucide-react';
+import { CreditCard, TrendingUp, Shield, Clock, Package, ArrowRight } from 'lucide-react';
 
 const CreditPage: React.FC = () => {
   return (
@@ -46,11 +47,57 @@ const CreditPage: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Dashboard Content */}
+          {/* Quick Actions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-8"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Link
+                to="/credit/orders"
+                className="group bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-sm hover:shadow-lg transition-all duration-200 p-6"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl group-hover:scale-110 transition-transform duration-200">
+                    <Package className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+                      Mis Órdenes de Crédito
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Gestiona tus órdenes y realiza pagos
+                    </p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-200" />
+                </div>
+              </Link>
+
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-sm p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl">
+                    <CreditCard className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-gray-800">
+                      Dashboard de Crédito
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Resumen de tu línea de crédito
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Dashboard Content */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
           >
             <CreditDashboard />
           </motion.div>

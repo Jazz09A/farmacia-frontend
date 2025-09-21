@@ -65,6 +65,7 @@ const AdminDashboardPage: React.FC = () => {
   const getStatusColor = (status: string) => {
     const colors = {
       pending: 'yellow',
+      confirmed: 'emerald', // Changed from blue to emerald for better UX
       processing: 'blue',
       shipped: 'purple',
       delivered: 'green',
@@ -271,29 +272,29 @@ const AdminDashboardPage: React.FC = () => {
           title="Ingresos Totales" 
           value={<SmartPriceDisplay amount={stats.total_revenue} />} 
           icon={DollarSign} 
-          change="+8.2%" 
-          changeType="up" 
+          // change="+8.2%" 
+          // changeType="up" 
         />
         <StatCard 
           title="Total de Pedidos" 
           value={stats.total_orders} 
           icon={ShoppingCart} 
-          change="+12.5%" 
-          changeType="up" 
+          // change="+12.5%" 
+          // changeType="up" 
         />
         <StatCard 
           title="Nuevos Clientes" 
           value={stats.new_customers} 
           icon={Users} 
-          change="+5" 
-          changeType="up" 
+          // change="+5" 
+          // changeType="up" 
         />
         <StatCard 
           title="Tasa de Conversión" 
           value={`${stats.conversion_rate.toFixed(2)}%`} 
           icon={TrendingUp} 
-          change="-0.5%" 
-          changeType="down" 
+          // change="-0.5%" 
+          // changeType="down" 
         />
       </div>
 
@@ -403,7 +404,7 @@ const AdminDashboardPage: React.FC = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs lg:text-sm font-medium text-gray-600">Confirmados</span>
-                <span className="text-sm lg:text-base font-bold text-green-600">{orderStatusSummary.confirmed}</span>
+                <span className="text-sm lg:text-base font-bold text-emerald-600">{orderStatusSummary.confirmed}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs lg:text-sm font-medium text-gray-600">Procesando</span>

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/AuthService';
 import { motion } from 'framer-motion';
-import { Eye, Truck } from 'lucide-react';
+import { Eye, Truck, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import OrderDetailsModal from './OrderDetailsModal';
+import PaymentModal from './PaymentModal'; // Import the new PaymentModal
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
 import type { Currency } from '../../types';
@@ -20,6 +21,7 @@ interface Order {
   exchange_rate?: number;
   item_count: number;
   created_at: string;
+  credit_remaining?: number; // Add credit_remaining field
 }
 
 const OrdersSection: React.FC = () => {
@@ -27,19 +29,22 @@ const OrdersSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false); // State for payment modal
   const { currency, formatPrice, convertPrice, getPriceInCurrency } = useGlobalCurrency();
 
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const userOrders = await authService.getUserOrders();
+      setOrders(userOrders);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const userOrders = await authService.getUserOrders();
-        setOrders(userOrders);
-      } catch (error) {
-        console.error("Failed to fetch orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchOrders();
   }, []);
 
@@ -51,6 +56,16 @@ const OrdersSection: React.FC = () => {
     } catch (error) {
       console.error("Failed to fetch order details:", error);
     }
+  };
+
+  const handlePay = (order: Order) => {
+    setSelectedOrder(order);
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePaymentCreated = () => {
+    setIsPaymentModalOpen(false);
+    fetchOrders();
   };
 
   // Función para formatear el precio de la orden usando los campos del endpoint
@@ -125,7 +140,7 @@ const OrdersSection: React.FC = () => {
                   </span>
                   <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                     order.payment_status === 'paid' || order.payment_status === 'confirmed'
-                      ? 'bg-green-100 text-green-800' 
+                      ? 'bg-emerald-100 text-emerald-800' 
                       : order.payment_status === 'pending'
                       ? 'bg-yellow-100 text-yellow-800'
                       : order.payment_status === 'rejected'
@@ -149,6 +164,11 @@ const OrdersSection: React.FC = () => {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                {(order.payment_status === 'pending' || order.payment_status === 'partially_paid') && (
+                  <button onClick={() => handlePay(order)} className="p-2 rounded-full hover:bg-green-100 text-green-600" title="Pagar">
+                    <DollarSign className="w-5 h-5" />
+                  </button>
+                )}
                 <button onClick={() => handleViewDetails(order.id)} className="p-2 rounded-full hover:bg-gray-100" title="Ver Detalles">
                   <Eye className="w-5 h-5" />
                 </button>
@@ -170,6 +190,10 @@ const OrdersSection: React.FC = () => {
       
       {isModalOpen && (
         <OrderDetailsModal order={selectedOrder} onClose={() => setIsModalOpen(false)} />
+      )}
+
+      {isPaymentModalOpen && selectedOrder && (
+        <PaymentModal order={selectedOrder} onClose={() => setIsPaymentModalOpen(false)} onPaymentCreated={handlePaymentCreated} />
       )}
     </div>
   );

@@ -7,7 +7,9 @@ import {
   CreditOrderData,
   CreditOrderResponse,
   PaymentData,
-  CreditContextType
+  CreditContextType,
+  CreditOrder,
+  CreditOrdersResponse
 } from '../types/credit';
 
 // Estados del contexto
@@ -16,6 +18,7 @@ interface CreditState {
   creditInfo: CreditInfo | null;
   dashboardData: CreditDashboard | null;
   payments: Payment[];
+  creditOrders: CreditOrder[];
   error: string | null;
   lastUpdated: Date | null;
 }
@@ -28,6 +31,9 @@ type CreditAction =
   | { type: 'SET_PAYMENTS'; payload: Payment[] }
   | { type: 'ADD_PAYMENT'; payload: Payment }
   | { type: 'UPDATE_PAYMENT'; payload: Payment }
+  | { type: 'SET_CREDIT_ORDERS'; payload: CreditOrder[] }
+  | { type: 'ADD_CREDIT_ORDER'; payload: CreditOrder }
+  | { type: 'UPDATE_CREDIT_ORDER'; payload: CreditOrder }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'CLEAR_ERROR' }
   | { type: 'SET_LAST_UPDATED'; payload: Date };
@@ -38,6 +44,7 @@ const initialState: CreditState = {
   creditInfo: null,
   dashboardData: null,
   payments: [],
+  creditOrders: [],
   error: null,
   lastUpdated: null
 };
@@ -65,6 +72,20 @@ const creditReducer = (state: CreditState, action: CreditAction): CreditState =>
         ...state,
         payments: state.payments.map(payment =>
           payment.id === action.payload.id ? action.payload : payment
+        )
+      };
+    
+    case 'SET_CREDIT_ORDERS':
+      return { ...state, creditOrders: action.payload };
+    
+    case 'ADD_CREDIT_ORDER':
+      return { ...state, creditOrders: [...state.creditOrders, action.payload] };
+    
+    case 'UPDATE_CREDIT_ORDER':
+      return {
+        ...state,
+        creditOrders: state.creditOrders.map(order =>
+          order.id === action.payload.id ? action.payload : order
         )
       };
     
@@ -150,12 +171,15 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
   }, [refreshCreditInfo, refreshDashboard]);
 
   // Función para crear pago
-  const createPayment = useCallback(async (paymentData: PaymentData): Promise<Payment> => {
+  const createPayment = useCallback(async (paymentData: PaymentData, paymentCaptureFile: File): Promise<Payment> => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
-      
-      const payment = await CreditService.createPayment(paymentData);
+
+      const { url } = await CreditService.uploadPaymentCapture(paymentCaptureFile);
+      const paymentWithCapture = { ...paymentData, payment_capture_url: url };
+
+      const payment = await CreditService.createPayment(paymentWithCapture);
       dispatch({ type: 'ADD_PAYMENT', payload: payment });
       
       // Actualizar dashboard después de crear pago
@@ -204,6 +228,41 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
     }
   }, []);
 
+  // Función para obtener órdenes de crédito
+  const getCreditOrders = useCallback(async (page: number = 1, limit: number = 10): Promise<CreditOrdersResponse> => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'CLEAR_ERROR' });
+      
+      const response = await CreditService.getCreditOrders(page, limit);
+      dispatch({ type: 'SET_CREDIT_ORDERS', payload: response.orders });
+      return response;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al obtener órdenes de crédito';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }, []);
+
+  // Función para obtener detalles de una orden de crédito
+  const getCreditOrderDetails = useCallback(async (orderId: string): Promise<CreditOrder> => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'CLEAR_ERROR' });
+      
+      const order = await CreditService.getCreditOrderDetails(orderId);
+      return order;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al obtener detalles de la orden';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }, []);
+
   // Cargar datos iniciales
   useEffect(() => {
     const loadInitialData = async () => {
@@ -245,14 +304,17 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
     creditInfo: state.creditInfo,
     dashboardData: state.dashboardData,
     payments: state.payments,
+    creditOrders: state.creditOrders,
     error: state.error,
     refreshCreditInfo,
     refreshDashboard,
     createCreditOrder,
     createPayment,
     getOrderPayments,
+    getCreditOrders,
+    getCreditOrderDetails,
     clearError: () => dispatch({ type: 'CLEAR_ERROR' })
-  }), [state.loading, state.creditInfo, state.dashboardData, state.payments, state.error, refreshCreditInfo, refreshDashboard, createCreditOrder, createPayment, getOrderPayments]);
+  }), [state.loading, state.creditInfo, state.dashboardData, state.payments, state.creditOrders, state.error, refreshCreditInfo, refreshDashboard, createCreditOrder, createPayment, getOrderPayments, getCreditOrders, getCreditOrderDetails]);
 
   return (
     <CreditContext.Provider value={contextValue}>

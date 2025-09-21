@@ -3,10 +3,34 @@ import CreditService from '../services/CreditService';
 import { Payment, PaymentApprovalData, AdminDashboard, ValidationResult } from '../types/credit';
 import { VALIDATION_RULES } from '../config/creditConfig';
 
+interface PaymentFilters {
+  status?: 'all' | 'pending' | 'approved' | 'rejected';
+  dateRange?: 'all' | 'today' | 'week' | 'month';
+  amountRange?: 'all' | 'low' | 'medium' | 'high';
+  searchTerm?: string;
+  page?: number;
+  limit?: number;
+}
+
+interface PaymentsResponse {
+  payments: Payment[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
 export const useAdminCredit = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingPayments, setPendingPayments] = useState<Payment[]>([]);
+  const [allPayments, setAllPayments] = useState<PaymentsResponse>({
+    payments: [],
+    total: 0,
+    page: 1,
+    limit: 50,
+    total_pages: 1
+  });
   const [adminDashboard, setAdminDashboard] = useState<AdminDashboard | null>(null);
 
   // Limpiar errores
@@ -24,6 +48,28 @@ export const useAdminCredit = () => {
       setPendingPayments(payments);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al obtener pagos pendientes';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Obtener todos los pagos con filtros
+  const getAllPayments = useCallback(async (filters?: PaymentFilters): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await CreditService.getAllPayments(filters);
+      setAllPayments(response);
+      
+      // También actualizar pendingPayments si no hay filtros específicos
+      if (!filters || filters.status === 'all' || filters.status === 'pending') {
+        const pendingOnly = response.payments.filter(p => p.status === 'pending');
+        setPendingPayments(pendingOnly);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al obtener pagos';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -204,9 +250,11 @@ export const useAdminCredit = () => {
     loading,
     error,
     pendingPayments,
+    allPayments,
     adminDashboard,
     clearError,
     getPendingPayments,
+    getAllPayments,
     getAdminDashboard,
     assignCredit,
     approvePayment,

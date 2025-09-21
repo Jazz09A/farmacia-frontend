@@ -55,7 +55,7 @@ const AdminOrdersPage: React.FC = () => {
       case 'pending':
         return <Clock className="w-4 h-4 text-yellow-500" />;
       case 'confirmed':
-        return <CheckCircle className="w-4 h-4 text-blue-500" />;
+        return <CheckCircle className="w-4 h-4 text-emerald-500" />;
       case 'processing':
         return <AlertCircle className="w-4 h-4 text-blue-600" />;
       case 'shipped':
@@ -75,7 +75,7 @@ const AdminOrdersPage: React.FC = () => {
       case 'pending':
         return `${baseClasses} bg-yellow-100 text-yellow-800`;
       case 'confirmed':
-        return `${baseClasses} bg-blue-100 text-blue-800`;
+        return `${baseClasses} bg-emerald-100 text-emerald-800`;
       case 'processing':
         return `${baseClasses} bg-blue-100 text-blue-800`;
       case 'shipped':

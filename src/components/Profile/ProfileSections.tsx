@@ -176,7 +176,7 @@ export const NotificationsSection: React.FC<{ notifications: UserNotification[] 
 
   const getNotificationColor = (type: string) => {
     const colors = {
-      order_confirmed: 'text-blue-600 bg-blue-100',
+      order_confirmed: 'text-emerald-600 bg-emerald-100',
       order_shipped: 'text-indigo-600 bg-indigo-100',
       order_delivered: 'text-green-600 bg-green-100',
       promotion_available: 'text-purple-600 bg-purple-100',

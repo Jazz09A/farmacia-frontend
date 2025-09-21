@@ -91,7 +91,7 @@ const TrackingPage: React.FC = () => {
       },
       confirmed: {
         label: 'Confirmado',
-        color: 'text-blue-700 bg-blue-100',
+        color: 'text-emerald-700 bg-emerald-100',
         icon: CheckCircle,
         description: 'Tu pedido ha sido confirmado'
       },

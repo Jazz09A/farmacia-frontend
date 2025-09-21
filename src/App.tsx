@@ -29,6 +29,7 @@ const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'));
 const VerificationRequiredPage = lazy(() => import('./pages/VerificationRequiredPage'));
 const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage'));
 const CreditPage = lazy(() => import('./pages/CreditPage'));
+const CreditOrdersPage = lazy(() => import('./pages/CreditOrdersPage'));
 
 // Blog Pages with Lazy Loading
 const BlogPage = lazy(() => import('./pages/BlogPage'));
@@ -48,6 +49,7 @@ const AdminEditProductPage = lazy(() => import('./pages/Admin/AdminEditProductPa
 const AdminFlashOffersPage = lazy(() => import('./pages/Admin/AdminFlashOffersPage'));
 const AdminAnalyticsPage = lazy(() => import('./pages/Admin/AdminAnalyticsPage'));
 const AdminCreditPage = lazy(() => import('./pages/Admin/AdminCreditPage'));
+const AdminPaymentsPage = lazy(() => import('./pages/Admin/AdminPaymentsPage'));
 
 // Hooks
 import { useGlobalCurrency } from './contexts/GlobalCurrencyContext';
@@ -107,6 +109,7 @@ const AppLayout = () => {
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/tracking/:orderId" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />
               <Route path="/credit" element={<ProtectedRoute><CreditPage /></ProtectedRoute>} />
+              <Route path="/credit/orders" element={<ProtectedRoute><CreditOrdersPage /></ProtectedRoute>} />
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogPostDetailPage />} />
               <Route path="/verify-account" element={<VerificationRequiredPage />} />
@@ -190,6 +193,7 @@ const AdminRoutes = () => (
         <Route path="flash-offers" element={<AdminFlashOffersPage />} />
         <Route path="analytics" element={<AdminAnalyticsPage />} />
         <Route path="credit" element={<AdminCreditPage />} />
+        <Route path="payments" element={<AdminPaymentsPage />} />
         <Route path="blog" element={<AdminBlogPage />} />
         <Route path="blog/new" element={<CreateBlogPostPage />} />
         <Route path="blog/edit/:id" element={<EditBlogPostPage />} />

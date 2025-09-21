@@ -4,6 +4,8 @@ export { CreditOrderForm } from './CreditOrderForm';
 export { PaymentForm } from './PaymentForm';
 export { PaymentHistory } from './PaymentHistory';
 export { CreditDashboard } from './CreditDashboard';
+export { CreditOrdersList } from './CreditOrdersList';
+export { CreditOrderDetails } from './CreditOrderDetails';
 
 // Componentes de administración
 export { AdminPaymentApproval } from './AdminPaymentApproval';

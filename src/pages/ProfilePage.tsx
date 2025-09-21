@@ -20,7 +20,8 @@ import {
   Loader2,
   DollarSign,
   ShoppingBag,
-  CreditCard as CreditIcon
+  CreditCard as CreditIcon,
+  ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
@@ -30,13 +31,17 @@ import type {
 } from '../types/profile';
 import { User } from '../types/auth';
 import OrdersSection from '../components/Profile/OrdersSection';
-import { CreditDashboard } from '../components/Credit/CreditDashboard';
+import { CreditOrdersList, CreditOrderDetails, PaymentForm } from '../components/Credit';
+import { CreditOrder } from '../types/credit';
 import { useUserStats } from '../hooks/useUserStats';
 
 type TabType = 'cuenta' | 'pedidos' | 'credito' | 'promociones' | 'soporte';
+type CreditViewMode = 'list' | 'details' | 'payment';
 
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('pedidos');
+  const [creditViewMode, setCreditViewMode] = useState<CreditViewMode>('list');
+  const [selectedCreditOrder, setSelectedCreditOrder] = useState<CreditOrder | null>(null);
   const { user, loading } = useAuth();
   const { formatPrice } = useGlobalCurrency();
   const location = useLocation();
@@ -50,6 +55,31 @@ const ProfilePage: React.FC = () => {
       setActiveTab(location.state.defaultTab);
     }
   }, [location.state]);
+
+  // Funciones para manejo de navegación de crédito
+  const handleViewCreditDetails = (order: CreditOrder) => {
+    setSelectedCreditOrder(order);
+    setCreditViewMode('details');
+  };
+
+  const handleMakeCreditPayment = (order: CreditOrder) => {
+    setSelectedCreditOrder(order);
+    setCreditViewMode('payment');
+  };
+
+  const handleBackToCreditList = () => {
+    setCreditViewMode('list');
+    setSelectedCreditOrder(null);
+  };
+
+  const handleBackToCreditDetails = () => {
+    setCreditViewMode('details');
+  };
+
+  const handleCreditPaymentCreated = () => {
+    // After payment is created, go back to details to see the updated payment history
+    setCreditViewMode('details');
+  };
 
   const tabs = [
     { id: 'cuenta', label: 'Mi Cuenta', icon: UserIcon, count: null },
@@ -244,7 +274,15 @@ const ProfilePage: React.FC = () => {
           >
             {activeTab === 'cuenta' && <AccountSection user={user} />}
             {activeTab === 'pedidos' && <OrdersSection />}
-            {activeTab === 'credito' && <CreditSection />}
+            {activeTab === 'credito' && <CreditSection 
+              viewMode={creditViewMode}
+              selectedOrder={selectedCreditOrder}
+              onViewDetails={handleViewCreditDetails}
+              onMakePayment={handleMakeCreditPayment}
+              onBackToList={handleBackToCreditList}
+              onBackToDetails={handleBackToCreditDetails}
+              onPaymentCreated={handleCreditPaymentCreated}
+            />}
             {activeTab === 'promociones' && <PromotionsSection promotions={promotions} />}
             {activeTab === 'soporte' && <SupportSection tickets={supportTickets} />}
           </motion.div>
@@ -756,17 +794,102 @@ const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => 
 };
 
 // Sección de Crédito
-const CreditSection: React.FC = () => {
+interface CreditSectionProps {
+  viewMode: CreditViewMode;
+  selectedOrder: CreditOrder | null;
+  onViewDetails: (order: CreditOrder) => void;
+  onMakePayment: (order: CreditOrder) => void;
+  onBackToList: () => void;
+  onBackToDetails: () => void;
+  onPaymentCreated: () => void;
+}
+
+const CreditSection: React.FC<CreditSectionProps> = ({
+  viewMode,
+  selectedOrder,
+  onViewDetails,
+  onMakePayment,
+  onBackToList,
+  onBackToDetails,
+  onPaymentCreated
+}) => {
+  const renderCreditContent = () => {
+    switch (viewMode) {
+      case 'list':
+        return (
+          <CreditOrdersList
+            onViewDetails={onViewDetails}
+            onMakePayment={onMakePayment}
+          />
+        );
+      
+      case 'details':
+        return selectedOrder ? (
+          <CreditOrderDetails
+            orderId={selectedOrder.id}
+            onBack={onBackToList}
+            onMakePayment={onMakePayment}
+          />
+        ) : null;
+      
+      case 'payment':
+        return selectedOrder ? (
+          <div className="space-y-6">
+            {/* Header */}
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-4"
+            >
+              <button
+                onClick={onBackToDetails}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </button>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Realizar Pago
+                </h2>
+                <p className="text-gray-600">
+                  Orden {selectedOrder.order_number}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Payment Form */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <PaymentForm
+                orderId={selectedOrder.id}
+                orderTotal={selectedOrder.total}
+                creditRemaining={selectedOrder.credit_remaining}
+                onPaymentCreated={onPaymentCreated}
+              />
+            </motion.div>
+          </div>
+        ) : null;
+      
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
             <CreditIcon className="w-5 h-5 lg:w-6 lg:h-6" />
-            Gestión de Crédito
+            {viewMode === 'list' ? 'Mis Órdenes de Crédito' : 
+             viewMode === 'details' ? 'Detalles de la Orden' : 
+             'Realizar Pago'}
           </h2>
         </div>
-        <CreditDashboard />
+        {renderCreditContent()}
       </div>
     </div>
   );

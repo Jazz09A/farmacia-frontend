@@ -25,7 +25,7 @@ import {
 
 const orderStatuses = [
   { id: 'pending', name: 'Pendiente', color: 'yellow' },
-  { id: 'confirmed', name: 'Confirmado', color: 'blue' },
+  { id: 'confirmed', name: 'Confirmado', color: 'emerald' },
   { id: 'processing', name: 'Preparando', color: 'blue' },
   { id: 'shipped', name: 'Enviado', color: 'purple' },
   { id: 'delivered', name: 'Entregado', color: 'green' },
@@ -51,7 +51,7 @@ const getStatusIcon = (status: string) => {
       case 'pending':
         return <Clock className="w-4 h-4 text-yellow-500" />;
       case 'confirmed':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-emerald-500" />;
       case 'processing':
         return <AlertCircle className="w-4 h-4 text-blue-500" />;
       case 'shipped':
@@ -128,6 +128,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus,
     
     const colorClasses = {
       yellow: 'bg-yellow-100 text-yellow-800',
+      emerald: 'bg-emerald-100 text-emerald-800',
       blue: 'bg-blue-100 text-blue-800',
       purple: 'bg-purple-100 text-purple-800',
       green: 'bg-green-100 text-green-800',

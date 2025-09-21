@@ -1,272 +1,146 @@
-import React, { useState, useRef } from 'react';
-import { usePayment } from '../../hooks/usePayment';
-import { PaymentFormData } from '../../types/credit';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { DollarSign, Paperclip, Send } from 'lucide-react';
+import { useCredit } from '../../contexts/CreditContext';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
 interface PaymentFormProps {
   orderId: string;
   orderTotal: number;
   creditRemaining: number;
-  onPaymentCreated: (payment: any) => void;
-  onCancel: () => void;
-  className?: string;
+  onPaymentCreated: () => void;
 }
 
-export const PaymentForm: React.FC<PaymentFormProps> = ({
-  orderId,
-  orderTotal,
-  creditRemaining,
-  onPaymentCreated,
-  onCancel,
-  className = ''
-}) => {
-  const { 
-    createPayment, 
-    uploadCaptureFile, 
-    loading, 
-    error, 
-    getFieldError, 
-    clearValidationErrors,
-    formatAmount,
-    getMaxAmount,
-    uploadingFile
-  } = usePayment();
+export const PaymentForm: React.FC<PaymentFormProps> = ({ orderId, orderTotal, creditRemaining, onPaymentCreated }) => {
+  const [amount, setAmount] = useState<number>(creditRemaining);
+  const [paymentReference, setPaymentReference] = useState('');
+  const [paymentCapture, setPaymentCapture] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { createPayment } = useCredit();
 
-  const [formData, setFormData] = useState<PaymentFormData>({
-    amount: 0,
-    payment_reference: '',
-    payment_capture_url: ''
-  });
-
-  const [captureFile, setCaptureFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const maxAmount = getMaxAmount(creditRemaining);
-
-  const handleInputChange = (field: keyof PaymentFormData, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Limpiar error del campo cuando el usuario empiece a escribir
-    if (getFieldError(field)) {
-      clearValidationErrors();
-    }
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const url = await uploadCaptureFile(file);
-      setFormData(prev => ({ ...prev, payment_capture_url: url }));
-      setCaptureFile(file);
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      // El error se maneja en el hook
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setPaymentCapture(e.target.files[0]);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!amount || !paymentReference || !paymentCapture) {
+      setError('Todos los campos son requeridos');
+      return;
+    }
+    if (amount > creditRemaining) {
+      setError(`El monto no puede ser mayor al crédito restante (${creditRemaining})`);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
 
     try {
-      const paymentData = {
+      await createPayment({
         order_id: orderId,
-        ...formData
-      };
-
-      const payment = await createPayment(paymentData, creditRemaining);
-      onPaymentCreated(payment);
-    } catch (error) {
-      console.error('Error creating payment:', error);
-    }
-  };
-
-  const handleRemoveFile = () => {
-    setFormData(prev => ({ ...prev, payment_capture_url: '' }));
-    setCaptureFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+        amount,
+        payment_reference: paymentReference,
+        payment_capture_url: '' // The backend will handle the upload
+      }, paymentCapture);
+      onPaymentCreated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ocurrió un error al crear el pago');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className={`payment-form bg-white rounded-lg p-6 shadow-lg ${className}`}>
-      <div className="mb-6">
-        <h3 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-2">
-          💳 Realizar Pago Parcial
-        </h3>
-        <p className="text-gray-600">
-          Complete los datos para registrar su pago parcial
-        </p>
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-50 text-red-700 p-4 rounded-lg text-center"
+        >
+          {error}
+        </motion.div>
+      )}
 
-      {/* Información de la orden */}
-      <div className="bg-gray-50 rounded-lg p-4 mb-6">
-        <h4 className="font-semibold text-gray-800 mb-2">Información de la Orden</h4>
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <span>Total de la Orden:</span>
-            <span className="font-semibold">{formatAmount(orderTotal)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Saldo Pendiente:</span>
-            <span className="font-semibold text-lg text-blue-600">{formatAmount(creditRemaining)}</span>
-          </div>
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600">Total de la Orden:</span>
+          <span className="font-bold text-gray-800">${orderTotal.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-gray-600">Crédito Restante:</span>
+          <span className="font-bold text-green-600">${creditRemaining.toFixed(2)}</span>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Monto a pagar */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Monto a Pagar *
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-            <input
-              type="number"
-              min="0.01"
-              max={maxAmount}
-              step="0.01"
-              value={formData.amount || ''}
-              onChange={(e) => handleInputChange('amount', parseFloat(e.target.value) || 0)}
-              className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                getFieldError('amount') ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="0.00"
-              required
-            />
+      <div>
+        <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">Monto a Pagar</label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <DollarSign className="h-5 w-5 text-gray-400" />
           </div>
-          {getFieldError('amount') && (
-            <p className="text-red-500 text-sm mt-1">{getFieldError('amount')}</p>
-          )}
-          <p className="text-gray-500 text-sm mt-1">
-            Máximo: {formatAmount(maxAmount)}
-          </p>
-        </div>
-
-        {/* Referencia del pago */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Referencia del Pago *
-          </label>
           <input
-            type="text"
-            value={formData.payment_reference}
-            onChange={(e) => handleInputChange('payment_reference', e.target.value)}
-            placeholder="Ej: REF123456789, Transferencia 001, etc."
-            maxLength={50}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              getFieldError('payment_reference') ? 'border-red-500' : 'border-gray-300'
-            }`}
+            type="number"
+            id="amount"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            max={creditRemaining}
+            step="0.01"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             required
           />
-          {getFieldError('payment_reference') && (
-            <p className="text-red-500 text-sm mt-1">{getFieldError('payment_reference')}</p>
-          )}
-          <p className="text-gray-500 text-sm mt-1">
-            Número de referencia o comprobante de su pago
-          </p>
         </div>
+      </div>
 
-        {/* Captura del pago */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Captura del Pago
-          </label>
-          <div className="space-y-3">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            
-            {uploadingFile && (
-              <div className="flex items-center gap-2 text-blue-600">
-                <LoadingSpinner size="sm" />
-                <span>Subiendo archivo...</span>
-              </div>
-            )}
+      <div>
+        <label htmlFor="paymentReference" className="block text-sm font-medium text-gray-700 mb-2">Referencia del Pago</label>
+        <input
+          type="text"
+          id="paymentReference"
+          value={paymentReference}
+          onChange={(e) => setPaymentReference(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+          required
+        />
+      </div>
 
-            {formData.payment_capture_url && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-green-500">✅</span>
-                    <span className="text-green-700 text-sm">
-                      Archivo subido: {captureFile?.name}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleRemoveFile}
-                    className="text-red-500 hover:text-red-700 text-sm"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-                
-                <img
-                  src={formData.payment_capture_url}
-                  alt="Captura del pago"
-                  className="max-w-xs max-h-48 rounded-lg border border-gray-300"
-                />
-              </div>
-            )}
-          </div>
-          {getFieldError('payment_capture_url') && (
-            <p className="text-red-500 text-sm mt-1">{getFieldError('payment_capture_url')}</p>
-          )}
-          <p className="text-gray-500 text-sm mt-1">
-            Suba una captura de pantalla o foto del comprobante de pago (recomendado)
-          </p>
-        </div>
-
-        {/* Error general */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center gap-2">
-              <span className="text-red-500">❌</span>
-              <p className="text-red-700">{error}</p>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Comprobante de Pago</label>
+        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+          <div className="space-y-1 text-center">
+            <Paperclip className="mx-auto h-12 w-12 text-gray-400" />
+            <div className="flex text-sm text-gray-600">
+              <label
+                htmlFor="file-upload"
+                className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+              >
+                <span>Sube un archivo</span>
+                <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileChange} />
+              </label>
+              <p className="pl-1">o arrástralo aquí</p>
             </div>
+            <p className="text-xs text-gray-500">PNG, JPG, GIF hasta 10MB</p>
+            {paymentCapture && <p className="text-sm text-green-600">Archivo seleccionado: {paymentCapture.name}</p>}
           </div>
-        )}
-
-        {/* Botones de acción */}
-        <div className="flex gap-4 pt-4">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-            disabled={loading}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={loading || !formData.amount || !formData.payment_reference}
-            className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <LoadingSpinner size="sm" />
-                Enviando Pago...
-              </>
-            ) : (
-              <>
-                📤 Enviar Pago
-              </>
-            )}
-          </button>
         </div>
-      </form>
-    </div>
+      </div>
+
+      <div className="flex justify-end">
+        <motion.button
+          type="submit"
+          disabled={loading}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? <LoadingSpinner size="sm" /> : <Send className="w-5 h-5" />}
+          Enviar Pago
+        </motion.button>
+      </div>
+    </form>
   );
 };
-

@@ -8,9 +8,10 @@ import {
   CreditDashboard,
   AdminDashboard,
   PaymentApprovalData,
-  CreditAssignmentData,
   Client,
-  ClientSearchResponse
+  ClientSearchResponse,
+  CreditOrder,
+  CreditOrdersResponse
 } from '../types/credit';
 
 class CreditService {
@@ -150,6 +151,50 @@ class CreditService {
     return response.json();
   }
 
+  /**
+   * Obtener lista de órdenes de crédito del usuario
+   */
+  async getCreditOrders(page: number = 1, limit: number = 10): Promise<CreditOrdersResponse> {
+    const response = await fetch(`${this.baseURL}/credit/orders/credit`, {
+      method: 'GET',
+      headers: await this.getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener órdenes de crédito: ${response.statusText}`);
+    }
+    // El backend puede devolver un arreglo plano de órdenes o un objeto paginado.
+    // Normalizamos para que el frontend siempre reciba CreditOrdersResponse.
+    const data = await response.json();
+    if (Array.isArray(data)) {
+      return {
+        orders: data as CreditOrder[],
+        total: data.length,
+        page,
+        limit,
+        total_pages: 1
+      };
+    }
+    // Si ya viene en el formato esperado, lo retornamos tal cual
+    return data as CreditOrdersResponse;
+  }
+
+  /**
+   * Obtener detalles de una orden de crédito específica
+   */
+  async getCreditOrderDetails(orderId: string): Promise<CreditOrder> {
+    const response = await fetch(`${this.baseURL}/credit/orders/${orderId}`, {
+      method: 'GET',
+      headers: await this.getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener detalles de la orden: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
   // ===== ENDPOINTS DE ADMINISTRADOR =====
 
   /**
@@ -250,6 +295,77 @@ class CreditService {
     }
 
     return response.json();
+  }
+
+  /**
+   * Obtener todos los pagos con filtros opcionales
+   */
+  async getAllPayments(filters?: {
+    status?: 'all' | 'pending' | 'approved' | 'rejected';
+    dateRange?: 'all' | 'today' | 'week' | 'month';
+    amountRange?: 'all' | 'low' | 'medium' | 'high';
+    searchTerm?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    payments: Payment[];
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  }> {
+    const params = new URLSearchParams();
+    
+    if (filters?.status && filters.status !== 'all') {
+      params.append('status', filters.status);
+    }
+    if (filters?.dateRange && filters.dateRange !== 'all') {
+      params.append('date_range', filters.dateRange);
+    }
+    if (filters?.amountRange && filters.amountRange !== 'all') {
+      params.append('amount_range', filters.amountRange);
+    }
+    if (filters?.searchTerm && filters.searchTerm.trim()) {
+      params.append('search', filters.searchTerm.trim());
+    }
+    if (filters?.page) {
+      params.append('page', filters.page.toString());
+    }
+    if (filters?.limit) {
+      params.append('limit', filters.limit.toString());
+    }
+
+    const url = `${this.baseURL}/credit/admin/payments${params.toString() ? `?${params.toString()}` : ''}`;
+    
+    console.log('🔍 Debug - Get All Payments Request:', {
+      url,
+      filters,
+      params: params.toString()
+    });
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: await this.getAdminHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener pagos: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    // Si el backend devuelve solo un array, normalizamos la respuesta
+    if (Array.isArray(data)) {
+      return {
+        payments: data,
+        total: data.length,
+        page: filters?.page || 1,
+        limit: filters?.limit || 50,
+        total_pages: 1
+      };
+    }
+
+    return data;
   }
 
   /**

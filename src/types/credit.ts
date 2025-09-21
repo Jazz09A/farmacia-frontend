@@ -20,6 +20,44 @@ export interface CreditOrderResponse {
   credit_remaining: number;
 }
 
+// Tipos para órdenes de crédito
+export interface CreditOrder {
+  id: string;
+  order_number: string;
+  total: number;
+  credit_used: number;
+  credit_remaining: number;
+  status: 'pending' | 'partial_paid' | 'paid' | 'cancelled';
+  created_at: string;
+  payment_due_date: string;
+  customer_notes?: string;
+  shipping_address: {
+    id: string;
+    address_line_1: string;
+    address_line_2?: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+  };
+  items: {
+    id: string;
+    product_name: string;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+  }[];
+  payments: Payment[];
+}
+
+export interface CreditOrdersResponse {
+  orders: CreditOrder[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
 export interface PaymentData {
   order_id: string;
   amount: number;
@@ -127,12 +165,15 @@ export interface CreditContextType {
   creditInfo: CreditInfo | null;
   dashboardData: CreditDashboard | null;
   payments: Payment[];
+  creditOrders: CreditOrder[];
   error: string | null;
   refreshCreditInfo: (handleLoading?: boolean) => Promise<void>;
   refreshDashboard: (handleLoading?: boolean) => Promise<void>;
   createCreditOrder: (data: CreditOrderData) => Promise<CreditOrderResponse>;
-  createPayment: (data: PaymentData) => Promise<Payment>;
+  createPayment: (data: PaymentData, paymentCaptureFile: File) => Promise<Payment>;
   getOrderPayments: (orderId: string) => Promise<Payment[]>;
+  getCreditOrders: (page?: number, limit?: number) => Promise<CreditOrdersResponse>;
+  getCreditOrderDetails: (orderId: string) => Promise<CreditOrder>;
   clearError: () => void;
 }
 
