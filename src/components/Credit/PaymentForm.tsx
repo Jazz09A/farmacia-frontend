@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { DollarSign, Paperclip, Send } from 'lucide-react';
 import { useCredit } from '../../contexts/CreditContext';
+import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
 interface PaymentFormProps {
@@ -12,16 +13,51 @@ interface PaymentFormProps {
 }
 
 export const PaymentForm: React.FC<PaymentFormProps> = ({ orderId, orderTotal, creditRemaining, onPaymentCreated }) => {
-  const [amount, setAmount] = useState<number>(creditRemaining);
+  // La deuda pendiente es lo que queda por pagar de esta orden
+  const pendingDebt = creditRemaining;
+  const [amount, setAmount] = useState<number>(pendingDebt);
   const [paymentReference, setPaymentReference] = useState('');
   const [paymentCapture, setPaymentCapture] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { createPayment } = useCredit();
+  const { currency, formatPrice } = useGlobalCurrency();
+
+  // Formatear moneda usando el contexto global
+  const formatCurrency = (amount: number) => formatPrice(amount, currency);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setPaymentCapture(e.target.files[0]);
+    }
+  };
+
+  // Manejar cambio específico para el campo de monto
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Si el campo está vacío, establecer en la deuda pendiente
+    if (value === '' || value === null || value === undefined) {
+      setAmount(pendingDebt);
+      return;
+    }
+    
+    // Convertir a número, si es NaN usar la deuda pendiente
+    const numericValue = parseFloat(value);
+    const finalValue = isNaN(numericValue) ? pendingDebt : numericValue;
+    
+    setAmount(finalValue);
+  };
+
+  // Manejar focus en el campo de monto (seleccionar todo para facilitar edición)
+  const handleAmountFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.select(); // Seleccionar todo el texto para facilitar la edición
+  };
+
+  // Manejar blur en el campo de monto (restaurar deuda pendiente si está vacío)
+  const handleAmountBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (e.target.value === '' || e.target.value === null) {
+      setAmount(pendingDebt);
     }
   };
 
@@ -31,8 +67,8 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({ orderId, orderTotal, c
       setError('Todos los campos son requeridos');
       return;
     }
-    if (amount > creditRemaining) {
-      setError(`El monto no puede ser mayor al crédito restante (${creditRemaining})`);
+    if (amount > pendingDebt) {
+      setError(`El monto no puede ser mayor a la deuda pendiente (${formatCurrency(pendingDebt)})`);
       return;
     }
 
@@ -69,11 +105,16 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({ orderId, orderTotal, c
       <div className="bg-gray-50 p-4 rounded-lg">
         <div className="flex justify-between items-center">
           <span className="text-gray-600">Total de la Orden:</span>
-          <span className="font-bold text-gray-800">${orderTotal.toFixed(2)}</span>
+          <span className="font-bold text-gray-800">{formatCurrency(orderTotal)}</span>
         </div>
         <div className="flex justify-between items-center mt-2">
-          <span className="text-gray-600">Crédito Restante:</span>
-          <span className="font-bold text-green-600">${creditRemaining.toFixed(2)}</span>
+          <span className="text-gray-600">Deuda Pendiente:</span>
+          <span className="font-bold text-red-600">{formatCurrency(pendingDebt)}</span>
+        </div>
+        <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded">
+          <p className="text-xs text-amber-800">
+            💡 Estás pagando la deuda pendiente de esta orden
+          </p>
         </div>
       </div>
 
@@ -87,10 +128,13 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({ orderId, orderTotal, c
             type="number"
             id="amount"
             value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
-            max={creditRemaining}
+            onChange={handleAmountChange}
+            onFocus={handleAmountFocus}
+            onBlur={handleAmountBlur}
+            max={pendingDebt}
             step="0.01"
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            placeholder={formatCurrency(pendingDebt)}
             required
           />
         </div>

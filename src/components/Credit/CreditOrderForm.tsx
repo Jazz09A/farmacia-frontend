@@ -153,7 +153,7 @@ export const CreditOrderForm: React.FC<CreditOrderFormProps> = ({
           </div>
           <div className="flex justify-between">
             <span>Total de la orden:</span>
-            <span className="font-semibold text-lg">${cartTotal.toLocaleString()}</span>
+            <span className="font-semibold text-lg">${cartTotal.toFixed(2)}</span>
           </div>
         </div>
       </div>

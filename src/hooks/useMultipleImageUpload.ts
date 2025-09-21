@@ -61,10 +61,6 @@ export const useMultipleImageUpload = (folder: string = 'products'): UseMultiple
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     formData.append('folder', folder);
-    
-    // Configuraciones adicionales para productos
-    formData.append('transformation', 'c_limit,w_1200,h_1200,q_auto:good');
-    formData.append('format', 'auto');
 
     try {
       const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {

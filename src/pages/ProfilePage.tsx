@@ -31,7 +31,8 @@ import type {
 } from '../types/profile';
 import { User } from '../types/auth';
 import OrdersSection from '../components/Profile/OrdersSection';
-import { CreditOrdersList, CreditOrderDetails, PaymentForm } from '../components/Credit';
+import { CreditOrdersList, CreditOrderDetails } from '../components/Credit';
+import EnhancedPaymentForm from '../components/Credit/EnhancedPaymentForm';
 import { CreditOrder } from '../types/credit';
 import { useUserStats } from '../hooks/useUserStats';
 
@@ -863,11 +864,15 @@ const CreditSection: React.FC<CreditSectionProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <PaymentForm
+              <EnhancedPaymentForm
                 orderId={selectedOrder.id}
                 orderTotal={selectedOrder.total}
+                orderTotalRef={selectedOrder.total_ref}
                 creditRemaining={selectedOrder.credit_remaining}
+                orderNumber={selectedOrder.order_number}
+                exchangeRate={selectedOrder.exchange_rate}
                 onPaymentCreated={onPaymentCreated}
+                onCancel={onBackToDetails}
               />
             </motion.div>
           </div>

@@ -170,16 +170,22 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
     }
   }, [refreshCreditInfo, refreshDashboard]);
 
-  // Función para crear pago
-  const createPayment = useCallback(async (paymentData: PaymentData, paymentCaptureFile: File): Promise<Payment> => {
+  // Función para crear pago (ahora usando Cloudinary directamente)
+  const createPayment = useCallback(async (paymentData: PaymentData, paymentCaptureFile?: File): Promise<Payment> => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
 
-      const { url } = await CreditService.uploadPaymentCapture(paymentCaptureFile);
-      const paymentWithCapture = { ...paymentData, payment_capture_url: url };
+      // Si se proporciona un archivo, subirlo a Cloudinary
+      // Si no, asumir que payment_capture_url ya contiene la URL de Cloudinary
+      let finalPaymentData = paymentData;
+      
+      if (paymentCaptureFile && paymentCaptureFile.size > 0) {
+        const { url } = await CreditService.uploadPaymentCapture(paymentCaptureFile);
+        finalPaymentData = { ...paymentData, payment_capture_url: url };
+      }
 
-      const payment = await CreditService.createPayment(paymentWithCapture);
+      const payment = await CreditService.createPayment(finalPaymentData);
       dispatch({ type: 'ADD_PAYMENT', payload: payment });
       
       // Actualizar dashboard después de crear pago

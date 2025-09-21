@@ -113,7 +113,7 @@ export const CreditInfoCard: React.FC<CreditInfoCardProps> = ({
               <div className="text-sm text-white/80">Crédito Disponible</div>
             </div>
             <div className="text-3xl font-bold text-green-300">
-              ${creditInfo.available_credit.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${creditInfo.available_credit.toFixed(2)}
             </div>
           </motion.div>
 
@@ -130,7 +130,7 @@ export const CreditInfoCard: React.FC<CreditInfoCardProps> = ({
               <div className="text-sm text-white/80">Límite de Crédito</div>
             </div>
             <div className="text-3xl font-bold text-blue-300">
-              ${creditInfo.credit_limit.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${creditInfo.credit_limit.toFixed(2)}
             </div>
           </motion.div>
 

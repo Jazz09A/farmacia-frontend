@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useCredit } from '../../contexts/CreditContext';
+import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
 import { CreditOrder } from '../../types/credit';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { 
@@ -30,6 +31,7 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
   className = ''
 }) => {
   const { creditOrders, loading, error, getCreditOrders, clearError } = useCredit();
+  const { currency, formatPrice, getPriceInCurrency } = useGlobalCurrency();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
@@ -49,51 +51,83 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
     }
   };
 
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return {
-          icon: Clock,
-          color: 'orange',
-          text: 'Pendiente',
-          description: 'Orden creada, esperando pago'
-        };
-      case 'partial_paid':
-        return {
-          icon: AlertTriangle,
-          color: 'blue',
-          text: 'Pago Parcial',
-          description: 'Se ha realizado un pago parcial'
-        };
-      case 'paid':
-        return {
-          icon: CheckCircle,
-          color: 'green',
-          text: 'Pagado',
-          description: 'Orden completamente pagada'
-        };
-      case 'cancelled':
-        return {
-          icon: XCircle,
-          color: 'red',
-          text: 'Cancelada',
-          description: 'Orden cancelada'
-        };
-      default:
-        return {
-          icon: Clock,
-          color: 'gray',
-          text: 'Desconocido',
-          description: 'Estado desconocido'
-        };
+  const getStatusInfo = (order: CreditOrder) => {
+    // Determinar el estado basado en la deuda pendiente y el estado de pago
+    const hasDebt = order.credit_remaining > 0;
+    const isPaid = order.credit_paid;
+    const hasPartialPayments = order.credit_paid_total > 0 && order.credit_remaining > 0;
+    
+    if (isPaid && !hasDebt) {
+      return {
+        icon: CheckCircle,
+        color: 'green',
+        text: 'Pagado',
+        description: 'Deuda completamente saldada'
+      };
+    } else if (hasPartialPayments) {
+      return {
+        icon: AlertTriangle,
+        color: 'blue',
+        text: 'Pago Parcial',
+        description: `Deuda pendiente: ${formatDebtAmount(order)}`
+      };
+    } else if (hasDebt) {
+      return {
+        icon: Clock,
+        color: 'orange',
+        text: 'Deuda Pendiente',
+        description: `Debe: ${formatDebtAmount(order)}`
+      };
+    } else if (order.status === 'cancelled') {
+      return {
+        icon: XCircle,
+        color: 'red',
+        text: 'Cancelado',
+        description: 'Orden cancelada'
+      };
+    } else {
+      return {
+        icon: Clock,
+        color: 'gray',
+        text: 'Procesando',
+        description: 'Orden en proceso'
+      };
     }
   };
 
-  const formatAmount = (amount: number): string => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
+  // Función para formatear precios usando el contexto de moneda
+  const formatOrderPrice = (order: CreditOrder) => {
+    switch (currency) {
+      case 'VES':
+        return formatPrice(order.total, 'VES');
+      case 'USD':
+      case 'REF':
+        if (order.total_ref !== undefined) {
+          return formatPrice(order.total_ref, 'USD');
+        }
+        // Si no hay total_ref, convertir usando la tasa de cambio
+        const convertedTotal = order.total / order.exchange_rate;
+        return formatPrice(convertedTotal, 'USD');
+      default:
+        return formatPrice(order.total, 'USD');
+    }
+  };
+
+  // Función para formatear la deuda pendiente
+  const formatDebtAmount = (order: CreditOrder) => {
+    switch (currency) {
+      case 'VES':
+        // Para VES, calcular la deuda en VES
+        const paidInVES = order.credit_paid_total * order.exchange_rate;
+        const debtInVES = order.total - paidInVES;
+        return formatPrice(debtInVES, 'VES');
+      case 'USD':
+      case 'REF':
+        // Para USD/REF, usar credit_remaining que ya está en USD/REF
+        return formatPrice(order.credit_remaining, 'USD');
+      default:
+        return formatPrice(order.credit_remaining, 'USD');
+    }
   };
 
   const formatDate = (dateString: string): string => {
@@ -109,7 +143,8 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
   };
 
   const canMakePayment = (order: CreditOrder): boolean => {
-    return order.status === 'pending' || order.status === 'partial_paid';
+    // Se puede hacer pago si hay deuda pendiente y la orden no está cancelada
+    return order.credit_remaining > 0 && order.status !== 'cancelled';
   };
 
   if (loading && orders.length === 0) {
@@ -263,7 +298,7 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
           </div>
         ) : (
           orders.map((order, index) => {
-            const statusInfo = getStatusInfo(order.status);
+            const statusInfo = getStatusInfo(order);
             const StatusIcon = statusInfo.icon;
             
             return (
@@ -318,13 +353,25 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
                         <div className="flex items-center gap-2">
                           <DollarSign className="w-4 h-4 text-gray-400" />
                           <span className="font-medium">Total:</span>
-                          <span className="font-bold text-gray-800">{formatAmount(order.total)}</span>
+                          <span className="font-bold text-gray-800">{formatOrderPrice(order)}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <CreditCard className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium">Pendiente:</span>
-                          <span className="font-bold text-red-600">{formatAmount(order.credit_remaining)}</span>
+                          <span className="font-medium">Deuda:</span>
+                          <span className="font-bold text-red-600">{formatDebtAmount(order)}</span>
                         </div>
+                        {order.credit_paid_total > 0 && (
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <span className="font-medium">Pagado:</span>
+                            <span className="font-bold text-green-600">
+                              {currency === 'VES' 
+                                ? formatPrice(order.credit_paid_total * order.exchange_rate, 'VES')
+                                : formatPrice(order.credit_paid_total, 'USD')
+                              }
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-gray-400" />
                           <span className="font-medium">Vence:</span>
@@ -354,7 +401,7 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
                           className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-sm"
                         >
                           <CreditCard className="w-4 h-4" />
-                          Hacer Pago
+                          Pagar Deuda
                         </button>
                       )}
                     </div>

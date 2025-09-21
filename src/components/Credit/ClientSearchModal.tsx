@@ -265,11 +265,11 @@ export const ClientSearchModal: React.FC<ClientSearchModalProps> = ({
                             <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
                               <div>
                                 <span className="text-gray-600">Disponible:</span>
-                                <span className="font-medium ml-1">${client.credit_info.available_credit.toLocaleString()}</span>
+                                <span className="font-medium ml-1">${client.credit_info.available_credit.toFixed(2)}</span>
                               </div>
                               <div>
                                 <span className="text-gray-600">Límite:</span>
-                                <span className="font-medium ml-1">${client.credit_info.credit_limit.toLocaleString()}</span>
+                                <span className="font-medium ml-1">${client.credit_info.credit_limit.toFixed(2)}</span>
                               </div>
                             </div>
                           </div>

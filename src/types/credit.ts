@@ -24,30 +24,50 @@ export interface CreditOrderResponse {
 export interface CreditOrder {
   id: string;
   order_number: string;
-  total: number;
-  credit_used: number;
-  credit_remaining: number;
-  status: 'pending' | 'partial_paid' | 'paid' | 'cancelled';
+  status: string;
+  total: number; // Total en VES
+  total_ref: number; // Total en USD/REF
+  currency: string; // Moneda original de la orden
+  exchange_rate: number; // Tasa de cambio usada
   created_at: string;
+  updated_at: string;
+  credit_amount: number; // Monto total del crédito otorgado
+  credit_remaining: number; // Deuda pendiente en USD/REF
+  credit_paid_total: number; // Total pagado en USD/REF
   payment_due_date: string;
-  customer_notes?: string;
-  shipping_address: {
+  credit_paid: boolean;
+  credit_payment_date?: string;
+  payment_status: string;
+  payment_method: string;
+  items: {
     id: string;
-    address_line_1: string;
-    address_line_2?: string;
+    product_id: string;
+    product_name: string;
+    product_brand: string;
+    product_image: string;
+    quantity: number;
+    unit_price: number;
+    unit_price_ref: number;
+    total_price: number;
+    total_price_ref: number;
+    selected_presentation: string;
+  }[];
+  shipping_address: {
+    street: string;
     city: string;
     state: string;
     postal_code: string;
     country: string;
+    recipient_name: string;
+    recipient_phone: string;
+    delivery_instructions?: string;
   };
-  items: {
-    id: string;
-    product_name: string;
-    quantity: number;
-    unit_price: number;
-    total_price: number;
-  }[];
-  payments: Payment[];
+  credit_payments: Payment[];
+  item_count: number;
+  customer_notes?: string;
+  tracking_number?: string;
+  estimated_delivery?: string;
+  delivered_at?: string;
 }
 
 export interface CreditOrdersResponse {
@@ -70,7 +90,7 @@ export interface Payment {
   order_id: string;
   amount: number;
   payment_reference: string;
-  payment_capture_url?: string;
+  payment_capture_url: string;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   approved_at?: string;
@@ -170,7 +190,7 @@ export interface CreditContextType {
   refreshCreditInfo: (handleLoading?: boolean) => Promise<void>;
   refreshDashboard: (handleLoading?: boolean) => Promise<void>;
   createCreditOrder: (data: CreditOrderData) => Promise<CreditOrderResponse>;
-  createPayment: (data: PaymentData, paymentCaptureFile: File) => Promise<Payment>;
+  createPayment: (data: PaymentData, paymentCaptureFile?: File) => Promise<Payment>;
   getOrderPayments: (orderId: string) => Promise<Payment[]>;
   getCreditOrders: (page?: number, limit?: number) => Promise<CreditOrdersResponse>;
   getCreditOrderDetails: (orderId: string) => Promise<CreditOrder>;

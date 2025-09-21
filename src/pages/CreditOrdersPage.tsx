@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { PageLayout } from '../components/Layout/PageLayout';
 import { CreditOrdersList } from '../components/Credit/CreditOrdersList';
 import { CreditOrderDetails } from '../components/Credit/CreditOrderDetails';
-import { PaymentForm } from '../components/Credit/PaymentForm';
+import EnhancedPaymentForm from '../components/Credit/EnhancedPaymentForm';
+import { CurrencyToggle } from '../components/Header/CurrencyToggle';
 import { CreditOrder } from '../types/credit';
 import { 
   CreditCard, 
@@ -93,11 +94,15 @@ const CreditOrdersPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <PaymentForm
+              <EnhancedPaymentForm
                 orderId={selectedOrder.id}
                 orderTotal={selectedOrder.total}
+                orderTotalRef={selectedOrder.total_ref}
                 creditRemaining={selectedOrder.credit_remaining}
+                orderNumber={selectedOrder.order_number}
+                exchangeRate={selectedOrder.exchange_rate}
                 onPaymentCreated={handlePaymentCreated}
+                onCancel={handleBackToDetails}
               />
             </motion.div>
           </div>
@@ -131,6 +136,11 @@ const CreditOrdersPage: React.FC = () => {
               <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
                 Gestiona tus órdenes de crédito, consulta detalles y realiza pagos de manera sencilla.
               </p>
+
+              {/* Currency Toggle */}
+              <div className="flex justify-center mb-8">
+                <CurrencyToggle />
+              </div>
 
               {/* Feature Pills */}
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8">
