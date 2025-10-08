@@ -77,7 +77,7 @@ export const CreditOrderForm: React.FC<CreditOrderFormProps> = ({
   // Validar que se haya proporcionado la dirección de envío
   if (!selectedShippingAddress) {
     return (
-      <div className={`credit-order-form bg-white rounded-lg p-6 shadow-lg ${className}`}>
+      <div className={`credit-order-form ${className}`}>
         <div className="text-center">
           <div className="text-red-500 text-4xl mb-4">❌</div>
           <h3 className="text-xl font-bold text-gray-800 mb-2">
@@ -99,7 +99,7 @@ export const CreditOrderForm: React.FC<CreditOrderFormProps> = ({
 
   if (!orderValidation.canCreate) {
     return (
-      <div className={`credit-order-form bg-white rounded-lg p-6 shadow-lg ${className}`}>
+      <div className={`credit-order-form ${className}`}>
         <div className="text-center">
           <div className="text-red-500 text-4xl mb-4">❌</div>
           <h3 className="text-xl font-bold text-gray-800 mb-2">
@@ -133,7 +133,7 @@ export const CreditOrderForm: React.FC<CreditOrderFormProps> = ({
   }
 
   return (
-    <div className={`credit-order-form bg-white rounded-lg p-6 shadow-lg ${className}`}>
+    <div className={`credit-order-form ${className}`}>
       <div className="mb-6">
         <h3 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-2">
           💳 Crear Orden con Crédito
@@ -153,7 +153,7 @@ export const CreditOrderForm: React.FC<CreditOrderFormProps> = ({
           </div>
           <div className="flex justify-between">
             <span>Total de la orden:</span>
-            <span className="font-semibold text-lg">${cartTotal.toFixed(2)}</span>
+            <span className="font-semibold text-lg">${Number(cartTotal).toFixed(2)}</span>
           </div>
         </div>
       </div>

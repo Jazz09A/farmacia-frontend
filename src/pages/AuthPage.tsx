@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
 import LoginForm from '../components/Auth/LoginForm';
 import JuridicoRegisterForm from '../components/Auth/JuridicoRegisterForm';
 
 const AuthPage: React.FC = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get('mode');
+  
+  const [isLogin, setIsLogin] = useState(mode !== 'register');
   const [userType, setUserType] = useState<'juridico' | null>(null);
 
   const handleShowRegister = () => {

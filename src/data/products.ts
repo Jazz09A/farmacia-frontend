@@ -10,9 +10,9 @@ interface PaginatedResponse {
   totalPages: number;
 }
 
-// Interface for backend API response
+// Interface for backend API response (loosely typed; backend may use strings for numbers)
 interface BackendResponse {
-  products: Product[];
+  products: any[];
   pagination: {
     page: number;
     limit: number;
@@ -29,8 +29,8 @@ interface BackendResponse {
   total: number;
 }
 
-// Function to map backend product data to frontend Product interface
-const mapBackendProductToProduct = (backendProduct: Product): Product => {
+// Function to map backend product data to frontend Product interface (normalize types, USD model)
+const mapBackendProductToProduct = (backendProduct: any): Product => {
   // Prioriza el campo 'image' si no es un placeholder.
   // Si no, utiliza el array 'images' como alternativa.
   const primaryImage =
@@ -44,6 +44,11 @@ const mapBackendProductToProduct = (backendProduct: Product): Product => {
       : primaryImage || 'https://placehold.co/400x400/png',
   ];
 
+  const parseNum = (v: any): number => {
+    const n = typeof v === 'string' ? parseFloat(v) : v;
+    return Number.isFinite(n) ? n : 0;
+  };
+
   return {
     id: backendProduct.id,
     name: backendProduct.name,
@@ -51,8 +56,7 @@ const mapBackendProductToProduct = (backendProduct: Product): Product => {
     category: backendProduct.category,
     subcategory: backendProduct.subcategory,
     patology: backendProduct.patology,
-    price_ves: backendProduct.price_ves,
-    price_ref: backendProduct.price_ref,
+    price: parseNum(backendProduct.price),
     description: backendProduct.description,
     ingredients: backendProduct.ingredients || [],
     image: primaryImage || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop',
@@ -60,10 +64,10 @@ const mapBackendProductToProduct = (backendProduct: Product): Product => {
     in_stock: backendProduct.in_stock,
     stock: backendProduct.stock,
     prescription: backendProduct.prescription,
-    rating: backendProduct.rating,
+    rating: parseNum(backendProduct.rating),
     review_count: backendProduct.review_count,
     is_offer: backendProduct.is_offer,
-    original_price: backendProduct.original_price || null,
+    original_price: backendProduct.original_price != null ? parseNum(backendProduct.original_price) : null,
     offer_end_time: backendProduct.offer_end_time ? new Date(backendProduct.offer_end_time).toISOString() : null,
     featured: backendProduct.featured,
     dosage: backendProduct.dosage,
@@ -73,8 +77,8 @@ const mapBackendProductToProduct = (backendProduct: Product): Product => {
     contraindicaciones: backendProduct.contraindicaciones,
     efectos_secundarios: backendProduct.efectos_secundarios,
     slug: backendProduct.slug,
-    discount_percentage: backendProduct.discount_percentage,
-    current_price: backendProduct.current_price,
+    discount_percentage: parseNum(backendProduct.discount_percentage),
+    current_price: parseNum(backendProduct.current_price ?? backendProduct.price),
     is_available: backendProduct.is_available,
     created_at: backendProduct.created_at,
     updated_at: backendProduct.updated_at,
@@ -141,8 +145,9 @@ export const getProducts = async (): Promise<Product[]> => {
 
 export const getProductById = async (id: string): Promise<Product | null> => {
   const response = await fetch(`${baseUrl}/api/v1/public/products/${id}`);
+  if (!response.ok) return null;
   const data = await response.json();
-  return data || null;
+  return data ? mapBackendProductToProduct(data) : null;
 };
 
 export const updateProduct = async (id: string, product: Product, token: string): Promise<Product | null> => {

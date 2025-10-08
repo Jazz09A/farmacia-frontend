@@ -35,7 +35,7 @@ const ProductDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('description');
   const [activeImage, setActiveImage] = useState('');
 
-  const { formatPrice, getPriceInCurrency, currency } = useCurrency();
+  const { formatPrice, getDisplayPrice, currency } = useCurrency();
   const { addToCart } = useCart();
   const [addingToCart, setAddingToCart] = useState(false);
 
@@ -154,29 +154,23 @@ const ProductDetailPage: React.FC = () => {
               {product.is_offer && product.original_price ? (
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
                   <span className="text-3xl lg:text-4xl font-bold text-medical-accent">
-                    {formatPrice(getPriceInCurrency(product.price_ves, product.price_ref))}
+                    {formatPrice(getDisplayPrice(product.price, currency), currency)}
                   </span>
                   <span className="text-lg lg:text-xl font-medium text-medical-gray-500 line-through">
-                    {formatPrice(currency === 'VES' ? product.original_price : (product.original_price / 36.5))}
+                    {formatPrice(getDisplayPrice(product.original_price, currency), currency)}
                   </span>
                   <span className="text-base lg:text-lg font-bold text-red-500 bg-red-100 px-3 py-1 rounded-full">
-                    - {Math.round(((product.original_price - product.price_ves) / product.original_price) * 100)}%
+                    - {Math.round(((product.original_price - product.price) / product.original_price) * 100)}%
                   </span>
                 </div>
               ) : (
                 <span className="text-3xl lg:text-4xl font-bold text-medical-primary">
-                  {formatPrice(getPriceInCurrency(product.price_ves, product.price_ref))}
+                  {formatPrice(getDisplayPrice(product.price, currency), currency)}
                 </span>
               )}
-              {currency === 'VES' ? (
-                <p className="text-base lg:text-lg text-medical-gray-600 mt-2">
-                  Aprox. {formatPrice(product.price_ref, 'USD')}
-                </p>
-              ) : (
-                <p className="text-base lg:text-lg text-medical-gray-600 mt-2">
-                  Aprox. {formatPrice(product.price_ves, 'VES')}
-                </p>
-              )}
+              <p className="text-base lg:text-lg text-medical-gray-600 mt-2">
+                Aprox. {currency === 'VES' ? formatPrice(product.price, 'USD') : formatPrice(getDisplayPrice(product.price, 'VES' as any), 'VES' as any)}
+              </p>
             </div>
             
             {/* Stock & Prescription */}

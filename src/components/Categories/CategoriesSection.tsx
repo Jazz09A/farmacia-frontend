@@ -5,17 +5,13 @@ import {
   Heart, 
   Baby, 
   Stethoscope, 
-  Syringe, 
-  Cross, 
-  Activity, 
-  Shield,
-  Eye,
-  Brain,
-  Bone,
-  Zap
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useScrollContext } from '../../contexts/ScrollContext';
 
 export const CategoriesSection: React.FC = () => {
+  const navigate = useNavigate();
+  const { scrollToTop } = useScrollContext();
   const categories = [
     {
       icon: Pill,
@@ -97,8 +93,8 @@ export const CategoriesSection: React.FC = () => {
             transition={{ duration: 0.8, delay: 0.4 }}
             viewport={{ once: true }}
           >
-            Cubrimos todas las especialidades médicas con medicamentos certificados 
-            y productos farmacéuticos de la más alta calidad para tu farmacia.
+             Cubrimos muchas especialidades médicas con productos nutraceuticos 
+             y farmacéuticos de la más alta calidad para tu farmacia.
           </motion.p>
         </motion.div>
 
@@ -159,6 +155,7 @@ export const CategoriesSection: React.FC = () => {
                 className="btn-medical-primary px-8 py-3 text-base font-semibold"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => window.open('https://wa.me/584241806018?text=Quiero%20consultar%20disponibilidad%20de%20productos', '_blank')}
               >
                 📞 Consultar Disponibilidad
               </motion.button>
@@ -166,6 +163,10 @@ export const CategoriesSection: React.FC = () => {
                 className="btn-medical-secondary px-8 py-3 text-base font-semibold border-2"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  scrollToTop({ smooth: true });
+                  setTimeout(() => navigate('/catalog'), 100);
+                }}
               >
                 📋 Ver Catálogo Completo
               </motion.button>

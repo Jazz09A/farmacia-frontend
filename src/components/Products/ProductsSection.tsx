@@ -5,15 +5,11 @@ import { ProductCard } from './ProductCard';
 import { Product } from '../../types/index';
 
 interface ProductsSectionProps {
-  currency: 'VES' | 'USD' | 'REF';
   onAddToCart: (product: Product, quantity: number) => void;
-  formatPrice: (priceVES: number, priceREF: number) => string;
 }
 
 export const ProductsSection: React.FC<ProductsSectionProps> = ({
-  currency,
-  onAddToCart,
-  formatPrice
+  onAddToCart
 }) => {
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -120,11 +116,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
               viewport={{ once: true }}
               layout
             >
-              <ProductCard
-                product={product}
-                currency={currency}
-                formatPrice={formatPrice}
-              />
+              <ProductCard product={product} />
             </motion.div>
           ))}
         </motion.div>

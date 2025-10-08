@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { DollarSign, Hash, RefreshCw } from 'lucide-react';
 
 interface CurrencyToggleProps {
-  currency: 'VES' | 'REF';
+  currency: 'VES' | 'USD';
   onToggle: () => void;
   isScrolled: boolean;
 }
@@ -63,7 +63,7 @@ export const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
         >
           {isConverting ? (
             <RefreshCw className="h-4 w-4 animate-spin" />
-          ) : currency === 'REF' ? (
+          ) : currency === 'USD' ? (
             <DollarSign className="h-5 w-5" />
           ) : (
             <Hash className="h-5 w-5" />
@@ -95,7 +95,7 @@ export const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.3, delay: 0.25 }}
           >
-            {currency === 'REF' ? 'US Dollar' : 'Bolívar'}
+            {currency === 'USD' ? 'US Dollar' : 'Bolívar'}
           </motion.span>
         </motion.div>
       </div>

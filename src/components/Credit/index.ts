@@ -6,6 +6,8 @@ export { PaymentHistory } from './PaymentHistory';
 export { CreditDashboard } from './CreditDashboard';
 export { CreditOrdersList } from './CreditOrdersList';
 export { CreditOrderDetails } from './CreditOrderDetails';
+export { CurrencyConverter } from './CurrencyConverter';
+export { OrderSummary } from './OrderSummary';
 
 // Componentes de administración
 export { AdminPaymentApproval } from './AdminPaymentApproval';

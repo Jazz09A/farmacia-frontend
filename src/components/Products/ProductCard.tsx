@@ -3,20 +3,18 @@ import { motion } from 'framer-motion';
 import { Heart, Star, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Product } from '../../types';
+import { useCurrency } from '../../hooks/useCurrency';
 
 interface ProductCardProps {
   product: Product;
-  currency: 'VES' | 'USD' | 'REF';
-  formatPrice: (priceVES: number, priceREF: number) => string;
   className?: string;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
-  currency,
-  formatPrice,
   className = ''
 }) => {
+  const { currency, getDisplayPrice, formatPrice } = useCurrency();
   return (
     <Link to={`/product/${product.id}`} className="block">
       <motion.div
@@ -95,17 +93,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div className="flex flex-col">
               {product.is_offer && product.original_price && (
                 <span className="text-sm text-gray-400 line-through">
-                  {currency === 'VES' 
-                    ? `Bs. ${product.original_price.toLocaleString('es-VE')}`
-                    : `$ ${product.original_price.toFixed(2)}`
-                  }
+                  {formatPrice(getDisplayPrice(product.original_price, currency), currency)}
                 </span>
               )}
               <span className="text-xl font-bold text-gray-900">
-                {currency === 'VES' 
-                  ? `Bs. ${product.price_ves.toLocaleString('es-VE')}` 
-                  : `$ ${product.price_ref.toFixed(2)}`
-                }
+                {formatPrice(getDisplayPrice(product.price, currency), currency)}
               </span>
             </div>
             {product.is_offer && (

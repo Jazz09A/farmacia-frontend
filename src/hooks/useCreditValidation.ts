@@ -1,23 +1,24 @@
 import { useCallback } from 'react';
 import { useCredit } from '../contexts/CreditContext';
 import { VALIDATION_RULES } from '../config/creditConfig';
+import { formatREF } from '../utils/currencyUtils';
 
 export const useCreditValidation = () => {
   const { creditInfo } = useCredit();
 
   // Validar si hay crédito suficiente para una compra
-  const validateCreditAvailability = useCallback((amount: number): { 
+  const validateCreditAvailability = useCallback((amount: string | number): { 
     isValid: boolean; 
     error?: string; 
-    availableCredit: number;
-    creditLimit: number;
+    availableCredit: string;
+    creditLimit: string;
   } => {
     if (!creditInfo) {
       return {
         isValid: false,
         error: 'No se pudo obtener información de crédito',
-        availableCredit: 0,
-        creditLimit: 0
+        availableCredit: '0.00',
+        creditLimit: '0.00'
       };
     }
 
@@ -30,7 +31,10 @@ export const useCreditValidation = () => {
       };
     }
 
-    if (amount <= 0) {
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    const availableCredit = parseFloat(creditInfo.available_credit);
+
+    if (isNaN(numericAmount) || numericAmount <= 0) {
       return {
         isValid: false,
         error: 'El monto debe ser mayor a 0',
@@ -39,10 +43,10 @@ export const useCreditValidation = () => {
       };
     }
 
-    if (amount > creditInfo.available_credit) {
+    if (numericAmount > availableCredit) {
       return {
         isValid: false,
-        error: `Crédito insuficiente. Necesita $${amount} pero solo tiene $${creditInfo.available_credit} disponible`,
+        error: `Crédito insuficiente. Necesita ${formatREF(amount.toString())} pero solo tiene ${formatREF(creditInfo.available_credit)} disponible`,
         availableCredit: creditInfo.available_credit,
         creditLimit: creditInfo.credit_limit
       };
@@ -56,19 +60,26 @@ export const useCreditValidation = () => {
   }, [creditInfo]);
 
   // Validar si el usuario puede hacer una compra
-  const canMakePurchase = useCallback((amount: number): boolean => {
+  const canMakePurchase = useCallback((amount: string | number): boolean => {
     const validation = validateCreditAvailability(amount);
     return validation.isValid;
   }, [validateCreditAvailability]);
 
   // Obtener porcentaje de crédito utilizado
   const getCreditUsagePercentage = useCallback((): number => {
-    if (!creditInfo || creditInfo.credit_limit === 0) {
+    if (!creditInfo) {
       return 0;
     }
 
-    const used = creditInfo.credit_limit - creditInfo.available_credit;
-    return Math.round((used / creditInfo.credit_limit) * 100);
+    const creditLimit = parseFloat(creditInfo.credit_limit);
+    const availableCredit = parseFloat(creditInfo.available_credit);
+
+    if (creditLimit === 0) {
+      return 0;
+    }
+
+    const used = creditLimit - availableCredit;
+    return Math.round((used / creditLimit) * 100);
   }, [creditInfo]);
 
   // Obtener estado del crédito con información detallada
@@ -136,7 +147,7 @@ export const useCreditValidation = () => {
   }, [creditInfo, getCreditUsagePercentage]);
 
   // Validar si se puede crear una orden de crédito
-  const canCreateCreditOrder = useCallback((cartTotal: number): { 
+  const canCreateCreditOrder = useCallback((cartTotal: string | number): { 
     canCreate: boolean; 
     reason?: string;
     suggestions?: string[];

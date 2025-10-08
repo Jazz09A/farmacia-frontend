@@ -8,7 +8,7 @@ const CurrencyToggle: React.FC = () => {
   const { currency, setCurrency, getCurrencySymbol, getCurrencyName } = useAdminCurrency();
   const [isOpen, setIsOpen] = useState(false);
 
-  const currencies: Currency[] = ['VES', 'USD', 'REF'];
+  const currencies: Currency[] = ['VES', 'USD'];
 
   const handleCurrencySelect = (newCurrency: Currency) => {
     setCurrency(newCurrency);
@@ -19,7 +19,6 @@ const CurrencyToggle: React.FC = () => {
     switch (curr) {
       case 'VES': return 'bg-yellow-500';
       case 'USD': return 'bg-green-500';
-      case 'REF': return 'bg-blue-500';
       default: return 'bg-gray-500';
     }
   };
@@ -28,7 +27,6 @@ const CurrencyToggle: React.FC = () => {
     switch (curr) {
       case 'VES': return '🇻🇪';
       case 'USD': return '🇺🇸';
-      case 'REF': return '💱';
       default: return '💰';
     }
   };
@@ -91,7 +89,6 @@ const CurrencyToggle: React.FC = () => {
                       <div className="text-xs text-gray-500 mt-1">
                         {curr === 'VES' && 'Bolívares Venezolanos'}
                         {curr === 'USD' && 'Dólares Estadounidenses'}
-                        {curr === 'REF' && 'Precio de Referencia'}
                       </div>
                     </div>
                     

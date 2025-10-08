@@ -1,8 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Star, Quote } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const TestimonialsSection: React.FC = () => {
+  const navigate = useNavigate();
   const testimonials = [
     {
       name: 'Dr. María González',
@@ -72,8 +74,8 @@ export const TestimonialsSection: React.FC = () => {
             transition={{ duration: 0.8, delay: 0.4 }}
             viewport={{ once: true }}
           >
-            Más de 500 farmacias confían en nosotros para su suministro farmacéutico. 
-            Conoce las experiencias de nuestros clientes satisfechos.
+             Más de 1200 farmacias confían en nosotros. 
+             Conoce las experiencias de nuestros clientes satisfechos.
           </motion.p>
         </motion.div>
 
@@ -154,6 +156,7 @@ export const TestimonialsSection: React.FC = () => {
                 className="btn-medical-primary px-8 py-3 text-base font-semibold"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/cliente-drozainka')}
               >
                 🚀 Convierte en Cliente
               </motion.button>
@@ -161,6 +164,7 @@ export const TestimonialsSection: React.FC = () => {
                 className="btn-medical-secondary px-8 py-3 text-base font-semibold border-2"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => window.open('https://wa.me/584241806018?text=Hola,%20quiero%20información%20sobre%20convertirme%20en%20cliente%20de%20Drozainka', '_blank')}
               >
                 📞 Contactar Ventas
               </motion.button>

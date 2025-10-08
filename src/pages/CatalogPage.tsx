@@ -8,6 +8,7 @@ import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import Pagination from '../components/common/Pagination';
 import { ProductCardSkeleton } from '../components/Skeleton/ProductCardSkeleton';
 import { authService } from '../services/AuthService';
+import MapSection from '../components/Map/MapSection';
 
 // Categorías temporales hasta que se obtengan de la API
 const medicalCategories = [
@@ -117,8 +118,8 @@ const CatalogPage: React.FC = () => {
       const matchesSubcategory = !filters.subcategory || product.subcategory === filters.subcategory;
       const matchesPatology = !filters.patology || product.patology === filters.patology;
       const matchesBrand = !filters.brand || product.brand.toLowerCase().includes(filters.brand.toLowerCase());
-      // Use the appropriate price field based on current currency
-      const currentPrice = currency === 'VES' ? product.price_ves : product.price_ref;
+      // Precios vienen en USD; convertir para display/filtrado si es VES
+      const currentPrice = currency === 'VES' ? product.price * 36.5 : product.price;
       const matchesPrice = currentPrice >= filters.priceRange[0] && currentPrice <= filters.priceRange[1];
       const matchesStock = !filters.inStock || product.in_stock;
       const matchesPrescription = !filters.prescription || product.prescription;
@@ -134,8 +135,8 @@ const CatalogPage: React.FC = () => {
       
       switch (filters.sortBy) {
         case 'price':
-          const priceA = currency === 'VES' ? a.price_ves : a.price_ref;
-          const priceB = currency === 'VES' ? b.price_ves : b.price_ref;
+          const priceA = currency === 'VES' ? a.price * 36.5 : a.price;
+          const priceB = currency === 'VES' ? b.price * 36.5 : b.price;
           comparison = priceA - priceB;
           break;
         case 'rating':
@@ -194,7 +195,7 @@ const CatalogPage: React.FC = () => {
         <div className="relative pt-8 pb-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-medical-primary to-medical-accent bg-clip-text text-transparent mb-6">
-              Catálogo Médico Premium
+              Catálogo De Productos
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
               Encuentra todos los medicamentos, suplementos y productos de salud que necesitas con la garantía de calidad farmacéutica
@@ -458,6 +459,12 @@ const CatalogPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        <section>
+          <MapSection
+            subtitle="Distribuidor líder de productos nutraceuticos y farmacéuticos en Venezuela. Suministramos productos certificados a farmacias con la más alta calidad y confiabilida."
+          />
+        </section>
 
 
       </div>

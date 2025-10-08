@@ -16,12 +16,14 @@ import { useCredit } from '../../contexts/CreditContext';
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import ImageUploader from '../common/ImageUploader';
+import { paymentMethods } from '../../config/paymentMethods';
+import { getPaymentMethodCurrency, formatVES, formatUSD } from '../../utils/currencyUtils';
 
 interface EnhancedPaymentFormProps {
   orderId: string;
   orderTotal: number; // Total en VES
   orderTotalRef?: number; // Total en USD/REF
-  creditRemaining: number; // Deuda pendiente en USD/REF
+  creditRemaining: number | string; // Deuda pendiente en USD/REF (puede venir como string del backend)
   orderNumber: string;
   exchangeRate: number;
   onPaymentCreated: () => void;
@@ -34,12 +36,14 @@ interface PaymentFormData {
   paymentCaptureUrl: string;
   paymentMethod: string;
   notes: string;
+  bankName?: string;
 }
 
 interface ValidationErrors {
   amount?: string;
   paymentReference?: string;
   paymentCaptureUrl?: string;
+  bankName?: string;
 }
 
 interface PaymentStep {
@@ -50,6 +54,11 @@ interface PaymentStep {
   completed: boolean;
   active: boolean;
 }
+
+const availablePaymentMethods = paymentMethods.filter(
+  method => method.id !== 'credito' && method.id !== 'efectivo'
+);
+
 
 export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
   orderId,
@@ -68,16 +77,63 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
   const pendingDebt = useMemo(() => {
     // La deuda pendiente es la diferencia entre el total de la orden y lo que ya se ha pagado
     // creditRemaining representa lo que queda por pagar de esta orden específica
-    const debt = creditRemaining || 0;
+    const debt = typeof creditRemaining === 'string' 
+      ? parseFloat(creditRemaining) 
+      : creditRemaining || 0;
     return isNaN(debt) ? 0 : debt;
   }, [creditRemaining]);
+
+  // Obtener el total de la orden en la moneda correcta según el contexto
+  const orderTotalInCurrentCurrency = useMemo(() => {
+    // Mostrar los valores como vienen del API sin conversión innecesaria
+    const totalNum = typeof orderTotal === 'string' ? parseFloat(orderTotal) : orderTotal;
+    const totalRefNum = typeof orderTotalRef === 'string' ? parseFloat(orderTotalRef) : orderTotalRef;
+    switch (currency) {
+      case 'VES':
+        return totalNum;
+      case 'USD':
+        return typeof totalRefNum === 'number' && !isNaN(totalRefNum) ? totalRefNum : totalNum;
+      default:
+        return totalNum;
+    }
+  }, [orderTotal, orderTotalRef, currency]);
+
+  // Obtener la deuda pendiente en la moneda correcta según el contexto
+  const creditRemainingInCurrentCurrency = useMemo(() => {
+    // Convertir creditRemaining a número si viene como string (API devuelve string)
+    const creditRemainingNum = typeof creditRemaining === 'string'
+      ? parseFloat(creditRemaining)
+      : (typeof creditRemaining === 'number' ? creditRemaining : 0);
+
+    const rate = typeof exchangeRate === 'string' ? parseFloat(exchangeRate as unknown as string) : exchangeRate;
+
+    console.log('🔍 Debug - Enhanced Payment Credit Remaining (With per-currency display):', {
+      orderId,
+      orderNumber,
+      currency,
+      creditRemaining,
+      creditRemainingNum,
+      exchangeRate,
+      rate
+    });
+
+    switch (currency) {
+      case 'VES':
+        return creditRemainingNum * (Number.isFinite(rate) ? rate : 1);
+      case 'USD':
+        return creditRemainingNum;
+      default:
+        return creditRemainingNum;
+    }
+  }, [creditRemaining, currency, orderId, orderNumber, exchangeRate]);
 
   const [formData, setFormData] = useState<PaymentFormData>(() => ({
     amount: pendingDebt,
     paymentReference: '',
     paymentCaptureUrl: '',
-    paymentMethod: 'transfer',
-    notes: ''
+    paymentMethod: availablePaymentMethods[0]?.id || 'pago-movil',
+    notes: '',
+    bankName: ''
   }));
 
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
@@ -114,6 +170,36 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
     }
   ], [currentStep]);
 
+  // Obtener la moneda del método de pago seleccionado
+  const paymentCurrency = useMemo(() => {
+    return getPaymentMethodCurrency(formData.paymentMethod);
+  }, [formData.paymentMethod]);
+
+  // Helpers en USD (backend entrega credit_remaining en USD/REF y total_ref en USD)
+  const pendingDebtUsd = useMemo(() => {
+    const cr = typeof creditRemaining === 'string' ? parseFloat(creditRemaining) : Number(creditRemaining || 0);
+    return Number.isFinite(cr) ? cr : 0;
+  }, [creditRemaining]);
+
+  const orderTotalUsd = useMemo(() => {
+    const totalRefNum = typeof orderTotalRef === 'string' ? parseFloat(orderTotalRef) : (orderTotalRef ?? NaN);
+    const totalVesNum = typeof orderTotal === 'string' ? parseFloat(orderTotal) : Number(orderTotal || 0);
+    const rate = typeof exchangeRate === 'string' ? parseFloat(exchangeRate as unknown as string) : exchangeRate;
+    if (Number.isFinite(totalRefNum)) return totalRefNum as number;
+    // Fallback: calcular USD desde VES si falta total_ref
+    return Number.isFinite(totalVesNum) && Number.isFinite(rate) && rate > 0 ? totalVesNum / (rate as number) : 0;
+  }, [orderTotalRef, orderTotal, exchangeRate]);
+
+  // Mostrar equivalente en VES para métodos en moneda nacional
+  const vesEquivalent = useMemo(() => {
+    const rate = typeof exchangeRate === 'string' ? parseFloat(exchangeRate as unknown as string) : exchangeRate;
+    return (Number(formData.amount) || 0) * (Number.isFinite(rate) ? (rate as number) : 1);
+  }, [formData.amount, exchangeRate]);
+
+  // Sincronizar el monto mostrado con el método de pago seleccionado
+  // REMOVER: ya no sincronizamos el valor con la moneda del método de pago; el input siempre es USD
+  // useEffect(() => { setFormData(prev => ({ ...prev, amount: pendingDebtInPaymentCurrency })); }, [...])
+
   // Validación en tiempo real
   const validateField = useCallback((field: keyof PaymentFormData, value: any): string | undefined => {
     switch (field) {
@@ -121,22 +207,51 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
         if (!value || value <= 0 || isNaN(value)) {
           return 'El monto debe ser mayor a 0';
         }
-        if (value > pendingDebt) {
-          return `El monto no puede exceder la deuda pendiente (${formatCurrency(pendingDebt)})`;
+        
+        // Validar contra límites en USD, porque el input es USD
+        const valueUsd = Number(value);
+        if (!valueUsd || valueUsd <= 0 || isNaN(valueUsd)) {
+          return 'El monto debe ser mayor a 0';
         }
-        if (value > getOrderTotalInCurrentCurrency()) {
-          return `El monto no puede exceder el total de la orden (${formatCurrency(getOrderTotalInCurrentCurrency())})`;
+
+        if (valueUsd > pendingDebtUsd) {
+          return `El monto no puede exceder la deuda pendiente (${formatUSD(pendingDebtUsd)})`;
+        }
+
+        if (valueUsd > orderTotalUsd) {
+          return `El monto no puede exceder el total de la orden (${formatUSD(orderTotalUsd)})`;
         }
         return undefined;
       
-      case 'paymentReference':
-        if (!value || value.trim().length < 3) {
-          return 'La referencia debe tener al menos 3 caracteres';
+      case 'paymentReference': {
+        const ref = (value || '').toString().trim();
+        if (!ref) {
+          return 'La referencia es obligatoria';
         }
-        if (value.trim().length > 50) {
-          return 'La referencia no puede exceder 50 caracteres';
+        // Requiere al menos 8 dígitos (últimos 8 o más)
+        const digitsCount = ref.replace(/\D/g, '').length;
+        if (digitsCount < 8) {
+          return 'Incluye al menos los últimos 8 dígitos de la referencia';
+        }
+        if (ref.length > 80) {
+          return 'La referencia no puede exceder 80 caracteres';
         }
         return undefined;
+      }
+
+      case 'bankName': {
+        const bank = (value || '').toString().trim();
+        if (!bank) {
+          return 'El banco es obligatorio';
+        }
+        if (bank.length < 3) {
+          return 'El nombre del banco debe tener al menos 3 caracteres';
+        }
+        if (bank.length > 60) {
+          return 'El nombre del banco no puede exceder 60 caracteres';
+        }
+        return undefined;
+      }
       
       case 'paymentCaptureUrl':
         if (!value || value.trim() === '') {
@@ -147,7 +262,7 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
       default:
         return undefined;
     }
-  }, [pendingDebt, orderTotal]);
+  }, [pendingDebtUsd, orderTotalUsd, formatUSD]);
 
   // Validar formulario completo
   const validateForm = useCallback((): ValidationErrors => {
@@ -224,10 +339,11 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
   const isStepValid = useCallback((step: number): boolean => {
     switch (step) {
       case 1:
-        return !validateField('amount', formData.amount) && 
-               !validateField('paymentReference', formData.paymentReference);
+        return !validateField('amount', formData.amount);
       case 2:
-        return !validateField('paymentCaptureUrl', formData.paymentCaptureUrl);
+        return !validateField('paymentCaptureUrl', formData.paymentCaptureUrl)
+          && !validateField('paymentReference', formData.paymentReference)
+          && !validateField('bankName', formData.bankName);
       case 3:
         return Object.keys(validateForm()).length === 0;
       default:
@@ -268,8 +384,13 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
     try {
       await createPayment({
         order_id: orderId,
-        amount: formData.amount,
-        payment_reference: formData.paymentReference,
+        amount: (paymentCurrency === 'VES'
+          ? (Number(formData.amount) * (typeof exchangeRate === 'string' ? parseFloat(exchangeRate as unknown as string) : exchangeRate || 1))
+          : Number(formData.amount)
+        ).toString(),
+        payment_currency: paymentCurrency, // Renombrado según guía
+        payment_method: formData.paymentMethod, // Enviar el método de pago seleccionado
+        payment_reference: `${(formData.bankName || '').trim()} ${formData.paymentReference}`.trim(),
         payment_capture_url: formData.paymentCaptureUrl
       }, new File([], '')); // El archivo ya se subió a Cloudinary
 
@@ -283,26 +404,14 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, orderId, createPayment, onPaymentCreated, validateForm]);
+  }, [formData, orderId, createPayment, onPaymentCreated, validateForm, paymentCurrency, exchangeRate]);
 
   // Formatear moneda usando el contexto global
   const formatCurrency = (amount: number) => formatPrice(amount, currency);
 
-  // Función para obtener el total de la orden en la moneda actual
+  // Función para obtener el total de la orden en la moneda del contexto global
   const getOrderTotalInCurrentCurrency = () => {
-    switch (currency) {
-      case 'VES':
-        return orderTotal || 0;
-      case 'USD':
-      case 'REF':
-        if (orderTotalRef !== undefined && orderTotalRef !== null) {
-          return orderTotalRef;
-        }
-        const convertedTotal = (orderTotal || 0) / (exchangeRate || 1);
-        return isNaN(convertedTotal) ? 0 : convertedTotal;
-      default:
-        return orderTotal || 0;
-    }
+    return orderTotalInCurrentCurrency;
   };
 
   // Renderizar indicador de pasos
@@ -365,7 +474,7 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Deuda Pendiente:</span>
-            <span className="font-bold text-red-600">{formatCurrency(pendingDebt)}</span>
+            <span className="font-bold text-red-600">{formatCurrency(creditRemainingInCurrentCurrency)}</span>
           </div>
         </div>
         
@@ -396,16 +505,25 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
             max={Math.min(pendingDebt || 0, getOrderTotalInCurrentCurrency())}
             min={0.01}
             step={0.01}
-            className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+            className={`w-full pl-10 pr-14 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
               validationErrors.amount ? 'border-red-300 bg-red-50' : 'border-gray-300'
             }`}
-            placeholder={formatCurrency(pendingDebt)}
+            placeholder={formatUSD(pendingDebtUsd)}
           />
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <span className="text-gray-500 text-sm font-medium">USD</span>
+          </div>
         </div>
         {validationErrors.amount && (
           <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
             <AlertCircle className="w-4 h-4" />
             {validationErrors.amount}
+          </p>
+        )}
+        {/* Equivalente de moneda para ayudar al usuario */}
+        {paymentCurrency === 'VES' && (
+          <p className="mt-2 text-xs text-gray-500">
+            Pagas en VES: {formatVES(vesEquivalent)} (tasa {typeof exchangeRate === 'string' ? exchangeRate : exchangeRate.toString()} VES/USD)
           </p>
         )}
         <div className="mt-2 flex gap-2">
@@ -433,37 +551,6 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
         </div>
       </div>
 
-      {/* Referencia del pago */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Referencia del Pago *
-        </label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Hash className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            value={formData.paymentReference}
-            onChange={(e) => handleFieldChange('paymentReference', e.target.value)}
-            maxLength={50}
-            className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-              validationErrors.paymentReference ? 'border-red-300 bg-red-50' : 'border-gray-300'
-            }`}
-            placeholder="Ej: REF123456789, Transferencia-001"
-          />
-        </div>
-        {validationErrors.paymentReference && (
-          <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-            <AlertCircle className="w-4 h-4" />
-            {validationErrors.paymentReference}
-          </p>
-        )}
-        <p className="mt-1 text-xs text-gray-500">
-          Ingresa el número de referencia de tu transferencia o pago
-        </p>
-      </div>
-
       {/* Método de pago */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -474,13 +561,38 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
           onChange={(e) => handleFieldChange('paymentMethod', e.target.value)}
           className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value="transfer">Transferencia Bancaria</option>
-          <option value="mobile_payment">Pago Móvil</option>
-          <option value="zelle">Zelle</option>
-          <option value="paypal">PayPal</option>
-          <option value="other">Otro</option>
+          {availablePaymentMethods.map(method => (
+            <option key={method.id} value={method.id}>
+              {method.name}
+            </option>
+          ))}
         </select>
       </div>
+
+      {/* Mostrar datos del método de pago seleccionado */}
+      <AnimatePresence>
+        {formData.paymentMethod && availablePaymentMethods.find(p => p.id === formData.paymentMethod)?.data && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="mt-6 p-4 bg-gradient-to-r from-medical-blue-50 to-medical-green-50 rounded-xl border border-medical-primary/20">
+              <h3 className="text-lg font-semibold mb-3 text-medical-primary flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Datos para el pago
+              </h3>
+              <div className="bg-white/80 p-3 rounded-lg">
+                <p className="text-sm font-mono text-gray-700 whitespace-pre-line">
+                  {availablePaymentMethods.find(p => p.id === formData.paymentMethod)?.data}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 
@@ -514,6 +626,58 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
           <p className="text-sm text-red-700">{validationErrors.paymentCaptureUrl}</p>
         </div>
       )}
+
+      {/* Referencia del pago */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Referencia del Pago *
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Hash className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            value={formData.paymentReference}
+            onChange={(e) => handleFieldChange('paymentReference', e.target.value)}
+            maxLength={80}
+            className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+              validationErrors.paymentReference ? 'border-red-300 bg-red-50' : 'border-gray-300'
+            }`}
+            placeholder="Ej: 12345678"
+          />
+        </div>
+        {validationErrors.paymentReference && (
+          <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+            <AlertCircle className="w-4 h-4" />
+            {validationErrors.paymentReference}
+          </p>
+        )}
+        <p className="mt-1 text-xs text-gray-500">Incluye los últimos 8 dígitos (o más) de la referencia.</p>
+      </div>
+
+      {/* Banco emisor */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Banco Emisor *
+        </label>
+        <input
+          type="text"
+          value={formData.bankName || ''}
+          onChange={(e) => handleFieldChange('bankName', e.target.value)}
+          maxLength={60}
+          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+            validationErrors.bankName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+          }`}
+          placeholder="Ej: Banco Provincial"
+        />
+        {validationErrors.bankName && (
+          <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+            <AlertCircle className="w-4 h-4" />
+            {validationErrors.bankName}
+          </p>
+        )}
+      </div>
 
       {/* Notas adicionales */}
       <div>

@@ -357,6 +357,7 @@ class AuthService {
   async createOrder(orderData: {
     shipping_address_id: string;
     payment_method: string;
+    payment_currency: 'USD' | 'VES';
     payment_capture_url: string;
     customer_notes: string;
   }): Promise<any> {

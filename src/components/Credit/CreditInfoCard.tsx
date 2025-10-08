@@ -4,6 +4,7 @@ import { useCredit } from '../../contexts/CreditContext';
 import { useCreditValidation } from '../../hooks/useCreditValidation';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { CreditCard, RefreshCw, TrendingUp, DollarSign, Shield, AlertTriangle } from 'lucide-react';
+import { formatUSD } from '../../utils/currencyUtils';
 
 interface CreditInfoCardProps {
   onRefresh?: () => void;
@@ -113,7 +114,7 @@ export const CreditInfoCard: React.FC<CreditInfoCardProps> = ({
               <div className="text-sm text-white/80">Crédito Disponible</div>
             </div>
             <div className="text-3xl font-bold text-green-300">
-              ${creditInfo.available_credit.toFixed(2)}
+              {formatUSD(creditInfo.available_credit)}
             </div>
           </motion.div>
 
@@ -130,7 +131,7 @@ export const CreditInfoCard: React.FC<CreditInfoCardProps> = ({
               <div className="text-sm text-white/80">Límite de Crédito</div>
             </div>
             <div className="text-3xl font-bold text-blue-300">
-              ${creditInfo.credit_limit.toFixed(2)}
+              {formatUSD(creditInfo.credit_limit)}
             </div>
           </motion.div>
 

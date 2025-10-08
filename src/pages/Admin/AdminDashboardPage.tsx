@@ -50,6 +50,13 @@ const AdminDashboardPage: React.FC = () => {
     conversion_rate: 0
   };
 
+  // Asegurar que conversion_rate sea número antes de formatear
+  const conversionRateNum = (() => {
+    const raw = (stats as any)?.conversion_rate;
+    const num = typeof raw === 'number' ? raw : parseFloat(raw ?? '0');
+    return Number.isFinite(num) ? num : 0;
+  })();
+
   const orderStatusSummary = data?.order_status_summary || {
     pending: 0,
     confirmed: 0,
@@ -291,7 +298,7 @@ const AdminDashboardPage: React.FC = () => {
         />
         <StatCard 
           title="Tasa de Conversión" 
-          value={`${stats.conversion_rate.toFixed(2)}%`} 
+          value={`${conversionRateNum.toFixed(2)}%`} 
           icon={TrendingUp} 
           // change="-0.5%" 
           // changeType="down" 

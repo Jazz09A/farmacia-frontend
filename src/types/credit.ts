@@ -1,9 +1,17 @@
 // Tipos para el sistema de créditos
 
+// Tipos base según documentación
+export type Decimal = string; // Siempre como string para precisión
+export type DateTime = string; // ISO 8601 format
+export type Currency = 'VES' | 'USD';
+export type PaymentStatus = 'pending' | 'approved' | 'rejected';
+export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type CreditStatus = 'active' | 'suspended' | 'blocked';
+
 export interface CreditInfo {
-  available_credit: number;
-  credit_limit: number;
-  credit_status: 'active' | 'suspended' | 'inactive';
+  available_credit: Decimal;    // Crédito disponible en USD
+  credit_limit: Decimal;        // Límite de crédito en USD
+  credit_status: CreditStatus;  // Estado del crédito
 }
 
 export interface CreditOrderData {
@@ -16,59 +24,72 @@ export interface CreditOrderResponse {
   message: string;
   order_id: string;
   order_number: string;
-  total: number;
-  credit_remaining: number;
+  total: Decimal;
+  credit_remaining: Decimal;
 }
 
-// Tipos para órdenes de crédito
-export interface CreditOrder {
-  id: string;
-  order_number: string;
-  status: string;
-  total: number; // Total en VES
-  total_ref: number; // Total en USD/REF
-  currency: string; // Moneda original de la orden
-  exchange_rate: number; // Tasa de cambio usada
-  created_at: string;
-  updated_at: string;
-  credit_amount: number; // Monto total del crédito otorgado
-  credit_remaining: number; // Deuda pendiente en USD/REF
-  credit_paid_total: number; // Total pagado en USD/REF
-  payment_due_date: string;
-  credit_paid: boolean;
-  credit_payment_date?: string;
-  payment_status: string;
-  payment_method: string;
-  items: {
-    id: string;
-    product_id: string;
-    product_name: string;
-    product_brand: string;
-    product_image: string;
-    quantity: number;
-    unit_price: number;
-    unit_price_ref: number;
-    total_price: number;
-    total_price_ref: number;
-    selected_presentation: string;
-  }[];
-  shipping_address: {
-    street: string;
-    city: string;
-    state: string;
-    postal_code: string;
-    country: string;
-    recipient_name: string;
-    recipient_phone: string;
-    delivery_instructions?: string;
-  };
-  credit_payments: Payment[];
-  item_count: number;
-  customer_notes?: string;
-  tracking_number?: string;
-  estimated_delivery?: string;
-  delivered_at?: string;
+// Interfaces de dirección y items según documentación
+export interface CreditOrderAddress {
+  full_name: string;                   // Nombre completo
+  phone: string;                       // Teléfono
+  address_line_1: string;              // Dirección línea 1
+  address_line_2?: string;             // Dirección línea 2
+  city: string;                        // Ciudad
+  state: string;                       // Estado
+  postal_code?: string;                // Código postal
+  country: string;                     // País
 }
+
+export interface CreditOrderItem {
+  id: string;                          // ID del item
+  product_id: string;                  // ID del producto
+  product_name: string;                // Nombre del producto
+  product_brand: string;               // Marca del producto
+  product_image?: string;              // URL de la imagen
+  quantity: number;                    // Cantidad
+  unit_price: string;                  // Precio unitario en USD (string)
+  total_price: string;                 // Precio total en USD (string)
+  selected_presentation: string;       // Presentación seleccionada
+}
+
+// Interfaz principal de orden de crédito según documentación
+export interface CreditOrderResponse {
+  id: string;                          // ID de la orden
+  order_number: string;                // Número de orden
+  status: OrderStatus;                 // Estado de la orden
+  total: string;                       // Total en USD (string)
+  payment_currency: Currency;          // Moneda del pago ('USD' | 'VES')
+  exchange_rate: string | null;        // Tasa usada si pagó en VES
+  created_at: DateTime;                // Fecha de creación
+  updated_at: DateTime;                // Fecha de actualización
+  
+  // Información específica de crédito
+  credit_amount: string;               // Monto del crédito en USD (string)
+  credit_remaining: string;            // Saldo pendiente en USD (string)
+  credit_paid_total: string;           // Total pagado en USD (string)
+  payment_due_date?: DateTime;         // Fecha límite de pago
+  credit_paid: boolean;                // Si está completamente pagado
+  credit_payment_date?: DateTime;      // Fecha de pago completo
+  
+  // Información de pago
+  payment_status: string;              // Estado del pago
+  payment_method: string;              // Método de pago ('credit')
+  
+  // Items y dirección
+  items: CreditOrderItem[];            // Items de la orden
+  shipping_address?: CreditOrderAddress; // Dirección de envío
+  credit_payments: CreditPaymentResponse[]; // Pagos realizados
+  
+  // Información adicional
+  item_count: number;                  // Cantidad de items
+  customer_notes?: string;             // Notas del cliente
+  tracking_number?: string;            // Número de seguimiento
+  estimated_delivery?: DateTime;       // Entrega estimada
+  delivered_at?: DateTime;             // Fecha de entrega
+}
+
+// Mantener compatibilidad con interfaz existente
+export interface CreditOrder extends CreditOrderResponse {}
 
 export interface CreditOrdersResponse {
   orders: CreditOrder[];
@@ -78,38 +99,38 @@ export interface CreditOrdersResponse {
   total_pages: number;
 }
 
-export interface PaymentData {
-  order_id: string;
-  amount: number;
-  payment_reference: string;
-  payment_capture_url?: string;
+export interface CreditPaymentCreate {
+  order_id: string;                    // ID de la orden
+  amount: Decimal;                     // Monto del pago
+  payment_currency?: Currency;         // Moneda del pago ('USD' | 'VES')
+  payment_method?: string;             // Método de pago seleccionado
+  payment_reference: string;           // Referencia del pago
+  payment_capture_url?: string;        // URL de captura/comprobante
 }
 
-export interface Payment {
-  id: string;
-  order_id: string;
-  amount: number;
-  payment_reference: string;
-  payment_capture_url: string;
-  status: 'pending' | 'approved' | 'rejected';
-  created_at: string;
-  approved_at?: string;
-  admin_notes?: string;
+export interface CreditPaymentResponse {
+  id: string;                          // ID del pago
+  order_id: string;                    // ID de la orden
+  amount: Decimal;                     // Monto principal en USD
+  payment_currency: Currency;          // Moneda del pago recibido
+  exchange_rate_used?: Decimal;        // Tasa del día del pago si VES
+  payment_reference: string;           // Referencia del pago
+  payment_capture_url?: string;        // URL del comprobante
+  status: PaymentStatus;               // Estado del pago
+  created_at: DateTime;                // Fecha de creación
+  approved_at?: DateTime;              // Fecha de aprobación
+  admin_notes?: string;                // Notas del administrador
 }
+
+// Mantener compatibilidad con interfaces existentes
+export interface PaymentData extends CreditPaymentCreate {}
+export interface Payment extends CreditPaymentResponse {}
 
 export interface CreditDashboard {
-  user_credit: CreditInfo;
-  orders: {
-    total_orders: number;
-    total_credit_used: number;
-    total_paid: number;
-    total_remaining: number;
-  };
-  payments: {
-    pending_count: number;
-    pending_amount: number;
-    recent_approved: Payment[];
-  };
+  total_orders: number;               // Total de órdenes de crédito
+  pending_payments: number;           // Pagos pendientes
+  total_credit_used: Decimal;         // Crédito total usado
+  next_payment_due?: Decimal;         // Próximo pago vencimiento
 }
 
 export interface AdminDashboard {
@@ -163,7 +184,9 @@ export interface CreditOrderFormData {
 }
 
 export interface PaymentFormData {
-  amount: number;
+  amount: Decimal;
+  currency?: Currency;
+  payment_method?: string;
   payment_reference: string;
   payment_capture_url: string;
 }

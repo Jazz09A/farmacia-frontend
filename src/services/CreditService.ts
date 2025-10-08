@@ -13,6 +13,7 @@ import {
   CreditOrder,
   CreditOrdersResponse
 } from '../types/credit';
+import { validateApiResponse, withErrorHandling } from '../utils/errorHandling';
 
 class CreditService {
   private baseURL: string;
@@ -51,17 +52,17 @@ class CreditService {
    * Obtener información de crédito del usuario
    */
   async getCreditInfo(): Promise<CreditInfo> {
-    const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREDIT_INFO}`, {
-      method: 'GET',
-      headers: await this.getHeaders()
-      
+    return withErrorHandling(async () => {
+      const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREDIT_INFO}`, {
+        method: 'GET',
+        headers: await this.getHeaders()
+      });
+
+      return validateApiResponse(response);
+    }, 'getCreditInfo').then(result => {
+      if (result.error) throw result.error;
+      return result.data!;
     });
-
-    if (!response.ok) {
-      throw new Error(`Error al obtener información de crédito: ${response.statusText}`);
-    }
-
-    return response.json();
   }
 
   /**
@@ -89,18 +90,28 @@ class CreditService {
    * Crear pago parcial
    */
   async createPayment(paymentData: PaymentData): Promise<Payment> {
-    const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREATE_PAYMENT}`, {
-      method: 'POST',
-      headers: await this.getHeaders(),
-      body: JSON.stringify(paymentData)
+    return withErrorHandling(async () => {
+      // Asegurar que el monto sea string para precisión decimal
+      const normalizedData = {
+        ...paymentData,
+        amount: paymentData.amount.toString(),
+        payment_currency: paymentData.payment_currency || 'VES',
+        payment_method: paymentData.payment_method || 'pago-movil'
+      };
+
+      console.log('🔍 Debug - Create Payment Request:', normalizedData);
+
+      const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREATE_PAYMENT}`, {
+        method: 'POST',
+        headers: await this.getHeaders(),
+        body: JSON.stringify(normalizedData)
+      });
+
+      return validateApiResponse(response);
+    }, 'createPayment').then(result => {
+      if (result.error) throw result.error;
+      return result.data!;
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error al crear pago: ${response.statusText}`);
-    }
-
-    return response.json();
   }
 
   /**
@@ -166,7 +177,11 @@ class CreditService {
     // El backend puede devolver un arreglo plano de órdenes o un objeto paginado.
     // Normalizamos para que el frontend siempre reciba CreditOrdersResponse.
     const data = await response.json();
+    
+    console.log('🔍 Debug - Raw Backend Response for getCreditOrders:', JSON.stringify(data, null, 2));
+    
     if (Array.isArray(data)) {
+      console.log('🔍 Debug - First order structure:', data[0] ? JSON.stringify(data[0], null, 2) : 'No orders');
       return {
         orders: data as CreditOrder[],
         total: data.length,
@@ -192,7 +207,10 @@ class CreditService {
       throw new Error(`Error al obtener detalles de la orden: ${response.statusText}`);
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log('🔍 Debug - Raw Backend Response for getCreditOrderDetails:', JSON.stringify(data, null, 2));
+    
+    return data;
   }
 
   // ===== ENDPOINTS DE ADMINISTRADOR =====
@@ -244,7 +262,6 @@ class CreditService {
     }
 
     const data = await response.json();
-    console.log('✅ All Clients Data:', data);
     return data;
   }
 
@@ -335,7 +352,7 @@ class CreditService {
       params.append('limit', filters.limit.toString());
     }
 
-    const url = `${this.baseURL}/credit/admin/payments${params.toString() ? `?${params.toString()}` : ''}`;
+    const url = `${this.baseURL}/credit/admin/credit/payments${params.toString() ? `?${params.toString()}` : ''}`;
     
     console.log('🔍 Debug - Get All Payments Request:', {
       url,
@@ -465,10 +482,12 @@ class CreditService {
   /**
    * Validar si el usuario tiene crédito suficiente
    */
-  async validateCreditAvailability(amount: number): Promise<boolean> {
+  async validateCreditAvailability(amount: string | number): Promise<boolean> {
     try {
       const creditInfo = await this.getCreditInfo();
-      return creditInfo.available_credit >= amount;
+      const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+      const availableCredit = parseFloat(creditInfo.available_credit);
+      return availableCredit >= numericAmount;
     } catch (error) {
       console.error('Error al validar crédito:', error);
       return false;

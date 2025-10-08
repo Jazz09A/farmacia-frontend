@@ -3,6 +3,8 @@ import { useCredit } from '../contexts/CreditContext';
 import { PaymentData, Payment, ValidationResult } from '../types/credit';
 import { VALIDATION_RULES, UI_CONFIG } from '../config/creditConfig';
 import CreditService from '../services/CreditService';
+import { getPaymentMethodCurrency } from '../utils/currencyUtils';
+import { validatePaymentAmount } from '../utils/creditValidation';
 
 export const usePayment = () => {
   const { createPayment, getOrderPayments, loading, error } = useCredit();
@@ -10,14 +12,27 @@ export const usePayment = () => {
   const [uploadingFile, setUploadingFile] = useState(false);
 
   // Validar datos del formulario de pago
-  const validatePaymentData = useCallback((data: PaymentData, creditRemaining: number): ValidationResult => {
+  const validatePaymentData = useCallback((data: PaymentData, creditRemaining: number, exchangeRate: number = 1): ValidationResult => {
     const errors: Record<string, string> = {};
 
-    // Validar monto
-    if (!data.amount || data.amount < VALIDATION_RULES.MIN_PAYMENT_AMOUNT) {
-      errors.amount = `El monto debe ser mayor a $${VALIDATION_RULES.MIN_PAYMENT_AMOUNT}`;
-    } else if (data.amount > creditRemaining) {
-      errors.amount = `El monto no puede exceder el saldo pendiente ($${creditRemaining})`;
+    // Determinar la moneda del método de pago
+    const paymentCurrency = getPaymentMethodCurrency(data.payment_currency || 'pago-movil');
+    
+    // Mostrar los valores como vienen del API sin conversión
+    const creditRemainingInPaymentCurrency = creditRemaining;
+
+    // Validar monto usando la función de validación mejorada
+    const amountValidation = validatePaymentAmount(
+      data.amount.toString(),
+      creditRemainingInPaymentCurrency.toString(),
+      data.payment_currency || paymentCurrency,
+      paymentCurrency
+    );
+
+    if (!amountValidation.isValid) {
+      amountValidation.errors.forEach(error => {
+        errors[error.field] = error.message;
+      });
     }
 
     // Validar referencia de pago

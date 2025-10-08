@@ -14,12 +14,43 @@ export const ContactUsSection: React.FC = () => {
     <div className="bg-white py-20">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Form Section */}
+          {/* Text Content Section - AHORA A LA IZQUIERDA */}
           <motion.div
+            className="text-gray-700"
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-800 lg:-mt-24 mb-6">LISTO PARA TRANSFORMAR TU FARMACIA?</h2>
+            <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+              Gracias por tu interés en asociarte con Drozainka como distribuidor farmacéutico. Por favor, completa el formulario y uno de nuestros asesores comerciales te contactará para establecer una alianza comercial.
+            </p>
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+              <div className="flex items-start">
+                  <AlertCircle className="h-6 w-6 text-blue-600 mr-4 mt-1" />
+                  <div>
+                      <h3 className="font-bold text-gray-800 text-lg mb-2">Documentación Comercial Requerida</h3>
+                      <p className="text-gray-700">
+                          Para establecer una relación comercial, necesitarás tener actualizados los siguientes documentos de tu farmacia:
+                      </p>
+                      <ul className="list-disc list-inside mt-4 space-y-2 text-gray-600">
+                          <li>RIF vigente de la farmacia</li>
+                          <li>Registro Mercantil actualizado</li>
+                          <li>Permiso de funcionamiento farmacéutico</li>
+                          <li>Licencia del farmacéutico responsable</li>
+                      </ul>
+                  </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Form Section - AHORA A LA DERECHA */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.4 }}
           >
             <form className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-gray-50 rounded-2xl shadow-lg">
               <div className="md:col-span-2 text-center mb-4">
@@ -72,37 +103,6 @@ export const ContactUsSection: React.FC = () => {
                 </motion.button>
               </div>
             </form>
-          </motion.div>
-
-          {/* Text Content Section */}
-          <motion.div
-            className="text-gray-700"
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-800 mb-6">QUEREMOS CONOCERTE</h2>
-            <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-              Gracias por tu interés en asociarte con Drozainka como distribuidor farmacéutico. Por favor, completa el formulario y uno de nuestros asesores comerciales te contactará para establecer una alianza comercial.
-            </p>
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
-              <div className="flex items-start">
-                  <AlertCircle className="h-6 w-6 text-blue-600 mr-4 mt-1" />
-                  <div>
-                      <h3 className="font-bold text-gray-800 text-lg mb-2">Documentación Comercial Requerida</h3>
-                      <p className="text-gray-700">
-                          Para establecer una relación comercial, necesitarás tener actualizados los siguientes documentos de tu farmacia:
-                      </p>
-                      <ul className="list-disc list-inside mt-4 space-y-2 text-gray-600">
-                          <li>RIF vigente de la farmacia</li>
-                          <li>Registro Mercantil actualizado</li>
-                          <li>Permiso de funcionamiento farmacéutico</li>
-                          <li>Licencia del farmacéutico responsable</li>
-                      </ul>
-                  </div>
-              </div>
-            </div>
           </motion.div>
         </div>
       </div>

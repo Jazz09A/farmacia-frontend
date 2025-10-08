@@ -97,36 +97,60 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
 
   // Función para formatear precios usando el contexto de moneda
   const formatOrderPrice = (order: CreditOrder) => {
+    console.log('🔍 Debug - formatOrderPrice:', {
+      orderId: order.id,
+      orderNumber: order.order_number,
+      total: order.total,
+      totalType: typeof order.total,
+      total_ref: order.total_ref,
+      totalRefType: typeof order.total_ref,
+      currency
+    });
+    
     switch (currency) {
       case 'VES':
-        return formatPrice(order.total, 'VES');
+        return formatPrice(parseFloat(order.total), 'VES');
       case 'USD':
       case 'REF':
         if (order.total_ref !== undefined) {
-          return formatPrice(order.total_ref, 'USD');
+          return formatPrice(parseFloat(order.total_ref), 'USD');
         }
-        // Si no hay total_ref, convertir usando la tasa de cambio
-        const convertedTotal = order.total / order.exchange_rate;
-        return formatPrice(convertedTotal, 'USD');
+        // Si no hay total_ref, usar total (asumiendo que ya está en la moneda correcta)
+        return formatPrice(parseFloat(order.total), 'USD');
       default:
-        return formatPrice(order.total, 'USD');
+        return formatPrice(parseFloat(order.total), 'USD');
     }
   };
 
   // Función para formatear la deuda pendiente
   const formatDebtAmount = (order: CreditOrder) => {
+    console.log('🔍 Debug - formatDebtAmount:', {
+      orderId: order.id,
+      orderNumber: order.order_number,
+      creditRemaining: order.credit_remaining,
+      creditRemainingType: typeof order.credit_remaining,
+      currency,
+      exchangeRate: order.exchange_rate,
+      total: order.total,
+      totalType: typeof order.total
+    });
+    
+    // Mostrar los valores como vienen del API sin conversión
+    // credit_remaining viene como string del API, convertir a número
+    const creditRemainingNum = parseFloat(order.credit_remaining);
+    
     switch (currency) {
       case 'VES':
-        // Para VES, calcular la deuda en VES
-        const paidInVES = order.credit_paid_total * order.exchange_rate;
-        const debtInVES = order.total - paidInVES;
-        return formatPrice(debtInVES, 'VES');
+        // Si el contexto es VES, mostrar en VES
+        // Según el API, credit_remaining está en REF, convertir a VES
+        const exchangeRateNum = parseFloat(order.exchange_rate);
+        return formatPrice(creditRemainingNum * exchangeRateNum, 'VES');
       case 'USD':
       case 'REF':
-        // Para USD/REF, usar credit_remaining que ya está en USD/REF
-        return formatPrice(order.credit_remaining, 'USD');
+        // Si el contexto es USD/REF, mostrar en USD/REF
+        return formatPrice(creditRemainingNum, 'USD');
       default:
-        return formatPrice(order.credit_remaining, 'USD');
+        return formatPrice(creditRemainingNum, 'USD');
     }
   };
 
@@ -360,14 +384,14 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
                           <span className="font-medium">Deuda:</span>
                           <span className="font-bold text-red-600">{formatDebtAmount(order)}</span>
                         </div>
-                        {order.credit_paid_total > 0 && (
+                        {parseFloat(order.credit_paid_total) > 0 && (
                           <div className="flex items-center gap-2">
                             <CheckCircle className="w-4 h-4 text-green-500" />
                             <span className="font-medium">Pagado:</span>
                             <span className="font-bold text-green-600">
                               {currency === 'VES' 
-                                ? formatPrice(order.credit_paid_total * order.exchange_rate, 'VES')
-                                : formatPrice(order.credit_paid_total, 'USD')
+                                ? formatPrice(parseFloat(order.credit_paid_total) * parseFloat(order.exchange_rate), 'VES')
+                                : formatPrice(parseFloat(order.credit_paid_total), 'USD')
                               }
                             </span>
                           </div>

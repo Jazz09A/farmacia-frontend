@@ -2,19 +2,19 @@ import React from 'react';
 import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
 
 interface PriceDisplayProps {
-  priceVes: number;
-  priceRef: number;
+  price: number; // USD
+  originalPrice?: number; // USD
   className?: string;
   showBothPrices?: boolean;
 }
 
 /**
  * Componente para mostrar precios en la divisa seleccionada en el admin
- * Usa directamente los precios del backend (price_ves y price_ref) sin conversión
+ * Muestra precio basado en USD y convierte a VES solo para display
  */
 const PriceDisplay: React.FC<PriceDisplayProps> = ({
-  priceVes,
-  priceRef,
+  price,
+  originalPrice,
   className = '',
   showBothPrices = false
 }) => {
@@ -22,15 +22,8 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
 
   // Seleccionar el precio correcto según la divisa
   const getDisplayPrice = () => {
-    switch (currency) {
-      case 'VES':
-        return { price: priceVes, displayCurrency: 'VES' as const };
-      case 'USD':
-      case 'REF':
-        return { price: priceRef, displayCurrency: currency };
-      default:
-        return { price: priceVes, displayCurrency: 'VES' as const };
-    }
+    const display = currency === 'VES' ? price * 36.5 : price; // TODO: tasa dinámica
+    return { price: display, displayCurrency: currency };
   };
 
   const { price, displayCurrency } = getDisplayPrice();
@@ -42,7 +35,7 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
           {formatPrice(price, displayCurrency)}
         </div>
         <div className="text-xs text-gray-500">
-          VES: {formatPrice(priceVes, 'VES')} | USD/REF: {formatPrice(priceRef, 'USD')}
+          USD: {formatPrice(price, 'USD' as any)} | VES: {formatPrice(price * 36.5, 'VES' as any)}
         </div>
       </div>
     );

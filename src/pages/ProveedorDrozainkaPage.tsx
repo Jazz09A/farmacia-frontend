@@ -21,7 +21,7 @@ import {
   Handshake
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
+import MapSection from '../components/Map/MapSection';
 const ProveedorDrozainkaPage: React.FC = () => {
   const [formData, setFormData] = useState({
     companyName: '',
@@ -265,25 +265,6 @@ const ProveedorDrozainkaPage: React.FC = () => {
               </motion.div>
             ))}
           </div>
-
-          {/* Call to Action para continuar */}
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <motion.button
-              onClick={() => document.getElementById('benefits-section')?.scrollIntoView({ behavior: 'smooth' })}
-              className="inline-flex items-center bg-medical-blue-600 hover:bg-medical-blue-700 text-white font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Conoce los beneficios de ser nuestro aliado
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </motion.button>
-          </motion.div>
         </div>
       </section>
 
@@ -327,25 +308,6 @@ const ProveedorDrozainkaPage: React.FC = () => {
               </motion.div>
             ))}
           </div>
-
-          {/* Call to Action para formulario */}
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <motion.button
-              onClick={() => document.getElementById('form-section')?.scrollIntoView({ behavior: 'smooth' })}
-              className="inline-flex items-center bg-medical-green-600 hover:bg-medical-green-700 text-white font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              ¿Listo para unirte? Completa el formulario
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </motion.button>
-          </motion.div>
         </div>
       </section>
 
@@ -679,48 +641,10 @@ const ProveedorDrozainkaPage: React.FC = () => {
           </motion.div>
         </div>
       </section>
-
-      {/* Contact Info Section */}
-      <section className="py-16 bg-medical-blue-600 text-white">
-        <div className="medical-container">
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl font-bold mb-8">
-              ¿Tienes preguntas? Contáctanos directamente
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              <div className="flex flex-col items-center space-y-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Mail className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold">Email Compras</h3>
-                <p className="text-white/80">Gcia.ComprasyServicios@dronena.com</p>
-              </div>
-              
-              <div className="flex flex-col items-center space-y-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Mail className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold">Email Servicios</h3>
-                <p className="text-white/80">ServiciosGenerales@dronena.com</p>
-              </div>
-              
-              <div className="flex flex-col items-center space-y-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Phone className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold">Teléfono</h3>
-                <p className="text-white/80">0251-2690111</p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+      <section>
+        <MapSection
+          subtitle="Distribuidor líder de productos nutraceuticos y farmacéuticos en Venezuela. Suministramos productos certificados a farmacias con la más alta calidad y confiabilida."
+        />
       </section>
     </div>
   );

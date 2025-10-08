@@ -13,7 +13,7 @@ import logoSrc from '../../public/logo/Logo.webp';
 interface NavbarProps {
   isScrolled: boolean;
   cartItemsCount: number;
-  currency: 'VES' | 'REF';
+  currency: 'VES' | 'USD';
   onCurrencyToggle: () => void;
 }
 
@@ -98,11 +98,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const menuItems = [
     { name: 'Inicio', href: '/', icon: Stethoscope },
-    { name: 'Catálogo', href: '/catalog', icon: ShoppingCart },
     { name: '¿Por qué nosotros?', href: '/why-us', icon: HelpCircle },
+    { name: 'Catálogo', href: '/catalog', icon: ShoppingCart },
     { name: 'Convertirse en cliente Drozainka', href: '/cliente-drozainka', icon: UserIcon },
     { name: '¿Quieres ser proveedor Drozainka?', href: '/proveedor-drozainka', icon: Briefcase },
-    { name: 'Nuestras marcas', href: '/marcas', icon: Tag },
     { name: 'Blog', href: '/blog', icon: BookText },
     { name: 'Querémos conocerte', href: '/queremos-conocerte', icon: Phone },
   ];
@@ -172,7 +171,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   {isScrolled 
                     ? '🚚 Distribución NACIONAL | 📞 0800-DROZAINKA'
-                    : "🚚 Distribución a Toda Venezuela | 📞 Atención comercial: 0424-XXX-XX-XX"
+                    : "🚚 Distribución a Toda Venezuela | 📞 Atención comercial: 0424-1806018"
                   }
                 </motion.p>
               </div>
@@ -195,7 +194,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* Desktop Navigation Menu */}
-            <div className="hidden lg:flex items-center space-x-1 flex-1 justify-center px-8">
+            <div className="hidden lg:flex items-center space-x-0.5 flex-1 justify-center px-8">
               {menuItems.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (

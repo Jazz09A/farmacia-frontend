@@ -8,10 +8,13 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/AuthService';
 import { useUploadImage } from '../hooks/useUploadImage';
+import { getPaymentMethodCurrency } from '../utils/currencyUtils';
 import { useNavigate } from 'react-router-dom';
 import { useCredit } from '../contexts/CreditContext';
 import { useCreditValidation } from '../hooks/useCreditValidation';
 import { CreditOrderForm } from '../components/Credit/CreditOrderForm';
+import { useNavbar } from '../contexts/NavbarContext';
+import { paymentMethods } from '../config/paymentMethods';
 
 interface Address {
   id: string;
@@ -31,12 +34,7 @@ const steps = [
   { id: 'confirm', name: 'Confirmar', icon: ShieldCheck },
 ];
 
-const paymentMethods: PaymentMethod[] = [
-  { id: 'pago-movil', name: 'Pago Móvil', description: 'pago en Bs. ', icon: '', available: true, currencies: ['VES'], data: 'Cédula: 1234567890\nTeléfono: 04123456789\nBanco: Banco de Venezuela' },
-  { id: 'zelle', name: 'Zelle', description: 'Datos para pago en USD.', icon: '', available: true, currencies: ['REF'], data: 'Correo: zelle@zelle.com' },
-  { id: 'efectivo', name: 'Efectivo', description: 'Paga al recibir tu pedido.', icon: '', available: true, currencies: ['VES', 'REF']},
-  { id: 'credito', name: 'Pago con Crédito', description: 'Usa tu línea de crédito disponible', icon: '', available: true, currencies: ['REF']},
-];
+
 
 interface FormData {
   razonSocial: string;
@@ -64,6 +62,20 @@ const CheckoutPage: React.FC = () => {
   const { canCreateCreditOrder } = useCreditValidation();
   const [showCreditForm, setShowCreditForm] = useState(false);
   const [creditOrderResult, setCreditOrderResult] = useState<any>(null);
+  const { hideNavbar, showNavbar } = useNavbar();
+
+  useEffect(() => {
+    if (showCreditForm) {
+      hideNavbar();
+    } else {
+      showNavbar();
+    }
+
+    return () => {
+      showNavbar();
+    };
+  }, [showCreditForm, hideNavbar, showNavbar]);
+
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -172,6 +184,7 @@ const CheckoutPage: React.FC = () => {
     const orderData = {
       shipping_address_id: formData.shipping_address_id,
       payment_method: formData.payment_method,
+      payment_currency: getPaymentMethodCurrency(formData.payment_method),
       payment_capture_url: formData.payment_capture_url,
       customer_notes: formData.customer_notes,
     };
@@ -510,7 +523,7 @@ const CheckoutPage: React.FC = () => {
       {/* Modal de formulario de crédito */}
       {showCreditForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <CreditOrderForm
               cartItems={cart?.items || []}
               cartTotal={cart?.total_ref || 0}

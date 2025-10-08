@@ -167,15 +167,6 @@ const ClienteDrozainkaPage: React.FC = () => {
             transition={{ duration: 0.8, delay: 0.5 }}
             viewport={{ once: true }}
           >
-            <motion.button
-              onClick={() => document.getElementById('form-section')?.scrollIntoView({ behavior: 'smooth' })}
-              className="inline-flex items-center bg-medical-blue-600 hover:bg-medical-blue-700 text-white font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              ¿Listo para registrarte? Completa el formulario
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </motion.button>
           </motion.div>
         </div>
       </section>
@@ -243,7 +234,7 @@ const ClienteDrozainkaPage: React.FC = () => {
                 </div>
 
                 <Link
-                  to="/auth"
+                  to="/auth?mode=register"
                   className="inline-flex items-center bg-gradient-to-r from-medical-blue-600 to-medical-blue-700 hover:from-medical-blue-700 hover:to-medical-blue-800 text-white font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                 >
                   <Shield className="w-5 h-5 mr-2" />
@@ -276,7 +267,7 @@ const ClienteDrozainkaPage: React.FC = () => {
                   <Phone className="w-6 h-6" />
                 </div>
                 <h3 className="font-semibold">Teléfono</h3>
-                <p className="text-white/80">+58 212 555-0123</p>
+                <p className="text-white/80">+58 424 180 6018</p>
               </div>
               
               <div className="flex flex-col items-center space-y-3">
@@ -284,7 +275,7 @@ const ClienteDrozainkaPage: React.FC = () => {
                   <Mail className="w-6 h-6" />
                 </div>
                 <h3 className="font-semibold">Email</h3>
-                <p className="text-white/80">comercial@grupodrozainka.com</p>
+                <p className="text-white/80">info@grupodrozainka.com</p>
               </div>
               
               <div className="flex flex-col items-center space-y-3">

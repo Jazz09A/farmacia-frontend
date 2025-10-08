@@ -1,11 +1,9 @@
 import { useState, useCallback } from 'react';
 import { Currency } from '../types';
 
-// Tasas de cambio (estas deberían venir de una API en producción)
+// Tasas de cambio (placeholder). En producción, obtener desde API y almacenar en contexto/global store.
 const EXCHANGE_RATES = {
-  VES_TO_REF: 36.5,
-  VES_TO_USD: 36.5, // Mismo que REF por ahora
-  REF_TO_USD: 1.0,  // REF es equivalente a USD
+  VES_TO_USD: 36.5,
 };
 
 export const useCurrency = () => {
@@ -15,8 +13,7 @@ export const useCurrency = () => {
     setCurrency(prev => {
       switch (prev) {
         case 'VES': return 'USD';
-        case 'USD': return 'REF';
-        case 'REF': return 'VES';
+        case 'USD': return 'VES';
         default: return 'VES';
       }
     });
@@ -33,7 +30,6 @@ export const useCurrency = () => {
     switch (curr) {
       case 'VES': return 'Bs.';
       case 'USD': return '$';
-      case 'REF': return '$';
       default: return 'Bs.';
     }
   };
@@ -45,7 +41,6 @@ export const useCurrency = () => {
     switch (curr) {
       case 'VES': return 'Bolívares';
       case 'USD': return 'Dólares';
-      case 'REF': return 'Precio Ref.';
       default: return 'Bolívares';
     }
   };
@@ -71,37 +66,22 @@ export const useCurrency = () => {
   const convertPrice = (price: number, fromCurrency: Currency, toCurrency: Currency = currency) => {
     if (fromCurrency === toCurrency) return price;
 
-    // Convertir todo a VES primero como moneda base
-    let priceInVES = price;
-    if (fromCurrency === 'REF' || fromCurrency === 'USD') {
-      priceInVES = price * EXCHANGE_RATES.VES_TO_REF;
+    // USD es la moneda interna. Convertir solo USD <-> VES
+    if (fromCurrency === 'USD' && toCurrency === 'VES') {
+      return price * EXCHANGE_RATES.VES_TO_USD;
     }
-
-    // Luego convertir de VES a la moneda objetivo
-    switch (toCurrency) {
-      case 'VES':
-        return priceInVES;
-      case 'REF':
-      case 'USD':
-        return priceInVES / EXCHANGE_RATES.VES_TO_REF;
-      default:
-        return priceInVES;
+    if (fromCurrency === 'VES' && toCurrency === 'USD') {
+      return price / EXCHANGE_RATES.VES_TO_USD;
     }
+    return price;
   };
 
   /**
    * Obtiene el precio en la moneda actual
    */
-  const getPriceInCurrency = (priceVes: number, priceRef: number) => {
-    switch (currency) {
-      case 'VES':
-        return priceVes;
-      case 'USD':
-      case 'REF':
-        return priceRef;
-      default:
-        return priceVes;
-    }
+  // Con el modelo USD-unificado, los precios vienen en USD y se convierten para display
+  const getDisplayPrice = (priceUsd: number, displayCurrency: Currency = currency) => {
+    return convertPrice(priceUsd, 'USD', displayCurrency);
   };
 
   return {
@@ -110,7 +90,7 @@ export const useCurrency = () => {
     setCurrency: setCurrencyDirect,
     formatPrice,
     convertPrice,
-    getPriceInCurrency,
+    getDisplayPrice,
     getCurrencySymbol,
     getCurrencyName,
     exchangeRates: EXCHANGE_RATES,

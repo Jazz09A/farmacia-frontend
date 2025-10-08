@@ -29,7 +29,8 @@ export const GlobalCurrencyProvider: React.FC<{ children: ReactNode }> = ({ chil
   useEffect(() => {
     if (isAuthenticated && user && user.preferred_currency) {
       // Map user's preferred_currency to our Currency type
-      const userCurrency: Currency = user.preferred_currency === 'USD' ? 'USD' : 'VES';
+      // REF is treated as USD since they are synonymous
+      const userCurrency: Currency = (user.preferred_currency === 'USD' || user.preferred_currency === 'REF') ? 'USD' : 'VES';
       currencyHook.setCurrency(userCurrency);
     }
   }, [isAuthenticated, user, currencyHook.setCurrency]);

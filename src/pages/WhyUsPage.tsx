@@ -31,6 +31,8 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import MapSection from '../components/Map/MapSection';
+import { ContactForm } from '../components/ContactUs/ContactForm';
 
 const WhyUsPage: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -639,123 +641,6 @@ const WhyUsPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Certifications Gallery */}
-      <section className="py-24 bg-white">
-        <div className="medical-container">
-          <motion.div
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-900 mb-6">
-              Certificaciones y <span className="text-medical-blue-600">Logros</span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Reconocimientos que respaldan nuestra calidad y compromiso.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {certifications.map((cert, index) => (
-              <motion.div
-                key={index}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5 }}
-              >
-                <div className="relative overflow-hidden">
-                  <img
-                    src={cert.image}
-                    alt={cert.name}
-                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1">
-                    <span className="text-xs font-bold text-gray-700">{cert.year}</span>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{cert.name}</h3>
-                  <p className="text-gray-600 text-sm">{cert.description}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Impact Section */}
-      <section className="py-24 bg-gradient-to-br from-medical-blue-600 to-medical-blue-800 text-white">
-        <div className="medical-container">
-          <motion.div
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl lg:text-5xl font-serif font-bold mb-6">
-              Nuestro <span className="text-yellow-300">Impacto</span>
-            </h2>
-            <p className="text-xl text-white/90 max-w-3xl mx-auto">
-              Contribuyendo al bienestar de las comunidades venezolanas.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            {[
-              { icon: Building2, number: '500+', label: 'Farmacias Asociadas', description: 'En todo el territorio nacional' },
-              { icon: Heart, number: '2M+', label: 'Vidas Impactadas', description: 'A través de medicamentos de calidad' },
-              { icon: Leaf, number: '15+', label: 'Años de Experiencia', description: 'Liderando la distribución farmacéutica' }
-            ].map((impact, index) => (
-              <motion.div
-                key={index}
-                className="text-center"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-6">
-                  <impact.icon className="w-10 h-10 text-white" />
-                </div>
-                <motion.div
-                  className="text-4xl lg:text-5xl font-bold text-white mb-2"
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 15, delay: 0.3 + index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  {impact.number}
-                </motion.div>
-                <h3 className="text-xl font-bold text-white mb-2">{impact.label}</h3>
-                <p className="text-white/80">{impact.description}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <Link
-              to="/contact"
-              className="inline-flex items-center bg-white text-medical-blue-600 hover:bg-gray-100 font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              Únete a Nuestra Red
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-24 bg-white">
         <div className="medical-container">
@@ -839,6 +724,20 @@ const WhyUsPage: React.FC = () => {
             </div>
           </motion.div>
         </div>
+      </section>
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <ContactForm />
+          </div>
+        </div>
+      </section>
+
+      {/* Map Section - debe ir de último en el WhyUs */}
+      <section>
+        <MapSection
+          subtitle="Distribuidor líder de productos nutraceuticos y farmacéuticos en Venezuela. Suministramos productos certificados a farmacias con la más alta calidad y confiabilida."
+        />
       </section>
     </div>
   );

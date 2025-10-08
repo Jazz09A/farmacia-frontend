@@ -12,6 +12,7 @@ import { BrandsSection } from '../components/Brands/BrandsSection';
 import { CartModal } from '../components/Cart/CartModal';
 import FeaturedBlogPosts from '../components/Blog/FeaturedBlogPosts';
 import { ContactUsSection } from '../components/ContactUs/ContactUsSection';
+import MapSection from '../components/Map/MapSection';
 
 // Skeleton Components
 import { 
@@ -130,18 +131,6 @@ const HomePage: React.FC = () => {
         <CategoriesSection />
       )}
 
-      {/* Stats Section with Skeleton */}
-      {loadingStates.stats ? (
-        <SectionSkeleton 
-          showTitle={false} 
-          itemsCount={4} 
-          itemsPerRow={4} 
-          className="bg-gradient-to-br from-medical-blue-50 to-medical-green-50" 
-        />
-      ) : (
-        <StatsSection />
-      )}
-
       {/* Testimonials Section with Skeleton */}
       {loadingStates.testimonials ? (
         <SectionSkeleton 
@@ -168,22 +157,6 @@ const HomePage: React.FC = () => {
             maxItems={6}
             refreshInterval={1000}
             className="animate-fade-in"
-          />
-        )}
-
-        {/* Products Section with Skeleton */}
-        {loadingStates.products ? (
-          <SectionSkeleton 
-            showTitle={true} 
-            itemsCount={8} 
-            itemsPerRow={4} 
-            className="bg-gray-50" 
-          />
-        ) : (
-          <ProductsSection
-            currency={currency as 'VES' | 'USD' | 'REF'}
-            onAddToCart={handleAddToCart}
-            formatPrice={formatPrice}
           />
         )}
 
@@ -215,6 +188,11 @@ const HomePage: React.FC = () => {
         ) : (
           <ContactUsSection />
         )}
+
+        {/* Map Section - debe ir de último en el Home */}
+        <MapSection 
+          subtitle="Distribuidor líder de productos nutraceuticos y farmacéuticos en Venezuela. Suministramos productos certificados a farmacias con la más alta calidad y confiabilida."
+        />
       </main>
 
       {/* Shopping Cart Modal */}

@@ -5,8 +5,7 @@ export interface Product {
   category: string;
   subcategory: string;
   patology: string;
-  price_ves: number;
-  price_ref: number;
+  price: number; // USD
   description: string;
   ingredients: string[] | null;
   image: string;
@@ -23,12 +22,12 @@ export interface Product {
   rating: number;
   review_count: number;
   is_offer: boolean;
-  original_price: number | null;
+  original_price: number | null; // USD
   offer_end_time: string | null;
   featured: boolean;
   slug: string;
   discount_percentage: number;
-  current_price: number;
+  current_price: number; // USD
   is_available: boolean;
   created_at: string;
   updated_at: string;
@@ -39,8 +38,7 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selected_presentation: string | null;
-  subtotal_ref: number;
-  subtotal_ves: number;
+  subtotal: number; // USD
   created_at: string;
   updated_at: string;
 }
@@ -49,8 +47,7 @@ export interface Cart {
   items: CartItem[];
   total_items: number;
   total_unique_items: number;
-  total_ves: number;
-  total_ref: number;
+  total: number; // USD
 }
 
 export interface SearchFilters {
@@ -66,7 +63,7 @@ export interface SearchFilters {
   sortOrder?: 'asc' | 'desc';
 }
 
-export type Currency = 'VES' | 'REF' | 'USD';
+export type Currency = 'VES' | 'USD';
 
 // 🔥 Flash Offer interfaces - API compliant and extensible
 export interface FlashOffer {
@@ -226,7 +223,8 @@ export interface Order {
   shipping_cost: number;
   taxes: number;
   total: number;
-  currency: string;
+  payment_currency: 'USD' | 'VES';
+  exchange_rate: number | null; // tasa usada si pago en VES
   payment_method: string;
   payment_status: string;
   payment_reference: string;
