@@ -321,11 +321,12 @@ class AuthService {
   async clearCart(): Promise<void> {
     // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
     const response = await this.authenticatedFetch(`${this.cartUrl}/clear`, {
-      method: 'POST',
+      method: 'DELETE',
     });
 
     if (!response.ok) {
-      throw new Error('Failed to clear cart');
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to clear cart');
     }
   }
 
