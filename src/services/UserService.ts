@@ -13,7 +13,7 @@ class UserService {
   // 📊 Obtener estadísticas del usuario
   async getUserStats(): Promise<UserStats> {
     try {
-      const response = await authService.authenticatedFetch(`/stats`);
+      const response = await authService.authenticatedFetch(`api/v1/user/stats`);
       
       if (!response.ok) {
         throw new Error(`Error fetching user stats: ${response.status}`);
