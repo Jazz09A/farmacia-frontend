@@ -216,7 +216,7 @@ export interface OrderItem {
   selected_presentation: string | null;
   product_name: string;
   product_brand: string;
-  product_image: string;
+  product_image: string[];
 }
 
 // 🏠 Dirección de envío desde la API

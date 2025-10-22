@@ -4,6 +4,7 @@ import { X, Truck, Package, CreditCard, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
 import { useNavbar } from '../../contexts/NavbarContext';
+import { OrderItem } from '../../types';
 
 interface OrderDetailsModalProps {
   order: any;
@@ -210,11 +211,14 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
             <div>
               <h4 className="font-bold mb-3">Artículos ({order.item_count})</h4>
               <div className="space-y-3">
-                {order.items.map((item: any) => (
+                {console.log( "order", order)}
+                
+                {order.items.map((item: OrderItem) => (
                   <div key={item.id} className="bg-white border border-medical-gray-200 rounded-xl p-4">
                     <div className="flex items-center space-x-4">
+                      
                       <img 
-                        src={item.product_image} 
+                        src={item.product_image[0]} 
                         alt={item.product_name} 
                         className="w-16 h-16 rounded-lg object-cover"
                       />

@@ -4,7 +4,7 @@ import {
   AuthResponse, 
   User 
 } from '../types/auth';
-import { Cart } from '../types';
+import { Cart, Order } from '../types';
 import { 
   CartWithDiscounts, 
   ApplicableDiscountResponse 
@@ -389,13 +389,15 @@ class AuthService {
     return await response.json();
   }
 
-  async getOrderDetails(orderId: string): Promise<any> {
+  async getOrderDetails(orderId: string): Promise<Order> {
     // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
     const response = await this.authenticatedFetch(`/api/v1/user/orders/${orderId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch order details');
     }
-    return await response.json();
+    const data = await response.json();
+    console.log("data order: ", data);
+    return data;
   }
 
   async getUserAddresses(options?: {

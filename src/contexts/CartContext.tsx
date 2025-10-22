@@ -1,3 +1,4 @@
+/* @refresh reset */
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { authService } from '../services/AuthService';
 import { Cart } from '../types';

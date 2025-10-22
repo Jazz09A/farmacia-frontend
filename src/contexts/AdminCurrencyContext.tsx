@@ -1,3 +1,4 @@
+/* @refresh reset */
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { useCurrency } from '../hooks/useCurrency';
 import { useAuth } from './AuthContext';

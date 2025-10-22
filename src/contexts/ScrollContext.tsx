@@ -1,3 +1,4 @@
+/* @refresh reset */
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 

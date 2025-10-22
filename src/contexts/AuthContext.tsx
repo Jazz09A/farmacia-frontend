@@ -1,3 +1,4 @@
+/* @refresh reset */
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { authService } from '../services/AuthService';
 import { User, LoginData, JuridicoRegisterData } from '../types/auth';
