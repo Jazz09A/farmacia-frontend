@@ -55,12 +55,14 @@ class CreditService {
     return withErrorHandling(async () => {
       const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREDIT_INFO}`;
       const headers = await this.getHeaders();
-      
+      console.log('url', url);
+      console.log('headers', headers);
       const response = await fetch(url, {
         method: 'GET',
         headers
       });
 
+      console.log('response', response);
       return validateApiResponse(response);
     }, 'getCreditInfo').then(result => {
       if (result.error) throw result.error;

@@ -35,6 +35,9 @@ export default defineConfig(({ mode }) => {
         target: env.VITE_API_URL || 'http://localhost:8000',
         changeOrigin: true,
         secure: true,
+        configure: (proxy, options) => {
+          console.log('proxy', proxy);
+          console.log('options', options);
       }
     },
     
@@ -73,6 +76,6 @@ export default defineConfig(({ mode }) => {
     include: ['react', 'react-dom', 'react-router-dom'],
     exclude: ['lucide-react'],
   },
-  
+  }
   };
 });
