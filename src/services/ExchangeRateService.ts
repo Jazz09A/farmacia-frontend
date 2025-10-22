@@ -18,7 +18,7 @@ export interface ExchangeRateData {
 }
 
 class ExchangeRateService {
-  private baseUrl = '/api/v1';
+  private baseUrl = import.meta.env.VITE_API_URL + '/api/v1' || 'http://localhost:8000/api/v1';
   private cache: ExchangeRateData | null = null;
   private cacheExpiry: number = 5 * 60 * 1000; // 5 minutos en milisegundos
 
@@ -28,12 +28,18 @@ class ExchangeRateService {
    */
   async getExchangeRate(forceRefresh: boolean = false): Promise<ExchangeRateData> {
     // Verificar si tenemos datos en caché y no están expirados
+    
     if (!forceRefresh && this.cache && this.isCacheValid()) {
       return this.cache;
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/exchange_rate/`);
+      const response = await fetch(`${this.baseUrl}/exchange_rate/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`Error fetching exchange rate: ${response.status}`);
