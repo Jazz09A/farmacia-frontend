@@ -56,22 +56,9 @@ class CreditService {
       const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREDIT_INFO}`;
       const headers = await this.getHeaders();
       
-      console.log('🔍 Debug - Credit Info Request:', {
-        url,
-        baseURL: this.baseURL,
-        endpoint: CREDIT_CONFIG.ENDPOINTS.CREDIT_INFO,
-        headers: { ...headers, Authorization: headers.Authorization ? 'Bearer ***' : 'none' }
-      });
-
       const response = await fetch(url, {
         method: 'GET',
         headers
-      });
-
-      console.log('🔍 Debug - Credit Info Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        url: response.url
       });
 
       return validateApiResponse(response);
@@ -85,7 +72,6 @@ class CreditService {
    * Crear orden con crédito
    */
   async createCreditOrder(orderData: CreditOrderData): Promise<CreditOrderResponse> {
-    console.log('🔍 Debug - Create Credit Order Request:', orderData);
     const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREATE_CREDIT_ORDER}`, {
       method: 'POST',
       headers: await this.getHeaders(),
@@ -153,22 +139,10 @@ class CreditService {
     const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.GET_MY_PAYMENTS}`;
     const headers = await this.getHeaders();
     
-    console.log('🔍 Debug - Get My Payments Request:', {
-      url,
-      baseURL: this.baseURL,
-      endpoint: CREDIT_CONFIG.ENDPOINTS.GET_MY_PAYMENTS,
-      headers: { ...headers, Authorization: headers.Authorization ? 'Bearer ***' : 'none' }
-    });
 
     const response = await fetch(url, {
       method: 'GET',
       headers
-    });
-
-    console.log('🔍 Debug - Get My Payments Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.url
     });
 
     if (!response.ok) {
@@ -185,22 +159,9 @@ class CreditService {
     const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREDIT_DASHBOARD}`;
     const headers = await this.getHeaders();
     
-    console.log('🔍 Debug - Credit Dashboard Request:', {
-      url,
-      baseURL: this.baseURL,
-      endpoint: CREDIT_CONFIG.ENDPOINTS.CREDIT_DASHBOARD,
-      headers: { ...headers, Authorization: headers.Authorization ? 'Bearer ***' : 'none' }
-    });
-
     const response = await fetch(url, {
       method: 'GET',
       headers
-    });
-
-    console.log('🔍 Debug - Credit Dashboard Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.url
     });
 
     if (!response.ok) {
@@ -226,10 +187,7 @@ class CreditService {
     // Normalizamos para que el frontend siempre reciba CreditOrdersResponse.
     const data = await response.json();
     
-    console.log('🔍 Debug - Raw Backend Response for getCreditOrders:', JSON.stringify(data, null, 2));
-    
     if (Array.isArray(data)) {
-      console.log('🔍 Debug - First order structure:', data[0] ? JSON.stringify(data[0], null, 2) : 'No orders');
       return {
         orders: data as CreditOrder[],
         total: data.length,
@@ -256,7 +214,6 @@ class CreditService {
     }
 
     const data = await response.json();
-    console.log('🔍 Debug - Raw Backend Response for getCreditOrderDetails:', JSON.stringify(data, null, 2));
     
     return data;
   }
@@ -286,26 +243,13 @@ class CreditService {
     const url = `${this.baseURL}/admin/customers`;
     const headers = await this.getAdminHeaders();
     
-    console.log('🔍 Debug - Get All Clients Request:', {
-      url,
-      headers,
-      baseURL: this.baseURL
-    });
-
     const response = await fetch(url, {
       method: 'GET',
       headers
     });
 
-    console.log('🔍 Debug - Get All Clients Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Error Response:', errorText);
       throw new Error(`Error al obtener clientes: ${response.statusText}`);
     }
 
@@ -402,12 +346,6 @@ class CreditService {
 
     const url = `${this.baseURL}/credit/admin/credit/payments${params.toString() ? `?${params.toString()}` : ''}`;
     
-    console.log('🔍 Debug - Get All Payments Request:', {
-      url,
-      filters,
-      params: params.toString()
-    });
-
     const response = await fetch(url, {
       method: 'GET',
       headers: await this.getAdminHeaders()

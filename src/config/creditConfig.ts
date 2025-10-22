@@ -2,7 +2,7 @@
 export const CREDIT_CONFIG = {
   // En desarrollo usamos rutas relativas para aprovechar el proxy de Vite
   // En producción usamos la URL completa
-  API_BASE_URL: import.meta.env.DEV ? '/api/v1' : (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'),
+  API_BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
   ENDPOINTS: {
     // Endpoints de usuario
     CREDIT_INFO: '/credit/credit/info',
