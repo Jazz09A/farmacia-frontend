@@ -1,7 +1,8 @@
 import { Product } from "../types/index";
 import { authService } from '../services/AuthService';
 
-const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const baseUrl = import.meta.env.VITE_API_URL  || 'http://localhost:8000';
+console.log('baseUrl: ', baseUrl);
 // Interface for paginated response matching the backend structure
 interface PaginatedResponse {
   products: Product[];
@@ -54,7 +55,7 @@ const mapBackendProductToProduct = (backendProduct: any): Product => {
     category: backendProduct.category,
     subcategory: backendProduct.subcategory,
     patology: backendProduct.patology,
-    price: parseNum(backendProduct.price),
+    price: parseNum(backendProduct.price).toString(),
     description: backendProduct.description,
     ingredients: backendProduct.ingredients || [],
     image: images[0] || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop',
@@ -62,10 +63,10 @@ const mapBackendProductToProduct = (backendProduct: any): Product => {
     in_stock: backendProduct.in_stock,
     stock: backendProduct.stock,
     prescription: backendProduct.prescription,
-    rating: parseNum(backendProduct.rating),
+    rating: parseNum(backendProduct.rating).toString(),
     review_count: backendProduct.review_count,
     is_offer: backendProduct.is_offer,
-    original_price: backendProduct.original_price != null ? parseNum(backendProduct.original_price) : null,
+    original_price: backendProduct.original_price != null ? parseNum(backendProduct.original_price).toString() : null,
     offer_end_time: backendProduct.offer_end_time ? new Date(backendProduct.offer_end_time).toISOString() : null,
     featured: backendProduct.featured,
     dosage: backendProduct.dosage,
@@ -75,8 +76,8 @@ const mapBackendProductToProduct = (backendProduct: any): Product => {
     contraindicaciones: backendProduct.contraindicaciones,
     efectos_secundarios: backendProduct.efectos_secundarios,
     slug: backendProduct.slug,
-    discount_percentage: parseNum(backendProduct.discount_percentage),
-    current_price: parseNum(backendProduct.current_price ?? backendProduct.price),
+    discount_percentage: parseNum(backendProduct.discount_percentage).toString(),
+    current_price: parseNum(backendProduct.current_price ?? backendProduct.price).toString(),
     is_available: backendProduct.is_available,
     created_at: backendProduct.created_at,
     updated_at: backendProduct.updated_at,

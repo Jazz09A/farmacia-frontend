@@ -34,7 +34,7 @@ export interface DashboardResponse {
 }
 
 class AdminService {
-  private baseUrl = '/api/v1/admin';
+  private baseUrl = import.meta.env.VITE_API_URL + '/api/v1/admin' || 'http://localhost:8000/api/v1/admin';
 
   // 📊 Obtener datos del dashboard
   async getDashboardData(): Promise<DashboardResponse> {

@@ -252,7 +252,7 @@ class CreditService {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Error al obtener clientes: ${response.statusText}`);
+      throw new Error(`Error al obtener clientes: ${response.statusText} -> ${errorText}`);
     }
 
     const data = await response.json();
