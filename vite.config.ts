@@ -1,11 +1,14 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { compression } from 'vite-plugin-compression2';
 import type { Plugin } from 'vite';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  
+  return {
   plugins: [
     react(),
     // Visualizar el tamaño del bundle
@@ -29,9 +32,9 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:8000',
+        target: env.VITE_API_URL || 'http://localhost:8000',
         changeOrigin: true,
-        secure: false,
+        secure: true,
       }
     },
     
@@ -71,4 +74,5 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   
+  };
 });

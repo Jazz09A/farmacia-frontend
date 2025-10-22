@@ -53,9 +53,25 @@ class CreditService {
    */
   async getCreditInfo(): Promise<CreditInfo> {
     return withErrorHandling(async () => {
-      const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREDIT_INFO}`, {
+      const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREDIT_INFO}`;
+      const headers = await this.getHeaders();
+      
+      console.log('🔍 Debug - Credit Info Request:', {
+        url,
+        baseURL: this.baseURL,
+        endpoint: CREDIT_CONFIG.ENDPOINTS.CREDIT_INFO,
+        headers: { ...headers, Authorization: headers.Authorization ? 'Bearer ***' : 'none' }
+      });
+
+      const response = await fetch(url, {
         method: 'GET',
-        headers: await this.getHeaders()
+        headers
+      });
+
+      console.log('🔍 Debug - Credit Info Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.url
       });
 
       return validateApiResponse(response);
@@ -134,9 +150,25 @@ class CreditService {
    * Obtener todos los pagos del usuario
    */
   async getMyPayments(): Promise<Payment[]> {
-    const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.GET_MY_PAYMENTS}`, {
+    const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.GET_MY_PAYMENTS}`;
+    const headers = await this.getHeaders();
+    
+    console.log('🔍 Debug - Get My Payments Request:', {
+      url,
+      baseURL: this.baseURL,
+      endpoint: CREDIT_CONFIG.ENDPOINTS.GET_MY_PAYMENTS,
+      headers: { ...headers, Authorization: headers.Authorization ? 'Bearer ***' : 'none' }
+    });
+
+    const response = await fetch(url, {
       method: 'GET',
-      headers: await this.getHeaders()
+      headers
+    });
+
+    console.log('🔍 Debug - Get My Payments Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.url
     });
 
     if (!response.ok) {
@@ -150,9 +182,25 @@ class CreditService {
    * Obtener dashboard de crédito del usuario
    */
   async getCreditDashboard(): Promise<CreditDashboard> {
-    const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREDIT_DASHBOARD}`, {
+    const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREDIT_DASHBOARD}`;
+    const headers = await this.getHeaders();
+    
+    console.log('🔍 Debug - Credit Dashboard Request:', {
+      url,
+      baseURL: this.baseURL,
+      endpoint: CREDIT_CONFIG.ENDPOINTS.CREDIT_DASHBOARD,
+      headers: { ...headers, Authorization: headers.Authorization ? 'Bearer ***' : 'none' }
+    });
+
+    const response = await fetch(url, {
       method: 'GET',
-      headers: await this.getHeaders()
+      headers
+    });
+
+    console.log('🔍 Debug - Credit Dashboard Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.url
     });
 
     if (!response.ok) {
