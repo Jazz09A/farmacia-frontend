@@ -1,16 +1,41 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const mockBrands = [
+const brands = [
   {
     id: 1,
-    name: 'Brand 1',
-    logo: 'https://via.placeholder.com/150'
+    name: 'By Naturlifes',
+    logo: 'src/public/brands/LOGO BY NATURLIFES.jpg'
+  },
+  {
+    id: 2,
+    name: 'Dulcilina',
+    logo: 'src/public/brands/Logo Dulcilina.jpg'
+  },
+  {
+    id: 3,
+    name: 'Fitosana',
+    logo: 'src/public/brands/Logo fitosana nueva imagen_page-0001 (1).jpg'
+  },
+  {
+    id: 4,
+    name: 'Grupo Fonti',
+    logo: 'src/public/brands/Logo Grupo Fonti.png'
+  },
+  {
+    id: 5,
+    name: 'Nuvitt',
+    logo: 'src/public/brands/Logo nuvitt.jpg'
+  },
+  {
+    id: 6,
+    name: 'NS',
+    logo: 'src/public/brands/NS-Logo-Nuevo-Slogan.png'
   }
 ]
 export const BrandsSection: React.FC = () => {
   // Duplicate brands for infinite scroll effect
-  const duplicatedBrands = [...mockBrands, ...mockBrands];
+  const duplicatedBrands = [...brands, ...brands];
 
   return (
     <section className="py-16 bg-white">
@@ -46,7 +71,7 @@ export const BrandsSection: React.FC = () => {
             {duplicatedBrands.map((brand, index) => (
               <motion.div
                 key={`${brand.id}-${index}`}
-                className="flex-shrink-0 w-32 h-16 flex items-center justify-center bg-gray-100 rounded-lg grayscale hover:grayscale-0 transition-all duration-300 cursor-pointer"
+                className="flex-shrink-0 w-32 h-16 flex items-center justify-center bg-gray-100 rounded-lg hover:grayscale transition-all duration-300 cursor-pointer"
                 whileHover={{ 
                   scale: 1.1,
                   boxShadow: '0 10px 25px rgba(0,0,0,0.1)'

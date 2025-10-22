@@ -72,13 +72,33 @@ const AdminDashboardPage: React.FC = () => {
   const getStatusColor = (status: string) => {
     const colors = {
       pending: 'yellow',
-      confirmed: 'emerald', // Changed from blue to emerald for better UX
-      processing: 'blue',
+      confirmed: 'blue', // Azul para confirmed
+      processing: 'orange', // Naranja para processing
       shipped: 'purple',
-      delivered: 'green',
+      delivered: 'green', // Verde para delivered
       cancelled: 'red'
     };
     return colors[status as keyof typeof colors] || 'gray';
+  };
+
+  // Función para traducir estados de órdenes
+  const getOrderStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'Pendiente';
+      case 'confirmed':
+        return 'Confirmado';
+      case 'processing':
+        return 'En Preparación';
+      case 'shipped':
+        return 'Enviado';
+      case 'delivered':
+        return 'Entregado';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
   };
 
 
@@ -140,6 +160,13 @@ const AdminDashboardPage: React.FC = () => {
   // 🔄 Manejar actualización de estado
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     try {
+      // Verificar si la orden está en un estado final
+      const currentOrder = data?.recent_orders.find(order => order.id === orderId);
+      if (currentOrder && (currentOrder.status === 'delivered' || currentOrder.status === 'cancelled')) {
+        alert('No se puede modificar una orden entregada o cancelada');
+        return;
+      }
+
       await updateOrderStatus(orderId, newStatus);
       
       // Actualizar orden seleccionada si corresponde
@@ -153,6 +180,7 @@ const AdminDashboardPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Error updating order status:', err);
+      alert('Error al actualizar el estado de la orden');
     }
   };
 
@@ -353,7 +381,7 @@ const AdminDashboardPage: React.FC = () => {
                         <td className="px-3 lg:px-6 py-3 lg:py-4">
                           <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-${statusColor}-100 text-${statusColor}-800`}>
                             <span className={`w-1.5 h-1.5 mr-1.5 bg-${statusColor}-500 rounded-full`}></span>
-                            <span className="truncate">{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
+                            <span className="truncate">{getOrderStatusText(order.status)}</span>
                           </div>
                         </td>
                         <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
@@ -411,11 +439,11 @@ const AdminDashboardPage: React.FC = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs lg:text-sm font-medium text-gray-600">Confirmados</span>
-                <span className="text-sm lg:text-base font-bold text-emerald-600">{orderStatusSummary.confirmed}</span>
+                <span className="text-sm lg:text-base font-bold text-blue-600">{orderStatusSummary.confirmed}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs lg:text-sm font-medium text-gray-600">Procesando</span>
-                <span className="text-sm lg:text-base font-bold text-blue-600">{orderStatusSummary.processing}</span>
+                <span className="text-sm lg:text-base font-bold text-orange-600">{orderStatusSummary.processing}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs lg:text-sm font-medium text-gray-600">Enviados</span>

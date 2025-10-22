@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 
 interface PageLayoutProps {
@@ -9,6 +9,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
   const location = useLocation();
   const [navbarHeight, setNavbarHeight] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
+
+
 
   // Pages that shouldn't have navbar spacing (admin routes, HomePage with hero)
   const excludedRoutes = ['/admin'];

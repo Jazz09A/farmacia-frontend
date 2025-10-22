@@ -176,13 +176,13 @@ export const NotificationsSection: React.FC<{ notifications: UserNotification[] 
 
   const getNotificationColor = (type: string) => {
     const colors = {
-      order_confirmed: 'text-emerald-600 bg-emerald-100',
+      order_confirmed: 'text-blue-600 bg-blue-100',
       order_shipped: 'text-indigo-600 bg-indigo-100',
       order_delivered: 'text-green-600 bg-green-100',
       promotion_available: 'text-purple-600 bg-purple-100',
       account_update: 'text-orange-600 bg-orange-100',
       system_message: 'text-gray-600 bg-gray-100',
-      payment_received: 'text-emerald-600 bg-emerald-100',
+      payment_received: 'text-blue-600 bg-blue-100',
       low_stock_alert: 'text-red-600 bg-red-100'
     };
     return colors[type as keyof typeof colors] || 'text-gray-600 bg-gray-100';

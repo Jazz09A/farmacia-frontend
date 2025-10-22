@@ -38,11 +38,14 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto; /* Usamos JavaScript para smooth scroll optimizado */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   height: 100%;
+  /* Optimizaciones de scroll */
+  overflow-y: scroll;
+  scroll-padding-top: 80px; /* Espacio para navbar fijo */
 }
 
 body {
@@ -56,6 +59,9 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  /* Optimizaciones de rendimiento para scroll */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* Fix for root container */
@@ -72,6 +78,8 @@ img, video {
   max-width: 100%;
   height: auto;
   display: block;
+  /* Lazy loading nativo */
+  loading: lazy;
 }
 
 /* Preload critical animations */
@@ -81,6 +89,52 @@ img, video {
 
 .will-change-opacity {
   will-change: opacity;
+}
+
+/* Optimizaciones de scroll */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+.scroll-optimized {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-snap-type: y proximity;
+}
+
+/* GPU acceleration para elementos animados */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Reducir repaints en scroll */
+.reduce-motion {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Shimmer animation for image loading */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* Medical specific base styles */

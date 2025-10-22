@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface CarouselImage {
+export interface CarouselImage {
   id: string;
   src: string;
   alt: string;

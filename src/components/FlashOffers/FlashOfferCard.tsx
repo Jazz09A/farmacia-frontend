@@ -129,7 +129,7 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
       {/* Product Image */}
       <div className={`${config.image} bg-white p-4 flex items-center justify-center relative overflow-hidden`}>
         <img
-          src={offer.product.image}
+          src={offer.product.images && offer.product.images.length > 1 ? offer.product.images[1] : offer.product.image}
           alt={offer.product.name}
           className="max-w-full max-h-full object-contain"
           loading="lazy"

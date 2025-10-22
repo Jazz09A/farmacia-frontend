@@ -8,14 +8,14 @@ interface AdminCurrencyContextType {
   setCurrency: (currency: Currency) => void;
   toggleCurrency: () => void;
   formatPrice: (value: number, valueCurrency?: Currency) => string;
-  convertPrice: (price: number, fromCurrency: Currency, toCurrency?: Currency) => number;
-  getPriceInCurrency: (priceVes: number, priceRef: number) => number;
+  convertPrice: (price: string | number, fromCurrency: Currency, toCurrency?: Currency) => number;
+  getDisplayPrice: (priceUsd: string | number, displayCurrency?: Currency) => number;
+  formatPriceFromBackend: (priceUsd: string | number, displayCurrency?: Currency) => string;
   getCurrencySymbol: (curr: Currency) => string;
   getCurrencyName: (curr: Currency) => string;
   exchangeRates: {
-    VES_TO_REF: number;
+    USD_TO_VES: number;
     VES_TO_USD: number;
-    REF_TO_USD: number;
   };
 }
 

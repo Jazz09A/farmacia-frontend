@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense, memo, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, lazy, Suspense, memo, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';
@@ -8,9 +8,9 @@ import { Navbar } from './components/Header/Navbar';
 import { Footer } from './components/Footer/Footer';
 import { PageLayout } from './components/Layout/PageLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import ScrollToTop from './components/ScrollToTop';
 import AdminRoute from './components/Admin/AdminRoute';
 import { LoadingSpinner } from './components/common/LoadingSpinner';
+import ScrollToTop from './components/ScrollToTop';
 
 // Pages with Lazy Loading
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -59,7 +59,7 @@ import { useCart } from './contexts/CartContext';
 import { ScrollProvider, useScrollContext } from './contexts/ScrollContext';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
-import { GlobalCurrencyProvider } from './contexts/GlobalCurrencyContext';
+import { GlobalCurrencyProviderWithAuth } from './contexts/GlobalCurrencyContext';
 import { NavbarProvider } from './contexts/NavbarContext';
 import { CreditProvider } from './contexts/CreditContext';
 
@@ -89,10 +89,8 @@ const AppLayout = () => {
       <Navbar
         isScrolled={isScrolled}
         cartItemsCount={cart?.total_items || 0}
-        currency={currency as 'VES' | 'REF'  }
-        onCurrencyToggle={toggleCurrency}
       />
-      <main className="flex-1 flex flex-col">
+      <main id="main-content" className="flex-1 flex flex-col">
         <PageLayout>
           <Suspense fallback={<LoadingSpinner message="Cargando página..." />}>
             <Routes>
@@ -220,18 +218,18 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <GlobalCurrencyProvider>
+        <GlobalCurrencyProviderWithAuth>
           <ScrollProvider>
+            <ScrollToTop />
             <NavbarProvider>
               <CartProvider>
                 <CreditProvider>
-                  <ScrollToTop />
                   <AppContainer />
                 </CreditProvider>
               </CartProvider>
             </NavbarProvider>
           </ScrollProvider>
-        </GlobalCurrencyProvider>
+        </GlobalCurrencyProviderWithAuth>
       </AuthProvider>
     </Router>
   );

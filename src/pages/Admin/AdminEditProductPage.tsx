@@ -5,21 +5,21 @@ import {
   ArrowLeft, 
   Save, 
   X, 
-  Upload, 
   Image as ImageIcon,
   AlertCircle,
-  CheckCircle,
   Package,
   DollarSign,
   Tag,
   Layers,
-  Star,
-  Info
+  Info,
+  Edit3
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { getProductById, updateProduct, deleteImage } from '../../data/products';
+import { productService } from '../../services/ProductService';
 import { Product } from '../../types';
 import { useUploadImage } from '../../hooks/useUploadImage';
+import { productImageService } from '../../services/ProductImageService';
+import { ImageEditor } from '../../components/Admin/ImageEditor';
 
 interface ProductFormData extends Omit<Product, 'id'> {
   meta_description?: string;
@@ -41,14 +41,39 @@ const AdminEditProductPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [showUnsavedChanges, setShowUnsavedChanges] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<string | null>(null);
+  const [isImageOperationLoading, setIsImageOperationLoading] = useState(false);
+  const [showImageEditor, setShowImageEditor] = useState(false);
+  const [imageToEdit, setImageToEdit] = useState<string>('');
+  const [imageIndexToEdit, setImageIndexToEdit] = useState<number>(-1);
   const {uploadImage, isUploading, error: uploadError} = useUploadImage();
   const token = localStorage.getItem('token');
   useEffect(() => {
     const fetchProduct = async () => {
       if (id) {
-        const productData = await getProductById(id);
-        if (productData) {
-          setFormData(productData);
+        try {
+          const productData = await productService.getProductById(id);
+          if (productData) {
+            console.log('Product data loaded:', productData);
+            console.log('Product images array:', productData.images);
+            console.log('Product single image:', productData.image);
+            
+            // Asegurar que las imágenes tengan URLs completas
+            const processedData = {
+              ...productData,
+              images: productData.images?.map(img => {
+                // Si la imagen es una ruta relativa, convertirla a URL completa
+                if (img.startsWith('/static/')) {
+                  return `${window.location.origin}${img}`;
+                }
+                return img;
+              }) || []
+            };
+            
+            console.log('Processed images:', processedData.images);
+            setFormData(processedData);
+          }
+        } catch (error) {
+          console.error('Error fetching product:', error);
         }
       }
       setIsLoading(false);
@@ -87,12 +112,8 @@ const AdminEditProductPage: React.FC = () => {
       newErrors.category = 'La categoría es requerida';
     }
 
-    if (formData.price_ves <= 0) {
-      newErrors.price_ves = 'El precio en VES debe ser mayor a 0';
-    }
-
-    if (formData.price_ref <= 0) {
-      newErrors.price_ref = 'El precio de referencia debe ser mayor a 0';
+    if (typeof formData.price === 'string' ? parseFloat(formData.price) <= 0 : formData.price <= 0) {
+      newErrors.price = 'El precio en USD debe ser mayor a 0';
     }
 
     if (!formData.image?.trim()) {
@@ -113,11 +134,20 @@ const AdminEditProductPage: React.FC = () => {
     try {
       // Si hay una imagen marcada para eliminar, la eliminamos primero
       if (imageToDelete && id) {
-        await deleteImage(id, imageToDelete, token || '');
+        await productService.deleteProductImage(id, imageToDelete);
         setImageToDelete(null); // Reseteamos el estado
       }
 
-      const updatedProduct = await updateProduct(id || '', formData as Product, token || '');
+      // Crear una copia del formData sin las imágenes para la actualización
+      const { images, ...productDataWithoutImages } = formData as Product;
+      
+      // Agregar las imágenes de vuelta para mantener la compatibilidad con el tipo Product
+      const productDataForUpdate = {
+        ...productDataWithoutImages,
+        images: images || []
+      };
+      
+      const updatedProduct = await productService.updateProduct(id || '', productDataForUpdate);
       if (updatedProduct) {
         setShowUnsavedChanges(false);
         navigate('/admin/products');
@@ -126,6 +156,7 @@ const AdminEditProductPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error al guardar:', error);
+      alert('Error al guardar el producto. Por favor, intenta de nuevo.');
     } finally {
       setIsSaving(false);
     } 
@@ -143,19 +174,95 @@ const AdminEditProductPage: React.FC = () => {
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const uploadedUrl = await uploadImage(file);
-      if (uploadedUrl) {
-        // This updates your form state with the new image URL
-        handleInputChange('image', uploadedUrl);
+    if (file && id) {
+      setIsImageOperationLoading(true);
+      try {
+        console.log('Starting image upload process...');
+        console.log('Product ID:', id);
+        console.log('Token present:', !!localStorage.getItem('token'));
+        
+        const uploadedUrl = await uploadImage(file);
+        if (uploadedUrl) {
+          console.log('Image uploaded successfully:', uploadedUrl);
+          
+          // Agregar la imagen al producto usando el servicio de imágenes
+          await productImageService.addImagesToProduct(id, [uploadedUrl]);
+          
+          // Actualizar el estado local
+          const currentImages = formData?.images || [];
+          handleInputChange('images', [...currentImages, uploadedUrl]);
+          
+          // Limpiar el input
+          event.target.value = '';
+        }
+      } catch (error) {
+        console.error('Error adding image to product:', error);
+        alert('Error al agregar la imagen al producto');
+      } finally {
+        setIsImageOperationLoading(false);
       }
     }
   };
 
-  const handleDeleteImage = () => {
-    if (!formData?.image) return;
-    setImageToDelete(formData.image); // Marcamos la imagen para ser eliminada al guardar
-    handleInputChange('image', ''); // La quitamos de la vista previa
+
+  const handleDeleteImageFromArray = async (imageUrl: string) => {
+    if (!formData?.images || !id) return;
+    
+    setIsImageOperationLoading(true);
+    try {
+      // Eliminar la imagen del producto usando el servicio
+      await productImageService.deleteImageFromProduct(id, imageUrl);
+      
+      // Actualizar el estado local
+      const updatedImages = formData.images.filter(img => img !== imageUrl);
+      handleInputChange('images', updatedImages);
+    } catch (error) {
+      console.error('Error deleting image from product:', error);
+      alert('Error al eliminar la imagen del producto');
+    } finally {
+      setIsImageOperationLoading(false);
+    }
+  };
+
+  const handleEditImage = (imageUrl: string, index: number) => {
+    setImageToEdit(imageUrl);
+    setImageIndexToEdit(index);
+    setShowImageEditor(true);
+  };
+
+  const handleSaveEditedImage = async (editedImageBlob: Blob) => {
+    if (!id || imageIndexToEdit === -1) return;
+    
+    setIsImageOperationLoading(true);
+    try {
+      // Convertir blob a File
+      const file = new File([editedImageBlob], 'edited-image.jpg', { type: 'image/jpeg' });
+      
+      // Subir la imagen editada
+      const uploadedUrl = await uploadImage(file);
+      
+      if (uploadedUrl && formData?.images) {
+        // Eliminar la imagen antigua del producto
+        await productImageService.deleteImageFromProduct(id, imageToEdit);
+        
+        // Agregar la nueva imagen
+        await productImageService.addImagesToProduct(id, [uploadedUrl]);
+        
+        // Actualizar el estado local - reemplazar la imagen en la misma posición
+        const updatedImages = [...formData.images];
+        updatedImages[imageIndexToEdit] = uploadedUrl;
+        handleInputChange('images', updatedImages);
+      }
+      
+      setShowImageEditor(false);
+      setImageToEdit('');
+      setImageIndexToEdit(-1);
+    } catch (error) {
+      console.error('Error saving edited image:', error);
+      alert('Error al guardar la imagen editada');
+    } finally {
+      setIsImageOperationLoading(false);
+    }
   };
   if (isLoading) {
     return <LoadingSpinner variant="inline" message="Cargando producto..." />;
@@ -184,7 +291,7 @@ const AdminEditProductPage: React.FC = () => {
     { id: 'pricing', label: 'Precios', icon: DollarSign },
     { id: 'categorization', label: 'Categorización', icon: Tag },
     { id: 'inventory', label: 'Inventario', icon: Layers },
-    { id: 'seo', label: 'SEO', icon: Star }
+    // { id: 'seo', label: 'SEO', icon: Star }
   ];
 
   return (
@@ -361,22 +468,127 @@ const AdminEditProductPage: React.FC = () => {
                 <div className="space-y-4 lg:space-y-6">
                   <div>
                     <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
-                      Imagen del Producto *
+                      Galería de Imágenes del Producto *
                     </label>
                     <div className="space-y-3 lg:space-y-4">
-                      {formData.image && (
+                      {/* Mostrar imagen principal (segunda posición del array) */}
+                      {(() => {
+                        const mainImage = formData.images && formData.images.length > 1 ? formData.images[1] : null;
+                        console.log('Rendering images section:', {
+                          hasImages: !!formData.images,
+                          imagesLength: formData.images?.length,
+                          secondImage: formData.images?.[1],
+                          allImages: formData.images,
+                          mainImage: mainImage,
+                          shouldRender: !!mainImage
+                        });
+                        return mainImage;
+                      })() && (
                         <div className="relative">
                           <img
-                            src={formData.image}
-                            alt="Preview"
+                            src={formData.images[1]}
+                            alt="Imagen principal"
                             className="w-full h-32 lg:h-48 object-cover rounded-lg border border-gray-300"
+                            onLoad={() => {
+                              console.log('Main image loaded successfully:', formData.images[1]);
+                            }}
+                            onError={(e) => {
+                              console.error('Error loading main image:', formData.images[1]);
+                              e.currentTarget.style.display = 'none';
+                            }}
                           />
-                          <button
-                            onClick={handleDeleteImage}
-                            className="absolute top-2 right-2 p-1 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-full transition-colors"
-                          >
-                            <X className="w-3 h-3 lg:w-4 lg:h-4" />
-                          </button>
+                          <div className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">
+                            Principal
+                          </div>
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            <button
+                              onClick={() => handleEditImage(formData.images[1], 1)}
+                              disabled={isImageOperationLoading}
+                              className="p-1 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-full transition-colors"
+                              title="Editar imagen"
+                            >
+                              <Edit3 className="w-3 h-3 lg:w-4 lg:h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteImageFromArray(formData.images[1])}
+                              disabled={isImageOperationLoading}
+                              className="p-1 bg-red-500 hover:bg-red-600 active:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-full transition-colors"
+                              title="Eliminar imagen"
+                            >
+                              <X className="w-3 h-3 lg:w-4 lg:h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Mostrar todas las imágenes en galería */}
+                      {(() => {
+                        const visibleImages = formData.images?.filter((_, index) => index > 0) || [];
+                        console.log('Gallery section:', {
+                          hasImages: !!formData.images,
+                          totalImages: formData.images?.length,
+                          visibleImages: visibleImages.length,
+                          visibleImagesList: visibleImages
+                        });
+                        return formData.images && formData.images.length > 0;
+                      })() && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">
+                            Galería de Imágenes ({formData.images.filter((_, index) => index > 0).length} imágenes)
+                          </h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {(() => {
+                              const filteredImages = formData.images.filter((_, index) => index > 0);
+                              console.log('Filtering images:', {
+                                originalImages: formData.images,
+                                filteredImages: filteredImages,
+                                originalLength: formData.images?.length,
+                                filteredLength: filteredImages.length
+                              });
+                              return filteredImages;
+                            })().map((imageUrl, index) => (
+                              <div key={index + 1} className="relative">
+                                <img
+                                  src={imageUrl}
+                                  alt={`Imagen ${index + 2}`}
+                                  className="w-full h-24 object-cover rounded-lg border border-gray-300"
+                                  onLoad={() => {
+                                    console.log(`Gallery image ${index + 2} loaded successfully:`, imageUrl);
+                                  }}
+                                  onError={(e) => {
+                                    console.error(`Error loading image ${index + 2}:`, imageUrl);
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                                <div className="absolute top-1 left-1 bg-gray-800 text-white px-1 py-0.5 rounded text-xs">
+                                  {index + 2}
+                                </div>
+                                {index === 0 && (
+                                  <div className="absolute top-1 right-1 bg-blue-500 text-white px-1 py-0.5 rounded text-xs">
+                                    Principal
+                                  </div>
+                                )}
+                                <div className="absolute bottom-1 right-1 flex gap-1">
+                                  <button
+                                    onClick={() => handleEditImage(imageUrl, index + 1)}
+                                    disabled={isImageOperationLoading}
+                                    className="p-1 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-full transition-colors"
+                                    title="Editar imagen"
+                                  >
+                                    <Edit3 className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteImageFromArray(imageUrl)}
+                                    disabled={isImageOperationLoading}
+                                    className="p-1 bg-red-500 hover:bg-red-600 active:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-full transition-colors"
+                                    title="Eliminar imagen"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                       
@@ -387,13 +599,21 @@ const AdminEditProductPage: React.FC = () => {
                             type="file"
                             accept="image/*"
                             onChange={handleFileChange}
-                            className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            disabled={isUploading || isImageOperationLoading}
+                            className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                             placeholder="Selecciona una imagen"
                           />
                           <p className="text-xs lg:text-sm text-gray-500">
-                            O arrastra una imagen aquí
+                            O arrastra una imagen aquí para agregarla a la galería
                           </p>
-                          {isUploading && <p className="text-xs lg:text-sm text-blue-600">Subiendo imagen...</p>}
+                          <p className="text-xs text-blue-600">
+                            La segunda imagen será la imagen principal del producto
+                          </p>
+                          {(isUploading || isImageOperationLoading) && (
+                            <p className="text-xs lg:text-sm text-blue-600">
+                              {isUploading ? 'Subiendo imagen...' : 'Procesando imagen...'}
+                            </p>
+                          )}
                           {uploadError && <p className="text-xs lg:text-sm text-red-600">{uploadError}</p>}
                         </div>
                       </div>
@@ -440,43 +660,23 @@ const AdminEditProductPage: React.FC = () => {
                 <div className="space-y-4 lg:space-y-6">
                   <div>
                     <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
-                      Precio en VES *
+                      Precio en USD *
                     </label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 lg:w-4 lg:h-4" />
                       <input
                         type="number"
-                        value={formData.price_ves}
-                        onChange={(e) => handleInputChange('price_ves', parseFloat(e.target.value) || 0)}
+                        step="0.01"
+                        value={formData.price}
+                        onChange={(e) => handleInputChange('price', parseFloat(e.target.value) || 0)}
                         className={`w-full pl-8 lg:pl-10 pr-3 py-2 text-sm lg:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.price_ves ? 'border-red-300' : 'border-gray-300'
+                          errors.price ? 'border-red-300' : 'border-gray-300'
                         }`}
                         placeholder="0.00"
                       />
                     </div>
-                    {errors.price_ves && (
-                      <p className="mt-1 text-xs lg:text-sm text-red-600">{errors.price_ves}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
-                      Precio de Referencia *
-                    </label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 lg:w-4 lg:h-4" />
-                      <input
-                        type="number"
-                        value={formData.price_ref}
-                        onChange={(e) => handleInputChange('price_ref', parseFloat(e.target.value) || 0)}
-                        className={`w-full pl-8 lg:pl-10 pr-3 py-2 text-sm lg:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.price_ref ? 'border-red-300' : 'border-gray-300'
-                        }`}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    {errors.price_ref && (
-                      <p className="mt-1 text-xs lg:text-sm text-red-600">{errors.price_ref}</p>
+                    {errors.price && (
+                      <p className="mt-1 text-xs lg:text-sm text-red-600">{errors.price}</p>
                     )}
                   </div>
 
@@ -488,6 +688,7 @@ const AdminEditProductPage: React.FC = () => {
                       <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 lg:w-4 lg:h-4" />
                       <input
                         type="number"
+                        step="0.01"
                         value={formData.original_price || ''}
                         onChange={(e) => handleInputChange('original_price', parseFloat(e.target.value) || 0)}
                         className="w-full pl-8 lg:pl-10 pr-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -504,7 +705,7 @@ const AdminEditProductPage: React.FC = () => {
                       <label className="flex items-center">
                         <input
                           type="checkbox"
-                            checked={formData.is_offer}
+                          checked={formData.is_offer}
                           onChange={(e) => handleInputChange('is_offer', e.target.checked)}
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
@@ -513,10 +714,10 @@ const AdminEditProductPage: React.FC = () => {
                         </span>
                       </label>
                       
-                      {formData.is_offer && formData.original_price && formData.original_price > 0 && formData.price_ves && (
+                      {formData.is_offer && formData.original_price && Number(formData.original_price) > 0 && formData.price && (
                         <div className="text-xs lg:text-sm text-gray-600">
-                          <p>Descuento: {Math.round(((formData.original_price - formData.price_ves) / formData.original_price) * 100)}%</p>
-                          <p>Ahorro: ${(formData.original_price - formData.price_ves).toFixed(2)} VES</p>
+                          <p>Descuento: {Math.round(((Number(formData.original_price) - Number(formData.price)) / Number(formData.original_price)) * 100)}%</p>
+                          <p>Ahorro: ${(Number(formData.original_price) - Number(formData.price)).toFixed(2)} USD</p>
                         </div>
                       )}
                     </div>
@@ -764,6 +965,19 @@ const AdminEditProductPage: React.FC = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Image Editor Modal */}
+      {showImageEditor && imageToEdit && (
+        <ImageEditor
+          image={imageToEdit}
+          onSave={handleSaveEditedImage}
+          onCancel={() => {
+            setShowImageEditor(false);
+            setImageToEdit('');
+            setImageIndexToEdit(-1);
+          }}
+        />
+      )}
     </div>
   );
 };

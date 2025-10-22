@@ -5,23 +5,21 @@ import { LoadingSpinner } from '../common/LoadingSpinner';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; // Updated import
 import { useNavbar } from '../../contexts/NavbarContext';
+import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
 import type { User } from '../../types/auth';
 // import { SearchBar } from './SearchBar';
-import { CurrencyToggle } from './CurrencyToggle';
+import ExchangeRateDisplay from './ExchangeRateDisplay';
+import { SimpleSearchInput } from '../common/SimpleSearchInput';
 import logoSrc from '../../public/logo/Logo.webp';
 
 interface NavbarProps {
   isScrolled: boolean;
   cartItemsCount: number;
-  currency: 'VES' | 'USD';
-  onCurrencyToggle: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   isScrolled,
   cartItemsCount,
-  currency,
-  onCurrencyToggle,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -31,6 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const { isNavbarVisible } = useNavbar();
+  const { currency, toggleCurrency, exchangeRates } = useGlobalCurrency();
 
   // Don't render Navbar on admin routes
   if (location.pathname.startsWith('/admin')) {
@@ -73,10 +72,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = 'auto';
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = 'auto';
     };
   }, [isMobileMenuOpen]);
 
@@ -194,13 +193,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* Desktop Navigation Menu */}
-            <div className="hidden lg:flex items-center space-x-0.5 flex-1 justify-center px-8">
+            <div className="hidden lg:flex items-center space-x-1 flex-1 justify-center px-8">
               {menuItems.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link key={item.name} to={item.href}>
                     <motion.div
-                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${getNavItemClasses(isActive)}`}
+                      className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${getNavItemClasses(isActive)}`}
                       whileHover={{ y: -2, scale: 1.05 }}
                     >
                       {item.name}
@@ -211,14 +210,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <div className="flex items-center flex-shrink-0 space-x-2 lg:space-x-3">
-              <div className="hidden sm:block">
-                <CurrencyToggle
-                  currency={currency}
-                  onToggle={onCurrencyToggle}
-                  isScrolled={isScrolled || isLightBackgroundPage}
-                />
+              {/* Exchange Rate Display - Fusionado con Currency Toggle */}
+              <div className="hidden lg:block">
+                <ExchangeRateDisplay />
               </div>
 
+              {/* Cart and User Actions */}
               <div className="flex items-center space-x-1 lg:space-x-2">
                 <Link to="/cart">
                   <motion.button
@@ -349,7 +346,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           {!shouldHideSearchBar && (
             <div className="lg:hidden pb-4">
-              {/* <SearchBar isScrolled={isScrolled || isLightBackgroundPage} /> */}
+              <SimpleSearchInput
+                placeholder="Buscar medicamentos..."
+                className="w-full"
+                showSuggestions={true}
+                isScrolled={isScrolled || isLightBackgroundPage}
+              />
             </div>
           )}
         </div>
@@ -394,9 +396,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 
                 {/* Footer fijo */}
                 <div className="flex-shrink-0">
-                  <div className="p-6 border-t border-medical-gray-200">
-                    <CurrencyToggle currency={currency} onToggle={onCurrencyToggle} isScrolled={true} />
-                  </div>
                   <div className="p-6 border-t border-medical-gray-200 bg-medical-blue-50">
                     <div className="text-center">
                       <p className="text-sm text-medical-gray-600 mb-2">¿Necesitas asesoría comercial?</p>

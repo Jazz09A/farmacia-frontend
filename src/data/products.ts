@@ -1,4 +1,5 @@
 import { Product } from "../types/index";
+import { authService } from '../services/AuthService';
 
 const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // Interface for paginated response matching the backend structure
@@ -31,18 +32,15 @@ interface BackendResponse {
 
 // Function to map backend product data to frontend Product interface (normalize types, USD model)
 const mapBackendProductToProduct = (backendProduct: any): Product => {
-  // Prioriza el campo 'image' si no es un placeholder.
-  // Si no, utiliza el array 'images' como alternativa.
-  const primaryImage =
-    backendProduct.image && !backendProduct.image.includes('placeholder')
-      ? backendProduct.image
-      : backendProduct.images?.[0];
+  // Usar el array completo de imágenes del backend
+  const images = backendProduct.images && Array.isArray(backendProduct.images) 
+    ? backendProduct.images.filter((img: string) => img && img.trim() !== '')
+    : [];
 
-  const images = [
-    primaryImage?.includes('placeholder')
-      ? 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop'
-      : primaryImage || 'https://placehold.co/400x400/png',
-  ];
+  // Si no hay imágenes, usar placeholder
+  if (images.length === 0) {
+    images.push('https://placehold.co/400x400/png');
+  }
 
   const parseNum = (v: any): number => {
     const n = typeof v === 'string' ? parseFloat(v) : v;
@@ -59,7 +57,7 @@ const mapBackendProductToProduct = (backendProduct: any): Product => {
     price: parseNum(backendProduct.price),
     description: backendProduct.description,
     ingredients: backendProduct.ingredients || [],
-    image: primaryImage || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop',
+    image: images[0] || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop',
     images: images,
     in_stock: backendProduct.in_stock,
     stock: backendProduct.stock,
@@ -150,17 +148,23 @@ export const getProductById = async (id: string): Promise<Product | null> => {
   return data ? mapBackendProductToProduct(data) : null;
 };
 
-export const updateProduct = async (id: string, product: Product, token: string): Promise<Product | null> => {
-  const response = await fetch(`${baseUrl}/api/v1/admin/products/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(product),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  const data = await response.json();
-  return data || null;
+export const updateProduct = async (id: string, product: Product): Promise<Product | null> => {
+  try {
+    const response = await authService.authenticatedFetch(`/api/v1/admin/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(product),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error updating product: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data ? mapBackendProductToProduct(data) : null;
+  } catch (error) {
+    console.error('Failed to update product:', error);
+    throw error;
+  }
 };
 
 export const deleteImage = async (id: string, image_url: string, token: string): Promise<Product | null> => {

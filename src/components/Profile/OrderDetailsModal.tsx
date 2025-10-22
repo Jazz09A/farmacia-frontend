@@ -4,7 +4,6 @@ import { X, Truck, Package, CreditCard, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
 import { useNavbar } from '../../contexts/NavbarContext';
-import type { Currency } from '../../types';
 
 interface OrderDetailsModalProps {
   order: any;
@@ -12,7 +11,7 @@ interface OrderDetailsModalProps {
 }
 
 const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose }) => {
-  const { currency, formatPrice, getPriceInCurrency } = useGlobalCurrency();
+  const { formatPriceFromBackend } = useGlobalCurrency();
   const { hideNavbar, showNavbar } = useNavbar();
   
   // Hide navbar when modal opens and show it when modal closes
@@ -52,37 +51,14 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
     return paymentStatusTranslations[status] || status;
   };
 
-  // Función para formatear precios usando los nuevos campos del endpoint
-  const formatOrderPrice = (vesAmount: number, refAmount?: number) => {
-    switch (currency) {
-      case 'VES':
-        return formatPrice(vesAmount, 'VES');
-      case 'USD':
-      case 'REF':
-        if (refAmount !== undefined) {
-          return formatPrice(refAmount, 'USD');
-        }
-        // Fallback: usar getPriceInCurrency si no hay refAmount
-        return formatPrice(getPriceInCurrency(vesAmount, refAmount || 0), currency);
-      default:
-        return formatPrice(vesAmount, order.currency as Currency);
-    }
+  // Función para formatear precios de órdenes (ahora vienen en USD como string)
+  const formatOrderPrice = (usdAmount: string | number) => {
+    return formatPriceFromBackend(usdAmount);
   };
 
-  // Función para formatear precios de items individuales
+  // Función para formatear precios de items (ahora vienen en USD como string)
   const formatItemPrice = (item: any) => {
-    switch (currency) {
-      case 'VES':
-        return formatPrice(item.total_price, 'VES');
-      case 'USD':
-      case 'REF':
-        if (item.total_price_ref !== undefined) {
-          return formatPrice(item.total_price_ref, 'USD');
-        }
-        return formatPrice(getPriceInCurrency(item.total_price, item.total_price_ref || 0), currency);
-      default:
-        return formatPrice(item.total_price, order.currency as Currency);
-    }
+    return formatPriceFromBackend(item.unit_price || item.total_price);
   };
 
   return (
@@ -159,20 +135,20 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span>{formatOrderPrice(order.subtotal, order.subtotal_ref)}</span>
+                  <span>{formatOrderPrice(order.subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Envío:</span>
-                  <span>{formatOrderPrice(order.shipping_cost, order.shipping_cost_ref)}</span>
+                  <span>{formatOrderPrice(order.shipping_cost)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Impuestos:</span>
-                  <span>{formatOrderPrice(order.taxes, order.taxes_ref)}</span>
+                  <span>{formatOrderPrice(order.taxes)}</span>
                 </div>
                 <div className="border-t border-medical-gray-300 pt-2 mt-2">
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total:</span>
-                    <span className="text-medical-blue-700">{formatOrderPrice(order.total, order.total_ref)}</span>
+                    <span className="text-medical-blue-700">{formatOrderPrice(order.total)}</span>
                   </div>
                 </div>
               </div>
@@ -195,19 +171,6 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
                     </button>
                   </div>
                   
-                  {/* Estado de verificación */}
-                  <div className="p-3 bg-white rounded border">
-                    <div className="text-sm text-medical-gray-600 mb-1">Estado de Verificación:</div>
-                    <div className={`text-sm font-medium ${
-                      order.payment_status === 'completed' ? 'text-green-700' :
-                      order.payment_status === 'failed' ? 'text-red-700' :
-                      'text-yellow-700'
-                    }`}>
-                      {order.payment_status === 'completed' ? '✅ Verificado y Confirmado por Administrador' :
-                       order.payment_status === 'failed' ? '❌ Verificado y Rechazado por Administrador' :
-                       '⏳ Pendiente de Verificación por Administrador'}
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -268,7 +231,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
                       <div className="text-right">
                         <p className="font-semibold text-lg">{formatItemPrice(item)}</p>
                         <p className="text-sm text-medical-gray-500">
-                          {formatOrderPrice(item.unit_price, item.unit_price_ref)} c/u
+                          {formatOrderPrice(item.unit_price)} c/u
                         </p>
                       </div>
                     </div>

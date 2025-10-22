@@ -5,6 +5,10 @@ import {
   User 
 } from '../types/auth';
 import { Cart } from '../types';
+import { 
+  CartWithDiscounts, 
+  ApplicableDiscountResponse 
+} from '../types/discounts';
 
 class AuthService {
   // En desarrollo usamos rutas relativas para aprovechar el proxy de Vite
@@ -393,8 +397,22 @@ class AuthService {
     return await response.json();
   }
 
-  async getUserAddresses(): Promise<any[]> {
-    const response = await this.authenticatedFetch('/api/v1/user/addresses');
+  async getUserAddresses(options?: {
+    include_checkout_preview?: boolean;
+    cart_total?: number;
+  }): Promise<any> {
+    let url = '/api/v1/user/addresses';
+    
+    if (options?.include_checkout_preview) {
+      const params = new URLSearchParams();
+      params.append('include_checkout_preview', 'true');
+      if (options.cart_total) {
+        params.append('cart_total', options.cart_total.toString());
+      }
+      url += `?${params.toString()}`;
+    }
+    
+    const response = await this.authenticatedFetch(url);
     if (!response.ok) {
       throw new Error('Failed to fetch user addresses');
     }
@@ -487,6 +505,36 @@ class AuthService {
     }
 
     return response;
+  }
+
+  // ===== MÉTODOS DE DESCUENTOS =====
+
+  /**
+   * Obtiene el carrito con información de descuentos aplicados
+   */
+  async getCartWithDiscounts(): Promise<CartWithDiscounts> {
+    const response = await this.authenticatedFetch(this.cartUrl);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error getting cart with discounts');
+    }
+    return await response.json();
+  }
+
+  /**
+   * Obtiene el descuento aplicable por cantidad (endpoint público)
+   */
+  async getApplicableQuantityDiscount(quantity: number): Promise<ApplicableDiscountResponse | null> {
+    try {
+      const response = await fetch(`${this.url}/api/v1/public/quantity-discounts/applicable?total_quantity=${quantity}`);
+      if (!response.ok) {
+        return null;
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching applicable discount:', error);
+      return null;
+    }
   }
 }
 

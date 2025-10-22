@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Product } from '../types';
 import { useCurrency } from '../hooks/useCurrency';
 import { useCart } from '../contexts/CartContext';
-import { getProductById } from '../data/products';
+import { productService } from '../services/ProductService';
 import { ProductDetailSkeleton } from '../components/Skeleton';
 
 // Placeholder for a component of product carousel
@@ -17,7 +17,11 @@ const ProductsCarousel: React.FC<{ products: Product[], title: string }> = ({ pr
       {products.map(product => (
         <div key={product.id} className="group relative bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-4 hover:shadow-xl transition-all duration-300">
           <Link to={`/product/${product.id}`}>
-            <img src={product.image} alt={product.name} className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform" />
+            <img 
+              src={product.images && product.images.length > 1 ? product.images[1] : product.image} 
+              alt={product.name} 
+              className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform" 
+            />
             <h3 className="font-semibold text-gray-800 line-clamp-2">{product.name}</h3>
             <p className="text-sm text-medical-primary">{product.brand}</p>
           </Link>
@@ -44,10 +48,10 @@ const ProductDetailPage: React.FC = () => {
       setLoading(true);
       try {
         if (id) {
-          const fetchedProduct = await getProductById(id);
+          const fetchedProduct = await productService.getProductById(id);
           if (fetchedProduct) {
             setProduct(fetchedProduct);
-            setActiveImage(fetchedProduct.images?.[0] || fetchedProduct.image);
+            setActiveImage(fetchedProduct.images && fetchedProduct.images.length > 1 ? fetchedProduct.images[1] : fetchedProduct.image);
           } else {
             setProduct(null);
           }
@@ -123,13 +127,13 @@ const ProductDetailPage: React.FC = () => {
               <img src={activeImage} alt={product.name} className="w-full h-80 sm:h-96 object-contain rounded-xl" />
             </motion.div>
             <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 sm:gap-4">
-              {product.images?.map((img, index) => (
+              {product.images?.filter((_, index) => index > 0).map((img, index) => (
                 <div 
-                  key={index}
+                  key={index + 1}
                   onClick={() => setActiveImage(img)}
                   className={`cursor-pointer rounded-xl p-1 sm:p-2 border-2 transition-all ${activeImage === img ? 'border-medical-primary' : 'border-transparent hover:border-medical-gray-200'}`}
                 >
-                  <img src={img} alt={`${product.name} view ${index + 1}`} className="w-full h-16 sm:h-20 object-cover rounded-md" />
+                  <img src={img} alt={`${product.name} view ${index + 2}`} className="w-full h-16 sm:h-20 object-cover rounded-md" />
                 </div>
               ))}
             </div>

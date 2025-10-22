@@ -5,9 +5,9 @@ export interface Product {
   category: string;
   subcategory: string;
   patology: string;
-  price: number; // USD
+  price: string; // USD - viene como string del backend
   description: string;
-  ingredients: string[] | null;
+  ingredients: string[];
   image: string;
   images: string[];
   in_stock: boolean;
@@ -19,15 +19,15 @@ export interface Product {
   registro_sanitario: string;
   contraindicaciones: string;
   efectos_secundarios: string;
-  rating: number;
+  rating: string; // viene como string del backend
   review_count: number;
   is_offer: boolean;
-  original_price: number | null; // USD
+  original_price: string | null; // USD - viene como string del backend
   offer_end_time: string | null;
   featured: boolean;
   slug: string;
-  discount_percentage: number;
-  current_price: number; // USD
+  discount_percentage: string; // viene como string del backend
+  current_price: string; // USD - viene como string del backend
   is_available: boolean;
   created_at: string;
   updated_at: string;
@@ -41,6 +41,23 @@ export interface CartItem {
   subtotal: number; // USD
   created_at: string;
   updated_at: string;
+}
+
+// Respuesta de la API de productos
+export interface ProductsApiResponse {
+  products: Product[];
+  pagination: Record<string, any>;
+  filters_applied: Record<string, any>;
+  total: number;
+}
+
+// Estructura para crear orden desde el carrito
+export interface OrderCreate {
+  shipping_address_id: string;
+  payment_method: string;
+  payment_currency: 'USD' | 'VES';
+  payment_capture_url: string;
+  customer_notes: string;
 }
 
 export interface Cart {
@@ -194,9 +211,9 @@ export interface OrderItem {
   id: string;
   product_id: string;
   quantity: number;
-  unit_price: number;
-  total_price: number;
-  selected_presentation: string;
+  unit_price: string; // USD como string del backend
+  total_price: string; // USD como string del backend
+  selected_presentation: string | null;
   product_name: string;
   product_brand: string;
   product_image: string;
@@ -219,18 +236,18 @@ export interface Order {
   id: string;
   order_number: string;
   status: string;
-  subtotal: number;
-  shipping_cost: number;
-  taxes: number;
-  total: number;
+  subtotal: string; // USD como string del backend
+  shipping_cost: string; // USD como string del backend
+  taxes: string; // USD como string del backend
+  total: string; // USD como string del backend
   payment_currency: 'USD' | 'VES';
-  exchange_rate: number | null; // tasa usada si pago en VES
+  exchange_rate: string | null; // tasa usada si pago en VES (como string)
   payment_method: string;
   payment_status: string;
-  payment_reference: string;
-  tracking_number?: string;
-  estimated_delivery?: string;
-  delivered_at?: string;
+  payment_reference: string | null;
+  tracking_number?: string | null;
+  estimated_delivery?: string | null;
+  delivered_at?: string | null;
   customer_notes?: string;
   created_at: string;
   updated_at: string;
@@ -239,6 +256,20 @@ export interface Order {
   item_count: number;
   payment_capture_url: string;
   shipping_address_id?: string;
+  // Campos adicionales del backend
+  is_credit_order: boolean;
+  credit_amount: string;
+  credit_remaining: string;
+  credit_paid_total: string;
+  payment_due_date?: string | null;
+  credit_paid: boolean;
+  credit_payment_date?: string | null;
+  quantity_discount?: any | null;
+  quantity_discount_amount: string;
+  discounts?: any | null;
+  original_subtotal?: string | null;
+  total_savings: string;
+  user: string;
 }
 
 export interface BlogPost {

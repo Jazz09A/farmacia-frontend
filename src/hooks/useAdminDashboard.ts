@@ -68,6 +68,19 @@ export const useAdminDashboard = (initialTimeRange: number = 7): DashboardHookSt
   const updateOrderStatus = useCallback(async (orderId: string, newStatus: string) => {
     if (!data) return;
 
+    // Buscar la orden para verificar su estado actual
+    const currentOrder = data.recent_orders.find(order => order.id === orderId);
+    if (!currentOrder) {
+      setError('Orden no encontrada');
+      return;
+    }
+
+    // Verificar si la orden está en un estado final
+    if (currentOrder.status === 'delivered' || currentOrder.status === 'cancelled') {
+      setError('No se puede modificar una orden entregada o cancelada');
+      return;
+    }
+
     try {
       // 🔄 Actualización optimista en el estado local
       setData(prevData => {

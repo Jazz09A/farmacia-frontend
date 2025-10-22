@@ -247,7 +247,7 @@ const AdminFlashOffersPage: React.FC = () => {
                       <td className="px-3 lg:px-6 py-3 lg:py-4">
                         <div className="flex items-center space-x-2 lg:space-x-3">
                           <img
-                            src={offer.product.image}
+                            src={offer.product.images && offer.product.images.length > 1 ? offer.product.images[1] : offer.product.image}
                             alt={offer.product.name}
                             className="w-10 h-10 lg:w-12 lg:h-12 rounded-lg object-cover flex-shrink-0"
                           />

@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { Heart, Star, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Product } from '../../types';
-import { useCurrency } from '../../hooks/useCurrency';
+import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
+import ProductImage from '../common/ProductImage';
 
 interface ProductCardProps {
   product: Product;
@@ -14,7 +15,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   className = ''
 }) => {
-  const { currency, getDisplayPrice, formatPrice } = useCurrency();
+  const { formatPriceFromBackend } = useGlobalCurrency();
   return (
     <Link to={`/product/${product.id}`} className="block">
       <motion.div
@@ -24,13 +25,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       >
         {/* Image Container */}
         <div className="relative overflow-hidden">
-          <img
+          <ProductImage
             src={product.image}
+            images={product.images}
             alt={product.name}
             className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-            decoding="async"
-            height="192"
+            size="lg"
           />
           
           {/* Overlay */}
@@ -78,7 +78,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 <Star
                   key={i}
                   className={`h-4 w-4 ${
-                    i < Math.floor(product.rating)
+                    i < Math.floor(parseFloat(product.rating))
                       ? 'text-yellow-400 fill-current'
                       : 'text-gray-300'
                   }`}
@@ -93,11 +93,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div className="flex flex-col">
               {product.is_offer && product.original_price && (
                 <span className="text-sm text-gray-400 line-through">
-                  {formatPrice(getDisplayPrice(product.original_price, currency), currency)}
+                  {formatPriceFromBackend(product.original_price)}
                 </span>
               )}
               <span className="text-xl font-bold text-gray-900">
-                {formatPrice(getDisplayPrice(product.price, currency), currency)}
+                {formatPriceFromBackend(product.price)}
               </span>
             </div>
             {product.is_offer && (

@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/AuthService';
 import { motion } from 'framer-motion';
-import { Eye, Truck, DollarSign } from 'lucide-react';
+import { Eye, Truck, DollarSign, Clock, CheckCircle, AlertCircle, Package, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import OrderDetailsModal from './OrderDetailsModal';
 import PaymentModal from './PaymentModal'; // Import the new PaymentModal
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
-import type { Currency } from '../../types';
 
 // Define interfaces for Order and OrderDetails to use TypeScript benefits
 interface Order {
   id: string;
   order_number: string;
-  status: string;
-  payment_status: string;
+  status?: string; // Hacer opcional para evitar errores
+  payment_status?: string; // Hacer opcional para evitar errores
   total: number;
   total_ref?: number;
   currency: string;
@@ -30,7 +29,7 @@ const OrdersSection: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false); // State for payment modal
-  const { currency, formatPrice, convertPrice, getPriceInCurrency } = useGlobalCurrency();
+  const { currency, formatPriceFromBackend } = useGlobalCurrency();
 
   const fetchOrders = async () => {
     try {
@@ -68,44 +67,144 @@ const OrdersSection: React.FC = () => {
     fetchOrders();
   };
 
-  // Función para formatear el precio de la orden usando los campos del endpoint
+  // Función para formatear el precio de la orden usando la nueva lógica de precios
   const formatOrderPrice = (order: Order) => {
-    // Seleccionar el precio correcto basado en la moneda actual
-    switch (currency) {
-      case 'VES':
-        // Si estamos mostrando en VES, usar el campo total (que viene en VES)
-        return formatPrice(order.total, 'VES');
-      
-      case 'USD':
-      case 'REF':
-        // Si estamos mostrando en USD/REF y tenemos total_ref disponible
-        if (order.total_ref !== undefined) {
-          return formatPrice(order.total_ref, 'USD');
-        }
-        // Fallback: usar getPriceInCurrency para convertir
-        return formatPrice(getPriceInCurrency(order.total, order.total_ref || 0), currency);
-      
-      default:
-        return formatPrice(order.total, order.currency as Currency);
-    }
+    // Los precios ahora vienen en USD como string del backend
+    // Usar formatPriceFromBackend para convertir automáticamente
+    return formatPriceFromBackend(order.total);
   };
 
   // Función para mostrar el precio original si es diferente
   const getOriginalPriceText = (order: Order) => {
-    // Mostrar precio original solo cuando estamos mostrando una conversión
-    const isShowingConversion = (
-      // Si mostramos USD/REF pero tenemos total_ref
-      ((currency === 'USD' || currency === 'REF') && order.total_ref !== undefined) ||
-      // Si mostramos VES pero la orden original no era en VES
-      (currency === 'VES' && order.currency !== 'VES')
-    );
-    
-    if (isShowingConversion) {
-      const originalPrice = Math.round(order.total * 100) / 100;
-      return `Original: ${originalPrice} ${order.currency}`;
+    // Con la nueva lógica, siempre mostramos el precio en la moneda opuesta
+    const oppositeCurrency = currency === 'VES' ? 'USD' : 'VES';
+    return `(${formatPriceFromBackend(order.total, oppositeCurrency)})`;
+  };
+
+  // Función para obtener el icono del estado del pedido
+  const getStatusIcon = (status: string | undefined) => {
+    // Si el status es undefined o null, usar icono por defecto
+    if (!status) {
+      return <Clock className="w-3 h-3" />;
     }
     
-    return null;
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return <Clock className="w-3 h-3" />;
+      case 'confirmed':
+        return <CheckCircle className="w-3 h-3" />;
+      case 'processing':
+        return <AlertCircle className="w-3 h-3" />;
+      case 'shipped':
+        return <Package className="w-3 h-3" />;
+      case 'delivered':
+        return <CheckCircle className="w-3 h-3" />;
+      case 'cancelled':
+        return <XCircle className="w-3 h-3" />;
+      default:
+        return <Clock className="w-3 h-3" />;
+    }
+  };
+
+  // Función para obtener las clases del badge de estado del pedido
+  const getOrderStatusBadge = (status: string | undefined) => {
+    const baseClasses = "px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5";
+    
+    // Si el status es undefined o null, usar estado por defecto
+    if (!status) {
+      return `${baseClasses} bg-gray-100 text-gray-800`;
+    }
+    
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+      case 'confirmed':
+        return `${baseClasses} bg-blue-100 text-blue-800`;
+      case 'processing':
+        return `${baseClasses} bg-orange-100 text-orange-800`;
+      case 'shipped':
+        return `${baseClasses} bg-purple-100 text-purple-800`;
+      case 'delivered':
+        return `${baseClasses} bg-green-100 text-green-800`;
+      case 'cancelled':
+        return `${baseClasses} bg-red-100 text-red-800`;
+      default:
+        return `${baseClasses} bg-gray-100 text-gray-800`;
+    }
+  };
+
+  // Función para obtener las clases del badge de estado de pago
+  const getPaymentStatusBadge = (status: string | undefined) => {
+    const baseClasses = "px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5";
+    
+    // Si el status es undefined o null, usar estado por defecto
+    if (!status) {
+      return `${baseClasses} bg-gray-100 text-gray-800`;
+    }
+    
+    switch (status.toLowerCase()) {
+      case 'paid':
+      case 'confirmed':
+        return `${baseClasses} bg-emerald-100 text-emerald-800`;
+      case 'pending':
+        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+      case 'rejected':
+      case 'failed':
+        return `${baseClasses} bg-red-100 text-red-800`;
+      case 'partially_paid':
+        return `${baseClasses} bg-orange-100 text-orange-800`;
+      default:
+        return `${baseClasses} bg-gray-100 text-gray-800`;
+    }
+  };
+
+  // Función para obtener el texto del estado de la orden en español
+  const getOrderStatusText = (status: string | undefined) => {
+    if (!status) {
+      return 'Sin Estado';
+    }
+    
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'Pendiente';
+      case 'confirmed':
+        return 'Confirmado';
+      case 'processing':
+        return 'En Preparación';
+      case 'shipped':
+        return 'Enviado';
+      case 'delivered':
+        return 'Entregado';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  };
+
+  // Función para obtener el texto del estado de pago en español
+  const getPaymentStatusText = (status: string | undefined) => {
+    // Si el status es undefined o null, usar texto por defecto
+    if (!status) {
+      return 'Sin Estado';
+    }
+    
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return 'Pagado';
+      case 'confirmed':
+        return 'Confirmado';
+      case 'pending':
+        return 'Pendiente';
+      case 'rejected':
+        return 'Rechazado';
+      case 'failed':
+        return 'Fallido';
+      case 'partially_paid':
+        return 'Pago Parcial';
+      default:
+        return status;
+    }
   };
 
   if (loading) {
@@ -133,26 +232,15 @@ const OrdersSection: React.FC = () => {
               </div>
               <div>
                 <div className="flex gap-2 mb-2">
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    order.status === 'delivered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {order.status}
+                  <span className={getOrderStatusBadge(order.status)}>
+                    {getStatusIcon(order.status)}
+                    {getOrderStatusText(order.status)}
                   </span>
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    order.payment_status === 'paid' || order.payment_status === 'confirmed'
-                      ? 'bg-emerald-100 text-emerald-800' 
-                      : order.payment_status === 'pending'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : order.payment_status === 'rejected'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {order.payment_status === 'paid' ? 'Pagado' : 
-                     order.payment_status === 'pending' ? 'Pago Pendiente' : 
-                     order.payment_status === 'confirmed' ? 'Pago Confirmado' :
-                     order.payment_status === 'rejected' ? 'Pago Rechazado' :
-                     order.payment_status}
-                  </span>
+                  {order.payment_status && getPaymentStatusText(order.payment_status) !== 'Sin Estado' && (
+                    <span className={getPaymentStatusBadge(order.payment_status)}>
+                      {getPaymentStatusText(order.payment_status)}
+                    </span>
+                  )}
                 </div>
                 <p className="font-semibold mt-1">
                   {formatOrderPrice(order)}

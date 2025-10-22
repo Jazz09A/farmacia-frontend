@@ -1,15 +1,17 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useScrollToTop } from '../hooks/useScrollToTop';
+import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 
 interface ScrollContextType {
-  scrollToTop: (options?: { smooth?: boolean; offset?: number }) => void;
-  scrollToElement: (elementId: string, options?: { smooth?: boolean; offset?: number }) => void;
+  scrollToTop: (options?: { smooth?: boolean; offset?: number; duration?: number }) => void;
+  scrollToElement: (elementId: string, options?: { smooth?: boolean; offset?: number; duration?: number }) => void;
+  scrollToPosition: (position: number, options?: { smooth?: boolean; offset?: number; duration?: number }) => void;
+  isScrolling: boolean;
 }
 
 const ScrollContext = createContext<ScrollContextType | undefined>(undefined);
 
 export const ScrollProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const scrollMethods = useScrollToTop();
+  const scrollMethods = useOptimizedScroll();
 
   return (
     <ScrollContext.Provider value={scrollMethods}>

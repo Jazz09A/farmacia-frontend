@@ -105,7 +105,16 @@ export const useOrders = (): OrdersHookState => {
   // 🔄 Actualizar estado de orden con actualización optimista
   const updateOrderStatus = useCallback(async (orderId: string, newStatus: string) => {
     const originalOrder = orders.find(o => o.id === orderId);
-    if (!originalOrder) return;
+    if (!originalOrder) {
+      setError('Orden no encontrada');
+      return;
+    }
+
+    // Verificar si la orden está en un estado final
+    if (originalOrder.status === 'delivered' || originalOrder.status === 'cancelled') {
+      setError('No se puede modificar una orden entregada o cancelada');
+      return;
+    }
 
     try {
       // 🔄 Actualización optimista en el estado local

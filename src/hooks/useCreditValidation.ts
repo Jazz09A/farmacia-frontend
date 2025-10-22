@@ -152,6 +152,35 @@ export const useCreditValidation = () => {
     reason?: string;
     suggestions?: string[];
   } => {
+    // Si no hay crédito disponible, no se puede crear la orden
+    if (!creditInfo) {
+      return {
+        canCreate: false,
+        reason: 'No se pudo obtener información de crédito',
+        suggestions: ['Contacte al administrador para verificar su cuenta']
+      };
+    }
+
+    // Si el crédito no está activo, no se puede crear la orden
+    if (creditInfo.credit_status !== 'active') {
+      return {
+        canCreate: false,
+        reason: 'Su crédito no está activo',
+        suggestions: ['Contacte al administrador para activar su crédito']
+      };
+    }
+
+    // Si el carrito está vacío o el total es 0, no se puede crear la orden
+    const numericTotal = typeof cartTotal === 'string' ? parseFloat(cartTotal) : cartTotal;
+    if (isNaN(numericTotal) || numericTotal <= 0) {
+      return {
+        canCreate: false,
+        reason: 'El carrito está vacío o el total es 0',
+        suggestions: ['Agregue productos al carrito para continuar']
+      };
+    }
+
+    // Validar si hay crédito suficiente
     const validation = validateCreditAvailability(cartTotal);
     
     if (!validation.isValid) {
@@ -172,7 +201,7 @@ export const useCreditValidation = () => {
     }
 
     return { canCreate: true };
-  }, [validateCreditAvailability]);
+  }, [validateCreditAvailability, creditInfo]);
 
   return {
     validateCreditAvailability,

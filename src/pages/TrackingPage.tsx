@@ -51,7 +51,7 @@ const TrackingPage: React.FC = () => {
   const [order, setOrder] = useState<TrackingOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { currency, formatPrice, getPriceInCurrency } = useGlobalCurrency();
+  const { currency, formatPriceFromBackend } = useGlobalCurrency();
 
   useEffect(() => {
     const loadOrder = async () => {
@@ -91,13 +91,13 @@ const TrackingPage: React.FC = () => {
       },
       confirmed: {
         label: 'Confirmado',
-        color: 'text-emerald-700 bg-emerald-100',
+        color: 'text-blue-700 bg-blue-100',
         icon: CheckCircle,
         description: 'Tu pedido ha sido confirmado'
       },
       processing: {
         label: 'En Preparación',
-        color: 'text-purple-700 bg-purple-100',
+        color: 'text-orange-700 bg-orange-100',
         icon: Package,
         description: 'Estamos preparando tu pedido'
       },
@@ -146,8 +146,8 @@ const TrackingPage: React.FC = () => {
         if (refAmount !== undefined) {
           return formatPrice(refAmount, 'USD');
         }
-        // Fallback: usar getPriceInCurrency si no hay refAmount
-        return formatPrice(getPriceInCurrency(vesAmount, refAmount || 0), currency);
+        // Fallback: usar formatPriceFromBackend
+        return formatPriceFromBackend(vesAmount);
       default:
         return formatPrice(vesAmount, order?.currency as Currency);
     }
@@ -163,7 +163,7 @@ const TrackingPage: React.FC = () => {
         if (item.total_price_ref !== undefined) {
           return formatPrice(item.total_price_ref, 'USD');
         }
-        return formatPrice(getPriceInCurrency(item.total_price, item.total_price_ref || 0), currency);
+        return formatPriceFromBackend(item.total_price);
       default:
         return formatPrice(item.total_price, order?.currency as Currency);
     }
@@ -733,19 +733,6 @@ const TrackingPage: React.FC = () => {
                       </button>
                     </div>
                     
-                    {/* Estado de verificación */}
-                    <div className="mt-3 p-2 bg-white rounded border">
-                      <div className="text-xs text-medical-gray-600 mb-1">Estado de Verificación:</div>
-                      <div className={`text-xs font-medium ${
-                        order.payment_status === 'completed' ? 'text-green-700' :
-                        order.payment_status === 'failed' ? 'text-red-700' :
-                        'text-yellow-700'
-                      }`}>
-                        {order.payment_status === 'completed' ? '✅ Verificado y Confirmado' :
-                         order.payment_status === 'failed' ? '❌ Verificado y Rechazado' :
-                         '⏳ Pendiente de Verificación por Administrador'}
-                      </div>
-                    </div>
                   </div>
                 )}
 

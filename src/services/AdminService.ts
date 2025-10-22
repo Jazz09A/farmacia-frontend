@@ -1,6 +1,7 @@
 // 🏥 Servicio para el panel de administración
 import { authService } from './AuthService';
 import { Order, Customer, CustomerStats } from '../types';
+import { exchangeRateService, ExchangeRateData } from './ExchangeRateService';
 
 export interface DashboardStats {
   total_revenue: number;
@@ -75,6 +76,23 @@ class AdminService {
   // 🔄 Actualizar estado de orden
   async updateOrderStatus(orderId: string, newStatus: string): Promise<void> {
     try {
+      // Primero obtener el estado actual de la orden para validar
+      const orderResponse = await authService.authenticatedFetch(
+        `${this.baseUrl}/order/${orderId}`
+      );
+      
+      if (!orderResponse.ok) {
+        throw new Error('No se pudo obtener la información de la orden');
+      }
+      
+      const orderData = await orderResponse.json();
+      const currentStatus = orderData.status;
+      
+      // Verificar si la orden está en un estado final
+      if (currentStatus === 'delivered' || currentStatus === 'cancelled') {
+        throw new Error('No se puede modificar una orden entregada o cancelada');
+      }
+
       const response = await authService.authenticatedFetch(
         `${this.baseUrl}/order/${orderId}/status`,
         {
@@ -158,17 +176,35 @@ class AdminService {
 
       const url = `${this.baseUrl}/orders${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
       const response = await authService.authenticatedFetch(url);
-      console.log(url);
       if (!response.ok) {
         throw new Error(`Error fetching orders: ${response.status}`);
       }
       
       const data = await response.json();
-      return {
-        orders: data,
-        total: data.length, // API should return pagination info
-        pages: Math.ceil(data.length / (params?.limit || 20))
-      };
+      
+      // Manejar diferentes estructuras de respuesta de la API
+      if (Array.isArray(data)) {
+        // Si la API devuelve directamente un array de órdenes
+        return {
+          orders: data,
+          total: data.length,
+          pages: Math.ceil(data.length / (params?.limit || 20))
+        };
+      } else if (data.orders && Array.isArray(data.orders)) {
+        // Si la API devuelve un objeto con orders, total, pages
+        return {
+          orders: data.orders,
+          total: data.total || data.orders.length,
+          pages: data.pages || Math.ceil((data.total || data.orders.length) / (params?.limit || 20))
+        };
+      } else {
+        // Fallback: tratar como array vacío
+        return {
+          orders: [],
+          total: 0,
+          pages: 0
+        };
+      }
     } catch (error) {
       console.error('Failed to fetch orders:', error);
       throw error;
@@ -320,6 +356,26 @@ class AdminService {
       return data;
     } catch (error) {
       console.error('Failed to create product:', error);
+      throw error;
+    }
+  }
+
+  // 💱 Obtener tasa de cambio actual
+  async getExchangeRate(): Promise<ExchangeRateData> {
+    try {
+      return await exchangeRateService.getExchangeRate();
+    } catch (error) {
+      console.error('Failed to get exchange rate:', error);
+      throw error;
+    }
+  }
+
+  // 💱 Actualizar tasa de cambio (forzar refresh)
+  async refreshExchangeRate(): Promise<ExchangeRateData> {
+    try {
+      return await exchangeRateService.getExchangeRate(true);
+    } catch (error) {
+      console.error('Failed to refresh exchange rate:', error);
       throw error;
     }
   }

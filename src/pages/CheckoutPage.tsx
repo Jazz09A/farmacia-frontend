@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useCurrency } from '../hooks/useCurrency';
+import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ArrowLeft, User, MapPin, CreditCard, ShieldCheck, UploadCloud, CheckCircle } from 'lucide-react';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
-import { PaymentMethod } from '../types';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/AuthService';
@@ -15,16 +14,25 @@ import { useCreditValidation } from '../hooks/useCreditValidation';
 import { CreditOrderForm } from '../components/Credit/CreditOrderForm';
 import { useNavbar } from '../contexts/NavbarContext';
 import { paymentMethods } from '../config/paymentMethods';
+import { CheckoutPreview } from '../types/discounts';
 
 interface Address {
   id: string;
+  user_id: string;
   street: string;
   city: string;
   state: string;
+  country: string;
   postal_code: string;
   recipient_name: string;
   recipient_phone: string;
+  delivery_instructions?: string;
+  address_type: string;
   is_default: boolean;
+  is_active: boolean;
+  shipping_zone_id: string;
+  created_at: string;
+  updated_at: string;
 }
 
 const steps = [
@@ -52,7 +60,7 @@ const CheckoutPage: React.FC = () => {
   const [isConfirming, setIsConfirming] = useState(false); // ✅ Agregar estado de carga
   const { cart, clearCart } = useCart();
   const { user, loading: userLoading } = useAuth();
-  const { formatPrice, getPriceInCurrency } = useCurrency();
+  const { formatPriceFromBackend, currency } = useGlobalCurrency();
   const { uploadImage, isUploading } = useUploadImage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -78,6 +86,7 @@ const CheckoutPage: React.FC = () => {
 
 
   const [addresses, setAddresses] = useState<Address[]>([]);
+  const [checkoutPreview, setCheckoutPreview] = useState<CheckoutPreview | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [newAddress, setNewAddress] = useState({
     street: '',
@@ -108,16 +117,158 @@ const CheckoutPage: React.FC = () => {
 
   const fetchAddresses = async () => {
     try {
-      const userAddresses = await authService.getUserAddresses();
-      setAddresses(userAddresses);
-      if (userAddresses.length > 0) {
-        setFormData(prev => ({ ...prev, shipping_address_id: userAddresses.find(a => a.is_default)?.id || userAddresses[0].id }));
+      // Obtener direcciones con checkout preview
+      const response = await authService.getUserAddresses({
+        include_checkout_preview: true,
+        cart_total: cart?.total || 0
+      });
+      console.log('Addresses response:', response); // Debug temporal
+      
+      const addresses = response.addresses || response;
+      console.log('Processed addresses:', addresses); // Debug temporal
+      console.log('Checkout preview response:', response.checkout_preview); // Debug temporal
+      setAddresses(addresses);
+      
+      if (addresses && addresses.length > 0) {
+        const defaultAddress = addresses.find((a: Address) => a.is_default) || addresses[0];
+        console.log('Selected default address:', defaultAddress); // Debug temporal
+        setFormData(prev => ({ ...prev, shipping_address_id: defaultAddress.id }));
+        
+        // Procesar checkout preview si está disponible
+        if (response.checkout_preview && response.checkout_preview.previews_by_address) {
+          console.log('Previews by address:', response.checkout_preview.previews_by_address); // Debug temporal
+          const addressPreview = response.checkout_preview.previews_by_address[defaultAddress.id];
+          if (addressPreview) {
+            // Convertir la estructura del backend a nuestro tipo CheckoutPreview
+            const checkoutPreview: CheckoutPreview = {
+              subtotal: addressPreview.subtotal,
+              shipping_cost: addressPreview.shipping_cost,
+              taxes: addressPreview.taxes,
+              total: addressPreview.total,
+              payment_currency: addressPreview.payment_currency as 'USD' | 'VES',
+              exchange_rate: addressPreview.exchange_rate,
+              shipping_zone: addressPreview.shipping_zone,
+              shipping_address: {
+                street: defaultAddress.street,
+                city: defaultAddress.city,
+                state: defaultAddress.state,
+                postal_code: defaultAddress.postal_code,
+                country: defaultAddress.country,
+                recipient_name: defaultAddress.recipient_name,
+                recipient_phone: defaultAddress.recipient_phone,
+                delivery_instructions: defaultAddress.delivery_instructions
+              },
+              quantity_discount: addressPreview.quantity_discount,
+              quantity_discount_amount: addressPreview.quantity_discount_amount,
+              flash_discounts: addressPreview.flash_discounts || [],
+              total_discount: addressPreview.total_discount,
+              // Nuevos campos para mostrar descuentos
+              original_subtotal: addressPreview.original_subtotal,
+              original_taxes: addressPreview.original_taxes,
+              original_total: addressPreview.original_total,
+              total_savings: addressPreview.total_savings,
+              savings_percentage: addressPreview.savings_percentage
+            };
+            setCheckoutPreview(checkoutPreview);
+            console.log('Checkout preview set:', checkoutPreview); // Debug temporal
+          }
+        }
       } else {
         setShowAddressForm(true);
       }
     } catch (error) {
       console.error('Failed to fetch addresses:', error);
-      setShowAddressForm(true); // Show form if there's an error fetching
+      setShowAddressForm(true);
+    }
+  };
+
+  // Función para obtener el preview del checkout (con fallback)
+  const getCheckoutPreview = () => {
+    if (checkoutPreview) {
+      return checkoutPreview;
+    }
+    
+    // Fallback: crear un preview básico con los datos del carrito
+    if (cart) {
+      return {
+        subtotal: cart.total,
+        shipping_cost: 0,
+        taxes: 0,
+        total: cart.total,
+        payment_currency: 'USD' as const,
+        shipping_zone: 'Calculando...',
+        shipping_address: {
+          street: '',
+          city: '',
+          state: '',
+          postal_code: '',
+          country: '',
+          recipient_name: '',
+          recipient_phone: '',
+          delivery_instructions: ''
+        },
+        quantity_discount: undefined,
+        quantity_discount_amount: 0,
+        flash_discounts: [],
+        total_discount: 0
+      };
+    }
+    
+    return null;
+  };
+
+  // Función para actualizar preview cuando cambie la dirección
+  const updateCheckoutPreview = async (addressId: string) => {
+    try {
+      // Obtener direcciones nuevamente para obtener el preview actualizado
+      const response = await authService.getUserAddresses({
+        include_checkout_preview: true,
+        cart_total: cart?.total || 0
+      });
+      
+      if (response.checkout_preview && response.checkout_preview.previews_by_address) {
+        const addressPreview = response.checkout_preview.previews_by_address[addressId];
+        if (addressPreview) {
+          // Encontrar la dirección correspondiente
+          const address = addresses.find(addr => addr.id === addressId);
+          if (address) {
+            // Convertir la estructura del backend a nuestro tipo CheckoutPreview
+            const checkoutPreview: CheckoutPreview = {
+              subtotal: addressPreview.subtotal,
+              shipping_cost: addressPreview.shipping_cost,
+              taxes: addressPreview.taxes,
+              total: addressPreview.total,
+              payment_currency: addressPreview.payment_currency as 'USD' | 'VES',
+              exchange_rate: addressPreview.exchange_rate,
+              shipping_zone: addressPreview.shipping_zone,
+              shipping_address: {
+                street: address.street,
+                city: address.city,
+                state: address.state,
+                postal_code: address.postal_code,
+                country: address.country,
+                recipient_name: address.recipient_name,
+                recipient_phone: address.recipient_phone,
+                delivery_instructions: address.delivery_instructions
+              },
+              quantity_discount: addressPreview.quantity_discount,
+              quantity_discount_amount: addressPreview.quantity_discount_amount,
+              flash_discounts: addressPreview.flash_discounts || [],
+              total_discount: addressPreview.total_discount,
+              // Nuevos campos para mostrar descuentos
+              original_subtotal: addressPreview.original_subtotal,
+              original_taxes: addressPreview.original_taxes,
+              original_total: addressPreview.original_total,
+              total_savings: addressPreview.total_savings,
+              savings_percentage: addressPreview.savings_percentage
+            };
+            setCheckoutPreview(checkoutPreview);
+            console.log('Updated checkout preview:', checkoutPreview); // Debug temporal
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update checkout preview:', error);
     }
   };
 
@@ -229,7 +380,6 @@ const CheckoutPage: React.FC = () => {
   const isNextDisabled = currentStep === 2 && 
     (formData.payment_method === 'pago-movil' || formData.payment_method === 'zelle') &&
     !formData.payment_capture_url;
-
   
   if (userLoading) return <LoadingSpinner variant="inline" message="Cargando información..." />;
 
@@ -271,16 +421,55 @@ const CheckoutPage: React.FC = () => {
                     <h2 className="text-2xl font-bold mb-6">2. Dirección de Envío</h2>
                     {addresses.length > 0 && !showAddressForm ? (
                       <div className="space-y-4">
-                        <select name="shipping_address_id" value={formData.shipping_address_id} onChange={handleChange} className="w-full p-3 border-gray-300 rounded-lg">
-                          {addresses.map(addr => (
-                            <option key={addr.id} value={addr.id}>
-                              {`${addr.street}, ${addr.city}, ${addr.state}`}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="space-y-3">
+                          {addresses.map(addr => {
+                            const isSelected = formData.shipping_address_id === addr.id;
+                            
+                            return (
+                              <div 
+                                key={addr.id} 
+                                className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                                  isSelected 
+                                    ? 'border-medical-primary bg-medical-blue-50' 
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                                onClick={() => {
+                                  setFormData(prev => ({ ...prev, shipping_address_id: addr.id }));
+                                  updateCheckoutPreview(addr.id);
+                                }}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <input 
+                                        type="radio" 
+                                        checked={isSelected}
+                                        onChange={() => {
+                                          setFormData(prev => ({ ...prev, shipping_address_id: addr.id }));
+                                          updateCheckoutPreview(addr.id);
+                                        }}
+                                        className="text-medical-primary"
+                                      />
+                                      <div>
+                                        <p className="font-medium">{addr.recipient_name}</p>
+                                        <p className="text-sm text-gray-600">
+                                          {addr.street}, {addr.city}, {addr.state}
+                                        </p>
+                                        <p className="text-xs text-gray-500">{addr.recipient_phone}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
                         <button onClick={() => setShowAddressForm(true)} className="text-medical-primary font-semibold">
                           + Agregar nueva dirección
                         </button>
+                        
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -315,98 +504,171 @@ const CheckoutPage: React.FC = () => {
                       {paymentMethods.map((method) => {
                         // Verificar si el método de crédito está disponible
                         const isCreditMethod = method.id === 'credito';
-                        const creditValidation = isCreditMethod ? canCreateCreditOrder(cart?.total_ref || 0) : { canCreate: true };
+                        const creditValidation = isCreditMethod ? canCreateCreditOrder(cart?.total || 0) : { canCreate: true };
+                        
+                        // Determinar la moneda del método de pago
+                        const paymentCurrency = getPaymentMethodCurrency(method.id);
+                        const isSelected = formData.payment_method === method.id;
+                        
+                        // Calcular el monto en la moneda correspondiente
+                        const totalInPaymentCurrency = paymentCurrency === 'VES' 
+                          ? formatPriceFromBackend(cart?.total || 0, 'VES')
+                          : formatPriceFromBackend(cart?.total || 0, 'USD');
                         
                         return (
-                          <label 
-                            key={method.id} 
-                            className={`flex items-center p-4 rounded-xl border-2 ${
-                              creditValidation.canCreate 
-                                ? 'border-gray-200 has-[:checked]:border-medical-primary has-[:checked]:bg-medical-blue-50' 
-                                : 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed'
-                            }`}
-                          >
-                            <input 
-                              type="radio" 
-                              name="payment_method" 
-                              value={method.id} 
-                              checked={formData.payment_method === method.id} 
-                              onChange={handleChange} 
-                              disabled={!creditValidation.canCreate}
-                              className="h-5 w-5 text-medical-primary focus:ring-medical-primary disabled:cursor-not-allowed"
-                            />
-                            <div className="ml-4 flex-1">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-semibold flex items-center gap-2">
-                                    {method.name}
-                                    {isCreditMethod && creditInfo && (
-                                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                        ${creditInfo.available_credit.toLocaleString()} disponible
-                                      </span>
-                                    )}
-                                  </p>
-                            <p className="text-sm text-gray-500">{method.description}</p>
+                          <div key={method.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                            {/* Header del acordeón */}
+                            <label 
+                              className={`flex items-center p-4 cursor-pointer transition-all duration-200 ${
+                                creditValidation.canCreate 
+                                  ? isSelected
+                                    ? 'bg-medical-blue-50 border-l-4 border-l-medical-primary'
+                                    : 'hover:bg-gray-50'
+                                  : 'bg-gray-100 opacity-60 cursor-not-allowed'
+                              }`}
+                            >
+                              <input 
+                                type="radio" 
+                                name="payment_method" 
+                                value={method.id} 
+                                checked={isSelected} 
+                                onChange={handleChange} 
+                                disabled={!creditValidation.canCreate}
+                                className="h-5 w-5 text-medical-primary focus:ring-medical-primary disabled:cursor-not-allowed"
+                              />
+                              <div className="ml-4 flex-1">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <p className="font-semibold flex items-center gap-2">
+                                      {method.name}
+                                      {isCreditMethod && creditInfo && (
+                                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                          ${creditInfo.available_credit.toLocaleString()} disponible
+                                        </span>
+                                      )}
+                                    </p>
+                                    <p className="text-sm text-gray-500">{method.description}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-lg font-bold text-medical-primary">
+                                      {totalInPaymentCurrency}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      Total a pagar
+                                    </p>
+                                  </div>
                                 </div>
                                 {isCreditMethod && !creditValidation.canCreate && (
-                                  <span className="text-xs text-red-600 font-medium">
-                                    {creditValidation.reason}
-                                  </span>
+                                  <div className="mt-2">
+                                    <span className="text-xs text-red-600 font-medium">
+                                      {creditValidation.reason}
+                                    </span>
+                                  </div>
+                                )}
+                                {isCreditMethod && creditValidation.suggestions && creditValidation.suggestions.length > 0 && (
+                                  <div className="mt-2 text-xs text-orange-600">
+                                    <p className="font-medium">Sugerencias:</p>
+                                    <ul className="list-disc list-inside">
+                                      {creditValidation.suggestions.map((suggestion, index) => (
+                                        <li key={index}>{suggestion}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
                                 )}
                               </div>
-                              {isCreditMethod && creditValidation.suggestions && creditValidation.suggestions.length > 0 && (
-                                <div className="mt-2 text-xs text-orange-600">
-                                  <p className="font-medium">Sugerencias:</p>
-                                  <ul className="list-disc list-inside">
-                                    {creditValidation.suggestions.map((suggestion, index) => (
-                                      <li key={index}>{suggestion}</li>
-                                    ))}
-                                  </ul>
-                                </div>
+                            </label>
+                            
+                            {/* Contenido desplegable del acordeón */}
+                            <AnimatePresence>
+                              {isSelected && method.data && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="px-4 pb-4 bg-gradient-to-r from-medical-blue-50 to-medical-green-50 border-t border-gray-200">
+                                    <div className="pt-4">
+                                      <h4 className="text-sm font-semibold text-medical-primary mb-3 flex items-center gap-2">
+                                        <CreditCard className="w-4 h-4" />
+                                        Datos para el pago
+                                      </h4>
+                                      <div className="bg-white/80 p-4 rounded-lg border border-medical-primary/20">
+                                        <div className="space-y-3">
+                                          <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                                            <span className="text-sm font-medium text-gray-700">Monto a pagar:</span>
+                                            <span className="text-lg font-bold text-medical-primary">
+                                              {totalInPaymentCurrency}
+                                            </span>
+                                          </div>
+                                          <div className="text-sm font-mono text-gray-700 whitespace-pre-line bg-gray-50 p-3 rounded">
+                                            {method.data}
+                                          </div>
+                                          {method.id === 'pago-movil' && (
+                                            <div className="space-y-3">
+                                              <div className="text-xs text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-200">
+                                                💡 <strong>Importante:</strong> Realiza el pago móvil y sube el comprobante para continuar.
+                                              </div>
+                                              <div>
+                                                <h5 className="text-sm font-medium text-gray-700 mb-2">Sube tu comprobante de pago</h5>
+                                                <button 
+                                                  onClick={() => fileInputRef.current?.click()} 
+                                                  disabled={isUploading} 
+                                                  className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 disabled:opacity-50 transition-colors"
+                                                >
+                                                  {isUploading ? 'Subiendo...' : formData.payment_capture_url ? <><CheckCircle className="text-green-500"/> Comprobante subido</> : <><UploadCloud/> Adjuntar archivo</>}
+                                                </button>
+                                                {isNextDisabled && formData.payment_method === 'pago-movil' && (
+                                                  <p className="text-red-500 text-xs mt-1">Por favor, sube el comprobante para continuar.</p>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+                                          {method.id === 'zelle' && (
+                                            <div className="space-y-3">
+                                              <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded border border-blue-200">
+                                                💡 <strong>Importante:</strong> Realiza la transferencia Zelle y sube el comprobante para continuar.
+                                              </div>
+                                              <div>
+                                                <h5 className="text-sm font-medium text-gray-700 mb-2">Sube tu comprobante de pago</h5>
+                                                <button 
+                                                  onClick={() => fileInputRef.current?.click()} 
+                                                  disabled={isUploading} 
+                                                  className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 disabled:opacity-50 transition-colors"
+                                                >
+                                                  {isUploading ? 'Subiendo...' : formData.payment_capture_url ? <><CheckCircle className="text-green-500"/> Comprobante subido</> : <><UploadCloud/> Adjuntar archivo</>}
+                                                </button>
+                                                {isNextDisabled && formData.payment_method === 'zelle' && (
+                                                  <p className="text-red-500 text-xs mt-1">Por favor, sube el comprobante para continuar.</p>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+                                          {method.id === 'efectivo' && (
+                                            <div className="text-xs text-gray-600 bg-green-50 p-2 rounded border border-green-200">
+                                              💡 <strong>Importante:</strong> Pagarás en efectivo al recibir tu pedido.
+                                            </div>
+                                          )}
+                                          {method.id === 'credito' && (
+                                            <div className="text-xs text-gray-600 bg-purple-50 p-2 rounded border border-purple-200">
+                                              💡 <strong>Importante:</strong> Se utilizará tu línea de crédito disponible.
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </motion.div>
                               )}
+                            </AnimatePresence>
                           </div>
-                        </label>
                         );
                       })}
                     </div>
                     
-                    {/* Mostrar datos del método de pago seleccionado */}
-                    <AnimatePresence>
-                      {formData.payment_method && paymentMethods.find(p => p.id === formData.payment_method)?.data && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.3, ease: "easeInOut" }}
-                          className="overflow-hidden"
-                        >
-                          <div className="mt-6 p-4 bg-gradient-to-r from-medical-blue-50 to-medical-green-50 rounded-xl border border-medical-primary/20">
-                            <h3 className="text-lg font-semibold mb-3 text-medical-primary flex items-center gap-2">
-                              <CreditCard className="w-5 h-5" />
-                              Datos para el pago
-                            </h3>
-                            <div className="bg-white/80 p-3 rounded-lg">
-                              <p className="text-sm font-mono text-gray-700 whitespace-pre-line">
-                                {paymentMethods.find(p => p.id === formData.payment_method)?.data}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    
-                    { (formData.payment_method === 'pago-movil' || formData.payment_method === 'zelle') && (
-                        <div className="mt-6">
-                            <h3 className="text-lg font-semibold mb-2">Sube tu comprobante de pago</h3>
-                             <button onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="flex items-center gap-2 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50">
-                                {isUploading ? 'Subiendo...' : formData.payment_capture_url ? <><CheckCircle className="text-green-500"/> Comprobante subido</> : <><UploadCloud/> Adjuntar archivo</>}
-                            </button>
-                            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*"/>
-                            {isNextDisabled && (
-                                <p className="text-red-500 text-sm mt-2">Por favor, sube el comprobante para continuar.</p>
-                            )}
-                        </div>
-                    )}
+                    {/* Input de archivo oculto */}
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*"/>
                   </div>
                 )}
                 {currentStep === 3 && (
@@ -427,6 +689,125 @@ const CheckoutPage: React.FC = () => {
                             <div className="text-sm">
                                 <div><span className="font-semibold text-gray-600">Zona:</span> <p>{addresses.find(z => z.id === formData.shipping_address_id)?.street}</p></div>
                                 <div className="mt-2"><span className="font-semibold text-gray-600">Notas:</span> <p>{formData.customer_notes || 'N/A'}</p></div>
+                                
+                                {/* Mostrar información de costos si está disponible */}
+                                {(() => {
+                                  const preview = getCheckoutPreview();
+                                  const hasDiscount = preview && preview.total_discount > 0;
+                                  
+                                  return preview && (
+                                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                                      <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <span>📋</span>
+                                        Desglose de Costos
+                                      </h4>
+                                      
+                                      <div className="space-y-2 text-sm">
+                                        {/* Subtotal Original */}
+                                        <div className="flex justify-between">
+                                          <span>Subtotal productos:</span>
+                                          <span className={`font-medium ${hasDiscount ? 'text-gray-500' : ''}`}>
+                                            {formatPriceFromBackend(preview.original_subtotal || preview.subtotal)}
+                                          </span>
+                                        </div>
+                                      
+                                      {/* Descuentos aplicados */}
+                                        {hasDiscount && (
+                                          <div className="ml-2 space-y-1.5 pb-2 border-b border-gray-300">
+                                            {/* Descuento por cantidad */}
+                                            {preview.quantity_discount && preview.quantity_discount_amount > 0 && (
+                                              <div className="flex justify-between items-center bg-green-50 -mx-2 px-2 py-1 rounded">
+                                                <div className="flex items-center gap-1.5">
+                                                  <span className="text-sm">🎉</span>
+                                                  <div>
+                                                    <p className="text-green-800 font-medium text-xs">{preview.quantity_discount.name}</p>
+                                                  </div>
+                                                </div>
+                                                <span className="font-semibold text-green-700 text-xs">
+                                                  -{formatPriceFromBackend(preview.quantity_discount_amount)}
+                                                </span>
+                                              </div>
+                                            )}
+                                            
+                                            {/* Ofertas flash */}
+                                            {preview.flash_discounts && preview.flash_discounts.length > 0 && (
+                                              <div className="flex justify-between items-center bg-orange-50 -mx-2 px-2 py-1 rounded">
+                                                <div className="flex items-center gap-1.5">
+                                                  <span className="text-sm">⚡</span>
+                                                  <p className="text-orange-800 font-medium text-xs">Ofertas Flash</p>
+                                                </div>
+                                                <span className="font-semibold text-orange-700 text-xs">
+                                                  -{formatPriceFromBackend(preview.flash_discounts.reduce((sum, d) => sum + d.discount_amount, 0))}
+                                                </span>
+                                              </div>
+                                            )}
+                                            
+                                            {/* Subtotal con descuentos */}
+                                            <div className="flex justify-between font-semibold pt-1">
+                                              <span className="text-green-800 text-xs">Subtotal con descuentos:</span>
+                                              <span className="text-green-700 text-xs">
+                                                {formatPriceFromBackend(preview.subtotal)}
+                                              </span>
+                                          </div>
+                                        </div>
+                                        )}
+                                        
+                                        {/* Envío */}
+                                        <div className="flex justify-between">
+                                          <span>Envío ({preview.shipping_zone}):</span>
+                                          <span className="font-medium">
+                                            {preview.shipping_cost === 0 
+                                              ? <span className="text-green-600 font-bold text-xs">¡GRATIS!</span>
+                                              : formatPriceFromBackend(preview.shipping_cost)
+                                            }
+                                          </span>
+                                        </div>
+                                        
+                                        {/* Impuestos */}
+                                        <div className="flex justify-between">
+                                          <span>Impuestos (16%):</span>
+                                          <span className="font-medium">{formatPriceFromBackend(preview.taxes)}</span>
+                                        </div>
+                                        
+                                        {/* Total */}
+                                        <div className="flex justify-between font-bold border-t border-gray-300 pt-2 mt-2">
+                                          <span>Total a Pagar:</span>
+                                          <div className="text-right">
+                                            <div className="text-medical-primary">
+                                              {formatPriceFromBackend(preview.total)} {preview.payment_currency}
+                                            </div>
+                                            {preview.original_total && preview.original_total > preview.total && (
+                                              <div className="text-xs text-gray-500 line-through">
+                                                {formatPriceFromBackend(preview.original_total)}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Ahorro total */}
+                                        {hasDiscount && preview.original_total && (
+                                          <div className="bg-green-100 border border-green-300 rounded-lg p-2 mt-3">
+                                            <div className="flex items-center justify-between">
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-lg">💰</span>
+                                                <span className="text-xs font-semibold text-green-900">Ahorro Total:</span>
+                                              </div>
+                                              <div className="text-right">
+                                                <p className="text-sm font-bold text-green-700">
+                                                  {formatPriceFromBackend(preview.original_total - preview.total)}
+                                                </p>
+                                                <p className="text-xs text-green-600 font-medium">
+                                                  {Math.round(((preview.original_total - preview.total) / preview.original_total) * 100)}% OFF
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                                
                             </div>
                         </div>
                         <div className="bg-white p-6 rounded-2xl shadow-soft border">
@@ -448,74 +829,224 @@ const CheckoutPage: React.FC = () => {
                 )}
               </motion.div>
             </AnimatePresence>
-            <div className="mt-8 flex justify-between">
-              <button onClick={prevStep} disabled={currentStep === 0} className="flex items-center gap-2 px-6 py-3 disabled:opacity-50">
-                <ArrowLeft className="w-4 h-4" /> Anterior
-              </button>
-              {currentStep < steps.length - 1 ? (
-                <button onClick={nextStep} disabled={isNextDisabled} className="flex items-center gap-2 px-6 py-3 bg-medical-primary text-white rounded-xl disabled:bg-gray-400 disabled:cursor-not-allowed">
-                  Siguiente <ChevronRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button 
-                  onClick={handleConfirmOrder} 
-                  disabled={isConfirming}
-                  className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-400 text-white rounded-xl transition-colors disabled:cursor-not-allowed"
-                >
-                  {isConfirming ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Procesando Pedido...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>Confirmar Pedido</span>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
           </div>
           
           <div className="lg:col-span-1">
-            <div className="bg-white p-6 rounded-2xl shadow-soft sticky top-28">
+            <div className="bg-white p-6 rounded-2xl shadow-soft lg:sticky lg:top-28">
               <h3 className="text-xl font-bold text-medical-gray-800 border-b pb-3 mb-4">Resumen del Pedido Comercial</h3>
               <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                 {cart?.items.map(item => (
                   <div key={item.id} className="flex justify-between items-center text-sm">
                     <div className="flex items-center gap-3">
-                      <img src={item.product.image} alt={item.product.name} className="w-12 h-12 rounded-lg object-cover" />
+                      <img 
+                        src={item.product.images && item.product.images.length > 1 ? item.product.images[1] : item.product.image} 
+                        alt={item.product.name} 
+                        className="w-12 h-12 rounded-lg object-cover" 
+                      />
                       <div>
                         <p className="font-semibold line-clamp-1">{item.product.name}</p>
                         <p className="text-gray-500">Cant: {item.quantity}</p>
                       </div>
                     </div>
                     <span className="font-semibold">
-                      {formatPrice(getPriceInCurrency(item.subtotal_ves, item.subtotal_ref))}
+                      {formatPriceFromBackend(item.subtotal)}
                     </span>
                   </div>
                 ))}
               </div>
               <div className="space-y-3 text-medical-gray-700 border-t mt-4 pt-4">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span className="font-semibold">
-                    {formatPrice(getPriceInCurrency(cart?.total_ves || 0, cart?.total_ref || 0))}
+                {(() => {
+                  const preview = getCheckoutPreview();
+                  const hasDiscount = preview && preview.total_discount > 0;
+                  
+                  return (
+                    <>
+                      {/* Subtotal Original */}
+                      <div className="flex justify-between text-sm">
+                        <span>Subtotal productos</span>
+                        <span className={`font-semibold ${hasDiscount ? 'text-gray-500' : ''}`}>
+                          {preview && preview.original_subtotal 
+                            ? formatPriceFromBackend(preview.original_subtotal)
+                            : formatPriceFromBackend(cart?.total || 0)
+                          }
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Logística</span>
-                  <span className="font-semibold">Incluida</span>
-                </div>
+                
+                      {/* Mostrar descuentos si existen */}
+                      {hasDiscount && preview && (
+                        <div className="ml-2 space-y-2 pb-2 border-b border-gray-200">
+                          {/* Descuento por cantidad */}
+                          {preview.quantity_discount && preview.quantity_discount_amount > 0 && (
+                            <div className="flex justify-between items-center text-sm bg-green-50 -mx-2 px-2 py-1.5 rounded">
+                              <div className="flex items-center gap-2">
+                                <span className="text-green-600">🎉</span>
+                                <div>
+                                  <p className="text-green-800 font-medium">{preview.quantity_discount.name}</p>
+                                  <p className="text-xs text-green-600">
+                                    {preview.quantity_discount.discount_type === 'percentage' 
+                                      ? `${preview.quantity_discount.discount_value}% de descuento`
+                                      : `$${preview.quantity_discount.discount_value} de descuento`
+                                    }
+                                  </p>
+                                </div>
+                              </div>
+                              <span className="font-semibold text-green-700">
+                                -{formatPriceFromBackend(preview.quantity_discount_amount)}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {/* Descuentos flash */}
+                          {preview.flash_discounts && preview.flash_discounts.length > 0 && (
+                            <div className="flex justify-between items-center text-sm bg-orange-50 -mx-2 px-2 py-1.5 rounded">
+                              <div className="flex items-center gap-2">
+                                <span className="text-orange-600">⚡</span>
+                                <div>
+                                  <p className="text-orange-800 font-medium">Ofertas Flash</p>
+                                  <p className="text-xs text-orange-600">
+                                    {preview.flash_discounts.length} producto{preview.flash_discounts.length > 1 ? 's' : ''} en oferta
+                                  </p>
+                                </div>
+                              </div>
+                              <span className="font-semibold text-orange-700">
+                                -{formatPriceFromBackend(preview.flash_discounts.reduce((sum, d) => sum + d.discount_amount, 0))}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {/* Subtotal después de descuentos */}
+                          <div className="flex justify-between text-sm font-semibold pt-1">
+                            <span className="text-green-800">Subtotal con descuentos</span>
+                            <span className="text-green-700">
+                              {formatPriceFromBackend(preview.subtotal)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Envío */}
+                      {preview && formData.shipping_address_id ? (
+                        <div className="flex justify-between text-sm">
+                          <span>Envío ({preview.shipping_zone})</span>
+                      <span className="font-semibold">
+                            {preview.shipping_cost === 0 
+                              ? <span className="text-green-600 font-bold">¡GRATIS!</span>
+                              : formatPriceFromBackend(preview.shipping_cost)
+                            }
+                      </span>
+                    </div>
+                      ) : (
+                        <div className="flex justify-between text-sm">
+                          <span>Envío</span>
+                          <span className="font-semibold text-gray-500">Calculando...</span>
+                        </div>
+                      )}
+                      
+                      {/* Impuestos */}
+                      {preview && formData.shipping_address_id ? (
+                        <div className="flex justify-between text-sm">
+                      <span>Impuestos (16%)</span>
+                      <span className="font-semibold">
+                        {formatPriceFromBackend(preview.taxes)}
+                      </span>
+                    </div>
+                      ) : (
+                        <div className="flex justify-between text-sm">
+                          <span>Impuestos (16%)</span>
+                    <span className="font-semibold text-gray-500">Calculando...</span>
+                  </div>
+                )}
+                
+                      {/* Total */}
                 <div className="flex justify-between font-bold text-lg text-medical-gray-900 border-t pt-3 mt-3">
-                  <span>Total</span>
-                  <span>
-                    {formatPrice(getPriceInCurrency(cart?.total_ves || 0, cart?.total_ref || 0))}
-                  </span>
+                        <span>Total a Pagar</span>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-medical-primary">
+                            {preview 
+                              ? formatPriceFromBackend(preview.total) 
+                              : formatPriceFromBackend(cart?.total || 0)
+                            } {preview?.payment_currency || currency}
+                          </div>
+                          {preview && preview.original_total && preview.original_total > preview.total && (
+                            <div className="text-xs text-gray-500 line-through">
+                              {formatPriceFromBackend(preview.original_total)}
+                            </div>
+                          )}
+                  </div>
                 </div>
+                
+                      {/* Tarjeta de ahorro total destacado */}
+                      {hasDiscount && preview && preview.original_total && (
+                        <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl shadow-sm">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-md">
+                                <span className="text-white font-bold text-lg">💰</span>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-green-900">¡Estás ahorrando!</p>
+                                <p className="text-xs text-green-700">Descuento aplicado automáticamente</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                              <p className="text-xl font-bold text-green-700">
+                                {formatPriceFromBackend(preview.original_total - preview.total)}
+                            </p>
+                              <p className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-0.5 rounded-full inline-block">
+                                {Math.round(((preview.original_total - preview.total) / preview.original_total) * 100)}% OFF
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      )}
+                    </>
+                    );
+                })()}
               </div>
             </div>
+          </div>
+        </div>
+        
+        {/* Botones de navegación - Siempre al final después de todo el contenido */}
+        <div className="mt-8 pb-4 lg:pb-0">
+          <div className="flex justify-between items-center gap-4 max-w-full">
+            <button 
+              onClick={prevStep} 
+              disabled={currentStep === 0} 
+              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 text-medical-gray-700 hover:text-medical-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-medium rounded-lg hover:bg-gray-100"
+            >
+              <ArrowLeft className="w-4 h-4" /> 
+              <span>Anterior</span>
+            </button>
+            
+            {currentStep < steps.length - 1 ? (
+              <button 
+                onClick={nextStep} 
+                disabled={isNextDisabled} 
+                className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 bg-medical-primary text-white rounded-xl hover:bg-medical-primary-dark disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-semibold shadow-lg hover:shadow-xl"
+              >
+                <span>Siguiente</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button 
+                onClick={handleConfirmOrder} 
+                disabled={isConfirming}
+                className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-green-500 hover:bg-green-600 disabled:bg-green-400 text-white rounded-xl transition-all disabled:cursor-not-allowed font-bold shadow-xl hover:shadow-2xl"
+              >
+                {isConfirming ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Procesando...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-5 h-5" />
+                    <span>Confirmar Pedido</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -526,7 +1057,7 @@ const CheckoutPage: React.FC = () => {
           <div className="bg-white rounded-lg p-6 shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <CreditOrderForm
               cartItems={cart?.items || []}
-              cartTotal={cart?.total_ref || 0}
+              cartTotal={cart?.total || 0}
               selectedShippingAddress={(() => {
                 const selectedAddr = addresses.find(addr => addr.id === formData.shipping_address_id);
                 return selectedAddr ? {

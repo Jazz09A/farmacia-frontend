@@ -78,7 +78,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
           <div className="flex justify-between items-start gap-3">
             <div className="flex items-center min-w-0 flex-1">
               <div className="w-12 h-12 sm:w-16 sm:h-16 mr-3 sm:mr-4 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
-                <img src={product.image} alt={product.name} className="w-full h-full object-cover"/>
+                <img 
+                  src={product.images && product.images.length > 1 ? product.images[1] : product.image} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">

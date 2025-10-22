@@ -1,13 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useCurrency } from '../hooks/useCurrency';
+import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import { motion } from 'framer-motion';
 import { Plus, Minus, ShoppingCart, ArrowLeft, Trash2 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { DiscountProgressWidget } from '../components/Discounts';
 
 const CartPage: React.FC = () => {
-  const { formatPrice } = useCurrency();
+  const { formatPriceFromBackend, currency } = useGlobalCurrency();
   const { cart, loading, updateQuantity, removeFromCart } = useCart();
 
   const handleIncreaseQuantity = async (itemId: string, currentQuantity: number) => {
@@ -75,6 +76,9 @@ const CartPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Items List */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Widget de progreso hacia descuentos */}
+            <DiscountProgressWidget />
+            
             {cart.items.map((item, index) => (
               <motion.div
                 key={item.id}
@@ -83,7 +87,11 @@ const CartPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <img src={item.product.image || 'https://via.placeholder.com/150'} alt={item.product.name} className="w-24 h-24 object-cover rounded-xl" />
+                <img 
+                  src={(item.product.images && item.product.images.length > 1 ? item.product.images[1] : item.product.image) || 'https://via.placeholder.com/150'} 
+                  alt={item.product.name} 
+                  className="w-24 h-24 object-cover rounded-xl" 
+                />
                 <div className="flex-grow">
                   <Link to={`/producto/${item.product.id}`} className="font-bold text-lg text-medical-gray-800 hover:text-medical-primary transition-colors">
                     {item.product.name}
@@ -107,10 +115,10 @@ const CartPage: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-lg text-medical-primary">
-                    {formatPrice(item.subtotal_ves, 'VES')}
+                    {formatPriceFromBackend(item.subtotal)}
                   </p>
                   <p className="text-sm text-medical-gray-500">
-                    {formatPrice(item.subtotal_ref, 'REF')}
+                    {formatPriceFromBackend(item.subtotal, currency === 'VES' ? 'USD' : 'VES')}
                   </p>
                   <button 
                     onClick={() => handleRemoveItem(item.id)} 
@@ -131,14 +139,14 @@ const CartPage: React.FC = () => {
               <div className="space-y-4 text-medical-gray-700">
                 <div className="flex justify-between">
                   <span>Subtotal ({cart.total_items} productos)</span>
-                  <span className="font-semibold">{formatPrice(cart.total_ves, 'VES')}</span>
+                  <span className="font-semibold">{formatPriceFromBackend(cart.total)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-xl text-medical-gray-900 border-t pt-4 mt-4">
                   <span>Total</span>
-                  <span>{formatPrice(cart.total_ves, 'VES')}</span>
+                  <span>{formatPriceFromBackend(cart.total)}</span>
                 </div>
                 <p className="text-right text-medical-gray-500 text-sm">
-                  Total aprox. {formatPrice(cart.total_ref, 'REF')}
+                  Total aprox. {formatPriceFromBackend(cart.total, currency === 'VES' ? 'USD' : 'VES')}
                 </p>
               </div>
 

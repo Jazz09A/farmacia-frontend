@@ -25,7 +25,7 @@ export default defineConfig({
     })
   ],
   server: {
-    allowedHosts: ['us-atmospheric-jamaica-pine.trycloudflare.com'],
+    allowedHosts: ['vertical-gather-develop-prev.trycloudflare.com'],
     host: true,
     proxy: {
       '/api': {

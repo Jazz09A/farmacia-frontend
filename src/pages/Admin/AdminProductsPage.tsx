@@ -17,7 +17,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Product } from '../../types';
 import { ProductPlaceholder } from '../../components/common';
-import { getProducts } from '../../data/products';
+import { productService } from '../../services/ProductService';
 import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
 import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
 
@@ -26,7 +26,7 @@ const ConfirmationModal = lazy(() => import('../../components/common/Confirmatio
 
 const AdminProductsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { getPriceInCurrency, formatPrice } = useAdminCurrency();
+  const { formatPriceFromBackend } = useAdminCurrency();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -38,20 +38,16 @@ const AdminProductsPage: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [listProducts, setListProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
 
 
   // Cargar productos
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        setLoading(true);
-        const products = await getProducts();
+        const products = await productService.getAllProducts();
         setListProducts(products);
       } catch (error) {
         console.error('Error loading products:', error);
-      } finally {
-        setLoading(false);
       }
     };
     
@@ -174,7 +170,7 @@ const AdminProductsPage: React.FC = () => {
     inStock: listProducts.filter(p => p.in_stock).length,
     lowStock: listProducts.filter(p => !p.in_stock).length,
     outOfStock: listProducts.filter(p => !p.in_stock).length,
-    totalRevenue: listProducts.reduce((sum, p) => sum + getPriceInCurrency(p.price_ves, p.price_ref), 0),
+    totalRevenue: listProducts.reduce((sum, p) => sum + (typeof p.price === 'string' ? parseFloat(p.price) : p.price), 0),
     totalSales: 0
   };
 
@@ -313,7 +309,7 @@ const AdminProductsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
                 <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Ingresos Totales</p>
-                <p className="text-lg lg:text-2xl font-bold text-gray-900 truncate">{formatPrice(stats.totalRevenue)}</p>
+                <p className="text-lg lg:text-2xl font-bold text-gray-900 truncate">{formatPriceFromBackend(stats.totalRevenue)}</p>
               </div>
               <div className="p-2 lg:p-3 bg-purple-100 rounded-full flex-shrink-0">
                 <DollarSign className="w-4 h-4 lg:w-6 lg:h-6 text-purple-600" />
@@ -411,18 +407,25 @@ const AdminProductsPage: React.FC = () => {
                 onClick={() => handleViewProduct(product)}
               >
                 <div className="flex items-start space-x-3">
-                  <img 
-                    src={product.image} 
-                    alt={product.name} 
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border flex-shrink-0"
+                  {product.images && product.images.length > 1 ? (
+                    <img 
+                      src={product.images[1]} 
+                      alt={product.name} 
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border flex-shrink-0"
                     />
+                  ) : (
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border flex-shrink-0"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800 text-sm sm:text-base truncate">{product.name}</p>
                     <p className="text-xs sm:text-sm text-gray-500 truncate">{product.brand}</p>
                     <div className="mt-1 sm:mt-2">
                       <SmartPriceDisplay 
-                        priceVes={product.price_ves} 
-                        priceRef={product.price_ref} 
+                        amountUsd={parseFloat(product.price)} 
                         className="font-semibold text-sm sm:text-base text-gray-900"
                       />
                     </div>
@@ -501,9 +504,15 @@ const AdminProductsPage: React.FC = () => {
                     </div>
                     </td>
                   <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center space-x-3">
-                    {product.images?.[0] || product.image ? (
+                    {product.images && product.images.length > 1 ? (
                       <img
-                        src={product.images?.[0] || product.image} 
+                        src={product.images[1]} 
+                        alt={product.name}
+                        className="w-12 h-12 rounded-lg object-cover border" 
+                      />
+                    ) : product.image ? (
+                      <img
+                        src={product.image} 
                         alt={product.name}
                         className="w-12 h-12 rounded-lg object-cover border" 
                       />
@@ -518,8 +527,7 @@ const AdminProductsPage: React.FC = () => {
                   <td className="px-6 py-4">{product.category}</td>
                   <td className="px-6 py-4">
                     <SmartPriceDisplay 
-                      priceVes={product.price_ves} 
-                      priceRef={product.price_ref} 
+                      amountUsd={parseFloat(product.price)} 
                       className="font-semibold"
                     />
                   </td>

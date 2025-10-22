@@ -1,14 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Filter, Grid, List, Heart, Pill, Stethoscope, Shield, Sparkles } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, Filter, Grid, List, Heart, Pill, Stethoscope, Shield, Sparkles, X } from 'lucide-react';
 import { Product, SearchFilters } from '../types';
-import { getProductsPaginated } from '../data/products';
-import { Cart } from '../types';
 import { ProductCard } from '../components/Products/ProductCard';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import Pagination from '../components/common/Pagination';
 import { ProductCardSkeleton } from '../components/Skeleton/ProductCardSkeleton';
-import { authService } from '../services/AuthService';
 import MapSection from '../components/Map/MapSection';
+import { productService } from '../services/ProductService';
+import { useCatalogCache } from '../hooks/usePageCache';
+import { useScrollContext } from '../contexts/ScrollContext';
+import { usePrefetchNextPage } from '../hooks/useImagePrefetch';
 
 // Categorías temporales hasta que se obtengan de la API
 const medicalCategories = [
@@ -24,7 +26,8 @@ const medicalConditions = [
 
 
 const CatalogPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,15 +36,15 @@ const CatalogPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [productsPerPage] = useState(8);
-  const [cart, setCart] = useState<Cart | null>(null);
-  const { currency, formatPrice: formatCurrencyPrice, getPriceInCurrency } = useGlobalCurrency();
+  const [productsPerPage] = useState(20);
+  const { currency, formatPriceFromBackend, getDisplayPrice } = useGlobalCurrency();
+  const { scrollToTop } = useScrollContext();
   
   const [filters, setFilters] = useState<SearchFilters>({
     category: '',
     subcategory: '',
     patology: '',
-    priceRange: [0, 1000000],
+    priceRange: [0, 1000],
     inStock: false,
     prescription: false,
     rating: 0,
@@ -50,15 +53,69 @@ const CatalogPage: React.FC = () => {
     sortOrder: 'asc'
   });
 
-  // Función para cargar productos paginados
-  const loadProducts = async (page: number = 1) => {
+  // Hook de caché para productos del catálogo
+  const cacheKey = 'catalog-products';
+  const cacheParams = {
+    search: searchTerm,
+    ...filters,
+    page: currentPage,
+    limit: productsPerPage,
+    currency
+  };
+  const { cachedData, setCachedData, isCached } = useCatalogCache(cacheKey, cacheParams);
+
+  // Función para cargar productos desde el backend
+  const loadProducts = async (page: number = 1, useCache: boolean = true) => {
+    // Crear parámetros de caché
+    const currentCacheParams = {
+      search: searchTerm,
+      ...filters,
+      page,
+      limit: productsPerPage,
+      currency
+    };
+
+    // Intentar obtener del caché primero
+    if (useCache && cachedData) {
+      setProducts(cachedData.products);
+      setTotalPages(cachedData.totalPages);
+      setTotalProducts(cachedData.totalProducts);
+      setCurrentPage(page);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const response = await getProductsPaginated(page, productsPerPage);
+      const response = await productService.searchProducts({
+        search: searchTerm || undefined,
+        category: filters.category || undefined,
+        subcategory: filters.subcategory || undefined,
+        patology: filters.patology || undefined,
+        brand: filters.brand || undefined,
+        min_price: filters.priceRange[0] > 0 ? filters.priceRange[0] : undefined,
+        max_price: filters.priceRange[1] < 1000 ? filters.priceRange[1] : undefined,
+        in_stock: filters.inStock || undefined,
+        prescription: filters.prescription || undefined,
+        sort_by: filters.sortBy as any,
+        sort_order: filters.sortOrder,
+        page,
+        limit: productsPerPage
+      });
+      
+      const cacheData = {
+        products: response.products,
+        totalPages: response.pagination?.total_pages || 1,
+        totalProducts: response.pagination?.total || response.total || 0
+      };
+
+      // Guardar en caché
+      setCachedData(cacheData);
+      
       setProducts(response.products);
-      setTotalPages(response.totalPages);
-      setTotalProducts(response.total);
-      setCurrentPage(response.page);
+      setTotalPages(cacheData.totalPages);
+      setTotalProducts(cacheData.totalProducts);
+      setCurrentPage(page);
     } catch (error) {
       console.error('Error loading products:', error);
       // En caso de error, limpiar el estado
@@ -71,17 +128,37 @@ const CatalogPage: React.FC = () => {
     }
   };
 
-  // Initial loading
+  // Debounce para búsqueda
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      loadProducts(1);
+    }, 500); // Espera 500ms después de que el usuario deje de escribir
+
+    return () => clearTimeout(debounce);
+  }, [searchTerm]);
+
+  // Cargar cuando cambian filtros (sin debounce)
   useEffect(() => {
     loadProducts(1);
-  }, []);
+  }, [filters]);
+
+  // Actualizar searchTerm cuando cambia la URL
+  useEffect(() => {
+    const urlSearch = searchParams.get('search');
+    if (urlSearch && urlSearch !== searchTerm) {
+      setSearchTerm(urlSearch);
+    }
+  }, [searchParams]);
 
   // Manejar cambio de página
   const handlePageChange = (page: number) => {
     loadProducts(page);
-    // Scroll to top cuando cambie de página
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll to top optimizado cuando cambie de página
+    scrollToTop({ smooth: true, duration: 400 });
   };
+
+  // Prefetch de imágenes de la página actual
+  usePrefetchNextPage(products, !isLoading && products.length > 0);
 
   // Filter change loading simulation
   useEffect(() => {
@@ -107,23 +184,26 @@ const CatalogPage: React.FC = () => {
     return icons[iconName] || <Pill className="w-5 h-5" />;
   };
 
-  // Filtrar y ordenar productos (ahora aplicado sobre los productos paginados)
+  // Filtrar y ordenar productos (aplicado sobre los productos filtrados por búsqueda)
   const filteredProducts = useMemo(() => {
-    let filtered = products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           product.description.toLowerCase().includes(searchTerm.toLowerCase());
+    // Usar los productos filtrados por búsqueda como base
+    const baseProducts = products;
+    
+    let filtered = baseProducts.filter(product => {
+      // La búsqueda ya se maneja en el componente SearchInput
+      // Solo aplicamos los otros filtros aquí
+      const matchesSearch = true; // SearchInput ya filtra por búsqueda
       
       const matchesCategory = !filters.category || product.category === filters.category;
       const matchesSubcategory = !filters.subcategory || product.subcategory === filters.subcategory;
       const matchesPatology = !filters.patology || product.patology === filters.patology;
       const matchesBrand = !filters.brand || product.brand.toLowerCase().includes(filters.brand.toLowerCase());
-      // Precios vienen en USD; convertir para display/filtrado si es VES
-      const currentPrice = currency === 'VES' ? product.price * 36.5 : product.price;
+      // Precios vienen en USD como string; convertir para display/filtrado
+      const currentPrice = getDisplayPrice(product.price, currency);
       const matchesPrice = currentPrice >= filters.priceRange[0] && currentPrice <= filters.priceRange[1];
       const matchesStock = !filters.inStock || product.in_stock;
       const matchesPrescription = !filters.prescription || product.prescription;
-      const matchesRating = product.rating >= filters.rating;
+      const matchesRating = parseFloat(product.rating) >= filters.rating;
 
       return matchesSearch && matchesCategory && matchesSubcategory && matchesPatology && 
              matchesBrand && matchesPrice && matchesStock && matchesPrescription && matchesRating;
@@ -135,12 +215,12 @@ const CatalogPage: React.FC = () => {
       
       switch (filters.sortBy) {
         case 'price':
-          const priceA = currency === 'VES' ? a.price * 36.5 : a.price;
-          const priceB = currency === 'VES' ? b.price * 36.5 : b.price;
+          const priceA = getDisplayPrice(a.price, currency);
+          const priceB = getDisplayPrice(b.price, currency);
           comparison = priceA - priceB;
           break;
         case 'rating':
-          comparison = a.rating - b.rating;
+          comparison = parseFloat(a.rating) - parseFloat(b.rating);
           break;
         case 'name':
           comparison = a.name.localeCompare(b.name);
@@ -160,20 +240,9 @@ const CatalogPage: React.FC = () => {
 
   // Función para formatear precios individuales (para filtros)
   const formatSinglePrice = (price: number): string => {
-    return formatCurrencyPrice(price);
+    return formatPriceFromBackend(price.toString(), currency);
   };
 
-  // Función para formatear precios del ProductCard (recibe ambos precios)
-  const formatProductPrice = (priceVes: number, priceRef: number): string => {
-    const selectedPrice = getPriceInCurrency(priceVes, priceRef);
-    return formatCurrencyPrice(selectedPrice);
-  };
-
-  useEffect(() => {
-    authService.getCart().then((cart: any) => {
-      setCart(cart.data);
-    });
-  }, []);
 
 
 
@@ -204,14 +273,24 @@ const CatalogPage: React.FC = () => {
             {/* Barra de búsqueda principal */}
             <div className="max-w-2xl mx-auto relative">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
                   type="text"
-                  placeholder="Buscar medicamentos, marcas, síntomas..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-medical-primary/50 focus:border-medical-primary transition-all duration-300 text-gray-900 placeholder-gray-500"
+                  placeholder="Buscar medicamentos, marcas, síntomas..."
+                  className="w-full pl-12 pr-4 py-4 bg-white/90 backdrop-blur-md border-2 border-medical-blue-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-medical-primary focus:border-transparent transition-all duration-300 text-gray-900 placeholder-gray-500"
                 />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -295,8 +374,8 @@ const CatalogPage: React.FC = () => {
                     <input
                       type="range"
                       min="0"
-                      max="1000000"
-                      step="5000"
+                      max="100"
+                      step="5"
                       value={filters.priceRange[1]}
                       onChange={(e) => setFilters({
                         ...filters, 
@@ -339,7 +418,7 @@ const CatalogPage: React.FC = () => {
             </div>
 
             {/* Contenido principal */}
-            <div className="flex-1 space-y-6">
+            <div className="flex-1 space-y-6 pb-16">
               {/* Controles de vista y ordenamiento */}
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
                 <div className="flex items-center gap-4">
@@ -410,7 +489,7 @@ const CatalogPage: React.FC = () => {
                     : 'grid-cols-1'
                 }`}>
                   {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} currency={currency} formatPrice={formatProductPrice}  />
+                    <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
               ) : (
@@ -430,7 +509,7 @@ const CatalogPage: React.FC = () => {
                           category: '',
                           subcategory: '',
                           patology: '',
-                          priceRange: [0, 1000000],
+                          priceRange: [0, 100],
                           inStock: false,
                           prescription: false,
                           rating: 0,

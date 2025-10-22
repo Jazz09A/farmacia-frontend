@@ -4,10 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { HeroSection } from '../components/Hero/HeroSection';
 import { WhyUsSection } from '../components/WhyUs';
 import { CategoriesSection } from '../components/Categories';
-import { StatsSection } from '../components/Stats';
 import { TestimonialsSection } from '../components/Testimonials';
 import { FlashOffersSection } from '../components/FlashOffers/FlashOffersSection';
-import { ProductsSection } from '../components/Products/ProductsSection';
 import { BrandsSection } from '../components/Brands/BrandsSection';
 import { CartModal } from '../components/Cart/CartModal';
 import FeaturedBlogPosts from '../components/Blog/FeaturedBlogPosts';
@@ -22,71 +20,81 @@ import {
 } from '../components/Skeleton';
 
 // Hooks
-
-import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
-import { Cart, Product } from '../types';
-import { useCart } from '../contexts/CartContext';
+import { useHomeCache } from '../hooks/usePageCache';
 
 const HomePage: React.FC = () => {
-  const { currency, formatPrice: globalFormatPrice } = useGlobalCurrency();
-  const { addToCart } = useCart();
   const [cartModalOpen, setCartModalOpen] = useState(false);
+  
+  // Usar caché para estado de loading
+  const { cachedData: cachedLoadingState, setCachedData: setCachedLoadingState } = useHomeCache(
+    'loading-states',
+    { version: '1.0' }
+  );
+
   // Loading states for different sections
-  const [loadingStates, setLoadingStates] = useState({
-    hero: true,
-    whyUs: true,
-    categories: true,
-    stats: true,
-    testimonials: true,
-    flashOffers: true,
-    products: true,
-    blog: true,
-    brands: true,
-    contact: true
-  });
+  const [loadingStates, setLoadingStates] = useState<{
+    hero: boolean;
+    whyUs: boolean;
+    categories: boolean;
+    stats: boolean;
+    testimonials: boolean;
+    flashOffers: boolean;
+    products: boolean;
+    blog: boolean;
+    brands: boolean;
+    contact: boolean;
+  }>(
+    cachedLoadingState || {
+      hero: true,
+      whyUs: true,
+      categories: true,
+      stats: true,
+      testimonials: true,
+      flashOffers: true,
+      products: true,
+      blog: true,
+      brands: true,
+      contact: true
+    }
+  );
 
   // Simulate realistic loading times for different sections
   useEffect(() => {
+    // Si hay caché, usar tiempos más cortos
+    const hasCache = !!cachedLoadingState;
+    const baseDelay = hasCache ? 100 : 800;
+    const increment = hasCache ? 50 : 200;
+
     const loadingSims = [
-      { section: 'hero', delay: 800 },
-      { section: 'whyUs', delay: 1000 },
-      { section: 'brands', delay: 1200 },
-      { section: 'categories', delay: 1400 },
-      { section: 'stats', delay: 1600 },
-      { section: 'testimonials', delay: 1800 },
-      { section: 'flashOffers', delay: 2000 },
-      { section: 'blog', delay: 2300 },
-      { section: 'products', delay: 2600 },
-      { section: 'contact', delay: 2800 }
+      { section: 'hero', delay: baseDelay },
+      { section: 'whyUs', delay: baseDelay + increment },
+      { section: 'brands', delay: baseDelay + increment * 2 },
+      { section: 'categories', delay: baseDelay + increment * 3 },
+      { section: 'stats', delay: baseDelay + increment * 4 },
+      { section: 'testimonials', delay: baseDelay + increment * 5 },
+      { section: 'flashOffers', delay: baseDelay + increment * 6 },
+      { section: 'blog', delay: baseDelay + increment * 7 },
+      { section: 'products', delay: baseDelay + increment * 8 },
+      { section: 'contact', delay: baseDelay + increment * 9 }
     ];
 
     loadingSims.forEach(({ section, delay }) => {
       setTimeout(() => {
-        setLoadingStates(prev => ({
-          ...prev,
-          [section]: false
-        }));
+        setLoadingStates((prev) => {
+          const newState = {
+            ...prev,
+            [section]: false
+          };
+          // Guardar en caché el estado final
+          if (Object.values(newState).every(val => !val)) {
+            setCachedLoadingState(newState, 10 * 60 * 1000); // 10 minutos
+          }
+          return newState;
+        });
       }, delay);
     });
   }, []);
 
-  // Handle add to cart
-  const handleAddToCart = async (product: Product, quantity: number = 1) => {
-    try {
-      await addToCart(product.id, quantity);
-      // Optionally show a success notification
-    } catch (error) {
-      console.error('Failed to add product to cart:', error);
-      // Optionally show an error notification
-    }
-  };
-
-  // Wrapper function to match component expectations
-  const formatPrice = (priceVES: number, priceREF: number) => {
-    return currency === 'VES' 
-      ? `Bs. ${priceVES.toLocaleString('es-VE')}` 
-      : `$ ${priceREF.toFixed(2)}`;
-  };
 
   return (
     <div className="flex-1 flex flex-col">
@@ -199,9 +207,6 @@ const HomePage: React.FC = () => {
       <CartModal
         isOpen={cartModalOpen}
         onClose={() => setCartModalOpen(false)}
-        currency={currency as 'VES' | 'REF'}
-        formatPrice={formatPrice}
-        totalPrice={0} // Cart state is now managed by CartContext, so this will be updated automatically
         onUpdateQuantity={() => {}}
         onRemoveItem={() => {}}
       />

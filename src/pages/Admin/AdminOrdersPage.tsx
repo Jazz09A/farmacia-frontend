@@ -3,7 +3,6 @@ import {
   Search, 
   Filter, 
   Download, 
-  Trash2,
   Clock,
   CheckCircle,
   AlertCircle,
@@ -26,13 +25,11 @@ import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
 import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
 
 const OrderModal = lazy(() => import('../../components/Admin/OrderModal'));
-const ConfirmationModal = lazy(() => import('../../components/common/ConfirmationModal'));
 
 const AdminOrdersPage: React.FC = () => {
   const { formatPrice } = useAdminCurrency();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
-  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
   
   const {
     orders,
@@ -45,19 +42,56 @@ const AdminOrdersPage: React.FC = () => {
     refreshOrders,
     updateOrderStatus,
     updatePaymentStatus,
-    deleteOrder,
     setFilters,
     setPage
   } = useOrders();
+
+  // Función para traducir estados de órdenes
+  const getOrderStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'Pendiente';
+      case 'confirmed':
+        return 'Confirmado';
+      case 'processing':
+        return 'En Preparación';
+      case 'shipped':
+        return 'Enviado';
+      case 'delivered':
+        return 'Entregado';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  };
+
+  // Función para traducir estados de pago
+  const getPaymentStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'Pendiente';
+      case 'completed':
+        return 'Completado';
+      case 'failed':
+        return 'Fallido';
+      case 'refunded':
+        return 'Reembolsado';
+      case 'partially_paid':
+        return 'Pago Parcial';
+      default:
+        return status;
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
         return <Clock className="w-4 h-4 text-yellow-500" />;
       case 'confirmed':
-        return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+        return <CheckCircle className="w-4 h-4 text-blue-500" />;
       case 'processing':
-        return <AlertCircle className="w-4 h-4 text-blue-600" />;
+        return <AlertCircle className="w-4 h-4 text-orange-500" />;
       case 'shipped':
         return <Package className="w-4 h-4 text-purple-500" />;
       case 'delivered':
@@ -75,9 +109,9 @@ const AdminOrdersPage: React.FC = () => {
       case 'pending':
         return `${baseClasses} bg-yellow-100 text-yellow-800`;
       case 'confirmed':
-        return `${baseClasses} bg-emerald-100 text-emerald-800`;
-      case 'processing':
         return `${baseClasses} bg-blue-100 text-blue-800`;
+      case 'processing':
+        return `${baseClasses} bg-orange-100 text-orange-800`;
       case 'shipped':
         return `${baseClasses} bg-purple-100 text-purple-800`;
       case 'delivered':
@@ -121,10 +155,22 @@ const AdminOrdersPage: React.FC = () => {
   };
 
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
-    await updateOrderStatus(orderId, newStatus);
-    
-    if (selectedOrder && selectedOrder.id === orderId) {
-      setSelectedOrder({ ...selectedOrder, status: newStatus });
+    try {
+      // Verificar si la orden está en un estado final
+      const currentOrder = orders.find(order => order.id === orderId);
+      if (currentOrder && (currentOrder.status === 'delivered' || currentOrder.status === 'cancelled')) {
+        alert('No se puede modificar una orden entregada o cancelada');
+        return;
+      }
+
+      await updateOrderStatus(orderId, newStatus);
+      
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status: newStatus });
+      }
+    } catch (err) {
+      console.error('Error updating order status:', err);
+      alert('Error al actualizar el estado de la orden');
     }
   };
 
@@ -147,17 +193,6 @@ const AdminOrdersPage: React.FC = () => {
     }
   };
   
-  const handleDeleteRequest = (e: React.MouseEvent, order: Order) => {
-    e.stopPropagation();
-    setOrderToDelete(order);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!orderToDelete) return;
-    await deleteOrder(orderToDelete.id);
-    setOrderToDelete(null);
-  };
-
   const handleSearchChange = (value: string) => {
     setFilters({ search: value });
   };
@@ -304,7 +339,7 @@ const AdminOrdersPage: React.FC = () => {
                           <div className="font-bold text-gray-900 text-sm">#{order.order_number || order.id.substring(0, 8)}</div>
                           <div className={getStatusBadge(order.status)}>
                             {getStatusIcon(order.status)}
-                            <span className="capitalize text-xs">{order.status}</span>
+                            <span className="text-xs">{getOrderStatusText(order.status)}</span>
                           </div>
                         </div>
                         <div className="text-sm text-gray-600 truncate">{order.shipping_address.recipient_name}</div>
@@ -322,12 +357,12 @@ const AdminOrdersPage: React.FC = () => {
                       <div className="text-right flex-shrink-0 ml-2">
                         <div className="font-bold text-gray-900 text-base lg:text-lg">
                           <SmartPriceDisplay 
-                            amount={order.total}
+                            amountUsd={order.total}
                             className="font-bold text-gray-900 text-base lg:text-lg"
                           />
                         </div>
                         <div className={getPaymentStatusBadge(order.payment_status)}>
-                          {order.payment_status}
+                          {getPaymentStatusText(order.payment_status)}
                         </div>
                       </div>
                     </div>
@@ -354,13 +389,6 @@ const AdminOrdersPage: React.FC = () => {
                           title="Ver detalles"
                         >
                           <Eye className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={(e) => handleDeleteRequest(e, order)} 
-                          className="text-red-600 hover:text-red-800 active:text-red-900 flex items-center text-sm font-medium p-2 rounded-md hover:bg-red-50"
-                          title="Eliminar pedido"
-                        >
-                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -460,7 +488,7 @@ const AdminOrdersPage: React.FC = () => {
                       <td className="px-6 py-4">
                         <div className="font-medium text-gray-900">
                           <SmartPriceDisplay 
-                            amount={order.total}
+                            amountUsd={order.total}
                             className="font-medium text-gray-900"
                           />
                         </div>
@@ -471,12 +499,12 @@ const AdminOrdersPage: React.FC = () => {
                       <td className="px-6 py-4">
                         <div className={getStatusBadge(order.status)}>
                           {getStatusIcon(order.status)}
-                          <span className="capitalize">{order.status}</span>
+                          <span>{getOrderStatusText(order.status)}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className={getPaymentStatusBadge(order.payment_status)}>
-                          {order.payment_status}
+                          {getPaymentStatusText(order.payment_status)}
                         </div>
                         <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                           <CreditCard className="w-3 h-3" />
@@ -494,13 +522,6 @@ const AdminOrdersPage: React.FC = () => {
                             title="Ver detalles"
                           >
                             <Eye className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={(e) => handleDeleteRequest(e, order)} 
-                            className="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-red-100 transition-colors"
-                            title="Eliminar pedido"
-                          >
-                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -570,28 +591,6 @@ const AdminOrdersPage: React.FC = () => {
             onClose={() => setShowOrderModal(false)}
             onUpdateStatus={handleUpdateStatus}
             onUpdatePaymentStatus={handleUpdatePaymentStatus}
-          />
-        </Suspense>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {orderToDelete && (
-        <Suspense fallback={<div>Cargando...</div>}>
-          <ConfirmationModal
-            isOpen={!!orderToDelete}
-            onClose={() => setOrderToDelete(null)}
-            onConfirm={handleConfirmDelete}
-            title="Confirmar Eliminación"
-            message={
-              <span>
-                ¿Estás seguro de que quieres eliminar el pedido{' '}
-                <strong>#{orderToDelete.order_number || orderToDelete.id.substring(0, 8)}</strong>? 
-                <br />
-                Esta acción no se puede deshacer.
-              </span>
-            }
-            confirmText="Sí, eliminar"
-            isDestructive={true}
           />
         </Suspense>
       )}
