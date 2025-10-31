@@ -10,15 +10,15 @@ import {
   UserX,
   Download,
   Upload,
-  Eye,
-  Loader2
+  Loader2,
+  Mail,
+  Phone
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Customer } from '../../types';
+import { SourceSystemCustomer } from '../../types';
 import { adminService } from '../../services/AdminService';
 
 const ConfirmationModal = lazy(() => import('../../components/common/ConfirmationModal'));
-const CustomerStatsModal = lazy(() => import('../../components/Admin/CustomerStatsModal'));
 
 
 
@@ -29,76 +29,83 @@ const AdminCustomersPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerToDelete, setCustomerToDelete] = useState<SourceSystemCustomer | null>(null);
+  const [customers, setCustomers] = useState<SourceSystemCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statsModalOpen, setStatsModalOpen] = useState(false);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  const [includeInactive, setIncludeInactive] = useState(false);
+  const [onlyWithEmail, setOnlyWithEmail] = useState(true);
+  const [creatingUsers, setCreatingUsers] = useState(false);
+  const [createSummary, setCreateSummary] = useState<null | { users_created: number; users_failed: number; emails_sent: number; emails_failed: number; success_rate: number }>(null);
 
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
-  // Cargar clientes al montar el componente
+  // Cargar clientes al montar el componente y cuando cambian los filtros
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [currentPage, includeInactive, onlyWithEmail]);
+
+  // Auto-cerrar notificación de resultado después de 5 segundos
+  useEffect(() => {
+    if (createSummary) {
+      const timer = setTimeout(() => {
+        setCreateSummary(null);
+      }, 5000); // 5 segundos
+
+      return () => clearTimeout(timer);
+    }
+  }, [createSummary]);
 
   const fetchCustomers = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await adminService.getCustomers();
-      if (data.length === 0) {
-        setError('No se encontraron clientes');
-        setCustomers([]);
+      const response = await adminService.fetchSourceCustomers({
+        page: currentPage,
+        limit: itemsPerPage,
+        include_inactive: includeInactive,
+        only_with_email: onlyWithEmail,
+        search: searchTerm || undefined
+      });
+      
+      setCustomers(response.customers);
+      setTotalCustomers(response.total);
+      
+      if (response.customers.length === 0) {
+        setError('No se encontraron clientes con los filtros aplicados');
       }
-      setCustomers(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar clientes');
-      console.error('Error fetching customers:', err);
+      setError(err instanceof Error ? err.message : 'Error al cargar clientes del sistema legacy');
+      console.error('Error fetching source customers:', err);
+      setCustomers([]);
+      setTotalCustomers(0);
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtrar clientes
+  // Los clientes ya vienen filtrados del backend, solo aplicamos filtros locales
   const filteredCustomers = useMemo(() => {
     return customers.filter(customer => {
-      const matchesSearch = 
-        customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (customer.company_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (customer.rif?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (customer.phone?.toLowerCase().includes(searchTerm.toLowerCase()));
-
       const matchesStatus = statusFilter === 'all' || 
-        (statusFilter === 'active' && customer.is_active) ||
-        (statusFilter === 'inactive' && !customer.is_active) ||
-        (statusFilter === 'verified' && customer.is_verified) ||
-        (statusFilter === 'unverified' && !customer.is_verified);
+        (statusFilter === 'active' && !customer.inactive) ||
+        (statusFilter === 'inactive' && customer.inactive);
 
-      const matchesType = typeFilter === 'all' || customer.user_type === typeFilter;
+      const matchesType = typeFilter === 'all' || 
+        (typeFilter === 'juridico' && customer.is_juridico) ||
+        (typeFilter === 'natural' && !customer.is_juridico);
 
-      return matchesSearch && matchesStatus && matchesType;
+      return matchesStatus && matchesType;
     });
-  }, [customers, searchTerm, statusFilter, typeFilter]);
+  }, [customers, statusFilter, typeFilter]);
 
-  // Paginación
-  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
-  const paginatedCustomers = filteredCustomers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Paginación manejada por el backend
+  const totalPages = Math.ceil(totalCustomers / itemsPerPage);
+  const paginatedCustomers = filteredCustomers; // Ya vienen paginados del backend
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-VE', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const getStatusBadge = (customer: Customer) => {
-    if (customer.is_active) {
+  const getStatusBadge = (customer: SourceSystemCustomer) => {
+    if (!customer.inactive) {
       return (
         <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
           Activo
@@ -113,36 +120,53 @@ const AdminCustomersPage: React.FC = () => {
     }
   };
 
-  const getVerificationBadge = (customer: Customer) => {
-    if (customer.is_verified) {
+  const getTypeBadge = (customer: SourceSystemCustomer) => {
+    if (customer.is_juridico) {
       return (
         <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-          Verificado
+          Jurídico
         </span>
       );
     } else {
       return (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
-          Sin verificar
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+          Natural
         </span>
       );
     }
   };
 
-  const getCustomerDisplayName = (customer: Customer) => {
-    return customer.company_name || customer.email || 'Sin nombre';
+  const getEmailBadge = (customer: SourceSystemCustomer) => {
+    if (customer.email || customer.alternate_email) {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+          <Mail className="w-3 h-3 mr-1" />
+          Con email
+        </span>
+      );
+    } else {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+          Sin email
+        </span>
+      );
+    }
   };
 
-  const handleViewStats = (customerId: string) => {
-    setSelectedCustomerId(customerId);
-    setStatsModalOpen(true);
+  const getCustomerDisplayName = (customer: SourceSystemCustomer) => {
+    return customer.customer_name || customer.customer_code || 'Sin nombre';
   };
 
-  const handleSelectCustomer = (customerId: string) => {
+  const handleSearch = () => {
+    setCurrentPage(1); // Reset a la página 1 cuando se busca
+    fetchCustomers();
+  };
+
+  const handleSelectCustomer = (customerCode: string) => {
     setSelectedCustomers(prev => 
-      prev.includes(customerId) 
-        ? prev.filter(id => id !== customerId)
-        : [...prev, customerId]
+      prev.includes(customerCode) 
+        ? prev.filter(code => code !== customerCode)
+        : [...prev, customerCode]
     );
   };
 
@@ -150,11 +174,11 @@ const AdminCustomersPage: React.FC = () => {
     if (selectedCustomers.length === paginatedCustomers.length) {
       setSelectedCustomers([]);
     } else {
-      setSelectedCustomers(paginatedCustomers.map(c => c.id));
+      setSelectedCustomers(paginatedCustomers.map(c => c.customer_code));
     }
   };
 
-  const handleDeleteRequest = (e: React.MouseEvent, customer: Customer) => {
+  const handleDeleteRequest = (e: React.MouseEvent, customer: SourceSystemCustomer) => {
     e.stopPropagation();
     setCustomerToDelete(customer);
   };
@@ -162,16 +186,43 @@ const AdminCustomersPage: React.FC = () => {
   const handleConfirmDelete = () => {
     if (!customerToDelete) return;
     // Lógica de eliminación
-    console.log(`Cliente ${customerToDelete.id} eliminado`);
+    console.log(`Cliente ${customerToDelete.customer_code} eliminado`);
     setCustomerToDelete(null);
+  };
+
+  // Crear usuarios y enviar correos desde clientes del sistema legacy
+  const handleCreateUsers = async (useAlternateEmails: boolean) => {
+    if (selectedCustomers.length === 0 || creatingUsers) return;
+    setCreatingUsers(true);
+    try {
+      const res = await adminService.createUsersFromSourceCustomers({
+        customer_codes: selectedCustomers,
+        use_alternate_emails: useAlternateEmails,
+      });
+      const s = res.summary;
+      setCreateSummary({
+        users_created: s.users_created,
+        users_failed: s.users_failed,
+        emails_sent: s.emails_sent,
+        emails_failed: s.emails_failed,
+        success_rate: s.success_rate,
+      });
+      // refrescar lista por si hay cambios
+      await fetchCustomers();
+    } catch (e) {
+      console.error('Error creando usuarios / enviando emails', e);
+      setCreateSummary(null);
+    } finally {
+      setCreatingUsers(false);
+    }
   };
 
   // Estadísticas
   const stats = {
-    total: customers.length,
-    active: customers.filter(c => c.is_active).length,
-    verified: customers.filter(c => c.is_verified).length,
-    unverified: customers.filter(c => !c.is_verified).length
+    total: totalCustomers,
+    active: customers.filter(c => !c.inactive).length,
+    with_email: customers.filter(c => c.email || c.alternate_email).length,
+    juridico: customers.filter(c => c.is_juridico).length
   };
 
   return (
@@ -223,6 +274,26 @@ const AdminCustomersPage: React.FC = () => {
             <Filter className="w-4 h-4 mr-2" />
             Filtros
           </button>
+            {selectedCustomers.length > 0 && (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleCreateUsers(true)}
+                  disabled={creatingUsers}
+                  className="px-3 lg:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  title="Crear usuarios y enviar correo (usar emails alternos si existen)"
+                >
+                  {creatingUsers ? 'Procesando...' : 'Crear usuarios + correos'}
+                </button>
+                <button
+                  onClick={() => handleCreateUsers(false)}
+                  disabled={creatingUsers}
+                  className="px-3 lg:px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                  title="Crear usuarios y enviar correo (solo email principal)"
+                >
+                  {creatingUsers ? 'Procesando...' : 'Solo email principal'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -256,11 +327,11 @@ const AdminCustomersPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Verificados</p>
-              <p className="text-lg lg:text-2xl font-bold text-blue-600">{stats.verified}</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Con Email</p>
+              <p className="text-lg lg:text-2xl font-bold text-blue-600">{stats.with_email}</p>
             </div>
             <div className="p-2 lg:p-3 bg-blue-100 rounded-full flex-shrink-0">
-              <UserCheck className="w-4 h-4 lg:w-6 lg:h-6 text-blue-600" />
+              <Mail className="w-4 h-4 lg:w-6 lg:h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -268,11 +339,11 @@ const AdminCustomersPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Sin Verificar</p>
-              <p className="text-lg lg:text-2xl font-bold text-yellow-600">{stats.unverified}</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Jurídicos</p>
+              <p className="text-lg lg:text-2xl font-bold text-purple-600">{stats.juridico}</p>
             </div>
-            <div className="p-2 lg:p-3 bg-yellow-100 rounded-full flex-shrink-0">
-              <UserX className="w-4 h-4 lg:w-6 lg:h-6 text-yellow-600" />
+            <div className="p-2 lg:p-3 bg-purple-100 rounded-full flex-shrink-0">
+              <Building className="w-4 h-4 lg:w-6 lg:h-6 text-purple-600" />
             </div>
           </div>
         </div>
@@ -288,12 +359,43 @@ const AdminCustomersPage: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  placeholder="Buscar por nombre, email, RIF..."
+                  placeholder="Buscar por nombre, email, RIF, código..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearch();
+                    }
+                  }}
                   className="pl-9 pr-4 py-2 w-full text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
+                <button
+                  onClick={handleSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-600 hover:text-blue-800"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
               </div>
+            </div>
+            {/* Email Filter Toggle Button */}
+            <div className="flex items-center">
+              <button
+                onClick={() => {
+                  setOnlyWithEmail(!onlyWithEmail);
+                  setCurrentPage(1);
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 font-medium transition-colors ${
+                  onlyWithEmail
+                    ? 'bg-blue-50 border-blue-500 text-blue-700 hover:bg-blue-100'
+                    : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
+                }`}
+                title={onlyWithEmail ? 'Mostrando solo clientes con email. Click para incluir sin email' : 'Mostrando todos los clientes. Click para solo con email'}
+              >
+                <Mail className={`w-4 h-4 ${onlyWithEmail ? 'text-blue-600' : 'text-gray-500'}`} />
+                <span className="text-sm whitespace-nowrap">
+                  {onlyWithEmail ? 'Solo con email' : 'Todos'}
+                </span>
+              </button>
             </div>
           </div>
 
@@ -315,8 +417,6 @@ const AdminCustomersPage: React.FC = () => {
                   <option value="all">Todos los estados</option>
                   <option value="active">Activos</option>
                   <option value="inactive">Inactivos</option>
-                  <option value="verified">Verificados</option>
-                  <option value="unverified">Sin verificar</option>
                 </select>
               </div>
 
@@ -329,20 +429,29 @@ const AdminCustomersPage: React.FC = () => {
                 >
                   <option value="all">Todos los tipos</option>
                   <option value="juridico">Personas Jurídicas</option>
+                  <option value="natural">Personas Naturales</option>
                 </select>
               </div>
 
-              <div className="flex items-end">
-                <button
-                  onClick={() => {
-                    setStatusFilter('all');
-                    setTypeFilter('all');
-                    setSearchTerm('');
-                  }}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Limpiar Filtros
-                </button>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={onlyWithEmail}
+                    onChange={(e) => setOnlyWithEmail(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Solo con email</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={includeInactive}
+                    onChange={(e) => setIncludeInactive(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Incluir inactivos</span>
+                </label>
               </div>
             </motion.div>
           )}
@@ -359,6 +468,12 @@ const AdminCustomersPage: React.FC = () => {
             </span>
           )}
         </p>
+        {createSummary && (
+          <div className="mt-2 sm:mt-0 bg-blue-50 border border-blue-200 text-blue-800 px-3 py-2 rounded-lg">
+            <span className="font-semibold">Resultado:</span>
+            {' '}Usuarios creados {createSummary.users_created}, fallidos {createSummary.users_failed} · Correos enviados {createSummary.emails_sent}, fallidos {createSummary.emails_failed} · Éxito {createSummary.success_rate}%
+          </div>
+        )}
         <div className="flex items-center space-x-2 mt-2 sm:mt-0">
           <span>Elementos por página:</span>
           <select className="border border-gray-300 rounded px-2 py-1 text-sm">
@@ -422,36 +537,29 @@ const AdminCustomersPage: React.FC = () => {
           <div className="divide-y divide-gray-200">
             {paginatedCustomers.map((customer) => (
               <div 
-                key={customer.id} 
+                key={customer.customer_code} 
                 className="p-4"
               >
                 <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-full ${customer.is_active ? 'bg-green-100' : 'bg-gray-100'}`}>
-                    <Building className={`w-6 h-6 ${customer.is_active ? 'text-green-600' : 'text-gray-600'}`} />
+                  <div className={`p-3 rounded-full ${!customer.inactive ? 'bg-green-100' : 'bg-gray-100'}`}>
+                    <Building className={`w-6 h-6 ${!customer.inactive ? 'text-green-600' : 'text-gray-600'}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800 truncate">{getCustomerDisplayName(customer)}</p>
-                    <p className="text-sm text-gray-500">{customer.email}</p>
-                    <p className="text-xs text-gray-400">RIF: {customer.rif || 'N/A'}</p>
+                    <p className="text-sm text-gray-500">{customer.email || customer.alternate_email || 'Sin email'}</p>
+                    <p className="text-xs text-gray-400">Código: {customer.customer_code} • RIF: {customer.rif || 'N/A'}</p>
                   </div>
                   <div className="text-right space-y-1">
                     {getStatusBadge(customer)}
-                    {getVerificationBadge(customer)}
+                    {getTypeBadge(customer)}
                   </div>
                 </div>
                  <div className="flex justify-between items-end mt-4">
                     <div className="text-sm text-gray-600">
-                      <p>Registrado: {formatDate(customer.created_at)}</p>
-                      <p className="text-xs">Último acceso: {formatDate(customer.last_login)}</p>
+                      {customer.phones && <p className="flex items-center gap-1"><Phone className="w-3 h-3" />{customer.phones}</p>}
+                      {getEmailBadge(customer)}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <button 
-                        onClick={() => handleViewStats(customer.id)}
-                        className="p-2 text-blue-500 rounded-full hover:bg-blue-100"
-                        title="Ver Estadísticas"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
                        <button 
                         onClick={(e) => handleDeleteRequest(e, customer)}
                         className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
@@ -484,68 +592,68 @@ const AdminCustomersPage: React.FC = () => {
                   </div>
                 </th>
                 <th scope="col" className="px-6 py-3">Cliente</th>
+                <th scope="col" className="px-6 py-3">Email</th>
+                <th scope="col" className="px-6 py-3">Teléfono</th>
                 <th scope="col" className="px-6 py-3">RIF</th>
+                <th scope="col" className="px-6 py-3">Tipo</th>
                 <th scope="col" className="px-6 py-3">Estado</th>
-                <th scope="col" className="px-6 py-3">Verificación</th>
-                <th scope="col" className="px-6 py-3">Registro</th>
                 <th scope="col" className="px-6 py-3 text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {paginatedCustomers.map(customer => (
                 <tr 
-                  key={customer.id}
+                  key={customer.customer_code}
                   className="bg-white border-b hover:bg-gray-50"
                 >
                   <td className="w-4 p-4">
                     <div className="flex items-center">
                     <input
-                        id={`checkbox-table-search-${customer.id}`} 
+                        id={`checkbox-table-search-${customer.customer_code}`} 
                       type="checkbox"
                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                      checked={selectedCustomers.includes(customer.id)}
-                      onChange={() => handleSelectCustomer(customer.id)}
+                      checked={selectedCustomers.includes(customer.customer_code)}
+                      onChange={() => handleSelectCustomer(customer.customer_code)}
                         onClick={(e) => e.stopPropagation()}
                       />
-                      <label htmlFor={`checkbox-table-search-${customer.id}`} className="sr-only">checkbox</label>
+                      <label htmlFor={`checkbox-table-search-${customer.customer_code}`} className="sr-only">checkbox</label>
                     </div>
                   </td>
                   <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center space-x-3">
-                    <div className={`p-3 rounded-full ${customer.is_active ? 'bg-green-100' : 'bg-gray-100'}`}>
-                      <Building className={`w-6 h-6 ${customer.is_active ? 'text-green-600' : 'text-gray-600'}`} />
+                    <div className={`p-3 rounded-full ${!customer.inactive ? 'bg-green-100' : 'bg-gray-100'}`}>
+                      <Building className={`w-6 h-6 ${!customer.inactive ? 'text-green-600' : 'text-gray-600'}`} />
                     </div>
                     <div>
                       <div className="text-base font-semibold">{getCustomerDisplayName(customer)}</div>
-                      <div className="text-sm text-gray-500">{customer.email}</div>
-                      <div className="text-xs text-gray-400">{customer.phone || 'Sin teléfono'}</div>
+                      <div className="text-xs text-gray-400">Código: {customer.customer_code}</div>
                     </div>
                   </th>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900">
+                      {customer.email || customer.alternate_email || 'Sin email'}
+                    </div>
+                    {customer.alternate_email && customer.email && (
+                      <div className="text-xs text-gray-500">Alt: {customer.alternate_email}</div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900">
+                      {customer.phones || 'N/A'}
+                    </div>
+                  </td>
                   <td className="px-6 py-4">
                     <span className="font-mono text-sm text-gray-900">
                       {customer.rif || 'N/A'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
+                    {getTypeBadge(customer)}
+                  </td>
+                  <td className="px-6 py-4">
                     {getStatusBadge(customer)}
-                  </td>
-                  <td className="px-6 py-4">
-                    {getVerificationBadge(customer)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="text-sm text-gray-900">{formatDate(customer.created_at)}</div>
-                      <div className="text-xs text-gray-500">Último: {formatDate(customer.last_login)}</div>
-                    </div>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center space-x-1">
-                      <button
-                        onClick={() => handleViewStats(customer.id)}
-                        className="p-2 text-blue-500 rounded-full hover:bg-blue-100"
-                        title="Ver Estadísticas"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
                       <button
                         onClick={(e) => handleDeleteRequest(e, customer)}
                         className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
@@ -588,14 +696,6 @@ const AdminCustomersPage: React.FC = () => {
         </div>
       )}
 
-      {/* Customer Stats Modal */}
-      <Suspense fallback={<div>Cargando...</div>}>
-        <CustomerStatsModal
-          isOpen={statsModalOpen}
-          onClose={() => setStatsModalOpen(false)}
-          customerId={selectedCustomerId}
-        />
-      </Suspense>
 
       {customerToDelete && (
         <Suspense fallback={<div>Cargando...</div>}>

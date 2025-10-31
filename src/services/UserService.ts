@@ -8,7 +8,7 @@ export interface UserStats {
 }
 
 class UserService {
-  private baseUrl = import.meta.env.VITE_API_URL + '/api/v1/user' || 'http://localhost:8000/api/v1/user';
+  private baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1/user';
 
   // 📊 Obtener estadísticas del usuario
   async getUserStats(): Promise<UserStats> {

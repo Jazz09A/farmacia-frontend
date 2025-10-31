@@ -371,3 +371,52 @@ export interface CustomerStats {
   favorite_categories: Record<string, any>[];
   purchase_trends: Record<string, any>;
 }
+
+// ===== SOURCE SYSTEM INTERFACES =====
+export type SourceSystemCustomer = {
+  customer_code: string;
+  customer_name: string;
+  email?: string | null;
+  alternate_email?: string | null;
+  rif?: string | null;
+  phones?: string | null;
+  inactive: boolean;
+  is_juridico: boolean;
+};
+
+export type SourceSystemCustomerListResponse = {
+  customers: SourceSystemCustomer[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+export type CreateUsersFromSourceSystemRequest = {
+  customer_codes: string[];
+  use_alternate_emails?: boolean;
+};
+
+export type UserCreationResult = {
+  success: boolean;
+  customer_code: string;
+  customer_name?: string;
+  email?: string;
+  user_id?: string;
+  error?: string;
+  email_sent?: boolean;
+  email_error?: string;
+};
+
+export type CreateUsersResponse = {
+  total: number;
+  successful: UserCreationResult[];
+  failed: UserCreationResult[];
+  summary: {
+    total_attempted: number;
+    users_created: number;
+    users_failed: number;
+    emails_sent: number;
+    emails_failed: number;
+    success_rate: number;
+  };
+};

@@ -17,7 +17,7 @@ export interface FlashOfferFilters {
 }
 
 class FlashOfferService {
-  private adminBaseUrl = import.meta.env.VITE_API_URL + '/api/v1/admin' || 'http://localhost:8000/api/v1/admin';
+  private adminBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1/admin';
 
   async getFlashOffersPublic(): Promise<FlashOfferResponse> {
     try {

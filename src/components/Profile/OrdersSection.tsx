@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/AuthService';
+import { invoiceService } from '../../services/InvoiceService';
 import { motion } from 'framer-motion';
-import { Eye, Truck, DollarSign, Clock, CheckCircle, AlertCircle, Package, XCircle } from 'lucide-react';
+import { Eye, Truck, DollarSign, Clock, CheckCircle, AlertCircle, Package, XCircle, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import OrderDetailsModal from './OrderDetailsModal';
+import InvoiceDetailsModal from './InvoiceDetailsModal';
 import PaymentModal from './PaymentModal'; // Import the new PaymentModal
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
+import type { DEMOAInvoice, DEMOAInvoiceDetails } from '../../types/invoices';
 
 // Define interfaces for Order and OrderDetails to use TypeScript benefits
 interface Order {
@@ -25,11 +28,15 @@ interface Order {
 
 const OrdersSection: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [invoices, setInvoices] = useState<DEMOAInvoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<DEMOAInvoiceDetails | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false); // State for payment modal
-  const { currency, formatPriceFromBackend } = useGlobalCurrency();
+  const { currency, formatPriceFromBackend, formatPrice } = useGlobalCurrency();
 
   const fetchOrders = async () => {
     try {
@@ -43,8 +50,23 @@ const OrdersSection: React.FC = () => {
     }
   };
 
+  const fetchInvoices = async () => {
+    try {
+      setLoadingInvoices(true);
+      const userInvoices = await invoiceService.getAllInvoices();
+      setInvoices(userInvoices);
+    } catch (error) {
+      console.error("Failed to fetch invoices:", error);
+      // Si falla, dejar array vacío para no bloquear la UI
+      setInvoices([]);
+    } finally {
+      setLoadingInvoices(false);
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
+    fetchInvoices();
   }, []);
 
   const handleViewDetails = async (orderId: string) => {
@@ -57,6 +79,16 @@ const OrdersSection: React.FC = () => {
     }
   };
 
+  const handleViewInvoiceDetails = async (invoiceNumber: string) => {
+    try {
+      const details = await invoiceService.getInvoiceDetails(invoiceNumber);
+      setSelectedInvoice(details);
+      setIsInvoiceModalOpen(true);
+    } catch (error) {
+      console.error("Failed to fetch invoice details:", error);
+    }
+  };
+
   const handlePay = (order: Order) => {
     setSelectedOrder(order);
     setIsPaymentModalOpen(true);
@@ -65,6 +97,7 @@ const OrdersSection: React.FC = () => {
   const handlePaymentCreated = () => {
     setIsPaymentModalOpen(false);
     fetchOrders();
+    fetchInvoices(); // Refrescar facturas también por si hay cambios
   };
 
   // Función para formatear el precio de la orden usando la nueva lógica de precios
@@ -207,77 +240,214 @@ const OrdersSection: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return <LoadingSpinner variant="inline" message="Cargando pedidos..." />;
+  // Funciones para facturas DEMOA
+  const formatInvoicePrice = (amount: string) => {
+    // Las facturas vienen en Bolívares como string
+    // Convertir a número y formatear en VES
+    const numAmount = parseFloat(amount);
+    return formatPrice(numAmount, 'VES');
+  };
+
+  const getInvoiceStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'Pendiente';
+      case 'paid':
+        return 'Pagada';
+      default:
+        return status;
+    }
+  };
+
+  const getInvoiceOrderStatusText = (orderStatus: string) => {
+    switch (orderStatus) {
+      case 'active':
+        return 'Activa';
+      case 'processing':
+        return 'En Proceso';
+      case 'requires_attention':
+        return 'Requiere Atención';
+      default:
+        return orderStatus;
+    }
+  };
+
+  const getInvoiceStatusBadge = (status: string) => {
+    const baseClasses = "px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5";
+    
+    switch (status) {
+      case 'pending':
+        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+      case 'paid':
+        return `${baseClasses} bg-emerald-100 text-emerald-800`;
+      default:
+        return `${baseClasses} bg-gray-100 text-gray-800`;
+    }
+  };
+
+  const getInvoiceOrderStatusBadge = (orderStatus: string) => {
+    const baseClasses = "px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5";
+    
+    switch (orderStatus) {
+      case 'active':
+        return `${baseClasses} bg-green-100 text-green-800`;
+      case 'processing':
+        return `${baseClasses} bg-orange-100 text-orange-800`;
+      case 'requires_attention':
+        return `${baseClasses} bg-red-100 text-red-800`;
+      default:
+        return `${baseClasses} bg-gray-100 text-gray-800`;
+    }
+  };
+
+  if (loading && loadingInvoices) {
+    return <LoadingSpinner variant="inline" message="Cargando pedidos y facturas..." />;
   }
+
+  const hasOrders = orders.length > 0;
+  const hasInvoices = invoices.length > 0;
+  const hasAnyContent = hasOrders || hasInvoices;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-medical-gray-800">Mis Pedidos</h2>
+        <h2 className="text-2xl font-bold text-medical-gray-800">Mis Pedidos y Facturas</h2>
         {/* El botón de cambio de divisas está ahora en el navbar global */}
       </div>
       
-      {orders.length > 0 ? (
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <motion.div
-              key={order.id}
-              className="bg-white p-4 rounded-lg shadow-sm flex justify-between items-center"
-              whileHover={{ scale: 1.02 }}
-            >
-              <div>
-                <p className="font-semibold">{order.order_number}</p>
-                <p className="text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString()}</p>
+      {hasAnyContent ? (
+        <div className="space-y-6">
+          {/* Sección de Pedidos */}
+          {hasOrders && (
+            <div>
+              <h3 className="text-lg font-semibold text-medical-gray-700 mb-3">Pedidos</h3>
+              <div className="space-y-4">
+                {orders.map((order) => (
+                  <motion.div
+                    key={order.id}
+                    className="bg-white p-4 rounded-lg shadow-sm flex justify-between items-center"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <div>
+                      <p className="font-semibold">{order.order_number}</p>
+                      <p className="text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <div className="flex gap-2 mb-2">
+                        <span className={getOrderStatusBadge(order.status)}>
+                          {getStatusIcon(order.status)}
+                          {getOrderStatusText(order.status)}
+                        </span>
+                        {order.payment_status && getPaymentStatusText(order.payment_status) !== 'Sin Estado' && (
+                          <span className={getPaymentStatusBadge(order.payment_status)}>
+                            {getPaymentStatusText(order.payment_status)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-semibold mt-1">
+                        {formatOrderPrice(order)}
+                      </p>
+                      {getOriginalPriceText(order) && (
+                        <p className="text-xs text-gray-500">
+                          {getOriginalPriceText(order)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {(order.payment_status === 'pending' || order.payment_status === 'partially_paid') && (
+                        <button onClick={() => handlePay(order)} className="p-2 rounded-full hover:bg-green-100 text-green-600" title="Pagar">
+                          <DollarSign className="w-5 h-5" />
+                        </button>
+                      )}
+                      <button onClick={() => handleViewDetails(order.id)} className="p-2 rounded-full hover:bg-gray-100" title="Ver Detalles">
+                        <Eye className="w-5 h-5" />
+                      </button>
+                      <Link 
+                        to={`/tracking/${order.id}`} 
+                        className="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition-colors" 
+                        title="Ver Tracking"
+                        onClick={() => console.log('Navegando a tracking:', `/tracking/${order.id}`)}
+                      >
+                        <Truck className="w-5 h-5" />
+                      </Link>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-              <div>
-                <div className="flex gap-2 mb-2">
-                  <span className={getOrderStatusBadge(order.status)}>
-                    {getStatusIcon(order.status)}
-                    {getOrderStatusText(order.status)}
-                  </span>
-                  {order.payment_status && getPaymentStatusText(order.payment_status) !== 'Sin Estado' && (
-                    <span className={getPaymentStatusBadge(order.payment_status)}>
-                      {getPaymentStatusText(order.payment_status)}
-                    </span>
-                  )}
-                </div>
-                <p className="font-semibold mt-1">
-                  {formatOrderPrice(order)}
-                </p>
-                {getOriginalPriceText(order) && (
-                  <p className="text-xs text-gray-500">
-                    {getOriginalPriceText(order)}
-                  </p>
-                )}
+            </div>
+          )}
+
+          {/* Sección de Facturas DEMOA */}
+          {hasInvoices && (
+            <div>
+              <h3 className="text-lg font-semibold text-medical-gray-700 mb-3">Facturas DEMOA</h3>
+              <div className="space-y-4">
+                {invoices.map((invoice) => (
+                  <motion.div
+                    key={invoice.invoice_number}
+                    className="bg-white p-4 rounded-lg shadow-sm flex justify-between items-center border-l-4 border-blue-500"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <p className="font-semibold">{invoice.invoice_number}</p>
+                        <p className="text-sm text-gray-500">
+                          Emitida: {new Date(invoice.emission_date).toLocaleDateString()}
+                        </p>
+                        {invoice.due_date && (
+                          <p className={`text-xs ${invoice.status === 'pending' ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+                            Vence: {new Date(invoice.due_date).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex gap-2 mb-2">
+                        <span className={getInvoiceStatusBadge(invoice.status)}>
+                          {invoice.status === 'pending' ? <Clock className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
+                          {getInvoiceStatusText(invoice.status)}
+                        </span>
+                        <span className={getInvoiceOrderStatusBadge(invoice.order_status)}>
+                          {getInvoiceOrderStatusText(invoice.order_status)}
+                        </span>
+                      </div>
+                      <p className="font-semibold mt-1">
+                        {formatInvoicePrice(invoice.total_amount)}
+                      </p>
+                      {invoice.status === 'pending' && parseFloat(invoice.balance) > 0 && (
+                        <p className="text-xs text-red-600 font-medium">
+                          Saldo pendiente: {formatInvoicePrice(invoice.balance)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => handleViewInvoiceDetails(invoice.invoice_number)} 
+                        className="p-2 rounded-full hover:bg-gray-100" 
+                        title="Ver Detalles"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-              <div className="flex items-center gap-2">
-                {(order.payment_status === 'pending' || order.payment_status === 'partially_paid') && (
-                  <button onClick={() => handlePay(order)} className="p-2 rounded-full hover:bg-green-100 text-green-600" title="Pagar">
-                    <DollarSign className="w-5 h-5" />
-                  </button>
-                )}
-                <button onClick={() => handleViewDetails(order.id)} className="p-2 rounded-full hover:bg-gray-100" title="Ver Detalles">
-                  <Eye className="w-5 h-5" />
-                </button>
-                <Link 
-                  to={`/tracking/${order.id}`} 
-                  className="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition-colors" 
-                  title="Ver Tracking"
-                  onClick={() => console.log('Navegando a tracking:', `/tracking/${order.id}`)}
-                >
-                  <Truck className="w-5 h-5" />
-                </Link>
-              </div>
-            </motion.div>
-          ))}
+            </div>
+          )}
         </div>
       ) : (
-        <p>No tienes pedidos aún.</p>
+        <div className="text-center py-8">
+          <p className="text-gray-500">No tienes pedidos ni facturas aún.</p>
+        </div>
       )}
       
       {isModalOpen && (
         <OrderDetailsModal order={selectedOrder} onClose={() => setIsModalOpen(false)} />
+      )}
+
+      {isInvoiceModalOpen && selectedInvoice && (
+        <InvoiceDetailsModal invoice={selectedInvoice} onClose={() => setIsInvoiceModalOpen(false)} />
       )}
 
       {isPaymentModalOpen && selectedOrder && (

@@ -1,6 +1,14 @@
 // 🏥 Servicio para el panel de administración
 import { authService } from './AuthService';
-import { Order, Customer, CustomerStats } from '../types';
+import { 
+  Order, 
+  Customer, 
+  CustomerStats,
+  SourceSystemCustomer,
+  SourceSystemCustomerListResponse,
+  CreateUsersFromSourceSystemRequest,
+  CreateUsersResponse
+} from '../types';
 import { exchangeRateService, ExchangeRateData } from './ExchangeRateService';
 
 export interface DashboardStats {
@@ -34,7 +42,7 @@ export interface DashboardResponse {
 }
 
 class AdminService {
-  private baseUrl = import.meta.env.VITE_API_URL + '/api/v1/admin' || 'http://localhost:8000/api/v1/admin';
+  private baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1/admin';
 
   // 📊 Obtener datos del dashboard
   async getDashboardData(): Promise<DashboardResponse> {
@@ -376,6 +384,79 @@ class AdminService {
       return await exchangeRateService.getExchangeRate(true);
     } catch (error) {
       console.error('Failed to refresh exchange rate:', error);
+      throw error;
+    }
+  }
+
+  // ===== SOURCE SYSTEM METHODS =====
+  
+  /**
+   * Obtener clientes del sistema legacy
+   * @param params Query params: page, limit, include_inactive, only_with_email, search
+   */
+  async fetchSourceCustomers(params: {
+    page: number;
+    limit: number;
+    include_inactive?: boolean;
+    only_with_email?: boolean;
+    search?: string;
+  }): Promise<SourceSystemCustomerListResponse> {
+    try {
+      const url = new URL(`${this.baseUrl}/source-system/customers`);
+      url.searchParams.set('page', String(params.page));
+      url.searchParams.set('limit', String(params.limit));
+      
+      if (params.include_inactive !== undefined) {
+        url.searchParams.set('include_inactive', String(params.include_inactive));
+      }
+      if (params.only_with_email !== undefined) {
+        url.searchParams.set('only_with_email', String(params.only_with_email));
+      }
+      if (params.search) {
+        url.searchParams.set('search', params.search);
+      }
+
+      const response = await authService.authenticatedFetch(url.pathname + url.search);
+      console.log('RESPONSE CUSTOMERS', response);
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: Failed to fetch source customers`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch source customers:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Crear usuarios a partir de clientes del sistema legacy
+   * @param params customer_codes y use_alternate_emails
+   */
+  async createUsersFromSourceCustomers(params: {
+    customer_codes: string[];
+    use_alternate_emails?: boolean;
+  }): Promise<CreateUsersResponse> {
+    try {
+      const response = await authService.authenticatedFetch(
+        `${this.baseUrl}/source-system/create-users`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            customer_codes: params.customer_codes,
+            use_alternate_emails: params.use_alternate_emails ?? false
+          })
+        }
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        throw new Error(errorText || `Error ${response.status}: Failed to create users`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to create users from source customers:', error);
       throw error;
     }
   }

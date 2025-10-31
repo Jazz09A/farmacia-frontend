@@ -96,11 +96,11 @@ const CreditOrdersPage: React.FC = () => {
             >
               <EnhancedPaymentForm
                 orderId={selectedOrder.id}
-                orderTotal={selectedOrder.total}
-                orderTotalRef={selectedOrder.total_ref}
+                orderTotal={Number(selectedOrder.total)}
+                orderTotalRef={Number(selectedOrder.credit_amount)}
                 creditRemaining={selectedOrder.credit_remaining}
                 orderNumber={selectedOrder.order_number}
-                exchangeRate={selectedOrder.exchange_rate}
+                exchangeRate={Number(selectedOrder.exchange_rate)}
                 onPaymentCreated={handlePaymentCreated}
                 onCancel={handleBackToDetails}
               />
@@ -139,7 +139,7 @@ const CreditOrdersPage: React.FC = () => {
 
               {/* Currency Toggle */}
               <div className="flex justify-center mb-8">
-                <CurrencyToggle />
+                <CurrencyToggle currency="USD" onToggle={() => {}} isScrolled={false} />
               </div>
 
               {/* Feature Pills */}

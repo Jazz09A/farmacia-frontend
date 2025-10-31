@@ -1,7 +1,7 @@
 import { authService } from './AuthService';
 
 class ProductImageService {
-  private baseUrl = import.meta.env.VITE_API_URL + '/api/v1/admin' || 'http://localhost:8000/api/v1/admin';
+  private baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1/admin';
 
   /**
    * Agregar imágenes a un producto

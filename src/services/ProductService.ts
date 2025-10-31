@@ -25,7 +25,7 @@ export interface SearchSuggestion {
 }
 
 class ProductService {
-  private baseUrl = import.meta.env.VITE_API_URL + '/api/v1/public/products' || 'http://localhost:8000/api/v1/public/products';
+  private baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1/public/products';
   private cache = new Map<string, { data: ProductsApiResponse; timestamp: number }>();
   private cacheExpiry = 2 * 60 * 1000; // 2 minutos
 
