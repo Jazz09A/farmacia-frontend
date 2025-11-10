@@ -33,13 +33,10 @@ const AdminDashboardPage: React.FC = () => {
   // const { currency } = useAdminCurrency();
 
   // 🎯 Datos del dashboard con React Query
-  const { data, isLoading: loading, status } = useAdminDashboardQuery(String(selectedTimeRange));
+  const { data, isLoading: loading, status, error, refetch } = useAdminDashboardQuery(String(selectedTimeRange));
   useEffect(() => {
     console.log('[RQ] useAdminDashboardQuery', { timeRange: selectedTimeRange, status });
   }, [selectedTimeRange, status]);
-
-  // 🔄 Actualizar datos cuando cambie el rango de tiempo
-  useEffect(() => {}, [selectedTimeRange]);
 
   // 📊 Extraer datos del API o valores por defecto
   const stats = data?.stats || {
@@ -185,7 +182,7 @@ const AdminDashboardPage: React.FC = () => {
 
   // 🔄 Función para refrescar datos manualmente
   const handleRefresh = async () => {
-    await refreshData(selectedTimeRange);
+    await refetch();
   };
 
   const StatCard = ({ 
@@ -270,7 +267,9 @@ const AdminDashboardPage: React.FC = () => {
           {error && (
             <div className="mt-2 flex items-start gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-md">
               <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-              <span className="text-sm text-red-700">{error}</span>
+              <span className="text-sm text-red-700">
+                {error instanceof Error ? error.message : 'Error al cargar los datos del dashboard'}
+              </span>
             </div>
           )}
         </div>
