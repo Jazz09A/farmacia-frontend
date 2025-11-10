@@ -207,7 +207,9 @@ const AdminFlashOffersPage: React.FC = () => {
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
           <div>
             <h3 className="font-medium text-red-800">Error</h3>
-            <p className="text-red-700 text-sm">{error}</p>
+            <p className="text-red-700 text-sm">
+              {error instanceof Error ? error.message : 'Error al cargar las ofertas flash'}
+            </p>
           </div>
         </div>
       )}

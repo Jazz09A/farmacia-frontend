@@ -33,7 +33,7 @@ const AdminOrdersPage: React.FC = () => {
   
   const [filters, setFilters] = useState({ status: 'all', search: '', sortBy: 'created_at', sortOrder: 'desc', limit: 20 });
   const [currentPage, setPage] = useState(1);
-  const { data: ordersResp, isLoading: loading, status } = useAdminOrdersQuery({
+  const { data: ordersResp, isLoading: loading, status, error, refetch } = useAdminOrdersQuery({
     page: currentPage,
     limit: filters.limit,
     status: filters.status,
@@ -209,9 +209,8 @@ const AdminOrdersPage: React.FC = () => {
     setFilters({ sortBy, sortOrder: newSortOrder });
   };
 
-  const handleRefresh = () => {
-    // React Query refetch implícito por cambios de params; forzamos cambio trivial
-    setPage(p => p);
+  const handleRefresh = async () => {
+    await refetch();
   };
 
   if (loading && orders.length === 0) {
@@ -253,7 +252,9 @@ const AdminOrdersPage: React.FC = () => {
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex">
             <AlertCircle className="w-5 h-5 text-red-400 mr-2 flex-shrink-0 mt-0.5" />
-            <div className="text-red-800 text-sm">{error}</div>
+            <div className="text-red-800 text-sm">
+              {error instanceof Error ? error.message : 'Error al cargar los pedidos'}
+            </div>
           </div>
         </div>
       )}
