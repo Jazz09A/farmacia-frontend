@@ -501,7 +501,10 @@ class AuthService {
     }
 
     // Construir la URL correcta según el entorno
-    const fullUrl = `${this.url}${url}`;
+    // Si la URL ya es completa (empieza con http:// o https://), usarla directamente
+    // Si es relativa, agregar this.url
+    const isAbsoluteUrl = url.startsWith('http://') || url.startsWith('https://');
+    const fullUrl = isAbsoluteUrl ? url : `${this.url}${url}`;
     const response = await fetch(fullUrl, { ...options, headers });
 
     // 🔥 MEJORADO: Manejar diferentes códigos de error de autenticación
