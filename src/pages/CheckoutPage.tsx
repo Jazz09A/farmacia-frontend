@@ -6,6 +6,7 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/AuthService';
+import { useUserAddressesQuery, useCreateOrderMutation, useCreateAddressMutation } from '../hooks/queries/useAuthQueries';
 import { useUploadImage } from '../hooks/useUploadImage';
 import { getPaymentMethodCurrency } from '../utils/currencyUtils';
 import { useNavigate } from 'react-router-dom';
@@ -109,77 +110,67 @@ const CheckoutPage: React.FC = () => {
     payment_capture_url: '',
   });
 
-  useEffect(() => {
-    if (currentStep === 1) {
-      fetchAddresses();
-    }
-  }, [currentStep]);
+  const { data: addressesData, refetch: refetchAddresses, isFetching: isFetchingAddresses, status: addressesStatus } = useUserAddressesQuery(
+    { include_checkout_preview: true, cart_total: cart?.total || 0 },
+    currentStep === 1
+  );
+  const createOrderMutation = useCreateOrderMutation();
+  const createAddressMutation = useCreateAddressMutation();
 
-  const fetchAddresses = async () => {
-    try {
-      // Obtener direcciones con checkout preview
-      const response = await authService.getUserAddresses({
-        include_checkout_preview: true,
-        cart_total: cart?.total || 0
-      });
-      console.log('Addresses response:', response); // Debug temporal
-      
-      const addresses = response.addresses || response;
-      console.log('Processed addresses:', addresses); // Debug temporal
-      console.log('Checkout preview response:', response.checkout_preview); // Debug temporal
-      setAddresses(addresses);
-      
-      if (addresses && addresses.length > 0) {
-        const defaultAddress = addresses.find((a: Address) => a.is_default) || addresses[0];
-        console.log('Selected default address:', defaultAddress); // Debug temporal
+  useEffect(() => {
+    if (currentStep === 1 && addressesData) {
+      console.log('[RQ] useUserAddressesQuery', { status: addressesStatus, hasData: !!addressesData });
+      const response: any = addressesData as any;
+      const list = response.addresses || response;
+      setAddresses(list);
+      if (list && list.length > 0) {
+        const defaultAddress = list.find((a: any) => a.is_default) || list[0];
         setFormData(prev => ({ ...prev, shipping_address_id: defaultAddress.id }));
-        
-        // Procesar checkout preview si está disponible
-        if (response.checkout_preview && response.checkout_preview.previews_by_address) {
-          console.log('Previews by address:', response.checkout_preview.previews_by_address); // Debug temporal
-          const addressPreview = response.checkout_preview.previews_by_address[defaultAddress.id];
-          if (addressPreview) {
-            // Convertir la estructura del backend a nuestro tipo CheckoutPreview
-            const checkoutPreview: CheckoutPreview = {
-              subtotal: addressPreview.subtotal,
-              shipping_cost: addressPreview.shipping_cost,
-              taxes: addressPreview.taxes,
-              total: addressPreview.total,
-              payment_currency: addressPreview.payment_currency as 'USD' | 'VES',
-              exchange_rate: addressPreview.exchange_rate,
-              shipping_zone: addressPreview.shipping_zone,
-              shipping_address: {
-                street: defaultAddress.street,
-                city: defaultAddress.city,
-                state: defaultAddress.state,
-                postal_code: defaultAddress.postal_code,
-                country: defaultAddress.country,
-                recipient_name: defaultAddress.recipient_name,
-                recipient_phone: defaultAddress.recipient_phone,
-                delivery_instructions: defaultAddress.delivery_instructions
-              },
-              quantity_discount: addressPreview.quantity_discount,
-              quantity_discount_amount: addressPreview.quantity_discount_amount,
-              flash_discounts: addressPreview.flash_discounts || [],
-              total_discount: addressPreview.total_discount,
-              // Nuevos campos para mostrar descuentos
-              original_subtotal: addressPreview.original_subtotal,
-              original_taxes: addressPreview.original_taxes,
-              original_total: addressPreview.original_total,
-              total_savings: addressPreview.total_savings,
-              savings_percentage: addressPreview.savings_percentage
-            };
-            setCheckoutPreview(checkoutPreview);
-            console.log('Checkout preview set:', checkoutPreview); // Debug temporal
-          }
-        }
       } else {
         setShowAddressForm(true);
       }
-    } catch (error) {
-      console.error('Failed to fetch addresses:', error);
-      setShowAddressForm(true);
+      if ((response as any).checkout_preview && (response as any).checkout_preview.previews_by_address && formData.shipping_address_id) {
+        const addressPreview = (response as any).checkout_preview.previews_by_address[formData.shipping_address_id];
+        if (addressPreview) {
+          const addr = list.find((a: any) => a.id === formData.shipping_address_id);
+          const preview = {
+            subtotal: addressPreview.subtotal,
+            shipping_cost: addressPreview.shipping_cost,
+            taxes: addressPreview.taxes,
+            total: addressPreview.total,
+            payment_currency: addressPreview.payment_currency as 'USD' | 'VES',
+            exchange_rate: addressPreview.exchange_rate,
+            shipping_zone: addressPreview.shipping_zone,
+            shipping_address: addr ? {
+              street: addr.street,
+              city: addr.city,
+              state: addr.state,
+              postal_code: addr.postal_code,
+              country: addr.country,
+              recipient_name: addr.recipient_name,
+              recipient_phone: addr.recipient_phone,
+              delivery_instructions: addr.delivery_instructions
+            } : undefined,
+            quantity_discount: addressPreview.quantity_discount,
+            quantity_discount_amount: addressPreview.quantity_discount_amount,
+            flash_discounts: addressPreview.flash_discounts || [],
+            total_discount: addressPreview.total_discount,
+            original_subtotal: addressPreview.original_subtotal,
+            original_taxes: addressPreview.original_taxes,
+            original_total: addressPreview.original_total,
+            total_savings: addressPreview.total_savings,
+            savings_percentage: addressPreview.savings_percentage
+          } as any;
+          setCheckoutPreview(preview);
+        }
+      }
     }
+  }, [currentStep, addressesData, addressesStatus, formData.shipping_address_id]);
+
+  const fetchAddresses = async () => {
+    // Mantener función para compatibilidad, pero usar refetch de React Query
+    const result = await refetchAddresses();
+    console.log('[RQ] refetch addresses', { status: result.status });
   };
 
   // Función para obtener el preview del checkout (con fallback)
@@ -219,56 +210,43 @@ const CheckoutPage: React.FC = () => {
 
   // Función para actualizar preview cuando cambie la dirección
   const updateCheckoutPreview = async (addressId: string) => {
-    try {
-      // Obtener direcciones nuevamente para obtener el preview actualizado
-      const response = await authService.getUserAddresses({
-        include_checkout_preview: true,
-        cart_total: cart?.total || 0
-      });
-      
-      if (response.checkout_preview && response.checkout_preview.previews_by_address) {
-        const addressPreview = response.checkout_preview.previews_by_address[addressId];
-        if (addressPreview) {
-          // Encontrar la dirección correspondiente
-          const address = addresses.find(addr => addr.id === addressId);
-          if (address) {
-            // Convertir la estructura del backend a nuestro tipo CheckoutPreview
-            const checkoutPreview: CheckoutPreview = {
-              subtotal: addressPreview.subtotal,
-              shipping_cost: addressPreview.shipping_cost,
-              taxes: addressPreview.taxes,
-              total: addressPreview.total,
-              payment_currency: addressPreview.payment_currency as 'USD' | 'VES',
-              exchange_rate: addressPreview.exchange_rate,
-              shipping_zone: addressPreview.shipping_zone,
-              shipping_address: {
-                street: address.street,
-                city: address.city,
-                state: address.state,
-                postal_code: address.postal_code,
-                country: address.country,
-                recipient_name: address.recipient_name,
-                recipient_phone: address.recipient_phone,
-                delivery_instructions: address.delivery_instructions
-              },
-              quantity_discount: addressPreview.quantity_discount,
-              quantity_discount_amount: addressPreview.quantity_discount_amount,
-              flash_discounts: addressPreview.flash_discounts || [],
-              total_discount: addressPreview.total_discount,
-              // Nuevos campos para mostrar descuentos
-              original_subtotal: addressPreview.original_subtotal,
-              original_taxes: addressPreview.original_taxes,
-              original_total: addressPreview.original_total,
-              total_savings: addressPreview.total_savings,
-              savings_percentage: addressPreview.savings_percentage
-            };
-            setCheckoutPreview(checkoutPreview);
-            console.log('Updated checkout preview:', checkoutPreview); // Debug temporal
-          }
-        }
+    const result = await refetchAddresses();
+    const response: any = result.data as any;
+    if (response && response.checkout_preview && response.checkout_preview.previews_by_address) {
+      const addressPreview = response.checkout_preview.previews_by_address[addressId];
+      const address = addresses.find(addr => addr.id === addressId);
+      if (address && addressPreview) {
+        const checkoutPreview: CheckoutPreview = {
+          subtotal: addressPreview.subtotal,
+          shipping_cost: addressPreview.shipping_cost,
+          taxes: addressPreview.taxes,
+          total: addressPreview.total,
+          payment_currency: addressPreview.payment_currency as 'USD' | 'VES',
+          exchange_rate: addressPreview.exchange_rate,
+          shipping_zone: addressPreview.shipping_zone,
+          shipping_address: {
+            street: address.street,
+            city: address.city,
+            state: address.state,
+            postal_code: address.postal_code,
+            country: address.country,
+            recipient_name: address.recipient_name,
+            recipient_phone: address.recipient_phone,
+            delivery_instructions: address.delivery_instructions
+          },
+          quantity_discount: addressPreview.quantity_discount,
+          quantity_discount_amount: addressPreview.quantity_discount_amount,
+          flash_discounts: addressPreview.flash_discounts || [],
+          total_discount: addressPreview.total_discount,
+          original_subtotal: addressPreview.original_subtotal,
+          original_taxes: addressPreview.original_taxes,
+          original_total: addressPreview.original_total,
+          total_savings: addressPreview.total_savings,
+          savings_percentage: addressPreview.savings_percentage
+        };
+        setCheckoutPreview(checkoutPreview);
+        console.log('[RQ] Updated checkout preview:', checkoutPreview);
       }
-    } catch (error) {
-      console.error('Failed to update checkout preview:', error);
     }
   };
 
@@ -282,7 +260,7 @@ const CheckoutPage: React.FC = () => {
 
   const handleSaveAddress = async () => {
     try {
-      const createdAddress = await authService.createUserAddress(newAddress);
+      const createdAddress: any = await createAddressMutation.mutateAsync(newAddress);
       setAddresses([...addresses, createdAddress]);
       setFormData(prev => ({ ...prev, shipping_address_id: createdAddress.id }));
       setShowAddressForm(false);
@@ -342,7 +320,7 @@ const CheckoutPage: React.FC = () => {
   
     try {
       setIsConfirming(true); // ✅ Activar estado de carga
-      await authService.createOrder(orderData);
+      await createOrderMutation.mutateAsync(orderData);
       
       localStorage.removeItem('checkoutFormData');
       clearCart(); 

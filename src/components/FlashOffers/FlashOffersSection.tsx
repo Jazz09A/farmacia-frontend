@@ -1,8 +1,10 @@
 // 🔥 Flash Offers Section Component
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, ChevronLeft, ChevronRight, Clock, Zap } from 'lucide-react';
-import { useFlashOffers, useFlashOfferVisibility } from '../../hooks/useFlashOffers';
+import { useFlashOffersPublicQuery } from '../../hooks/queries/useFlashOffersQueries';
+import { useFlashOfferVisibility } from '../../hooks/useFlashOffers';
+import { flashOfferService } from '../../services/FlashOfferService';
 import FlashOfferCard from './FlashOfferCard';
 import { FlashOfferWithProduct } from '../../types';
 
@@ -24,10 +26,26 @@ export const FlashOffersSection: React.FC<FlashOffersSectionProps> = ({
   const scrollRef = useRef<HTMLDivElement>(null);
   const { ref: visibilityRef, isVisible } = useFlashOfferVisibility(0.1);
   
-  // Solo fetch cuando la sección es visible para optimizar performance
-  const { offers, loading, error, hasActiveOffers } = useFlashOffers(
-    isVisible ? refreshInterval : 0
-  );
+  // Usar React Query para obtener ofertas flash
+  const { data: flashOffersResponse, isLoading: loading, error } = useFlashOffersPublicQuery();
+  
+  // Log solo cuando cambian los datos realmente, no en cada render
+  useEffect(() => {
+    if (flashOffersResponse) {
+      console.log('[RQ] useFlashOffersPublicQuery data updated', { 
+        loading, 
+        error, 
+        count: flashOffersResponse?.flash_offers?.length 
+      });
+    }
+  }, [flashOffersResponse?.flash_offers?.length, error]); // Solo cuando cambian los datos
+
+  // Filtrar solo ofertas activas
+  const offers: FlashOfferWithProduct[] = flashOffersResponse?.flash_offers
+    ? flashOffersResponse.flash_offers.filter(offer => flashOfferService.isOfferActive(offer))
+    : [];
+  
+  const hasActiveOffers = offers.length > 0;
 
   // No renderizar si no hay ofertas activas
   if (!hasActiveOffers && !loading) {

@@ -22,10 +22,13 @@ const CatalogPage = lazy(() => import('./pages/CatalogPage'));
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
 const CartPage = lazy(() => import('./pages/CartPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
+const CheckoutQuotePage = lazy(() => import('./pages/CheckoutQuotePage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const QuoteDetailPage = lazy(() => import('./pages/QuoteDetailPage'));
 const TrackingPage = lazy(() => import('./pages/TrackingPage'));
 const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'));
+const QuoteSuccessPage = lazy(() => import('./pages/QuoteSuccessPage'));
 const VerificationRequiredPage = lazy(() => import('./pages/VerificationRequiredPage'));
 const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage'));
 const CreditPage = lazy(() => import('./pages/CreditPage'));
@@ -52,7 +55,6 @@ const AdminCreditPage = lazy(() => import('./pages/Admin/AdminCreditPage'));
 const AdminPaymentsPage = lazy(() => import('./pages/Admin/AdminPaymentsPage'));
 
 // Hooks
-import { useGlobalCurrency } from './contexts/GlobalCurrencyContext';
 import { useCart } from './contexts/CartContext'; 
 
 // Contexts
@@ -66,7 +68,6 @@ import { CreditProvider } from './contexts/CreditContext';
 const AppLayout = () => {
   const { isScrolled, showScrollTop } = useApp();
   const { cart } = useCart();
-  const { currency, toggleCurrency } = useGlobalCurrency();
   const location = useLocation();
   const isAuthRoute = location.pathname.startsWith('/auth');
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -103,8 +104,12 @@ const AppLayout = () => {
               <Route path="/product/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
               <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
               <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+              <Route path="/checkout/quote" element={<ProtectedRoute><CheckoutQuotePage /></ProtectedRoute>} />
               <Route path="/order-success" element={<ProtectedRoute><OrderSuccessPage /></ProtectedRoute>} />
+              <Route path="/checkout/quote/success" element={<ProtectedRoute><QuoteSuccessPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="/profile/quotes" element={<Navigate to="/profile" state={{ defaultTab: 'cotizaciones' }} replace />} />
+              <Route path="/profile/quotes/:quoteId" element={<ProtectedRoute><QuoteDetailPage /></ProtectedRoute>} />
               <Route path="/tracking/:orderId" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />
               <Route path="/credit" element={<ProtectedRoute><CreditPage /></ProtectedRoute>} />
               <Route path="/credit/orders" element={<ProtectedRoute><CreditOrdersPage /></ProtectedRoute>} />

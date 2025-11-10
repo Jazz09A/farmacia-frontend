@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { usePayment } from '../../hooks/usePayment';
-import { Payment } from '../../types/credit';
+import React, { useEffect } from 'react';
+import { useOrderPaymentsQuery } from '../../hooks/queries/useCreditQueries';
 import { PAYMENT_STATUS } from '../../config/creditConfig';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
@@ -13,23 +12,11 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
   orderId,
   className = ''
 }) => {
-  const { getPayments, loading, error } = usePayment();
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const { data: payments = [], isLoading: loading, error } = useOrderPaymentsQuery(orderId, !!orderId);
 
   useEffect(() => {
-    const fetchPayments = async () => {
-      try {
-        const paymentsData = await getPayments(orderId);
-        setPayments(paymentsData);
-      } catch (error) {
-        console.error('Error fetching payments:', error);
-      }
-    };
-
-    if (orderId) {
-      fetchPayments();
-    }
-  }, [orderId, getPayments]);
+    console.log('[RQ] useOrderPaymentsQuery', { orderId, loading, error, count: payments.length });
+  }, [orderId, loading, error, payments.length]);
 
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -98,7 +85,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
         <div className="text-center p-6">
           <div className="text-red-500 text-2xl mb-2">❌</div>
           <p className="text-gray-600 mb-4">Error al cargar el historial de pagos</p>
-          <p className="text-sm text-gray-500">{error}</p>
+          <p className="text-sm text-gray-500">{error instanceof Error ? error.message : 'Error desconocido'}</p>
         </div>
       </div>
     );

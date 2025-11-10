@@ -11,28 +11,30 @@ export interface CarouselImage {
 
 interface HeroCarouselProps {
   images: CarouselImage[];
+  autoPlay?: boolean;
   autoPlayInterval?: number;
   className?: string;
 }
 
 export const HeroCarousel: React.FC<HeroCarouselProps> = ({
-  images,
+  autoPlay = true,
   autoPlayInterval = 5000,
-  className = ''
+  className = '',
+  images,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
   // Auto-play functionality
   useEffect(() => {
-    if (isHovered) return;
+    if (isHovered || !autoPlay) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
     }, autoPlayInterval);
 
     return () => clearInterval(interval);
-  }, [isHovered, autoPlayInterval, images.length]);
+  }, [isHovered, autoPlayInterval, images.length, autoPlay]);
 
 
   if (!images.length) return null;

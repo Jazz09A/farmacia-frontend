@@ -3,17 +3,24 @@ import { Link } from 'react-router-dom';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import { motion } from 'framer-motion';
 import { Plus, Minus, ShoppingCart, ArrowLeft, Trash2 } from 'lucide-react';
-import { useCart } from '../contexts/CartContext';
+// React Query hooks for cart
+import { useCartQuery, useUpdateCartItemMutation, useRemoveFromCartMutation } from '../hooks/queries/useAuthQueries';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { DiscountProgressWidget } from '../components/Discounts';
 
 const CartPage: React.FC = () => {
   const { formatPriceFromBackend, currency } = useGlobalCurrency();
-  const { cart, loading, updateQuantity, removeFromCart } = useCart();
+  const { data: cart, isLoading } = useCartQuery(true);
+  const updateMutation = useUpdateCartItemMutation();
+  const removeMutation = useRemoveFromCartMutation();
+  
+  React.useEffect(() => {
+    console.log('[RQ] useCartQuery', { isLoading, total_items: cart?.total_items });
+  }, [isLoading, cart?.total_items]);
 
   const handleIncreaseQuantity = async (itemId: string, currentQuantity: number) => {
     try {
-      await updateQuantity(itemId, currentQuantity + 1);
+      await updateMutation.mutateAsync({ itemId, quantity: currentQuantity + 1 });
     } catch (error) {
       console.error('Error increasing quantity:', error);
       alert('Error al aumentar la cantidad. Por favor, inténtalo de nuevo.');
@@ -28,7 +35,7 @@ const CartPage: React.FC = () => {
     }
     
     try {
-      await updateQuantity(itemId, currentQuantity - 1);
+      await updateMutation.mutateAsync({ itemId, quantity: currentQuantity - 1 });
     } catch (error) {
       console.error('Error decreasing quantity:', error);
       alert('Error al disminuir la cantidad. Por favor, inténtalo de nuevo.');
@@ -38,7 +45,7 @@ const CartPage: React.FC = () => {
   const handleRemoveItem = async (itemId: string) => {
     if (confirm('¿Estás seguro de que deseas eliminar este producto del carrito?')) {
       try {
-        await removeFromCart(itemId);
+        await removeMutation.mutateAsync(itemId);
       } catch (error) {
         console.error('Error removing item:', error);
         alert('Error al eliminar el producto. Por favor, inténtalo de nuevo.');
@@ -46,7 +53,7 @@ const CartPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingSpinner message="Cargando carrito..." />;
   }
 
@@ -152,10 +159,10 @@ const CartPage: React.FC = () => {
 
               <div className="mt-8 space-y-4">
                 <Link
-                  to="/checkout"
+                  to="/checkout/quote"
                   className="w-full text-center block px-6 py-4 bg-medical-primary text-white font-semibold rounded-2xl shadow-medical hover:bg-medical-primary-dark transition-all"
                 >
-                  Finalizar Compra
+                  Generar Cotización
                 </Link>
                 <Link
                   to="/catalogo"

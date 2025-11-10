@@ -1,6 +1,7 @@
 /* @refresh reset */
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import CreditService from '../services/CreditService';
+import { authService } from '../services/AuthService';
 import {
   CreditInfo,
   CreditDashboard,
@@ -118,6 +119,10 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
   // Función para actualizar información de crédito
   const refreshCreditInfo = useCallback(async (handleLoading = true): Promise<void> => {
     try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        return;
+      }
       if (handleLoading) dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
       
@@ -135,6 +140,10 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
   // Función para actualizar dashboard
   const refreshDashboard = useCallback(async (handleLoading = true): Promise<void> => {
     try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        return;
+      }
       if (handleLoading) dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
       
@@ -152,6 +161,10 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
   // Función para crear orden de crédito
   const createCreditOrder = useCallback(async (orderData: CreditOrderData): Promise<CreditOrderResponse> => {
     try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('No hay sesión activa para crear orden de crédito');
+      }
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
       
@@ -174,6 +187,10 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
   // Función para crear pago (ahora usando Cloudinary directamente)
   const createPayment = useCallback(async (paymentData: PaymentData, paymentCaptureFile?: File): Promise<Payment> => {
     try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('No hay sesión activa para crear pagos');
+      }
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
 
@@ -205,6 +222,10 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
   // Función para obtener pagos de una orden
   const getOrderPayments = useCallback(async (orderId: string): Promise<Payment[]> => {
     try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('No hay sesión activa para consultar pagos');
+      }
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
       
@@ -222,6 +243,10 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
   // Función para obtener todos los pagos del usuario
   const getMyPayments = useCallback(async (handleLoading = true): Promise<void> => {
     try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('No hay sesión activa para obtener pagos');
+      }
       if (handleLoading) dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
       
@@ -238,6 +263,10 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
   // Función para obtener órdenes de crédito
   const getCreditOrders = useCallback(async (page: number = 1, limit: number = 10): Promise<CreditOrdersResponse> => {
     try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('No hay sesión activa para obtener órdenes de crédito');
+      }
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
       
@@ -256,6 +285,10 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
   // Función para obtener detalles de una orden de crédito
   const getCreditOrderDetails = useCallback(async (orderId: string): Promise<CreditOrder> => {
     try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('No hay sesión activa para obtener detalles de la orden de crédito');
+      }
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
       
@@ -273,6 +306,10 @@ export const CreditProvider: React.FC<CreditProviderProps> = ({ children }) => {
   // Cargar datos iniciales
   useEffect(() => {
     const loadInitialData = async () => {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        return;
+      }
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
         await Promise.all([

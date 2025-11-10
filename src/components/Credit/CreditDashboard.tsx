@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useCredit } from '../../contexts/CreditContext';
+import { useCreditDashboardQuery } from '../../hooks/queries/useCreditQueries';
 import { useCreditValidation } from '../../hooks/useCreditValidation';
 import { CreditInfoCard } from './CreditInfoCard';
 import { LoadingSpinner } from '../common/LoadingSpinner';
@@ -24,8 +24,16 @@ interface CreditDashboardProps {
 export const CreditDashboard: React.FC<CreditDashboardProps> = ({
   className = ''
 }) => {
-  const { dashboardData, loading, error, refreshDashboard } = useCredit();
+  const { data: dashboardData, isLoading: loading, error, refetch } = useCreditDashboardQuery(true);
   const { getCreditUsagePercentage, getCreditStatusInfo } = useCreditValidation();
+
+  useEffect(() => {
+    console.log('[RQ] useCreditDashboardQuery', { loading, error, hasData: !!dashboardData });
+  }, [loading, error, dashboardData]);
+
+  const refreshDashboard = () => {
+    refetch();
+  };
 
   
 

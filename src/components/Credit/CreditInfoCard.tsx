@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useCredit } from '../../contexts/CreditContext';
+import { useCreditInfoQuery } from '../../hooks/queries/useCreditQueries';
 import { useCreditValidation } from '../../hooks/useCreditValidation';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { CreditCard, RefreshCw, TrendingUp, DollarSign, Shield, AlertTriangle } from 'lucide-react';
@@ -30,11 +30,15 @@ export const CreditInfoCard: React.FC<CreditInfoCardProps> = ({
   showDetails = true,
   className = ''
 }) => {
-  const { creditInfo, loading, error, refreshCreditInfo } = useCredit();
+  const { data: creditInfo, isLoading: loading, error, refetch } = useCreditInfoQuery(true);
   const { getCreditStatusInfo, getCreditUsagePercentage } = useCreditValidation();
 
+  useEffect(() => {
+    console.log('[RQ] useCreditInfoQuery', { loading, error, hasData: !!creditInfo });
+  }, [loading, error, creditInfo]);
+
   const handleRefresh = async () => {
-    await refreshCreditInfo();
+    await refetch();
     onRefresh?.();
   };
 

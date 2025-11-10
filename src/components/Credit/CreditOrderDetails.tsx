@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useCredit } from '../../contexts/CreditContext';
+import { useCreditOrderDetailsQuery } from '../../hooks/queries/useCreditQueries';
 import { CreditOrder } from '../../types/credit';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { PaymentHistory } from './PaymentHistory';
@@ -35,21 +35,11 @@ export const CreditOrderDetails: React.FC<CreditOrderDetailsProps> = ({
   onMakePayment,
   className = ''
 }) => {
-  const { getCreditOrderDetails, loading, error } = useCredit();
-  const [order, setOrder] = useState<CreditOrder | null>(null);
+  const { data: order, isLoading: loading, error } = useCreditOrderDetailsQuery(orderId, !!orderId);
 
   useEffect(() => {
-    loadOrderDetails();
-  }, [orderId]);
-
-  const loadOrderDetails = async () => {
-    try {
-      const orderData = await getCreditOrderDetails(orderId);
-      setOrder(orderData);
-    } catch (error) {
-      console.error('Error loading order details:', error);
-    }
-  };
+    console.log('[RQ] useCreditOrderDetailsQuery', { orderId, loading, error, hasData: !!order });
+  }, [orderId, loading, error, order]);
 
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -140,7 +130,7 @@ export const CreditOrderDetails: React.FC<CreditOrderDetailsProps> = ({
             <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
           <h3 className="text-2xl font-bold text-gray-800 mb-3">Error al cargar los detalles</h3>
-          <p className="text-gray-600 mb-6 max-w-md mx-auto">{error}</p>
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">{error instanceof Error ? error.message : 'Error desconocido'}</p>
           <button
             onClick={onBack}
             className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"

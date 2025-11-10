@@ -7,8 +7,7 @@ import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import Pagination from '../components/common/Pagination';
 import { ProductCardSkeleton } from '../components/Skeleton/ProductCardSkeleton';
 import MapSection from '../components/Map/MapSection';
-import { productService } from '../services/ProductService';
-import { useCatalogCache } from '../hooks/usePageCache';
+import { useProductsQuery } from '../hooks/queries/useProductsQueries';
 import { useScrollContext } from '../contexts/ScrollContext';
 import { usePrefetchNextPage } from '../hooks/useImagePrefetch';
 
@@ -27,15 +26,11 @@ const medicalConditions = [
 
 const CatalogPage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchParams.get('search') || '');
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isFiltering, setIsFiltering] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
   const [productsPerPage] = useState(20);
   const { currency, formatPriceFromBackend, getDisplayPrice } = useGlobalCurrency();
   const { scrollToTop } = useScrollContext();
@@ -53,94 +48,48 @@ const CatalogPage: React.FC = () => {
     sortOrder: 'asc'
   });
 
-  // Hook de caché para productos del catálogo
-  const cacheKey = 'catalog-products';
-  const cacheParams = {
-    search: searchTerm,
-    ...filters,
-    page: currentPage,
-    limit: productsPerPage,
-    currency
-  };
-  const { cachedData, setCachedData, isCached } = useCatalogCache(cacheKey, cacheParams);
-
-  // Función para cargar productos desde el backend
-  const loadProducts = async (page: number = 1, useCache: boolean = true) => {
-    // Crear parámetros de caché
-    const currentCacheParams = {
-      search: searchTerm,
-      ...filters,
-      page,
-      limit: productsPerPage,
-      currency
-    };
-
-    // Intentar obtener del caché primero
-    if (useCache && cachedData) {
-      setProducts(cachedData.products);
-      setTotalPages(cachedData.totalPages);
-      setTotalProducts(cachedData.totalProducts);
-      setCurrentPage(page);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await productService.searchProducts({
-        search: searchTerm || undefined,
-        category: filters.category || undefined,
-        subcategory: filters.subcategory || undefined,
-        patology: filters.patology || undefined,
-        brand: filters.brand || undefined,
-        min_price: filters.priceRange[0] > 0 ? filters.priceRange[0] : undefined,
-        max_price: filters.priceRange[1] < 1000 ? filters.priceRange[1] : undefined,
-        in_stock: filters.inStock || undefined,
-        prescription: filters.prescription || undefined,
-        sort_by: filters.sortBy as any,
-        sort_order: filters.sortOrder,
-        page,
-        limit: productsPerPage
-      });
-      
-      const cacheData = {
-        products: response.products,
-        totalPages: response.pagination?.total_pages || 1,
-        totalProducts: response.pagination?.total || response.total || 0
-      };
-
-      // Guardar en caché
-      setCachedData(cacheData);
-      
-      setProducts(response.products);
-      setTotalPages(cacheData.totalPages);
-      setTotalProducts(cacheData.totalProducts);
-      setCurrentPage(page);
-    } catch (error) {
-      console.error('Error loading products:', error);
-      // En caso de error, limpiar el estado
-      setProducts([]);
-      setTotalPages(0);
-      setTotalProducts(0);
-      setCurrentPage(1);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Debounce para búsqueda
   useEffect(() => {
-    const debounce = setTimeout(() => {
-      loadProducts(1);
-    }, 500); // Espera 500ms después de que el usuario deje de escribir
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1);
+    }, 500);
 
-    return () => clearTimeout(debounce);
+    return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Cargar cuando cambian filtros (sin debounce)
+  // Convertir filtros locales a parámetros de búsqueda de API
+  const searchParams_api = useMemo(() => ({
+    search: debouncedSearchTerm || undefined,
+    category: filters.category || undefined,
+    subcategory: filters.subcategory || undefined,
+    patology: filters.patology || undefined,
+    brand: filters.brand || undefined,
+    min_price: filters.priceRange[0] > 0 ? filters.priceRange[0] : undefined,
+    max_price: filters.priceRange[1] < 1000 ? filters.priceRange[1] : undefined,
+    in_stock: filters.inStock || undefined,
+    prescription: filters.prescription || undefined,
+    sort_by: filters.sortBy as 'name' | 'price' | 'rating' | 'created_at' | 'relevance',
+    sort_order: filters.sortOrder,
+    page: currentPage,
+    limit: productsPerPage
+  }), [debouncedSearchTerm, filters, currentPage, productsPerPage]);
+
+  // Usar React Query para obtener productos
+  const { data: productsResponse, isLoading, isFetching, error } = useProductsQuery(searchParams_api);
   useEffect(() => {
-    loadProducts(1);
-  }, [filters]);
+    console.log('[RQ] useProductsQuery', {
+      key: searchParams_api,
+      isLoading,
+      isFetching,
+      total: productsResponse?.total,
+    });
+  }, [productsResponse, isLoading, isFetching, searchParams_api]);
+
+  const products = productsResponse?.products || [];
+  const totalPages = productsResponse?.pagination?.total_pages || productsResponse?.total ? Math.ceil((productsResponse.total || 0) / productsPerPage) : 1;
+  const totalProducts = productsResponse?.total || productsResponse?.pagination?.total || 0;
+  const isFiltering = isFetching && !isLoading;
 
   // Actualizar searchTerm cuando cambia la URL
   useEffect(() => {
@@ -150,27 +99,19 @@ const CatalogPage: React.FC = () => {
     }
   }, [searchParams]);
 
+  // Resetear página cuando cambian filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, debouncedSearchTerm]);
+
   // Manejar cambio de página
   const handlePageChange = (page: number) => {
-    loadProducts(page);
-    // Scroll to top optimizado cuando cambie de página
+    setCurrentPage(page);
     scrollToTop({ smooth: true, duration: 400 });
   };
 
   // Prefetch de imágenes de la página actual
   usePrefetchNextPage(products, !isLoading && products.length > 0);
-
-  // Filter change loading simulation
-  useEffect(() => {
-    if (!isLoading) {
-      setIsFiltering(true);
-      const timer = setTimeout(() => {
-        setIsFiltering(false);
-      }, 600);
-
-      return () => clearTimeout(timer);
-    }
-  }, [searchTerm, filters]);
 
   // Icono dinámico para categorías
   const getCategoryIcon = (iconName: string) => {
@@ -184,59 +125,8 @@ const CatalogPage: React.FC = () => {
     return icons[iconName] || <Pill className="w-5 h-5" />;
   };
 
-  // Filtrar y ordenar productos (aplicado sobre los productos filtrados por búsqueda)
-  const filteredProducts = useMemo(() => {
-    // Usar los productos filtrados por búsqueda como base
-    const baseProducts = products;
-    
-    let filtered = baseProducts.filter(product => {
-      // La búsqueda ya se maneja en el componente SearchInput
-      // Solo aplicamos los otros filtros aquí
-      const matchesSearch = true; // SearchInput ya filtra por búsqueda
-      
-      const matchesCategory = !filters.category || product.category === filters.category;
-      const matchesSubcategory = !filters.subcategory || product.subcategory === filters.subcategory;
-      const matchesPatology = !filters.patology || product.patology === filters.patology;
-      const matchesBrand = !filters.brand || product.brand.toLowerCase().includes(filters.brand.toLowerCase());
-      // Precios vienen en USD como string; convertir para display/filtrado
-      const currentPrice = getDisplayPrice(product.price, currency);
-      const matchesPrice = currentPrice >= filters.priceRange[0] && currentPrice <= filters.priceRange[1];
-      const matchesStock = !filters.inStock || product.in_stock;
-      const matchesPrescription = !filters.prescription || product.prescription;
-      const matchesRating = parseFloat(product.rating) >= filters.rating;
-
-      return matchesSearch && matchesCategory && matchesSubcategory && matchesPatology && 
-             matchesBrand && matchesPrice && matchesStock && matchesPrescription && matchesRating;
-    });
-
-    // Ordenar productos
-    filtered.sort((a, b) => {
-      let comparison = 0;
-      
-      switch (filters.sortBy) {
-        case 'price':
-          const priceA = getDisplayPrice(a.price, currency);
-          const priceB = getDisplayPrice(b.price, currency);
-          comparison = priceA - priceB;
-          break;
-        case 'rating':
-          comparison = parseFloat(a.rating) - parseFloat(b.rating);
-          break;
-        case 'name':
-          comparison = a.name.localeCompare(b.name);
-          break;
-        case 'popularity':
-          comparison = a.review_count - b.review_count;
-          break;
-        default:
-          comparison = a.name.localeCompare(b.name);
-      }
-
-      return filters.sortOrder === 'desc' ? -comparison : comparison;
-    });
-
-    return filtered;
-  }, [products, searchTerm, filters]);
+  // Los productos ya vienen filtrados del servidor, no necesitamos filtrar localmente
+  const filteredProducts = products;
 
   // Función para formatear precios individuales (para filtros)
   const formatSinglePrice = (price: number): string => {
@@ -472,7 +362,7 @@ const CatalogPage: React.FC = () => {
               </div>
 
               {/* Grid de productos */}
-              {isLoading || isFiltering ? (
+              {isLoading ? (
                 <div className={`grid gap-6 ${
                   viewMode === 'grid' 
                     ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 

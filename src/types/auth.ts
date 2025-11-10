@@ -50,6 +50,7 @@ export interface User {
   id: string;
   email: string;
   phone: string;
+  customer_code?: string; // Código Profit Plus asociado (co_cli)
   user_type: 'juridico' | 'natural' | 'admin';
   role: 'super_admin' | 'admin' | 'user';
   preferred_currency: 'VES' | 'USD';

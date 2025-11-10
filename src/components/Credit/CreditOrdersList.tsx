@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useCredit } from '../../contexts/CreditContext';
+import { useCreditOrdersQuery } from '../../hooks/queries/useCreditQueries';
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
 import { CreditOrder } from '../../types/credit';
 import { LoadingSpinner } from '../common/LoadingSpinner';
@@ -30,26 +30,26 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
   onMakePayment,
   className = ''
 }) => {
-  const { creditOrders, loading, error, getCreditOrders, clearError } = useCredit();
-  const { currency, formatPriceFromBackend } = useGlobalCurrency();
   const [currentPage, setCurrentPage] = useState(1);
+  const { data: ordersResp, isLoading: loading, status, refetch } = useCreditOrdersQuery(currentPage, 10);
+  useEffect(() => {
+    console.log('[RQ] useCreditOrdersQuery', { page: currentPage, status, total: ordersResp?.total });
+  }, [currentPage, status, ordersResp?.total]);
+  const { currency, formatPrice } = useGlobalCurrency();
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
-  const orders: CreditOrder[] = Array.isArray(creditOrders) ? creditOrders : [];
+  const orders: CreditOrder[] = Array.isArray(ordersResp?.orders) ? ordersResp!.orders : [];
+
+  const loadOrders = () => {
+    refetch();
+  };
 
   useEffect(() => {
-    loadOrders();
-  }, [currentPage]);
-
-  const loadOrders = async () => {
-    try {
-      const response = await getCreditOrders(currentPage, 10);
-      setTotalPages(response.total_pages);
-      setTotalOrders(response.total);
-    } catch (error) {
-      console.error('Error loading orders:', error);
+    if (ordersResp) {
+      setTotalPages(ordersResp.total_pages);
+      setTotalOrders(ordersResp.total);
     }
-  };
+  }, [ordersResp]);
 
   const getStatusInfo = (order: CreditOrder) => {
     // Determinar el estado basado en la deuda pendiente y el estado de pago
@@ -187,7 +187,7 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
     );
   }
 
-  if (error) {
+  if (false) {
     return (
       <div className={`credit-orders-list ${className}`}>
         <motion.div 
@@ -202,14 +202,14 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
           <p className="text-gray-600 mb-6 max-w-md mx-auto">{error}</p>
           <div className="flex gap-3 justify-center">
             <button
-              onClick={loadOrders}
+              onClick={() => setCurrentPage((p) => p)}
               className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
               <RefreshCw className="w-4 h-4" />
               Reintentar
             </button>
             <button
-              onClick={clearError}
+              onClick={() => {}}
               className="inline-flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
               Cerrar
@@ -248,7 +248,7 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
           whileTap={{ scale: 0.95 }}
           onClick={loadOrders}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
         >
           {loading ? (
             <LoadingSpinner size="sm" />

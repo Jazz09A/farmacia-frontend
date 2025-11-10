@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useAdminCredit } from '../../hooks/useAdminCredit';
+import { useAdminCreditDashboardQuery } from '../../hooks/queries/useCreditQueries';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
 interface AdminCreditDashboardProps {
@@ -9,18 +9,42 @@ interface AdminCreditDashboardProps {
 export const AdminCreditDashboard: React.FC<AdminCreditDashboardProps> = ({
   className = ''
 }) => {
-  const {
-    adminDashboard,
-    loading,
-    error,
-    getAdminDashboard,
-    getPaymentStats,
-    formatAmount
-  } = useAdminCredit();
+  const { data: adminDashboard, isLoading: loading, error, refetch } = useAdminCreditDashboardQuery(true);
 
   useEffect(() => {
-    getAdminDashboard();
-  }, [getAdminDashboard]);
+    console.log('[RQ] useAdminCreditDashboardQuery', { loading, error, hasData: !!adminDashboard });
+  }, [loading, error, adminDashboard]);
+
+  const formatAmount = (amount: number): string => {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const getPaymentStats = () => {
+    if (!adminDashboard) {
+      return {
+        pendingCount: 0,
+        approvedToday: 0,
+        totalPendingAmount: 0,
+        ordersWithPending: 0
+      };
+    }
+
+    const pendingPayments = adminDashboard.pending_payments || [];
+    const today = new Date().toISOString().split('T')[0];
+    const approvedToday = (adminDashboard.recent_approved_payments || []).filter(
+      (p: any) => p.approved_at && p.approved_at.startsWith(today)
+    ).length;
+
+    return {
+      pendingCount: pendingPayments.length,
+      approvedToday,
+      totalPendingAmount: pendingPayments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0),
+      ordersWithPending: new Set(pendingPayments.map((p: any) => p.order_id)).size
+    };
+  };
 
   const stats = getPaymentStats();
 
@@ -41,9 +65,9 @@ export const AdminCreditDashboard: React.FC<AdminCreditDashboardProps> = ({
         <div className="text-center p-8">
           <div className="text-red-500 text-4xl mb-4">❌</div>
           <h3 className="text-xl font-bold text-gray-800 mb-2">Error al cargar el dashboard</h3>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-gray-600 mb-4">{error instanceof Error ? error.message : 'Error desconocido'}</p>
           <button
-            onClick={getAdminDashboard}
+            onClick={() => refetch()}
             className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
           >
             🔄 Reintentar
@@ -76,14 +100,14 @@ export const AdminCreditDashboard: React.FC<AdminCreditDashboardProps> = ({
             Resumen general del sistema de créditos
           </p>
         </div>
-        <button
-          onClick={getAdminDashboard}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center gap-2"
-        >
-          {loading ? <LoadingSpinner size="sm" /> : '🔄'}
-          Actualizar
-        </button>
+          <button
+            onClick={() => refetch()}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+          >
+            {loading ? <LoadingSpinner size="sm" /> : '🔄'}
+            Actualizar
+          </button>
       </div>
 
       {/* Estadísticas principales */}

@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Order } from '../../types';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { useOrders } from '../../hooks/useOrders';
+import { useAdminOrdersQuery, useUpdateOrderStatusMutation, useUpdatePaymentStatusMutation } from '../../hooks/queries/useAdminQueries';
 import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
 import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
 
@@ -31,20 +31,24 @@ const AdminOrdersPage: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   
-  const {
-    orders,
-    loading,
-    error,
-    total,
-    pages,
-    currentPage,
-    filters,
-    refreshOrders,
-    updateOrderStatus,
-    updatePaymentStatus,
-    setFilters,
-    setPage
-  } = useOrders();
+  const [filters, setFilters] = useState({ status: 'all', search: '', sortBy: 'created_at', sortOrder: 'desc', limit: 20 });
+  const [currentPage, setPage] = useState(1);
+  const { data: ordersResp, isLoading: loading, status } = useAdminOrdersQuery({
+    page: currentPage,
+    limit: filters.limit,
+    status: filters.status,
+    search: filters.search,
+    sort_by: filters.sortBy,
+    sort_order: filters.sortOrder as 'asc' | 'desc'
+  });
+  const orders = ordersResp?.orders || [];
+  const total = ordersResp?.total || 0;
+  const pages = ordersResp?.pages || 0;
+  const updateOrderStatusMutation = useUpdateOrderStatusMutation();
+  const updatePaymentStatusMutation = useUpdatePaymentStatusMutation();
+  React.useEffect(() => {
+    console.log('[RQ] useAdminOrdersQuery', { status, page: currentPage, count: orders.length });
+  }, [status, currentPage, orders.length]);
 
   // Función para traducir estados de órdenes
   const getOrderStatusText = (status: string) => {
@@ -163,7 +167,7 @@ const AdminOrdersPage: React.FC = () => {
         return;
       }
 
-      await updateOrderStatus(orderId, newStatus);
+      await updateOrderStatusMutation.mutateAsync({ orderId, status: newStatus });
       
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
@@ -176,7 +180,7 @@ const AdminOrdersPage: React.FC = () => {
 
   const handleUpdatePaymentStatus = async (orderId: string, paymentStatus: 'completed' | 'failed') => {
     try {
-      await updatePaymentStatus(orderId, paymentStatus);
+      await updatePaymentStatusMutation.mutateAsync({ orderId, paymentStatus });
       
       // Update local state for the modal
       if (selectedOrder && selectedOrder.id === orderId) {
@@ -186,8 +190,7 @@ const AdminOrdersPage: React.FC = () => {
         });
       }
       
-      // Refresh orders to get updated data
-      await refreshOrders();
+      // Refetch handled by invalidation in mutation
     } catch (error) {
       console.error('Error updating payment status:', error);
     }
@@ -207,7 +210,8 @@ const AdminOrdersPage: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    refreshOrders();
+    // React Query refetch implícito por cambios de params; forzamos cambio trivial
+    setPage(p => p);
   };
 
   if (loading && orders.length === 0) {

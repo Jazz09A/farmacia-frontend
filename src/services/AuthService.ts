@@ -76,7 +76,12 @@ class AuthService {
       console.log("response: ", response);
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.message || 'Credenciales inválidas');
+        // Devolver mensaje del backend (detail o message) sin lanzar excepción
+        return {
+          success: false,
+          message: result?.detail || result?.message || 'Credenciales inválidas',
+          errors: result?.errors || {}
+        };
       }
       if (result.access_token) {
         console.log(result.access_token);
@@ -92,7 +97,12 @@ class AuthService {
       }
     } catch (error) {
       console.error('Error en login:', error);
-      throw new Error('Error de conexión. Por favor, intenta nuevamente.');
+      // Manejo de red/otros errores devolviendo una respuesta uniforme
+      return {
+        success: false,
+        message: 'Error de conexión. Por favor, intenta nuevamente.',
+        errors: {}
+      };
     }
   }
 
@@ -495,7 +505,7 @@ class AuthService {
     const response = await fetch(fullUrl, { ...options, headers });
 
     // 🔥 MEJORADO: Manejar diferentes códigos de error de autenticación
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === 401) {
       // Token inválido o expirado - hacer logout completo
       this.logout();
       
@@ -505,6 +515,11 @@ class AuthService {
       }));
       
       throw new Error('Session expired - please login again');
+    }
+
+    if (response.status === 403) {
+      // Mantener la sesión, pero propagar el error para manejo específico
+      throw new Error('No tienes permisos para esta acción.');
     }
 
     return response;

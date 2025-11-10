@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Product } from '../types';
 import { useCurrency } from '../hooks/useCurrency';
 import { useCart } from '../contexts/CartContext';
-import { productService } from '../services/ProductService';
+import { useProductQuery, useRelatedProductsQuery } from '../hooks/queries/useProductsQueries';
 import { ProductDetailSkeleton } from '../components/Skeleton';
 
 // Placeholder for a component of product carousel
@@ -34,7 +34,7 @@ const ProductsCarousel: React.FC<{ products: Product[], title: string }> = ({ pr
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: productData, isLoading: isLoadingProduct, status: statusProduct } = useProductQuery(id || '', !!id);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   const [activeImage, setActiveImage] = useState('');
@@ -44,30 +44,21 @@ const ProductDetailPage: React.FC = () => {
   const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      setLoading(true);
-      try {
-        if (id) {
-          const fetchedProduct = await productService.getProductById(id);
-          if (fetchedProduct) {
-            setProduct(fetchedProduct);
-            setActiveImage(fetchedProduct.images && fetchedProduct.images.length > 1 ? fetchedProduct.images[1] : fetchedProduct.image);
-          } else {
-            setProduct(null);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching product:', error);
-        setProduct(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProduct();
-  }, [id]);
+    if (productData) {
+      setProduct(productData);
+      setActiveImage(productData.images && productData.images.length > 1 ? productData.images[1] : productData.image);
+    }
+    // Debug hooks
+    console.log('[RQ] useProductQuery', { id, status: statusProduct, hasData: !!productData });
+  }, [productData, statusProduct, id]);
+
+  const { data: relatedData, status: statusRelated } = useRelatedProductsQuery(product, 6);
+  useEffect(() => {
+    console.log('[RQ] useRelatedProductsQuery', { productId: product?.id, status: statusRelated, count: relatedData?.length });
+  }, [statusRelated, relatedData, product?.id]);
 
   // Show skeleton while loading
-  if (loading) {
+  if (isLoadingProduct) {
     return <ProductDetailSkeleton />;
   }
 
@@ -100,7 +91,7 @@ const ProductDetailPage: React.FC = () => {
     }
   };
 
-  const relatedProducts: Product[] = []; 
+  const relatedProducts: Product[] = relatedData || []; 
   const recommendedProducts: Product[] = []; 
   const productReviews: any[] = [];
 

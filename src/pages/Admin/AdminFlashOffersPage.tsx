@@ -1,5 +1,5 @@
 // 🔥 Admin Flash Offers Management Page
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Flame, 
@@ -16,7 +16,13 @@ import {
   AlertCircle,
   CheckCircle2
 } from 'lucide-react';
-import { useAdminFlashOffers } from '../../hooks/useFlashOffers';
+import { 
+  useAdminFlashOffersQuery, 
+  useCreateFlashOfferMutation,
+  useUpdateFlashOfferMutation,
+  useDeleteFlashOfferMutation,
+  useToggleFlashOfferStatusMutation
+} from '../../hooks/queries/useFlashOffersQueries';
 import { FlashOfferFilters, flashOfferService } from '../../services/FlashOfferService';
 import { FlashOfferWithProduct, CreateFlashOfferPayload } from '../../types';
 import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
@@ -32,7 +38,35 @@ const AdminFlashOffersPage: React.FC = () => {
   const [selectedOffer, setSelectedOffer] = useState<FlashOfferWithProduct | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
-  const { offers, totalCount, activeCount, loading, error, actions } = useAdminFlashOffers(filters);
+  const { data: flashOffersResponse, isLoading: loading, error, refetch } = useAdminFlashOffersQuery(filters);
+  const createMutation = useCreateFlashOfferMutation();
+  const updateMutation = useUpdateFlashOfferMutation();
+  const deleteMutation = useDeleteFlashOfferMutation();
+  const toggleStatusMutation = useToggleFlashOfferStatusMutation();
+
+  useEffect(() => {
+    console.log('[RQ] useAdminFlashOffersQuery', { loading, error, count: flashOffersResponse?.flash_offers?.length });
+  }, [loading, error, flashOffersResponse]);
+
+  const offers = flashOffersResponse?.flash_offers || [];
+  const totalCount = flashOffersResponse?.total_count || 0;
+  const activeCount = flashOffersResponse?.active_count || 0;
+
+  const actions = {
+    refresh: () => refetch(),
+    create: async (payload: CreateFlashOfferPayload) => {
+      await createMutation.mutateAsync(payload);
+    },
+    update: async (id: string, payload: Partial<CreateFlashOfferPayload>) => {
+      await updateMutation.mutateAsync({ id, payload });
+    },
+    delete: async (id: string) => {
+      await deleteMutation.mutateAsync(id);
+    },
+    toggleStatus: async (id: string, is_active: boolean) => {
+      await toggleStatusMutation.mutateAsync({ id, is_active });
+    },
+  };
 
   const handleToggleStatus = async (offerId: string, currentStatus: boolean) => {
     try {

@@ -19,7 +19,7 @@ import {
   CheckSquare,
   Square
 } from 'lucide-react';
-import { useAdminCredit } from '../../hooks/useAdminCredit';
+import { useAllPaymentsQuery, useApprovePaymentMutation } from '../../hooks/queries/useCreditQueries';
 import { Payment } from '../../types/credit';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { PageLayout } from '../../components/Layout/PageLayout';
@@ -316,22 +316,18 @@ const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
 };
 
 const AdminPaymentsPage: React.FC = () => {
-  const {
-    allPayments,
-    loading,
-    error,
-    getAllPayments,
-    approvePayment,
-    rejectPayment,
-    formatAmount
-  } = useAdminCredit();
-
+  const formatAmount = (n: number) => new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(n);
   const [filters, setFilters] = useState<PaymentFilters>({
     status: 'all',
     dateRange: 'all',
     amountRange: 'all',
     searchTerm: ''
   });
+  const { data, isLoading: loading, status } = useAllPaymentsQuery(filters);
+  const approvePaymentMutation = useApprovePaymentMutation();
+  useEffect(() => {
+    console.log('[RQ] useAllPaymentsQuery', { status, count: data?.payments?.length });
+  }, [status, data?.payments?.length]);
 
   const [selectedPayments, setSelectedPayments] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
@@ -339,23 +335,14 @@ const AdminPaymentsPage: React.FC = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    getAllPayments();
-  }, [getAllPayments]);
-
-  // Aplicar filtros cuando cambien
-  useEffect(() => {
-    if (allPayments.payments.length > 0) {
-      getAllPayments(filters);
-    }
-  }, [filters, getAllPayments]);
+  // React Query: el refetch se dispara por el cambio de filtros (parte de la queryKey)
 
   const handleFilterChange = (key: keyof PaymentFilters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  // Los filtros ahora se manejan en el backend, así que usamos directamente los datos
-  const filteredPayments = allPayments.payments;
+  // Los filtros ahora se manejan en el backend (React Query)
+  const filteredPayments = data?.payments || [];
 
   const handleSelectPayment = (paymentId: string) => {
     setSelectedPayments(prev => {
@@ -383,7 +370,7 @@ const AdminPaymentsPage: React.FC = () => {
     setIsProcessing(true);
     try {
       const promises = Array.from(selectedPayments).map(paymentId =>
-        approvePayment(paymentId, 'Aprobación masiva')
+        approvePaymentMutation.mutateAsync({ paymentId, approvalData: { approved: true, notes: 'Aprobación masiva' } })
       );
       await Promise.all(promises);
       setSelectedPayments(new Set());
@@ -400,11 +387,11 @@ const AdminPaymentsPage: React.FC = () => {
   };
 
   const handleApprove = async (paymentId: string, notes: string) => {
-    await approvePayment(paymentId, notes);
+    await approvePaymentMutation.mutateAsync({ paymentId, approvalData: { approved: true, notes } });
   };
 
   const handleReject = async (paymentId: string, reason: string) => {
-    await rejectPayment(paymentId, reason);
+    await approvePaymentMutation.mutateAsync({ paymentId, approvalData: { approved: false, reason } });
   };
 
   const handleExportPayments = () => {
@@ -457,11 +444,11 @@ const AdminPaymentsPage: React.FC = () => {
   };
 
   const stats = {
-    total: allPayments.payments.length,
-    pending: allPayments.payments.filter(p => p.status === 'pending').length,
-    approved: allPayments.payments.filter(p => p.status === 'approved').length,
-    rejected: allPayments.payments.filter(p => p.status === 'rejected').length,
-    totalAmount: allPayments.payments.reduce((sum, p) => sum + p.amount, 0)
+    total: filteredPayments.length,
+    pending: filteredPayments.filter(p => p.status === 'pending').length,
+    approved: filteredPayments.filter(p => p.status === 'approved').length,
+    rejected: filteredPayments.filter(p => p.status === 'rejected').length,
+    totalAmount: filteredPayments.reduce((sum, p) => sum + p.amount, 0)
   };
 
   if (loading && allPayments.payments.length === 0) {
@@ -512,7 +499,7 @@ const AdminPaymentsPage: React.FC = () => {
                   {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
                 <button
-                  onClick={() => getAllPayments(filters)}
+                  onClick={() => setFilters({ ...filters })}
                   disabled={loading}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center gap-2"
                 >

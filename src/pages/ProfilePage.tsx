@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User as UserIcon, 
@@ -21,7 +21,8 @@ import {
   DollarSign,
   ShoppingBag,
   CreditCard as CreditIcon,
-  ArrowLeft
+  ArrowLeft,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
@@ -31,12 +32,13 @@ import type {
 } from '../types/profile';
 import { User } from '../types/auth';
 import OrdersSection from '../components/Profile/OrdersSection';
+import QuotesSection from '../components/Profile/QuotesSection';
 import { CreditOrdersList, CreditOrderDetails } from '../components/Credit';
 import EnhancedPaymentForm from '../components/Credit/EnhancedPaymentForm';
 import { CreditOrder } from '../types/credit';
 import { useUserStats } from '../hooks/useUserStats';
 
-type TabType = 'cuenta' | 'pedidos' | 'credito' | 'promociones' | 'soporte';
+type TabType = 'cuenta' | 'pedidos' | 'credito' | 'cotizaciones' | 'promociones' | 'soporte';
 type CreditViewMode = 'list' | 'details' | 'payment';
 
 const ProfilePage: React.FC = () => {
@@ -46,6 +48,7 @@ const ProfilePage: React.FC = () => {
   const { user, loading } = useAuth();
   const { formatPrice } = useGlobalCurrency();
   const location = useLocation();
+  const navigate = useNavigate();
   
   const [promotions] = useState<UserPromotion[]>([]);
   const [supportTickets] = useState<SupportTicket[]>([]);
@@ -86,6 +89,7 @@ const ProfilePage: React.FC = () => {
     { id: 'cuenta', label: 'Mi Cuenta', icon: UserIcon, count: null },
     { id: 'pedidos', label: 'Pedidos', icon: Package, count: null },
     { id: 'credito', label: 'Crédito', icon: CreditIcon, count: null },
+    { id: 'cotizaciones', label: 'Cotizaciones', icon: FileText, count: null },
     // { id: 'promociones', label: 'Promociones', icon: Gift, count: promotions.filter(p => !p.is_used).length },
     // { id: 'soporte', label: 'Soporte', icon: MessageCircle, count: supportTickets.filter(t => t.status === 'open').length }
   ];
@@ -238,7 +242,7 @@ const ProfilePage: React.FC = () => {
              {tabs.map((tab) => (
                <button
                  key={tab.id}
-                 onClick={() => setActiveTab(tab.id as TabType)}
+                onClick={() => setActiveTab(tab.id as TabType)}
                  className={`flex items-center justify-center sm:justify-start gap-2 lg:gap-3 px-4 lg:px-6 py-4 lg:py-5 font-medium transition-all relative text-sm lg:text-base min-h-[60px] sm:min-h-0 ${
                    activeTab === tab.id
                      ? 'text-medical-blue-700 bg-medical-blue-50 border-b-2 sm:border-b-0 border-medical-blue-600'
@@ -284,6 +288,7 @@ const ProfilePage: React.FC = () => {
               onBackToDetails={handleBackToCreditDetails}
               onPaymentCreated={handleCreditPaymentCreated}
             />}
+            {activeTab === 'cotizaciones' && <QuotesSection />}
             {activeTab === 'promociones' && <PromotionsSection promotions={promotions} />}
             {activeTab === 'soporte' && <SupportSection tickets={supportTickets} />}
           </motion.div>

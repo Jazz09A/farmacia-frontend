@@ -43,24 +43,9 @@ const WhyUsPage: React.FC = () => {
   // Image carousel data
   const facilityImages = [
     {
-      src: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
-      title: 'Almacén Principal',
-      description: 'Instalaciones de 15,000 m² con control de temperatura'
-    },
-    {
-      src: 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
-      title: 'Centro de Distribución',
-      description: 'Logística especializada para entrega nacional'
-    },
-    {
-      src: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
-      title: 'Laboratorio de Control',
-      description: 'Análisis de calidad y certificación de productos'
-    },
-    {
-      src: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
-      title: 'Centro de Capacitación',
-      description: 'Formación continua para nuestro equipo'
+      src: '/images-local/Drogueria-del-Sud.jpeg',
+      title: 'Nuestras Instalaciones',
+      description: 'Instalaciones modernas y equipadas para la distribución farmacéutica'
     }
   ];
 
@@ -198,8 +183,9 @@ const WhyUsPage: React.FC = () => {
     }
   ];
 
-  // Auto-advance carousel
+  // Auto-advance carousel (solo si hay más de una imagen)
   useEffect(() => {
+    if (facilityImages.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % facilityImages.length);
     }, 5000);
@@ -378,59 +364,71 @@ const WhyUsPage: React.FC = () => {
 
           <div className="relative">
             <div className="overflow-hidden rounded-2xl">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentImageIndex}
-                  className="relative h-96 lg:h-[500px]"
-                  initial={{ opacity: 0, x: 300 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -300 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <img
-                    src={facilityImages[currentImageIndex].src}
-                    alt={facilityImages[currentImageIndex].title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                  <div className="absolute bottom-8 left-8 text-white">
-                    <h3 className="text-2xl lg:text-3xl font-bold mb-2">
-                      {facilityImages[currentImageIndex].title}
-                    </h3>
-                    <p className="text-white/90 text-lg">
-                      {facilityImages[currentImageIndex].description}
-                    </p>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
+              {facilityImages.length > 0 && facilityImages[currentImageIndex] ? (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentImageIndex}
+                    className="relative h-96 lg:h-[500px]"
+                    initial={{ opacity: 0, x: 300 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -300 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <img
+                      src={facilityImages[currentImageIndex].src}
+                      alt={facilityImages[currentImageIndex].title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    <div className="absolute bottom-8 left-8 text-white">
+                      <h3 className="text-2xl lg:text-3xl font-bold mb-2">
+                        {facilityImages[currentImageIndex].title}
+                      </h3>
+                      <p className="text-white/90 text-lg">
+                        {facilityImages[currentImageIndex].description}
+                      </p>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              ) : (
+                <div className="relative h-96 lg:h-[500px] bg-gray-200 flex items-center justify-center">
+                  <p className="text-gray-500">No hay imágenes disponibles</p>
+                </div>
+              )}
             </div>
 
-            {/* Navigation Buttons */}
-            <button
-              onClick={prevImage}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300"
-            >
-              <ChevronLeft className="w-6 h-6 text-gray-700" />
-            </button>
-            <button
-              onClick={nextImage}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300"
-            >
-              <ChevronRight className="w-6 h-6 text-gray-700" />
-            </button>
-
-            {/* Dots Indicator */}
-            <div className="flex justify-center mt-8 space-x-2">
-              {facilityImages.map((_, index) => (
+            {/* Navigation Buttons - Solo mostrar si hay más de una imagen */}
+            {facilityImages.length > 1 && (
+              <>
                 <button
-                  key={index}
-                  onClick={() => setCurrentImageIndex(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    index === currentImageIndex ? 'bg-medical-blue-600' : 'bg-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
+                  onClick={prevImage}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300"
+                >
+                  <ChevronLeft className="w-6 h-6 text-gray-700" />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300"
+                >
+                  <ChevronRight className="w-6 h-6 text-gray-700" />
+                </button>
+              </>
+            )}
+
+            {/* Dots Indicator - Solo mostrar si hay más de una imagen */}
+            {facilityImages.length > 1 && (
+              <div className="flex justify-center mt-8 space-x-2">
+                {facilityImages.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      index === currentImageIndex ? 'bg-medical-blue-600' : 'bg-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

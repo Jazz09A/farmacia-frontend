@@ -15,8 +15,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import OrderModal from '../../components/Admin/OrderModal';
-import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 import { RecentOrder, adminService } from '../../services/AdminService';
+import { useAdminDashboardQuery } from '../../hooks/queries/useAdminQueries';
 import { Order } from '../../types';
 import DashboardSkeleton from '../../components/Skeleton/DashboardSkeleton';
 import OrderModalSkeleton from '../../components/Skeleton/OrderModalSkeleton';
@@ -32,15 +32,14 @@ const AdminDashboardPage: React.FC = () => {
   // Contexto de divisas disponible para uso futuro
   // const { currency } = useAdminCurrency();
 
-  // 🎯 Hook para datos del dashboard con API real
-  const { data, loading, error, refreshData, updateOrderStatus } = useAdminDashboard(selectedTimeRange);
+  // 🎯 Datos del dashboard con React Query
+  const { data, isLoading: loading, status } = useAdminDashboardQuery(String(selectedTimeRange));
+  useEffect(() => {
+    console.log('[RQ] useAdminDashboardQuery', { timeRange: selectedTimeRange, status });
+  }, [selectedTimeRange, status]);
 
   // 🔄 Actualizar datos cuando cambie el rango de tiempo
-  useEffect(() => {
-    if (selectedTimeRange !== 7) { // Solo si cambió del valor inicial
-      refreshData(selectedTimeRange);
-    }
-  }, [selectedTimeRange]); // Hook maneja la carga inicial
+  useEffect(() => {}, [selectedTimeRange]);
 
   // 📊 Extraer datos del API o valores por defecto
   const stats = data?.stats || {
@@ -167,7 +166,7 @@ const AdminDashboardPage: React.FC = () => {
         return;
       }
 
-      await updateOrderStatus(orderId, newStatus);
+      await adminService.updateOrderStatus(orderId, newStatus);
       
       // Actualizar orden seleccionada si corresponde
       if (selectedOrder && selectedOrder.id === orderId) {

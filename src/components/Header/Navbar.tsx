@@ -47,13 +47,13 @@ export const Navbar: React.FC<NavbarProps> = ({
     return name.split(' ').map((n: string) => n[0]).join('').toUpperCase();
   };
 
-  const lightBackgroundPages = ['/catalog', '/cart', '/checkout', '/auth', '/profile', '/blog'];
+  const lightBackgroundPages = ['/catalog', '/cart', '/checkout', '/checkout/quote', '/auth', '/profile', '/blog'];
   const isLightBackgroundPage = lightBackgroundPages.includes(location.pathname) || 
                                 location.pathname.startsWith('/product') ||
                                 location.pathname.startsWith('/tracking') ||
                                 location.pathname.startsWith('/blog');
 
-  const hideSearchBarPages = ['/auth', '/catalog','/cart'];
+  const hideSearchBarPages = ['/auth', '/catalog','/cart', '/checkout/quote'];
   const shouldHideSearchBar = hideSearchBarPages.includes(location.pathname) || location.pathname.startsWith('/product');
 
   const getMobileOptimizedTransition = useCallback((baseTransition: any) => {
