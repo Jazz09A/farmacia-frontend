@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, lazy, Suspense, memo, useCallback } from 'react';
+import React, { useState, useEffect, lazy, Suspense, memo, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';
@@ -31,6 +31,7 @@ const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'));
 const QuoteSuccessPage = lazy(() => import('./pages/QuoteSuccessPage'));
 const VerificationRequiredPage = lazy(() => import('./pages/VerificationRequiredPage'));
 const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const CreditPage = lazy(() => import('./pages/CreditPage'));
 const CreditOrdersPage = lazy(() => import('./pages/CreditOrdersPage'));
 
@@ -71,12 +72,16 @@ const AppLayout = () => {
   const location = useLocation();
   const isAuthRoute = location.pathname.startsWith('/auth');
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isStandaloneRoute = location.pathname === '/reset-password' || 
+                            location.pathname.startsWith('/verify-email') ||
+                            location.pathname === '/verify-account';
 
-  if (isAuthRoute || isAdminRoute) {
+  if (isAuthRoute || isAdminRoute || isStandaloneRoute) {
     return (
       <Suspense fallback={<LoadingSpinner message="Cargando página..." />}>
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/verify-account" element={<VerificationRequiredPage />} />
           <Route path="/verify-email/:token" element={<EmailVerificationPage />} />
           <Route path="/admin/*" element={<AdminRoutes />} />

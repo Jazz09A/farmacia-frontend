@@ -36,6 +36,7 @@ import { CreditOrdersList, CreditOrderDetails } from '../components/Credit';
 import EnhancedPaymentForm from '../components/Credit/EnhancedPaymentForm';
 import { CreditOrder } from '../types/credit';
 import { useUserStats } from '../hooks/useUserStats';
+import ChangePasswordForm from '../components/Profile/ChangePasswordForm';
 
 type TabType = 'cuenta' | 'pedidos' | 'credito' | 'cotizaciones' | 'promociones' | 'soporte';
 type CreditViewMode = 'list' | 'details' | 'payment';
@@ -298,6 +299,8 @@ const ProfilePage: React.FC = () => {
 
 // Componente para la sección de cuenta
 const AccountSection: React.FC<{ user: User }> = ({ user }) => {
+  const [showChangePassword, setShowChangePassword] = useState(false);
+
   return (
     <div className="space-y-6 lg:space-y-8">
              {/* Información de la cuenta */}
@@ -387,45 +390,55 @@ const AccountSection: React.FC<{ user: User }> = ({ user }) => {
        </div>
 
              {/* Seguridad */}
-       <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
-         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 lg:mb-8">
-           <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
-             <Key className="w-5 h-5 lg:w-6 lg:h-6" />
-             Seguridad
-           </h2>
-           <button className="btn-medical-secondary self-start sm:self-auto px-4 py-2 lg:px-6 lg:py-3">
-             <span className="hidden sm:inline">Cambiar Contraseña</span>
-             <span className="sm:hidden">Contraseña</span>
-           </button>
-         </div>
+       {showChangePassword ? (
+         <ChangePasswordForm
+           onSuccess={() => setShowChangePassword(false)}
+           onCancel={() => setShowChangePassword(false)}
+         />
+       ) : (
+         <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
+           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 lg:mb-8">
+             <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
+               <Key className="w-5 h-5 lg:w-6 lg:h-6" />
+               Seguridad
+             </h2>
+             <button
+               onClick={() => setShowChangePassword(true)}
+               className="btn-medical-secondary self-start sm:self-auto px-4 py-2 lg:px-6 lg:py-3"
+             >
+               <span className="hidden sm:inline">Cambiar Contraseña</span>
+               <span className="sm:hidden">Contraseña</span>
+             </button>
+           </div>
 
-         <div className="space-y-4 lg:space-y-5">
-           <div className="flex items-center gap-4 p-4 lg:p-5 bg-green-50 rounded-xl border border-green-200 hover:shadow-sm transition-all">
-             <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-               <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
-             </div>
-             <div className="min-w-0 flex-1">
-               <div className="font-semibold text-green-800 text-sm lg:text-base mb-1">
-                 Cuenta {user.is_verified ? 'verificada' : 'no verificada'}
+           <div className="space-y-4 lg:space-y-5">
+             <div className="flex items-center gap-4 p-4 lg:p-5 bg-green-50 rounded-xl border border-green-200 hover:shadow-sm transition-all">
+               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                 <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
                </div>
-               <div className="text-xs lg:text-sm text-green-600">
-                 Tu cuenta está {user.is_active ? 'activa' : 'inactiva'}
+               <div className="min-w-0 flex-1">
+                 <div className="font-semibold text-green-800 text-sm lg:text-base mb-1">
+                   Cuenta {user.is_verified ? 'verificada' : 'no verificada'}
+                 </div>
+                 <div className="text-xs lg:text-sm text-green-600">
+                   Tu cuenta está {user.is_active ? 'activa' : 'inactiva'}
+                 </div>
                </div>
              </div>
-           </div>
-           <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
-             <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-               <Calendar className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
-             </div>
-             <div className="min-w-0 flex-1">
-               <div className="text-xs lg:text-sm text-medical-gray-500 mb-1">Último acceso</div>
-               <div className="font-semibold text-sm lg:text-base">
-                 {user.last_login ? new Date(user.last_login).toLocaleString('es-VE') : 'No registrado'}
+             <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
+               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                 <Calendar className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
+               </div>
+               <div className="min-w-0 flex-1">
+                 <div className="text-xs lg:text-sm text-medical-gray-500 mb-1">Último acceso</div>
+                 <div className="font-semibold text-sm lg:text-base">
+                   {user.last_login ? new Date(user.last_login).toLocaleString('es-VE') : 'No registrado'}
+                 </div>
                </div>
              </div>
            </div>
          </div>
-       </div>
+       )}
     </div>
   );
 };

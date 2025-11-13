@@ -166,6 +166,109 @@ class AuthService {
     }
   }
 
+  // Solicitar reset de contraseña (olvidé mi contraseña)
+  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await fetch(`${this.url}${this.baseUrl}/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          message: result.message || result.detail || 'Error al solicitar el reset de contraseña'
+        };
+      }
+      
+      return {
+        success: true,
+        message: result.message || 'Se ha enviado un email con las instrucciones para restablecer tu contraseña'
+      };
+    } catch (error) {
+      console.error('Error en forgotPassword:', error);
+      return {
+        success: false,
+        message: 'Error de conexión. Por favor, intenta nuevamente.'
+      };
+    }
+  }
+
+  // Restablecer contraseña con token (desde el enlace del email)
+  async resetPassword(token: string, newPassword: string, confirmPassword: string): Promise<{ success: boolean; message: string; errors?: Record<string, string[]> }> {
+    try {
+      const response = await fetch(`${this.url}${this.baseUrl}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          new_password: newPassword,
+          confirm_password: confirmPassword
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          message: result.message || result.detail || 'Error al restablecer la contraseña',
+          errors: result.errors || {}
+        };
+      }
+      
+      return {
+        success: true,
+        message: result.message || 'Contraseña restablecida exitosamente'
+      };
+    } catch (error) {
+      console.error('Error en resetPassword:', error);
+      return {
+        success: false,
+        message: 'Error de conexión. Por favor, intenta nuevamente.'
+      };
+    }
+  }
+
+  // Cambiar contraseña (usuario autenticado)
+  async changePassword(currentPassword: string, newPassword: string, confirmPassword: string): Promise<{ success: boolean; message: string; errors?: Record<string, string[]> }> {
+    try {
+      const response = await this.authenticatedFetch(`${this.baseUrl}/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+          confirm_password: confirmPassword
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          message: result.message || result.detail || 'Error al cambiar la contraseña',
+          errors: result.errors || {}
+        };
+      }
+      
+      return {
+        success: true,
+        message: result.message || 'Contraseña cambiada exitosamente'
+      };
+    } catch (error) {
+      console.error('Error en changePassword:', error);
+      return {
+        success: false,
+        message: 'Error de conexión. Por favor, intenta nuevamente.'
+      };
+    }
+  }
+
   logout(): void {
     // Cancelar cualquier solicitud en progreso
     if (this.requestAbortController) {
