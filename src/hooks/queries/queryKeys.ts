@@ -11,6 +11,7 @@ export const queryKeys = {
     featured: () => [...queryKeys.products.all, 'featured'] as const,
     offers: () => [...queryKeys.products.all, 'offers'] as const,
     suggestions: (q: string) => [...queryKeys.products.all, 'suggestions', q] as const,
+    recommendations: (id: string) => [...queryKeys.products.all, 'recommendations', id] as const,
   },
   exchangeRate: {
     current: ['exchangeRate', 'current'] as const,

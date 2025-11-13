@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User as UserIcon, 
   Package, 
   Gift, 
   MessageCircle, 
-  Settings, 
   Key,
   Clock,
   CheckCircle,
@@ -48,7 +47,6 @@ const ProfilePage: React.FC = () => {
   const { user, loading } = useAuth();
   const { formatPrice } = useGlobalCurrency();
   const location = useLocation();
-  const navigate = useNavigate();
   
   const [promotions] = useState<UserPromotion[]>([]);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
@@ -290,7 +288,7 @@ const ProfilePage: React.FC = () => {
             />}
             {activeTab === 'cotizaciones' && <QuotesSection />}
             {activeTab === 'promociones' && <PromotionsSection promotions={promotions} />}
-            {activeTab === 'soporte' && <SupportSection tickets={supportTickets} />}
+            {activeTab === 'soporte' && <SupportSection tickets={supportTickets} setTickets={setSupportTickets} />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -309,11 +307,11 @@ const AccountSection: React.FC<{ user: User }> = ({ user }) => {
              <UserIcon className="w-5 h-5 lg:w-6 lg:h-6" />
              Información de la Cuenta
            </h2>
-           <button className="btn-medical-secondary self-start sm:self-auto px-4 py-2 lg:px-6 lg:py-3">
+           {/* <button className="btn-medical-secondary self-start sm:self-auto px-4 py-2 lg:px-6 lg:py-3">
              <Settings className="w-4 h-4 lg:w-5 lg:h-5" />
              <span className="hidden sm:inline ml-2">Editar</span>
              <span className="sm:hidden">Editar</span>
-           </button>
+           </button> */}
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
@@ -569,7 +567,10 @@ const PromotionsSection: React.FC<{ promotions: UserPromotion[] }> = ({ promotio
 };
 
 // Sección de Soporte
-const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => {
+const SupportSection: React.FC<{ 
+  tickets: SupportTicket[];
+  setTickets: React.Dispatch<React.SetStateAction<SupportTicket[]>>;
+}> = ({ tickets, setTickets }) => {
   const [showNewTicketForm, setShowNewTicketForm] = useState(false);
   const [newTicket, setNewTicket] = useState({
     subject: '',
@@ -601,13 +602,19 @@ const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => 
   const handleSubmitTicket = (e: React.FormEvent) => {
     e.preventDefault();
     // Aquí iría la lógica para enviar el ticket
-    setSupportTickets(prev => [...prev, {
-      ...newTicket,
-      status: 'processing',
+    const ticket: SupportTicket = {
+      id: `ticket-${Date.now()}`,
+      user_id: '', // Se asignará cuando se implemente la lógica real
+      subject: newTicket.subject,
+      message: newTicket.message,
+      status: 'open',
+      priority: newTicket.priority as 'low' | 'medium' | 'high' | 'urgent',
+      category: newTicket.category as 'technical' | 'billing' | 'order' | 'general',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      id: `ticket-${Date.now()}` // Simulate a unique ID
-    }]);
+      responses: []
+    };
+    setTickets((prev: SupportTicket[]) => [...prev, ticket]);
     setShowNewTicketForm(false);
     setNewTicket({ subject: '', category: 'general', priority: 'medium', message: '' });
   };
@@ -877,11 +884,11 @@ const CreditSection: React.FC<CreditSectionProps> = ({
             >
               <EnhancedPaymentForm
                 orderId={selectedOrder.id}
-                orderTotal={selectedOrder.total}
-                orderTotalRef={selectedOrder.total_ref}
+                orderTotal={parseFloat(selectedOrder.total) || 0}
+                orderTotalRef={undefined}
                 creditRemaining={selectedOrder.credit_remaining}
                 orderNumber={selectedOrder.order_number}
-                exchangeRate={selectedOrder.exchange_rate}
+                exchangeRate={selectedOrder.exchange_rate ? parseFloat(selectedOrder.exchange_rate) : 1}
                 onPaymentCreated={onPaymentCreated}
                 onCancel={onBackToDetails}
               />

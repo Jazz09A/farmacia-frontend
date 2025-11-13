@@ -408,6 +408,34 @@ export const Navbar: React.FC<NavbarProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {isLoggingOut && (
+          <motion.div
+            key="logout-overlay"
+            className="fixed inset-0 z-[2000] flex items-center justify-center bg-white/80 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="rounded-3xl border border-medical-gray-200 bg-white px-10 py-8 text-center shadow-elegant"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <LoadingSpinner
+                variant="inline"
+                size="lg"
+                message="Cerrando sesión..."
+                submessage="Estamos asegurando tus datos antes de salir"
+                className="py-0"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

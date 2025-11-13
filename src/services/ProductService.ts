@@ -510,6 +510,46 @@ class ProductService {
   async deleteProductImage(productId: string, imageUrl: string): Promise<Product> {
     throw new Error('Delete product image is not available for articles API.');
   }
+
+  /**
+   * Obtener recomendaciones de productos para un artículo específico
+   */
+  async getProductRecommendations(productId: string): Promise<{
+    related_articles: Product[];
+    frequently_bought_together: Product[];
+    you_may_also_like: Product[];
+  }> {
+    try {
+      const response = await authService.authenticatedFetch(`${this.baseUrl}/${productId}/recommendations`);
+
+      if (!response.ok) {
+        throw new Error(`Error fetching recommendations: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Mapear los artículos a Product
+      return {
+        related_articles: (data.related_articles || []).map((article: ArticleSummary) => 
+          this.mapArticleSummaryToProduct(article)
+        ),
+        frequently_bought_together: (data.frequently_bought_together || []).map((article: ArticleSummary) => 
+          this.mapArticleSummaryToProduct(article)
+        ),
+        you_may_also_like: (data.you_may_also_like || []).map((article: ArticleSummary) => 
+          this.mapArticleSummaryToProduct(article)
+        ),
+      };
+    } catch (error) {
+      console.error('Failed to fetch product recommendations:', error);
+      // Retornar estructura vacía en caso de error
+      return {
+        related_articles: [],
+        frequently_bought_together: [],
+        you_may_also_like: [],
+      };
+    }
+  }
 }
 
 export const productService = new ProductService();

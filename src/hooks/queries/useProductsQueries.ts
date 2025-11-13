@@ -87,4 +87,19 @@ export const useRelatedProductsQuery = (product: Product | null, limit: number =
   });
 };
 
+export const useProductRecommendations = (productId: string, enabled: boolean = true) => {
+  return useQuery<{
+    related_articles: Product[];
+    frequently_bought_together: Product[];
+    you_may_also_like: Product[];
+  }>({
+    queryKey: queryKeys.products.recommendations(productId),
+    queryFn: () => productService.getProductRecommendations(productId),
+    enabled: enabled && !!productId,
+    staleTime: 30 * 60 * 1000, // Cache por 30 minutos
+    gcTime: 60 * 60 * 1000, // Mantener en cache por 1 hora
+    refetchOnWindowFocus: false,
+  });
+};
+
 

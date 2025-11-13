@@ -1,38 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Star, CheckCircle, AlertTriangle, ChevronRight, ShoppingCart, Plus, Minus, Heart, Truck, Clock } from 'lucide-react';
+import { Star, CheckCircle, AlertTriangle, ChevronRight, ShoppingCart, Plus, Minus, Truck, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { Product } from '../types';
 import { useCurrency } from '../hooks/useCurrency';
-import { useProductQuery, useRelatedProductsQuery } from '../hooks/queries/useProductsQueries';
+import { useProductQuery, useProductRecommendations } from '../hooks/queries/useProductsQueries';
 import { ProductDetailSkeleton } from '../components/Skeleton';
 import ProductImage from '../components/common/ProductImage';
 import { useQuoteCart } from '../hooks/useQuoteCart';
+import { RecommendedProductsSection } from '../components/Products/RecommendedProductsSection';
 
-// Placeholder for a component of product carousel
-const ProductsCarousel: React.FC<{ products: Product[], title: string }> = ({ products, title }) => (
-  <div className="py-12">
-    <h2 className="text-2xl font-bold text-medical-gray-800 mb-6">{title}</h2>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {products.map(product => (
-        <div key={product.id} className="group relative bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-4 hover:shadow-xl transition-all duration-300">
-          <Link to={`/product/${product.id}`}>
-            <ProductImage
-              src={product.image}
-              images={product.images}
-              alt={product.name}
-              className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform"
-              size="md"
-            />
-            <h3 className="font-semibold text-gray-800 line-clamp-2">{product.name}</h3>
-            <p className="text-sm text-medical-primary">{product.brand}</p>
-          </Link>
-        </div>
-      ))}
-    </div>
-  </div>
-);
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -59,7 +37,10 @@ const ProductDetailPage: React.FC = () => {
     return found?.cantidad ?? 0;
   }, [items, product]);
 
-  const { data: relatedData } = useRelatedProductsQuery(product, 6);
+  const { 
+    data: recommendationsData, 
+    isLoading: isLoadingRecommendations 
+  } = useProductRecommendations(id || '', !!id && !!product);
 
   // Show skeleton while loading
   if (isLoadingProduct) {
@@ -95,9 +76,11 @@ const ProductDetailPage: React.FC = () => {
     }
   };
 
-  const relatedProducts: Product[] = relatedData || []; 
-  const recommendedProducts: Product[] = []; 
   const productReviews: any[] = [];
+  
+  // Extraer datos de recomendaciones
+  const relatedArticles = recommendationsData?.related_articles || [];
+  const frequentlyBoughtTogether = recommendationsData?.frequently_bought_together || [];
 
   return (
     <div className="min-h-screen bg-medical-gray-50 pt-24 lg:pt-32">
@@ -182,7 +165,7 @@ const ProductDetailPage: React.FC = () => {
                     {formatPrice(getDisplayPrice(product.original_price, currency), currency)}
                   </span>
                   <span className="text-base lg:text-lg font-bold text-red-500 bg-red-100 px-3 py-1 rounded-full">
-                    - {Math.round(((product.original_price - product.price) / product.original_price) * 100)}%
+                    - {Math.round(((parseFloat(product.original_price) - parseFloat(product.price)) / parseFloat(product.original_price)) * 100)}%
                   </span>
                 </div>
               ) : (
@@ -191,7 +174,7 @@ const ProductDetailPage: React.FC = () => {
                 </span>
               )}
               <p className="text-base lg:text-lg text-medical-gray-600 mt-2">
-                Aprox. {currency === 'VES' ? formatPrice(product.price, 'USD') : formatPrice(getDisplayPrice(product.price, 'VES' as any), 'VES' as any)}
+                Aprox. {currency === 'VES' ? formatPrice(parseFloat(product.price), 'USD') : formatPrice(getDisplayPrice(product.price, 'VES'), 'VES')}
               </p>
             </div>
             
@@ -241,13 +224,13 @@ const ProductDetailPage: React.FC = () => {
                   )}
                   <span>{addingToCart ? 'Agregando...' : 'Agregar al Carrito'}</span>
                 </motion.button>
-                <motion.button 
+                {/* <motion.button 
                   className="rounded-2xl border border-medical-gray-300 p-3 text-medical-gray-600 transition-all hover:border-red-500 hover:bg-red-50 hover:text-red-500"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <Heart className="w-6 h-6" />
-                </motion.button>
+                </motion.button> */}
               </div>
             </div>
             {cartQuantity > 0 && (
@@ -260,7 +243,7 @@ const ProductDetailPage: React.FC = () => {
             <div className="space-y-3 pt-4">
                 <div className="flex items-center text-medical-gray-700">
                     <Truck className="w-5 h-5 mr-3 text-medical-primary"/>
-                    <span>Envío gratuito en pedidos sobre <span className="font-bold">{formatPrice(25, 'REF')}</span></span>
+                    <span>Envío gratuito en pedidos sobre <span className="font-bold">{formatPrice(25, 'USD')}</span></span>
                 </div>
                 <div className="flex items-center text-medical-gray-700">
                     <Clock className="w-5 h-5 mr-3 text-medical-primary"/>
@@ -274,7 +257,9 @@ const ProductDetailPage: React.FC = () => {
         <div className="mt-16">
           <div className="border-b border-medical-gray-200 overflow-x-auto">
             <nav className="-mb-px flex space-x-6 sm:space-x-8" aria-label="Tabs">
-              {['description', 'details', 'reviews'].map((tab) => (
+              {['description', 
+              // 'details', 'reviews'
+              ].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -321,8 +306,11 @@ const ProductDetailPage: React.FC = () => {
           </div>
         </div>
         
-        <ProductsCarousel products={relatedProducts} title="Productos Relacionados" />
-        <ProductsCarousel products={recommendedProducts} title="También te podría interesar" />
+        <RecommendedProductsSection
+          relatedArticles={relatedArticles}
+          frequentlyBoughtTogether={frequentlyBoughtTogether}
+          isLoading={isLoadingRecommendations}
+        />
       </div>
     </div>
   );

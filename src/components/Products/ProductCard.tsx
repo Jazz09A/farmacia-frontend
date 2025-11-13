@@ -16,6 +16,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   className = ''
 }) => {
   const { formatPriceFromBackend } = useGlobalCurrency();
+  const isCompact = className.includes('text-sm');
   return (
     <Link to={`/product/${product.id}`} className="block">
       <motion.div
@@ -25,13 +26,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       >
         {/* Image Container */}
         <div className="relative overflow-hidden bg-gray-50">
-          <div className="aspect-square w-full flex items-center justify-center p-4 relative">
+          <div className={`aspect-square w-full flex items-center justify-center ${isCompact ? 'p-2' : 'p-4'} relative`}>
             <ProductImage
               src={product.image}
               images={product.images}
               alt={product.name}
               className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-              size="lg"
+              size={isCompact ? "md" : "lg"}
             />
           </div>
           
@@ -54,55 +55,59 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
 
           {/* Wishlist Button */}
-          <motion.button
+          {/* <motion.button
             className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full text-gray-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
             <Heart className="h-4 w-4" />
-          </motion.button>
+          </motion.button> */}
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className={isCompact ? "p-3" : "p-6"}>
           {/* Brand */}
-          <p className="text-blue-600 text-sm font-medium mb-1">{product.brand}</p>
+          {!isCompact && (
+            <p className="text-blue-600 text-sm font-medium mb-1">{product.brand}</p>
+          )}
           
           {/* Name */}
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+          <h3 className={`${isCompact ? 'text-sm' : 'text-lg'} font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors`}>
             {product.name}
           </h3>
           
           {/* Rating */}
-          <div className="flex items-center space-x-2 mb-3">
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-4 w-4 ${
-                    i < Math.floor(parseFloat(product.rating))
-                      ? 'text-yellow-400 fill-current'
-                      : 'text-gray-300'
-                  }`}
-                />
-              ))}
+          {!isCompact && (
+            <div className="flex items-center space-x-2 mb-3">
+              <div className="flex items-center">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${
+                      i < Math.floor(parseFloat(product.rating))
+                        ? 'text-yellow-400 fill-current'
+                        : 'text-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-sm text-gray-500">({product.review_count})</span>
             </div>
-            <span className="text-sm text-gray-500">({product.review_count})</span>
-          </div>
+          )}
 
           {/* Price */}
-          <div className="flex items-center justify-between mb-4">
+          <div className={`flex items-center ${isCompact ? 'justify-center' : 'justify-between'}`}>
             <div className="flex flex-col">
               {product.is_offer && product.original_price && (
-                <span className="text-sm text-gray-400 line-through">
+                <span className={`${isCompact ? 'text-xs' : 'text-sm'} text-gray-400 line-through`}>
                   {formatPriceFromBackend(product.original_price)}
                 </span>
               )}
-              <span className="text-xl font-bold text-gray-900">
+              <span className={`${isCompact ? 'text-base' : 'text-xl'} font-bold text-gray-900`}>
                 {formatPriceFromBackend(product.price)}
               </span>
             </div>
-            {product.is_offer && (
+            {product.is_offer && !isCompact && (
               <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded-full font-medium">
                 ¡Oferta!
               </span>
