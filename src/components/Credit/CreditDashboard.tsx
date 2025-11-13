@@ -27,10 +27,6 @@ export const CreditDashboard: React.FC<CreditDashboardProps> = ({
   const { data: dashboardData, isLoading: loading, error, refetch } = useCreditDashboardQuery(true);
   const { getCreditUsagePercentage, getCreditStatusInfo } = useCreditValidation();
 
-  useEffect(() => {
-    console.log('[RQ] useCreditDashboardQuery', { loading, error, hasData: !!dashboardData });
-  }, [loading, error, dashboardData]);
-
   const refreshDashboard = () => {
     refetch();
   };

@@ -21,10 +21,9 @@ const CreateBlogPostPage: React.FC = () => {
       updatedAt: new Date(),
     };
 
-    console.log('Nuevo artículo creado (simulado):', newPost);
-    alert('Artículo creado con éxito (simulado).');
+    // TODO: Implementar creación real de blog post
     
-    // Aquí llamarías a tu API: createPost(newPost)
+    alert('Artículo creado con éxito (simulado).');
     
     navigate('/admin/blog');
   };

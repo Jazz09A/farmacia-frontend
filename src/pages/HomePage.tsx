@@ -28,12 +28,6 @@ const HomePage: React.FC = () => {
   // Prefetch de datos clave con React Query
   const { data: featuredProducts, status: statusFeatured } = useFeaturedProductsQuery(8);
   const { data: offerProducts, status: statusOffers } = useOfferProductsQuery(8);
-  useEffect(() => {
-    console.log('[RQ] HomePage queries', {
-      featured: { status: statusFeatured, count: featuredProducts?.length },
-      offers: { status: statusOffers, count: offerProducts?.length }
-    });
-  }, [statusFeatured, statusOffers, featuredProducts?.length, offerProducts?.length]);
   
   // Usar caché para estado de loading
   const { cachedData: cachedLoadingState, setCachedData: setCachedLoadingState } = useHomeCache(

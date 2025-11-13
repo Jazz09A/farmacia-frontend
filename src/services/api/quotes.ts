@@ -55,8 +55,6 @@ class QuoteService {
       'Content-Type': 'application/json',
     };
     
-    console.log('[QuoteService] Creating quote with headers:', headers);
-    
     const response = await authService.authenticatedFetch(this.baseUrl, {
       method: 'POST',
       headers,

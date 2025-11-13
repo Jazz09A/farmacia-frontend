@@ -34,9 +34,6 @@ const AdminDashboardPage: React.FC = () => {
 
   // 🎯 Datos del dashboard con React Query
   const { data, isLoading: loading, status, error, refetch } = useAdminDashboardQuery(String(selectedTimeRange));
-  useEffect(() => {
-    console.log('[RQ] useAdminDashboardQuery', { timeRange: selectedTimeRange, status });
-  }, [selectedTimeRange, status]);
 
   // 📊 Extraer datos del API o valores por defecto
   const stats = data?.stats || {

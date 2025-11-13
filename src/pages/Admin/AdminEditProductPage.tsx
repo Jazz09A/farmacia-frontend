@@ -50,23 +50,6 @@ const AdminEditProductPage: React.FC = () => {
         try {
           const productData = await productService.getProductById(id);
           if (productData) {
-            console.log('Product data loaded:', productData);
-            console.log('Product images array:', productData.images);
-            console.log('Product single image:', productData.image);
-            
-            // Asegurar que las imágenes tengan URLs completas
-            const processedData = {
-              ...productData,
-              images: productData.images?.map(img => {
-                // Si la imagen es una ruta relativa, convertirla a URL completa
-                if (img.startsWith('/static/')) {
-                  return `${window.location.origin}${img}`;
-                }
-                return img;
-              }) || []
-            };
-            
-            console.log('Processed images:', processedData.images);
             setFormData(processedData);
           }
         } catch (error) {
@@ -143,8 +126,6 @@ const AdminEditProductPage: React.FC = () => {
     if (file && id) {
       setIsImageOperationLoading(true);
       try {
-        console.log('Starting image upload process...');
-        console.log('Article code (co_art):', id);
         
         // Validar tipo de archivo
         if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
@@ -162,7 +143,6 @@ const AdminEditProductPage: React.FC = () => {
         const result = await productImageService.uploadArticleImage(id, file, 'PRINC');
         
         if (result && result.url) {
-          console.log('Image uploaded successfully:', result.url);
           
           // Actualizar el estado local - agregar la nueva imagen
           const currentImages = formData?.images || [];
@@ -454,14 +434,6 @@ const AdminEditProductPage: React.FC = () => {
                       {/* Mostrar imagen principal (segunda posición del array) */}
                       {(() => {
                         const mainImage = formData.images && formData.images.length > 1 ? formData.images[1] : null;
-                        console.log('Rendering images section:', {
-                          hasImages: !!formData.images,
-                          imagesLength: formData.images?.length,
-                          secondImage: formData.images?.[1],
-                          allImages: formData.images,
-                          mainImage: mainImage,
-                          shouldRender: !!mainImage
-                        });
                         return mainImage;
                       })() && (
                         <div className="relative">
@@ -470,10 +442,8 @@ const AdminEditProductPage: React.FC = () => {
                             alt="Imagen principal"
                             className="w-full h-32 lg:h-48 object-cover rounded-lg border border-gray-300"
                             onLoad={() => {
-                              console.log('Main image loaded successfully:', formData.images[1]);
                             }}
                             onError={(e) => {
-                              console.error('Error loading main image:', formData.images[1]);
                               e.currentTarget.style.display = 'none';
                             }}
                           />
@@ -504,12 +474,6 @@ const AdminEditProductPage: React.FC = () => {
                       {/* Mostrar todas las imágenes en galería */}
                       {(() => {
                         const visibleImages = formData.images?.filter((_, index) => index > 0) || [];
-                        console.log('Gallery section:', {
-                          hasImages: !!formData.images,
-                          totalImages: formData.images?.length,
-                          visibleImages: visibleImages.length,
-                          visibleImagesList: visibleImages
-                        });
                         return formData.images && formData.images.length > 0;
                       })() && (
                         <div>
@@ -519,12 +483,6 @@ const AdminEditProductPage: React.FC = () => {
                           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                             {(() => {
                               const filteredImages = formData.images.filter((_, index) => index > 0);
-                              console.log('Filtering images:', {
-                                originalImages: formData.images,
-                                filteredImages: filteredImages,
-                                originalLength: formData.images?.length,
-                                filteredLength: filteredImages.length
-                              });
                               return filteredImages;
                             })().map((imageUrl, index) => (
                               <div key={index + 1} className="relative">
@@ -533,10 +491,8 @@ const AdminEditProductPage: React.FC = () => {
                                   alt={`Imagen ${index + 2}`}
                                   className="w-full h-24 object-cover rounded-lg border border-gray-300"
                                   onLoad={() => {
-                                    console.log(`Gallery image ${index + 2} loaded successfully:`, imageUrl);
                                   }}
                                   onError={(e) => {
-                                    console.error(`Error loading image ${index + 2}:`, imageUrl);
                                     e.currentTarget.style.display = 'none';
                                   }}
                                 />

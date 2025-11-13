@@ -44,10 +44,6 @@ const AdminFlashOffersPage: React.FC = () => {
   const deleteMutation = useDeleteFlashOfferMutation();
   const toggleStatusMutation = useToggleFlashOfferStatusMutation();
 
-  useEffect(() => {
-    console.log('[RQ] useAdminFlashOffersQuery', { loading, error, count: flashOffersResponse?.flash_offers?.length });
-  }, [loading, error, flashOffersResponse]);
-
   const offers = flashOffersResponse?.flash_offers || [];
   const totalCount = flashOffersResponse?.total_count || 0;
   const activeCount = flashOffersResponse?.active_count || 0;

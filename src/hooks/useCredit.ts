@@ -1,30 +1,36 @@
 // Hook personalizado para el sistema de crédito según documentación
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCredit as useCreditContext } from '../contexts/CreditContext';
+import {
+  useCreditInfoQuery,
+  useCreditDashboardQuery,
+  useMyPaymentsQuery,
+  useCreditOrdersQuery,
+} from './queries/useCreditQueries';
+import { queryKeys } from './queries/queryKeys';
+import creditService from '../services/CreditService';
 import { formatVES, formatUSD, convertVesToUsd, convertUsdToVes } from '../utils/currencyUtils';
 import { validatePaymentForm, validateCreditAvailability } from '../utils/creditValidation';
-import { handleApiError, getErrorMessage } from '../utils/errorHandling';
 
 export const useCredit = () => {
+  const queryClient = useQueryClient();
   const {
-    creditInfo,
-    dashboardData,
-    payments,
-    creditOrders,
     loading,
     error,
-    refreshCreditInfo,
-    refreshDashboard,
     createCreditOrder,
     createPayment,
-    getOrderPayments,
-    getCreditOrders,
-    getCreditOrderDetails,
     clearError
   } = useCreditContext();
 
+  const creditInfoQuery = useCreditInfoQuery();
+  const dashboardQuery = useCreditDashboardQuery();
+  const paymentsQuery = useMyPaymentsQuery();
+  const creditOrdersQuery = useCreditOrdersQuery();
+
   const [exchangeRate, setExchangeRate] = useState<string>('1.0');
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Formatear montos según moneda
   const formatAmount = useCallback((amount: string | number, currency: 'VES' | 'USD' = 'USD') => {
@@ -59,13 +65,24 @@ export const useCredit = () => {
 
   // Validar formulario de pago
   const validatePayment = useCallback((formData: any) => {
-    return validatePaymentForm(formData);
+    const validation = validatePaymentForm(formData);
+    const errors: Record<string, string> = {};
+
+    if (!validation.isValid) {
+      validation.errors.forEach(error => {
+        errors[error.field] = error.message;
+      });
+    }
+
+    setValidationErrors(errors);
+    return validation;
   }, []);
 
   // Validar disponibilidad de crédito
   const validateCredit = useCallback((amount: string | number) => {
-    return validateCreditAvailability(amount, creditInfo?.available_credit || '0');
-  }, [creditInfo]);
+    const availableCredit = creditInfoQuery.data?.available_credit ?? '0';
+    return validateCreditAvailability(amount, availableCredit);
+  }, [creditInfoQuery.data]);
 
   // Crear pago con validación
   const createPaymentWithValidation = useCallback(async (paymentData: any) => {
@@ -83,54 +100,58 @@ export const useCredit = () => {
       }
 
       // Crear pago
-      return await createPayment(paymentData);
+      const payment = await createPayment(paymentData);
+      setValidationErrors({});
+      return payment;
     } catch (error) {
-      const apiError = handleApiError(error);
-      throw new Error(getErrorMessage(apiError));
+      throw error;
     }
-  }, [validatePayment, validateCredit, createPayment]);
+  }, [createPayment, validateCredit, validatePayment]);
 
   // Obtener información de crédito formateada
   const getFormattedCreditInfo = useCallback(() => {
-    if (!creditInfo) return null;
+    const info = creditInfoQuery.data;
+    if (!info) return null;
 
     return {
       available_credit: {
-        raw: creditInfo.available_credit,
-        formatted: formatAmount(creditInfo.available_credit, 'USD')
+        raw: info.available_credit,
+        formatted: formatAmount(info.available_credit, 'USD')
       },
       credit_limit: {
-        raw: creditInfo.credit_limit,
-        formatted: formatAmount(creditInfo.credit_limit, 'USD')
+        raw: info.credit_limit,
+        formatted: formatAmount(info.credit_limit, 'USD')
       },
-      credit_status: creditInfo.credit_status,
-      usage_percentage: creditInfo.credit_limit !== '0' 
-        ? Math.round(((parseFloat(creditInfo.credit_limit) - parseFloat(creditInfo.available_credit)) / parseFloat(creditInfo.credit_limit)) * 100)
+      credit_status: info.credit_status,
+      usage_percentage: info.credit_limit !== '0' 
+        ? Math.round(((parseFloat(info.credit_limit) - parseFloat(info.available_credit)) / parseFloat(info.credit_limit)) * 100)
         : 0
     };
-  }, [creditInfo, formatAmount]);
+  }, [creditInfoQuery.data, formatAmount]);
 
   // Obtener dashboard formateado
   const getFormattedDashboard = useCallback(() => {
-    if (!dashboardData) return null;
+    const dashboard = dashboardQuery.data;
+    if (!dashboard) return null;
 
     return {
-      total_orders: dashboardData.total_orders,
-      pending_payments: dashboardData.pending_payments,
+      total_orders: dashboard.total_orders,
+      pending_payments: dashboard.pending_payments,
       total_credit_used: {
-        raw: dashboardData.total_credit_used,
-        formatted: formatAmount(dashboardData.total_credit_used, 'USD')
+        raw: dashboard.total_credit_used,
+        formatted: formatAmount(dashboard.total_credit_used, 'USD')
       },
-      next_payment_due: dashboardData.next_payment_due ? {
-        raw: dashboardData.next_payment_due,
-        formatted: formatAmount(dashboardData.next_payment_due, 'USD')
+      next_payment_due: dashboard.next_payment_due ? {
+        raw: dashboard.next_payment_due,
+        formatted: formatAmount(dashboard.next_payment_due, 'USD')
       } : null
     };
-  }, [dashboardData, formatAmount]);
+  }, [dashboardQuery.data, formatAmount]);
 
   // Obtener órdenes de crédito formateadas
   const getFormattedOrders = useCallback(() => {
-    return creditOrders.map(order => ({
+    const orders = creditOrdersQuery.data?.orders ?? [];
+    return orders.map(order => ({
       ...order,
       total: {
         raw: order.total,
@@ -153,10 +174,11 @@ export const useCredit = () => {
         formatted: formatAmount(parseFloat(order.credit_paid_total), 'USD')
       }
     }));
-  }, [creditOrders, formatAmount]);
+  }, [creditOrdersQuery.data, formatAmount]);
 
   // Obtener pagos formateados
   const getFormattedPayments = useCallback(() => {
+    const payments = paymentsQuery.data ?? [];
     return payments.map(payment => ({
       ...payment,
       amount: {
@@ -168,19 +190,21 @@ export const useCredit = () => {
         formatted: formatAmount(payment.amount_ves, 'VES')
       } : null
     }));
-  }, [payments, formatAmount]);
+  }, [paymentsQuery.data, formatAmount]);
 
   // Refrescar toda la información
   const refreshAll = useCallback(async () => {
     try {
       await Promise.all([
-        refreshCreditInfo(),
-        refreshDashboard()
+        creditInfoQuery.refetch(),
+        dashboardQuery.refetch(),
+        paymentsQuery.refetch(),
+        creditOrdersQuery.refetch(),
       ]);
     } catch (error) {
       console.error('Error refreshing credit data:', error);
     }
-  }, [refreshCreditInfo, refreshDashboard]);
+  }, [creditInfoQuery, dashboardQuery, paymentsQuery, creditOrdersQuery]);
 
   // Obtener tasa de cambio (simulado por ahora)
   const getExchangeRate = useCallback(() => {
@@ -192,13 +216,16 @@ export const useCredit = () => {
     setExchangeRate(rate);
   }, []);
 
+  const clearValidationErrors = useCallback(() => setValidationErrors({}), []);
+  const getFieldError = useCallback((field: string) => validationErrors[field], [validationErrors]);
+
   return {
     // Datos básicos
-    creditInfo,
-    dashboardData,
-    payments,
-    creditOrders,
-    loading,
+    creditInfo: creditInfoQuery.data ?? null,
+    dashboardData: dashboardQuery.data ?? null,
+    payments: paymentsQuery.data ?? [],
+    creditOrders: creditOrdersQuery.data?.orders ?? [],
+    loading: loading || creditInfoQuery.isLoading || dashboardQuery.isLoading || paymentsQuery.isLoading || creditOrdersQuery.isLoading,
     error,
     
     // Datos formateados
@@ -216,18 +243,36 @@ export const useCredit = () => {
     validateCredit,
     
     // Acciones
-    refreshCreditInfo,
-    refreshDashboard,
+    refreshCreditInfo: creditInfoQuery.refetch,
+    refreshDashboard: dashboardQuery.refetch,
     refreshAll,
     createCreditOrder,
     createPayment: createPaymentWithValidation,
-    getOrderPayments,
-    getCreditOrders,
-    getCreditOrderDetails,
+    getOrderPayments: useCallback((orderId: string) => {
+      return queryClient.fetchQuery({
+        queryKey: queryKeys.credit.orderPayments(orderId),
+        queryFn: () => creditService.getOrderPayments(orderId),
+      });
+    }, [queryClient]),
+    getCreditOrders: useCallback((page: number = 1, limit: number = 10) => {
+      return queryClient.fetchQuery({
+        queryKey: queryKeys.credit.orders(page, limit),
+        queryFn: () => creditService.getCreditOrders(page, limit),
+      });
+    }, [queryClient]),
+    getCreditOrderDetails: useCallback((orderId: string) => {
+      return queryClient.fetchQuery({
+        queryKey: queryKeys.credit.order(orderId),
+        queryFn: () => creditService.getCreditOrderDetails(orderId),
+      });
+    }, [queryClient]),
     clearError,
+    clearValidationErrors,
+    getFieldError,
     
     // Tasa de cambio
     exchangeRate: getExchangeRate(),
-    setExchangeRate: setExchangeRateValue
+    setExchangeRate: setExchangeRateValue,
+    validationErrors,
   };
 };

@@ -32,9 +32,6 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const { data: ordersResp, isLoading: loading, status, refetch } = useCreditOrdersQuery(currentPage, 10);
-  useEffect(() => {
-    console.log('[RQ] useCreditOrdersQuery', { page: currentPage, status, total: ordersResp?.total });
-  }, [currentPage, status, ordersResp?.total]);
   const { currency, formatPrice } = useGlobalCurrency();
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
@@ -97,15 +94,6 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
 
   // Función para formatear precios usando el contexto de moneda
   const formatOrderPrice = (order: CreditOrder) => {
-    console.log('🔍 Debug - formatOrderPrice:', {
-      orderId: order.id,
-      orderNumber: order.order_number,
-      total: order.total,
-      totalType: typeof order.total,
-      total_ref: order.total_ref,
-      totalRefType: typeof order.total_ref,
-      currency
-    });
     
     switch (currency) {
       case 'VES':
@@ -124,16 +112,6 @@ export const CreditOrdersList: React.FC<CreditOrdersListProps> = ({
 
   // Función para formatear la deuda pendiente
   const formatDebtAmount = (order: CreditOrder) => {
-    console.log('🔍 Debug - formatDebtAmount:', {
-      orderId: order.id,
-      orderNumber: order.order_number,
-      creditRemaining: order.credit_remaining,
-      creditRemainingType: typeof order.credit_remaining,
-      currency,
-      exchangeRate: order.exchange_rate,
-      total: order.total,
-      totalType: typeof order.total
-    });
     
     // Mostrar los valores como vienen del API sin conversión
     // credit_remaining viene como string del API, convertir a número

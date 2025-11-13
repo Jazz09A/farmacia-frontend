@@ -2,12 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import creditService from '../../services/CreditService';
 import { queryKeys } from './queryKeys';
 
-export const useCreditInfoQuery = () => {
+export const useCreditInfoQuery = (enabled: boolean = true) => {
   return useQuery({
     queryKey: queryKeys.credit.info,
     queryFn: () => creditService.getCreditInfo(),
-    staleTime: 2 * 60 * 1000,
-    refetchOnWindowFocus: true,
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -15,7 +16,8 @@ export const useCreditDashboardQuery = () => {
   return useQuery({
     queryKey: queryKeys.credit.dashboard,
     queryFn: () => creditService.getCreditDashboard(),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -23,8 +25,9 @@ export const useCreditOrdersQuery = (page: number = 1, limit: number = 10) => {
   return useQuery({
     queryKey: queryKeys.credit.orders(page, limit),
     queryFn: () => creditService.getCreditOrders(page, limit),
-    staleTime: 60 * 1000,
-    keepPreviousData: true as any,
+    staleTime: 2 * 60 * 1000,
+    keepPreviousData: true,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -33,7 +36,8 @@ export const useCreditOrderDetailsQuery = (orderId: string, enabled: boolean = t
     queryKey: queryKeys.credit.order(orderId),
     queryFn: () => creditService.getCreditOrderDetails(orderId),
     enabled: !!orderId && enabled,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -42,7 +46,8 @@ export const useOrderPaymentsQuery = (orderId: string, enabled: boolean = true) 
     queryKey: queryKeys.credit.orderPayments(orderId),
     queryFn: () => creditService.getOrderPayments(orderId),
     enabled: !!orderId && enabled,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -50,7 +55,8 @@ export const useMyPaymentsQuery = () => {
   return useQuery({
     queryKey: queryKeys.credit.myPayments,
     queryFn: () => creditService.getMyPayments(),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -58,7 +64,8 @@ export const usePendingPaymentsQuery = () => {
   return useQuery({
     queryKey: queryKeys.credit.pendingPayments,
     queryFn: () => creditService.getPendingPayments(),
-    staleTime: 60 * 1000,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -73,8 +80,9 @@ export const useAllPaymentsQuery = (filters?: {
   return useQuery({
     queryKey: queryKeys.credit.allPayments(filters),
     queryFn: () => creditService.getAllPayments(filters),
-    staleTime: 60 * 1000,
-    keepPreviousData: true as any,
+    staleTime: 2 * 60 * 1000,
+    keepPreviousData: true,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -82,7 +90,8 @@ export const useAdminCreditDashboardQuery = () => {
   return useQuery({
     queryKey: queryKeys.credit.adminDashboard,
     queryFn: () => creditService.getAdminDashboard(),
-    staleTime: 60 * 1000,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 

@@ -51,8 +51,6 @@ const ProductDetailPage: React.FC = () => {
       setProduct(productData);
       setActiveImage(productData.images && productData.images.length > 1 ? productData.images[1] : productData.image);
     }
-    // Debug hooks
-    console.log('[RQ] useProductQuery', { id, status: statusProduct, hasData: !!productData });
   }, [productData, statusProduct, id]);
 
   const cartQuantity = useMemo(() => {
@@ -61,10 +59,7 @@ const ProductDetailPage: React.FC = () => {
     return found?.cantidad ?? 0;
   }, [items, product]);
 
-  const { data: relatedData, status: statusRelated } = useRelatedProductsQuery(product, 6);
-  useEffect(() => {
-    console.log('[RQ] useRelatedProductsQuery', { productId: product?.id, status: statusRelated, count: relatedData?.length });
-  }, [statusRelated, relatedData, product?.id]);
+  const { data: relatedData } = useRelatedProductsQuery(product, 6);
 
   // Show skeleton while loading
   if (isLoadingProduct) {

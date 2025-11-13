@@ -73,7 +73,6 @@ class AuthService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      console.log("response: ", response);
       const result = await response.json();
       if (!response.ok) {
         // Devolver mensaje del backend (detail o message) sin lanzar excepción
@@ -84,7 +83,6 @@ class AuthService {
         };
       }
       if (result.access_token) {
-        console.log(result.access_token);
         this.setToken(result.access_token);
         const user = await this.getMe(); // Fetch user data after setting token
         if (user) {
@@ -140,8 +138,6 @@ class AuthService {
   }
 
   private async fetchUserData(signal: AbortSignal): Promise<User | null> {
-    const fullUrl = `${this.url}${this.baseUrl}/me`;
-    console.log("fullUrl: ", fullUrl);
     try {
       // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
       const response = await this.authenticatedFetch(`${this.baseUrl}/me`, {
@@ -406,7 +402,6 @@ class AuthService {
       throw new Error('Failed to fetch order details');
     }
     const data = await response.json();
-    console.log("data order: ", data);
     return data;
   }
 
@@ -419,7 +414,6 @@ class AuthService {
       throw new Error('Failed to fetch user addresses');
     }
     const data = await response.json();
-    console.log('[AuthService] Customer addresses response:', data);
     return data;
   }
 
@@ -499,24 +493,6 @@ class AuthService {
     // Si es relativa, agregar this.url
     const isAbsoluteUrl = url.startsWith('http://') || url.startsWith('https://');
     const fullUrl = isAbsoluteUrl ? url : `${this.url}${url}`;
-    
-    // 🔍 VERIFICACIÓN: Log de headers para debugging
-    const headersObj = headers as Record<string, string>;
-    console.log('[AuthService] authenticatedFetch - Request details:', {
-      url: fullUrl,
-      method: options.method || 'GET',
-      headers: {
-        'Authorization': headersObj['Authorization'] ? 'Bearer ***' : 'MISSING',
-        'Content-Type': headersObj['Content-Type'] || 'NOT SET',
-        'X-Source-System': headersObj['X-Source-System'] || 'NOT SET',
-        ...Object.keys(headersObj).reduce((acc, key) => {
-          if (key !== 'Authorization') {
-            acc[key] = headersObj[key];
-          }
-          return acc;
-        }, {} as Record<string, string>)
-      }
-    });
     
     // Asegurar que options.headers no sobrescriba nuestros headers construidos
     const { headers: _, ...restOptions } = options;

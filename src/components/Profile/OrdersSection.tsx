@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { authService } from '../../services/AuthService';
-import { invoiceService } from '../../services/InvoiceService';
+import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Eye, Truck, DollarSign, Clock, CheckCircle, AlertCircle, Package, XCircle, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import OrderDetailsModal from './OrderDetailsModal';
 import InvoiceDetailsModal from './InvoiceDetailsModal';
-import PaymentModal from './PaymentModal'; // Import the new PaymentModal
+import PaymentModal from './PaymentModal';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
+import { useUserOrdersQuery, useOrderDetailsQuery } from '../../hooks/queries/useAuthQueries';
+import { useInvoicesQuery, useInvoiceDetailsQuery } from '../../hooks/queries/useInvoiceQueries';
+import { queryKeys } from '../../hooks/queries/queryKeys';
 import type { DEMOAInvoice, DEMOAInvoiceDetails } from '../../types/invoices';
 
 // Define interfaces for Order and OrderDetails to use TypeScript benefits
@@ -27,77 +29,40 @@ interface Order {
 }
 
 const OrdersSection: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [invoices, setInvoices] = useState<DEMOAInvoice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingInvoices, setLoadingInvoices] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
-  const [selectedInvoice, setSelectedInvoice] = useState<DEMOAInvoiceDetails | null>(null);
+  const queryClient = useQueryClient();
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [selectedInvoiceNumber, setSelectedInvoiceNumber] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false); // State for payment modal
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const { currency, formatPriceFromBackend, formatPrice } = useGlobalCurrency();
 
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const userOrders = await authService.getUserOrders();
-      setOrders(userOrders);
-    } catch (error) {
-      console.error("Failed to fetch orders:", error);
-    } finally {
-      setLoading(false);
-    }
+  // React Query hooks
+  const { data: orders = [], isLoading: loadingOrders } = useUserOrdersQuery();
+  const { data: invoices = [], isLoading: loadingInvoices } = useInvoicesQuery('all');
+  const { data: selectedOrder } = useOrderDetailsQuery(selectedOrderId || '', !!selectedOrderId && isModalOpen);
+  const { data: selectedInvoice } = useInvoiceDetailsQuery(selectedInvoiceNumber || '', !!selectedInvoiceNumber && isInvoiceModalOpen);
+
+  const handleViewDetails = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setIsModalOpen(true);
   };
 
-  const fetchInvoices = async () => {
-    try {
-      setLoadingInvoices(true);
-      const userInvoices = await invoiceService.getAllInvoices();
-      setInvoices(userInvoices);
-    } catch (error) {
-      console.error("Failed to fetch invoices:", error);
-      // Si falla, dejar array vacío para no bloquear la UI
-      setInvoices([]);
-    } finally {
-      setLoadingInvoices(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-    fetchInvoices();
-  }, []);
-
-  const handleViewDetails = async (orderId: string) => {
-    try {
-      const details = await authService.getOrderDetails(orderId);
-      setSelectedOrder(details);
-      setIsModalOpen(true);
-    } catch (error) {
-      console.error("Failed to fetch order details:", error);
-    }
-  };
-
-  const handleViewInvoiceDetails = async (invoiceNumber: string) => {
-    try {
-      const details = await invoiceService.getInvoiceDetails(invoiceNumber);
-      setSelectedInvoice(details);
-      setIsInvoiceModalOpen(true);
-    } catch (error) {
-      console.error("Failed to fetch invoice details:", error);
-    }
+  const handleViewInvoiceDetails = (invoiceNumber: string) => {
+    setSelectedInvoiceNumber(invoiceNumber);
+    setIsInvoiceModalOpen(true);
   };
 
   const handlePay = (order: Order) => {
-    setSelectedOrder(order);
+    setSelectedOrderId(order.id);
     setIsPaymentModalOpen(true);
   };
 
   const handlePaymentCreated = () => {
     setIsPaymentModalOpen(false);
-    fetchOrders();
-    fetchInvoices(); // Refrescar facturas también por si hay cambios
+    // Invalidar queries para refrescar datos
+    queryClient.invalidateQueries({ queryKey: queryKeys.auth.orders });
+    queryClient.invalidateQueries({ queryKey: queryKeys.invoices.list('all') });
   };
 
   // Función para formatear el precio de la orden usando la nueva lógica de precios
@@ -300,7 +265,8 @@ const OrdersSection: React.FC = () => {
     }
   };
 
-  if (loading && loadingInvoices) {
+  const loading = loadingOrders || loadingInvoices;
+  if (loading && !orders.length && !invoices.length) {
     return <LoadingSpinner variant="inline" message="Cargando pedidos y facturas..." />;
   }
 
@@ -366,7 +332,6 @@ const OrdersSection: React.FC = () => {
                         to={`/tracking/${order.id}`} 
                         className="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition-colors" 
                         title="Ver Tracking"
-                        onClick={() => console.log('Navegando a tracking:', `/tracking/${order.id}`)}
                       >
                         <Truck className="w-5 h-5" />
                       </Link>
@@ -442,16 +407,25 @@ const OrdersSection: React.FC = () => {
         </div>
       )}
       
-      {isModalOpen && (
-        <OrderDetailsModal order={selectedOrder} onClose={() => setIsModalOpen(false)} />
+      {isModalOpen && selectedOrder && (
+        <OrderDetailsModal order={selectedOrder} onClose={() => {
+          setIsModalOpen(false);
+          setSelectedOrderId(null);
+        }} />
       )}
 
       {isInvoiceModalOpen && selectedInvoice && (
-        <InvoiceDetailsModal invoice={selectedInvoice} onClose={() => setIsInvoiceModalOpen(false)} />
+        <InvoiceDetailsModal invoice={selectedInvoice} onClose={() => {
+          setIsInvoiceModalOpen(false);
+          setSelectedInvoiceNumber(null);
+        }} />
       )}
 
       {isPaymentModalOpen && selectedOrder && (
-        <PaymentModal order={selectedOrder} onClose={() => setIsPaymentModalOpen(false)} onPaymentCreated={handlePaymentCreated} />
+        <PaymentModal order={selectedOrder} onClose={() => {
+          setIsPaymentModalOpen(false);
+          setSelectedOrderId(null);
+        }} onPaymentCreated={handlePaymentCreated} />
       )}
     </div>
   );

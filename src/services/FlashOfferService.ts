@@ -56,12 +56,10 @@ class FlashOfferService {
           // No hay ofertas activas
           return [];
         }
-        console.log(response.json());
         throw new Error(`Error fetching flash offers: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log('Raw API response in getActiveFlashOffers:', data);
       
       // Parse the flash offers from the response with robust handling
       const flash_offers = this.parseFlashOffersFromResponse(data);
@@ -95,7 +93,6 @@ class FlashOfferService {
       }
       
       const data = await response.json();
-      console.log('Raw API response in getAllFlashOffers:', data);
       
       // Parse the flash offers from the response with robust handling
       const flash_offers = this.parseFlashOffersFromResponse(data);
@@ -210,9 +207,6 @@ class FlashOfferService {
 
   // Parse flash offers from API response with robust structure handling
   private parseFlashOffersFromResponse(data: any): FlashOfferWithProduct[] {
-    // Debug logging to understand API response structure
-    console.log('Type of data:', typeof data);
-    console.log('Keys in data:', Object.keys(data || {}));
     
     // Ensure data structure is valid
     if (!data || typeof data !== 'object') {
@@ -225,27 +219,22 @@ class FlashOfferService {
     
     // Check if the response directly contains an array of offers
     if (Array.isArray(data)) {
-      console.log('Response is a direct array of offers');
       flash_offers = data;
     }
     // Check if the response has flash_offers property
     else if (data.flash_offers && Array.isArray(data.flash_offers)) {
-      console.log('Response has flash_offers array property');
       flash_offers = data.flash_offers;
     }
     // Check if the response has offers property
     else if (data.offers && Array.isArray(data.offers)) {
-      console.log('Response has offers array property');
       flash_offers = data.offers;
     }
     // Check if the response has data property with flash_offers
     else if (data.data && Array.isArray(data.data.flash_offers)) {
-      console.log('Response has nested data.flash_offers array');
       flash_offers = data.data.flash_offers;
     }
     // Check if the response has data property that is an array
     else if (data.data && Array.isArray(data.data)) {
-      console.log('Response has data array property');
       flash_offers = data.data;
     }
     else {

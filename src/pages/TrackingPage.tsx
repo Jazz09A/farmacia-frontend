@@ -54,20 +54,15 @@ const TrackingPage: React.FC = () => {
   const { currency, formatPriceFromBackend } = useGlobalCurrency();
 
   useEffect(() => {
+    if (!orderId) {
+      return;
+    }
     const loadOrder = async () => {
-      console.log('TrackingPage: orderId recibido:', orderId);
-      if (!orderId) {
-        console.log('TrackingPage: No hay orderId, retornando');
-        return;
-      }
-      
       setIsLoading(true);
       setError(null);
       
       try {
-        console.log('TrackingPage: Cargando orden con ID:', orderId);
         const orderData = await authService.getOrderDetails(orderId);
-        console.log('TrackingPage: Orden cargada:', orderData);
         setOrder(orderData);
       } catch (err: any) {
         console.error('TrackingPage: Error loading order:', err);

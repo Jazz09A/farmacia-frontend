@@ -335,7 +335,6 @@ export const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets
   const handleSubmitTicket = (e: React.FormEvent) => {
     e.preventDefault();
     // Aquí iría la lógica para enviar el ticket
-    console.log('Nuevo ticket:', newTicket);
     setShowNewTicketForm(false);
     setNewTicket({ subject: '', category: 'general', priority: 'medium', message: '' });
   };

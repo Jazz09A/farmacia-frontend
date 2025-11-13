@@ -78,12 +78,6 @@ const CatalogPage: React.FC = () => {
   // Usar React Query para obtener productos
   const { data: productsResponse, isLoading, isFetching, error } = useProductsQuery(searchParams_api);
   useEffect(() => {
-    console.log('[RQ] useProductsQuery', {
-      key: searchParams_api,
-      isLoading,
-      isFetching,
-      total: productsResponse?.total,
-    });
   }, [productsResponse, isLoading, isFetching, searchParams_api]);
 
   const products = productsResponse?.products || [];

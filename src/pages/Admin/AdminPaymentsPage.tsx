@@ -325,9 +325,6 @@ const AdminPaymentsPage: React.FC = () => {
   });
   const { data, isLoading: loading, status } = useAllPaymentsQuery(filters);
   const approvePaymentMutation = useApprovePaymentMutation();
-  useEffect(() => {
-    console.log('[RQ] useAllPaymentsQuery', { status, count: data?.payments?.length });
-  }, [status, data?.payments?.length]);
 
   const [selectedPayments, setSelectedPayments] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
@@ -451,7 +448,7 @@ const AdminPaymentsPage: React.FC = () => {
     totalAmount: filteredPayments.reduce((sum, p) => sum + p.amount, 0)
   };
 
-  if (loading && allPayments.payments.length === 0) {
+  if (loading && filteredPayments.length === 0) {
     return (
       <PageLayout>
         <div className="min-h-screen bg-gray-50 pt-32 pb-16">

@@ -51,7 +51,7 @@ const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   
   const [promotions] = useState<UserPromotion[]>([]);
-  const [supportTickets] = useState<SupportTicket[]>([]);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const { stats: userStats, loading: statsLoading, error: statsError } = useUserStats();
 
   useEffect(() => {
@@ -88,7 +88,7 @@ const ProfilePage: React.FC = () => {
   const tabs = [
     { id: 'cuenta', label: 'Mi Cuenta', icon: UserIcon, count: null },
     { id: 'pedidos', label: 'Pedidos', icon: Package, count: null },
-    { id: 'credito', label: 'Crédito', icon: CreditIcon, count: null },
+    // { id: 'credito', label: 'Crédito', icon: CreditIcon, count: null },
     { id: 'cotizaciones', label: 'Cotizaciones', icon: FileText, count: null },
     // { id: 'promociones', label: 'Promociones', icon: Gift, count: promotions.filter(p => !p.is_used).length },
     // { id: 'soporte', label: 'Soporte', icon: MessageCircle, count: supportTickets.filter(t => t.status === 'open').length }
@@ -601,7 +601,13 @@ const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => 
   const handleSubmitTicket = (e: React.FormEvent) => {
     e.preventDefault();
     // Aquí iría la lógica para enviar el ticket
-    console.log('Nuevo ticket:', newTicket);
+    setSupportTickets(prev => [...prev, {
+      ...newTicket,
+      status: 'processing',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      id: `ticket-${Date.now()}` // Simulate a unique ID
+    }]);
     setShowNewTicketForm(false);
     setNewTicket({ subject: '', category: 'general', priority: 'medium', message: '' });
   };

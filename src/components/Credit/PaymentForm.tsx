@@ -64,13 +64,6 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       ? parseFloat(creditRemaining) 
       : creditRemaining;
     
-    console.log('🔍 Debug - Credit Remaining (No Conversion):', {
-      currency,
-      creditRemaining,
-      creditRemainingNum,
-      creditRemainingType: typeof creditRemaining
-    });
-    
     // Mostrar los valores como vienen del API sin conversión
     return creditRemainingNum;
   }, [creditRemaining, currency]);

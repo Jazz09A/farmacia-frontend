@@ -46,9 +46,6 @@ const AdminOrdersPage: React.FC = () => {
   const pages = ordersResp?.pages || 0;
   const updateOrderStatusMutation = useUpdateOrderStatusMutation();
   const updatePaymentStatusMutation = useUpdatePaymentStatusMutation();
-  React.useEffect(() => {
-    console.log('[RQ] useAdminOrdersQuery', { status, page: currentPage, count: orders.length });
-  }, [status, currentPage, orders.length]);
 
   // Función para traducir estados de órdenes
   const getOrderStatusText = (status: string) => {

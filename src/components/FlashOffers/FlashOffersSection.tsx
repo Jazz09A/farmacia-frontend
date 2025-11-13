@@ -29,17 +29,6 @@ export const FlashOffersSection: React.FC<FlashOffersSectionProps> = ({
   // Usar React Query para obtener ofertas flash
   const { data: flashOffersResponse, isLoading: loading, error } = useFlashOffersPublicQuery();
   
-  // Log solo cuando cambian los datos realmente, no en cada render
-  useEffect(() => {
-    if (flashOffersResponse) {
-      console.log('[RQ] useFlashOffersPublicQuery data updated', { 
-        loading, 
-        error, 
-        count: flashOffersResponse?.flash_offers?.length 
-      });
-    }
-  }, [flashOffersResponse?.flash_offers?.length, error]); // Solo cuando cambian los datos
-
   // Filtrar solo ofertas activas
   const offers: FlashOfferWithProduct[] = flashOffersResponse?.flash_offers
     ? flashOffersResponse.flash_offers.filter(offer => flashOfferService.isOfferActive(offer))
@@ -199,7 +188,6 @@ export const FlashOffersSection: React.FC<FlashOffersSectionProps> = ({
                 showQuantity={true}
                 onAddToCart={(productId) => {
                   // Analytics tracking
-                  console.log(`Flash offer added to cart: ${productId}`);
                 }}
               />
             </motion.div>

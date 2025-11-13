@@ -111,15 +111,6 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus,
   // Estados finales que no pueden ser modificados
   const isFinalStatus = order.status === 'delivered' || order.status === 'cancelled';
 
-  // Debug: mostrar información del estado de pago
-  console.log('OrderModal Debug:', {
-    payment_status: order.payment_status,
-    payment_capture_url: order.payment_capture_url,
-    onUpdatePaymentStatus: !!onUpdatePaymentStatus,
-    order_id: order.id,
-    order_number: order.order_number
-  });
-  
   const handleConfirmStatusChange = async () => {
     if (selectedStatus === order.status) return;
     setIsUpdating(true);

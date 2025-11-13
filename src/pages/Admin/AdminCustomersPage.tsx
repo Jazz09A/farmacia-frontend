@@ -186,7 +186,6 @@ const AdminCustomersPage: React.FC = () => {
   const handleConfirmDelete = () => {
     if (!customerToDelete) return;
     // Lógica de eliminación
-    console.log(`Cliente ${customerToDelete.customer_code} eliminado`);
     setCustomerToDelete(null);
   };
 

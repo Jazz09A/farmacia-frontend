@@ -1,31 +1,36 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCart } from '../contexts/CartContext';
+import { useQuantityDiscountQuery } from './queries/useAuthQueries';
+import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/AuthService';
-import { QuantityDiscount, ApplicableDiscountResponse } from '../types/discounts';
+import { queryKeys } from './queries/queryKeys';
 
 export const useDiscounts = () => {
   const { cart } = useCart();
-  const [applicableDiscount, setApplicableDiscount] = useState<QuantityDiscount | null>(null);
-  const [loading, setLoading] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const quantity = cart?.total_items ?? 0;
+  const discountQuery = useQuantityDiscountQuery(quantity, isAuthenticated);
+  const queryClient = useQueryClient();
 
-  // Obtener descuento aplicable por cantidad
-  const fetchApplicableDiscount = useCallback(async (quantity: number) => {
-    if (quantity === 0) {
-      setApplicableDiscount(null);
+  const fetchApplicableDiscount = useCallback(async (nextQuantity: number) => {
+    if (!isAuthenticated) return;
+    if (nextQuantity <= 0) {
       return;
     }
 
-    setLoading(true);
-    try {
-      const discount = await authService.getApplicableQuantityDiscount(quantity);
-      setApplicableDiscount(discount);
-    } catch (error) {
-      console.error('Error fetching applicable discount:', error);
-      setApplicableDiscount(null);
-    } finally {
-      setLoading(false);
+    if (nextQuantity === quantity) {
+      await discountQuery.refetch();
+      return;
     }
-  }, []);
+
+    await queryClient.fetchQuery({
+      queryKey: queryKeys.auth.quantityDiscount(nextQuantity),
+      queryFn: () => authService.getApplicableQuantityDiscount(nextQuantity),
+    });
+  }, [discountQuery, isAuthenticated, queryClient, quantity]);
+
+  const applicableDiscount = discountQuery.data ?? null;
 
   // Calcular ahorro potencial
   const calculatePotentialSavings = useCallback((
@@ -43,18 +48,13 @@ export const useDiscounts = () => {
     }
   }, [applicableDiscount]);
 
-  // Auto-fetch cuando cambie la cantidad del carrito
-  useEffect(() => {
-    if (cart?.total_items) {
-      fetchApplicableDiscount(cart.total_items);
-    }
-  }, [cart?.total_items, fetchApplicableDiscount]);
-
-  return {
+  return useMemo(() => ({
     applicableDiscount,
-    loading,
+    loading: discountQuery.isLoading || discountQuery.isFetching,
     fetchApplicableDiscount,
-    calculatePotentialSavings
-  };
+    calculatePotentialSavings,
+  }), [applicableDiscount, calculatePotentialSavings, discountQuery.isFetching, discountQuery.isLoading, fetchApplicableDiscount]);
 };
+
+export default useDiscounts;
 

@@ -1,10 +1,12 @@
 /* @refresh reset */
-import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useMemo, useState, ReactNode, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { authService } from '../services/AuthService';
 import { Cart } from '../types';
 import { CartWithDiscounts, QuantityDiscount } from '../types/discounts';
 import { useAuth } from './AuthContext';
-import cartCache from '../utils/cartCache';
+import { useCartQuery, useCartWithDiscountsQuery, useQuantityDiscountQuery } from '../hooks/queries/useAuthQueries';
+import { queryKeys } from '../hooks/queries/queryKeys';
 
 // Función para migrar datos del carrito de la estructura antigua a la nueva
 const migrateCartData = (cartData: any): Cart => {
@@ -47,288 +49,126 @@ const migrateCartData = (cartData: any): Cart => {
 
 interface CartContextType {
   cart: Cart | null;
-  loading: boolean;
-  fetchCart: (forceRefresh?: boolean) => Promise<void>;
-  clearCart: () => Promise<void>;
+  cartLoading: boolean;
+  cartWithDiscounts: CartWithDiscounts | null;
+  cartWithDiscountsLoading: boolean;
+  applicableQuantityDiscount: QuantityDiscount | null;
   addToCart: (productId: string, quantity: number) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
+  clearCart: () => Promise<void>;
   refreshCart: () => Promise<void>;
-  
-  // Nuevas funcionalidades de descuentos
-  cartWithDiscounts: CartWithDiscounts | null;
-  applicableQuantityDiscount: QuantityDiscount | null;
-  fetchCartWithDiscounts: () => Promise<void>;
-  fetchApplicableDiscount: (quantity: number) => Promise<void>;
   refreshCartWithDiscounts: () => Promise<void>;
+  loading: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [loading, setLoading] = useState(false);
-  const { user, isAuthenticated } = useAuth();
-  const fetchingRef = useRef(false);
-  const currentUserRef = useRef<string | null>(null);
-  
-  // Estados para descuentos
-  const [cartWithDiscounts, setCartWithDiscounts] = useState<CartWithDiscounts | null>(null);
-  const [applicableQuantityDiscount, setApplicableQuantityDiscount] = useState<QuantityDiscount | null>(null);
+  const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
+  const [actionLoading, setActionLoading] = useState(false);
 
-  // 🚀 Función optimizada para cargar carrito
-  const fetchCart = useCallback(async (forceRefresh: boolean = false) => {
-    if (!isAuthenticated || !user?.id || fetchingRef.current) {
-      return;
+  const cartQuery = useCartQuery(isAuthenticated);
+  const cartWithDiscountsQuery = useCartWithDiscountsQuery(isAuthenticated);
+
+  const totalItems = cartQuery.data?.total_items ?? 0;
+  const quantityDiscountQuery = useQuantityDiscountQuery(totalItems, isAuthenticated);
+
+  const runWithSessionValidation = useCallback(async <T,>(action: () => Promise<T>): Promise<T> => {
+    const token = authService.getCurrentToken();
+    if (!token) {
+      throw new Error('No hay sesión activa para completar esta acción.');
     }
 
-    const userId = user.id;
-    
-    // Si cambió el usuario, limpiar carrito anterior
-    if (currentUserRef.current && currentUserRef.current !== userId) {
-      setCart(null);
-      cartCache.clearUserCart(currentUserRef.current);
-    }
-    currentUserRef.current = userId;
+    setActionLoading(true);
 
-    // 🔍 Verificar caché primero (solo si no es refresh forzado)
-    if (!forceRefresh) {
-      const cachedCart = cartCache.getCart(userId);
-      if (cachedCart) {
-        setCart(cachedCart);
-        
-        // Si el caché es relativamente nuevo, no hacer request API
-        if (!cartCache.shouldRefresh(userId)) {
-          return;
-        }
-      }
-    }
-
-    // 🌐 Fetch desde API
-    fetchingRef.current = true;
-    setLoading(true);
-    
     try {
-      const cartData = await authService.getCart();
-      
-      // 🔄 Migrar datos del carrito si es necesario (estructura antigua -> nueva)
-      const migratedCart = migrateCartData(cartData);
-      
-      setCart(migratedCart);
-      
-      // 💾 Guardar en caché
-      cartCache.setCart(userId, migratedCart);
-      
-    } catch (error) {
-      console.error("Failed to fetch cart", error);
-      
-      // Si hay error, mantener datos del caché si existen
-      const cachedCart = cartCache.getCart(userId);
-      if (cachedCart) {
-        const migratedCachedCart = migrateCartData(cachedCart);
-        setCart(migratedCachedCart);
-      } else {
-        setCart(null);
-      }
+      return await action();
     } finally {
-      setLoading(false);
-      fetchingRef.current = false;
+      setActionLoading(false);
     }
-  }, [isAuthenticated, user?.id]);
+  }, []);
 
-  // 🗑️ Limpiar carrito
-  const clearCart = useCallback(async () => {
-    if (!user?.id) return;
-    
-    try {
-      await authService.clearCart();
-      setCart(null);
-      cartCache.clearUserCart(user.id);
-    } catch (error) {
-      console.error("Failed to clear cart", error);
-      throw error;
-    }
-  }, [user?.id]);
+  const invalidateCartQueries = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.cart }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.cartWithDiscounts }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.quantityDiscountRoot }),
+    ]);
+  }, [queryClient]);
 
-  // ➕ Agregar al carrito con actualización optimista
   const addToCart = useCallback(async (productId: string, quantity: number) => {
-    if (!user?.id) throw new Error('User not authenticated');
-
-    try {
-      // 🔄 Actualización optimista del UI
-      setCart(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          total_unique_items: prev.total_unique_items + 1,
-          // Nota: En un caso real, calcularías el precio exacto
-        };
-      });
-
+    await runWithSessionValidation(async () => {
       await authService.addToCart(productId, quantity);
-      
-      // 🔄 Refrescar desde servidor para datos exactos
-      await fetchCart(true);
-      
-    } catch (error) {
-      console.error("Failed to add to cart", error);
-      // Revertir cambio optimista haciendo refresh
-      await fetchCart(true);
-      throw error;
-    }
-  }, [user?.id, fetchCart]);
+      await invalidateCartQueries();
+    });
+  }, [invalidateCartQueries, runWithSessionValidation]);
 
-  // ✏️ Actualizar cantidad
   const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
-    if (!user?.id) throw new Error('User not authenticated');
-
-    const originalCart = cart;
-    
-    try {
-      // 🔄 Actualización optimista
-      setCart(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          items: prev.items?.map(item => 
-            item.id === itemId ? { ...item, quantity } : item
-          ) || []
-        };
-      });
-
+    await runWithSessionValidation(async () => {
       await authService.updateCartItem(itemId, quantity);
-      await fetchCart(true);
-      
-    } catch (error) {
-      console.error("Failed to update cart item quantity", error);
-      // Revertir a estado original
-      setCart(originalCart);
-      throw error;
-    }
-  }, [user?.id, cart, fetchCart]);
+      await invalidateCartQueries();
+    });
+  }, [invalidateCartQueries, runWithSessionValidation]);
 
-  // ❌ Remover del carrito
   const removeFromCart = useCallback(async (itemId: string) => {
-    if (!user?.id) throw new Error('User not authenticated');
-
-    const originalCart = cart;
-    
-    try {
-      // 🔄 Actualización optimista
-      setCart(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          items: prev.items?.filter(item => item.id !== itemId) || [],
-          total_unique_items: Math.max(0, prev.total_unique_items - 1)
-        };
-      });
-
+    await runWithSessionValidation(async () => {
       await authService.removeFromCart(itemId);
-      await fetchCart(true);
-      
-    } catch (error) {
-      console.error("Failed to remove from cart", error);
-      // Revertir a estado original
-      setCart(originalCart);
-      throw error;
-    }
-  }, [user?.id, cart, fetchCart]);
+      await invalidateCartQueries();
+    });
+  }, [invalidateCartQueries, runWithSessionValidation]);
 
-  // 🔄 Función para refrescar manualmente
+  const clearCart = useCallback(async () => {
+    await runWithSessionValidation(async () => {
+      await authService.clearCart();
+      await invalidateCartQueries();
+    });
+  }, [invalidateCartQueries, runWithSessionValidation]);
+
   const refreshCart = useCallback(async () => {
-    await fetchCart(true);
-  }, [fetchCart]);
+    await invalidateCartQueries();
+  }, [invalidateCartQueries]);
 
-  // 🎯 Efecto principal: cargar carrito cuando cambie el usuario
-  useEffect(() => {
-    if (isAuthenticated && user?.id) {
-      fetchCart(false); // Usar caché si está disponible
-    } else {
-      // Usuario no autenticado - limpiar estado
-      setCart(null);
-      setLoading(false);
-      if (currentUserRef.current) {
-        cartCache.clearUserCart(currentUserRef.current);
-        currentUserRef.current = null;
-      }
-    }
-  }, [isAuthenticated, user?.id, fetchCart]);
-
-  // ===== FUNCIONES DE DESCUENTOS =====
-
-  // Obtener carrito con descuentos
-  const fetchCartWithDiscounts = useCallback(async () => {
-    if (!isAuthenticated || !user?.id) {
-      setCartWithDiscounts(null);
-      return;
-    }
-
-    try {
-      const cart = await authService.getCartWithDiscounts();
-      setCartWithDiscounts(cart);
-    } catch (error) {
-      console.error('Error fetching cart with discounts:', error);
-      setCartWithDiscounts(null);
-    }
-  }, [isAuthenticated, user?.id]);
-
-  // Obtener descuento aplicable por cantidad
-  const fetchApplicableDiscount = useCallback(async (quantity: number) => {
-    if (quantity === 0) {
-      setApplicableQuantityDiscount(null);
-      return;
-    }
-
-    try {
-      const discount = await authService.getApplicableQuantityDiscount(quantity);
-      setApplicableQuantityDiscount(discount);
-    } catch (error) {
-      console.error('Error fetching applicable discount:', error);
-      setApplicableQuantityDiscount(null);
-    }
-  }, []);
-
-  // Refrescar carrito con descuentos
   const refreshCartWithDiscounts = useCallback(async () => {
-    await fetchCartWithDiscounts();
-  }, [fetchCartWithDiscounts]);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.cartWithDiscounts }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.quantityDiscountRoot }),
+    ]);
+  }, [queryClient]);
 
-  // Auto-fetch descuentos cuando cambie el carrito
-  useEffect(() => {
-    if (cart?.total_items) {
-      fetchApplicableDiscount(cart.total_items);
-      fetchCartWithDiscounts();
-    }
-  }, [cart?.total_items, fetchApplicableDiscount, fetchCartWithDiscounts]);
-
-  // 🧹 Limpieza al desmontar
-  useEffect(() => {
-    return () => {
-      fetchingRef.current = false;
-    };
-  }, []);
-
-  return (
-    <CartContext.Provider value={{ 
-      cart, 
-      loading, 
-      fetchCart, 
-      clearCart, 
+  const contextValue: CartContextType = useMemo(() => ({
+    cart: cartQuery.data ?? null,
+    cartLoading: cartQuery.isLoading || cartQuery.isFetching,
+    cartWithDiscounts: cartWithDiscountsQuery.data ?? null,
+    cartWithDiscountsLoading: cartWithDiscountsQuery.isLoading || cartWithDiscountsQuery.isFetching,
+    applicableQuantityDiscount: quantityDiscountQuery.data ?? null,
       addToCart, 
       updateQuantity, 
       removeFromCart,
+    clearCart,
+    refreshCart,
+    refreshCartWithDiscounts,
+    loading: actionLoading || cartQuery.isLoading || cartWithDiscountsQuery.isLoading || quantityDiscountQuery.isLoading,
+  }), [
+    actionLoading,
+    addToCart,
+    cartQuery.data,
+    cartQuery.isFetching,
+    cartQuery.isLoading,
+    cartWithDiscountsQuery.data,
+    cartWithDiscountsQuery.isFetching,
+    cartWithDiscountsQuery.isLoading,
+    clearCart,
+    quantityDiscountQuery.data,
+    quantityDiscountQuery.isLoading,
       refreshCart,
-      // Nuevas funcionalidades de descuentos
-      cartWithDiscounts,
-      applicableQuantityDiscount,
-      fetchCartWithDiscounts,
-      fetchApplicableDiscount,
-      refreshCartWithDiscounts
-    }}>
-      {children}
-    </CartContext.Provider>
-  );
+    refreshCartWithDiscounts,
+    removeFromCart,
+    updateQuantity,
+  ]);
+
+  return <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>;
 };
 
 export const useCart = (): CartContextType => {

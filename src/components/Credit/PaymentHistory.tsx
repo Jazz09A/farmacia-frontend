@@ -14,10 +14,6 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
 }) => {
   const { data: payments = [], isLoading: loading, error } = useOrderPaymentsQuery(orderId, !!orderId);
 
-  useEffect(() => {
-    console.log('[RQ] useOrderPaymentsQuery', { orderId, loading, error, count: payments.length });
-  }, [orderId, loading, error, payments.length]);
-
   const getStatusInfo = (status: string) => {
     switch (status) {
       case PAYMENT_STATUS.PENDING:

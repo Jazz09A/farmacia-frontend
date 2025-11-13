@@ -80,7 +80,6 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
                   to={`/tracking/${order.id}`} 
                   className="btn-medical-primary flex items-center gap-2 px-3 py-2 text-sm"
                   onClick={() => {
-                    console.log('Navegando a tracking desde modal:', `/tracking/${order.id}`);
                     onClose();
                   }}
                 >
@@ -211,7 +210,6 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
             <div>
               <h4 className="font-bold mb-3">Artículos ({order.item_count})</h4>
               <div className="space-y-3">
-                {console.log( "order", order)}
                 
                 {order.items.map((item: OrderItem) => (
                   <div key={item.id} className="bg-white border border-medical-gray-200 rounded-xl p-4">

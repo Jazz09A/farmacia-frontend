@@ -24,7 +24,7 @@ const EditBlogPostPage: React.FC = () => {
       updatedAt: new Date(),
     };
 
-    console.log('Artículo actualizado (simulado):', updatedPost);
+    // TODO: Implementar actualización real
     alert('Artículo actualizado con éxito (simulado).');
 
     // Aquí llamarías a tu API: updatePost(id, updatedPost)

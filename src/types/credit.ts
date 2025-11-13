@@ -205,18 +205,9 @@ export interface ValidationResult {
 // Tipos para contexto
 export interface CreditContextType {
   loading: boolean;
-  creditInfo: CreditInfo | null;
-  dashboardData: CreditDashboard | null;
-  payments: Payment[];
-  creditOrders: CreditOrder[];
   error: string | null;
-  refreshCreditInfo: (handleLoading?: boolean) => Promise<void>;
-  refreshDashboard: (handleLoading?: boolean) => Promise<void>;
   createCreditOrder: (data: CreditOrderData) => Promise<CreditOrderResponse>;
   createPayment: (data: PaymentData, paymentCaptureFile?: File) => Promise<Payment>;
-  getOrderPayments: (orderId: string) => Promise<Payment[]>;
-  getCreditOrders: (page?: number, limit?: number) => Promise<CreditOrdersResponse>;
-  getCreditOrderDetails: (orderId: string) => Promise<CreditOrder>;
   clearError: () => void;
 }
 

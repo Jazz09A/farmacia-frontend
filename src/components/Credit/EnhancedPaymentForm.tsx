@@ -107,16 +107,6 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
 
     const rate = typeof exchangeRate === 'string' ? parseFloat(exchangeRate as unknown as string) : exchangeRate;
 
-    console.log('🔍 Debug - Enhanced Payment Credit Remaining (With per-currency display):', {
-      orderId,
-      orderNumber,
-      currency,
-      creditRemaining,
-      creditRemainingNum,
-      exchangeRate,
-      rate
-    });
-
     switch (currency) {
       case 'VES':
         return creditRemainingNum * (Number.isFinite(rate) ? rate : 1);

@@ -110,7 +110,7 @@ const CheckoutPage: React.FC = () => {
     payment_capture_url: '',
   });
 
-  const { data: addressesData, refetch: refetchAddresses, isFetching: isFetchingAddresses, status: addressesStatus } = useUserAddressesQuery(
+  const { data: addressesData, refetch: refetchAddresses, isFetching: isFetchingAddresses } = useUserAddressesQuery(
     { include_checkout_preview: true, cart_total: cart?.total || 0 },
     currentStep === 1
   );
@@ -118,59 +118,30 @@ const CheckoutPage: React.FC = () => {
   const createAddressMutation = useCreateAddressMutation();
 
   useEffect(() => {
-    if (currentStep === 1 && addressesData) {
-      console.log('[RQ] useUserAddressesQuery', { status: addressesStatus, hasData: !!addressesData });
-      const response: any = addressesData as any;
-      const list = response.addresses || response;
-      setAddresses(list);
-      if (list && list.length > 0) {
-        const defaultAddress = list.find((a: any) => a.is_default) || list[0];
-        setFormData(prev => ({ ...prev, shipping_address_id: defaultAddress.id }));
-      } else {
-        setShowAddressForm(true);
-      }
-      if ((response as any).checkout_preview && (response as any).checkout_preview.previews_by_address && formData.shipping_address_id) {
-        const addressPreview = (response as any).checkout_preview.previews_by_address[formData.shipping_address_id];
-        if (addressPreview) {
-          const addr = list.find((a: any) => a.id === formData.shipping_address_id);
-          const preview = {
-            subtotal: addressPreview.subtotal,
-            shipping_cost: addressPreview.shipping_cost,
-            taxes: addressPreview.taxes,
-            total: addressPreview.total,
-            payment_currency: addressPreview.payment_currency as 'USD' | 'VES',
-            exchange_rate: addressPreview.exchange_rate,
-            shipping_zone: addressPreview.shipping_zone,
-            shipping_address: addr ? {
-              street: addr.street,
-              city: addr.city,
-              state: addr.state,
-              postal_code: addr.postal_code,
-              country: addr.country,
-              recipient_name: addr.recipient_name,
-              recipient_phone: addr.recipient_phone,
-              delivery_instructions: addr.delivery_instructions
-            } : undefined,
-            quantity_discount: addressPreview.quantity_discount,
-            quantity_discount_amount: addressPreview.quantity_discount_amount,
-            flash_discounts: addressPreview.flash_discounts || [],
-            total_discount: addressPreview.total_discount,
-            original_subtotal: addressPreview.original_subtotal,
-            original_taxes: addressPreview.original_taxes,
-            original_total: addressPreview.original_total,
-            total_savings: addressPreview.total_savings,
-            savings_percentage: addressPreview.savings_percentage
-          } as any;
-          setCheckoutPreview(preview);
+    if (addressesData) {
+      if (addressesData.addresses?.length) {
+        setAddresses(addressesData.addresses);
+        const defaultAddress = addressesData.addresses.find(address => address.is_default);
+        if (defaultAddress) {
+          setFormData(prev => ({
+            ...prev,
+            shipping_address_id: defaultAddress.id
+          }));
         }
       }
+      if (addressesData.checkout_preview) {
+        setCheckoutPreview(addressesData.checkout_preview);
+      }
     }
-  }, [currentStep, addressesData, addressesStatus, formData.shipping_address_id]);
+  }, [addressesData]);
 
   const fetchAddresses = async () => {
     // Mantener función para compatibilidad, pero usar refetch de React Query
     const result = await refetchAddresses();
-    console.log('[RQ] refetch addresses', { status: result.status });
+    if (result.status === 'success' && result.data) {
+      setAddresses(result.data.addresses || []);
+      setCheckoutPreview(result.data.checkout_preview || null);
+    }
   };
 
   // Función para obtener el preview del checkout (con fallback)
@@ -245,7 +216,6 @@ const CheckoutPage: React.FC = () => {
           savings_percentage: addressPreview.savings_percentage
         };
         setCheckoutPreview(checkoutPreview);
-        console.log('[RQ] Updated checkout preview:', checkoutPreview);
       }
     }
   };

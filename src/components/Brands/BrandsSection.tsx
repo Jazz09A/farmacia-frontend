@@ -101,14 +101,6 @@ export const BrandsSection: React.FC = () => {
       const allElements = Array.from(carouselRef.current.children);
       const firstGroupElements = allElements.slice(0, brands.length);
       
-      if (isDev) {
-        console.log('[BrandsSection] Calculating width:', {
-          totalElements: allElements.length,
-          firstGroupElements: firstGroupElements.length,
-          expected: brands.length
-        });
-      }
-      
       if (firstGroupElements.length === brands.length) {
         // Obtener el primer y último elemento del primer grupo
         const firstElement = firstGroupElements[0] as HTMLElement;
@@ -120,16 +112,10 @@ export const BrandsSection: React.FC = () => {
         // Calcular el ancho desde el inicio del primer elemento hasta el final del último
         const width = lastRect.right - firstRect.left;
         
-        if (isDev) {
-          console.log('[BrandsSection] Width calculated:', width);
-        }
-        
         setCarouselWidth(prevWidth => {
           // Solo actualizar si el ancho cambió significativamente (más de 1px)
           return Math.abs(prevWidth - width) > 1 ? width : prevWidth;
         });
-      } else if (isDev) {
-        console.warn('[BrandsSection] Not enough elements to calculate width');
       }
     }
   }, []);
@@ -139,9 +125,6 @@ export const BrandsSection: React.FC = () => {
     // Calcular después de que se rendericen los elementos - múltiples intentos
     const attemptCalculate = (attempt = 1) => {
       if (attempt > 10) {
-        if (isDev) {
-          console.warn('[BrandsSection] Max attempts reached, using fallback');
-        }
         return;
       }
       
@@ -200,10 +183,6 @@ export const BrandsSection: React.FC = () => {
   // Controlar el loop infinito sin saltos visibles usando requestAnimationFrame
   useEffect(() => {
     if (carouselWidth > 0 && carouselRef.current) {
-      if (isDev) {
-        console.log('[BrandsSection] Starting animation with width:', carouselWidth);
-      }
-      
       let isAnimating = true;
       let startTime: number | null = null;
       let currentX = 0;
@@ -216,9 +195,6 @@ export const BrandsSection: React.FC = () => {
         
         if (startTime === null) {
           startTime = timestamp;
-          if (isDev) {
-            console.log('[BrandsSection] Animation started');
-          }
         }
         
         const elapsed = timestamp - startTime;
@@ -243,19 +219,11 @@ export const BrandsSection: React.FC = () => {
       animationFrameId = requestAnimationFrame(animate);
       
       return () => {
-        if (isDev) {
-          console.log('[BrandsSection] Stopping animation');
-        }
         isAnimating = false;
         if (animationFrameId !== null) {
           cancelAnimationFrame(animationFrameId);
         }
       };
-    } else if (isDev) {
-      console.log('[BrandsSection] Animation not started:', {
-        carouselWidth,
-        hasRef: !!carouselRef.current
-      });
     }
   }, [carouselWidth]);
 

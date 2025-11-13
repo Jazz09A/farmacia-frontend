@@ -33,10 +33,6 @@ export const CreditInfoCard: React.FC<CreditInfoCardProps> = ({
   const { data: creditInfo, isLoading: loading, error, refetch } = useCreditInfoQuery(true);
   const { getCreditStatusInfo, getCreditUsagePercentage } = useCreditValidation();
 
-  useEffect(() => {
-    console.log('[RQ] useCreditInfoQuery', { loading, error, hasData: !!creditInfo });
-  }, [loading, error, creditInfo]);
-
   const handleRefresh = async () => {
     await refetch();
     onRefresh?.();

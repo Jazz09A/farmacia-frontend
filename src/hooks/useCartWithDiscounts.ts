@@ -1,51 +1,22 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { authService } from '../services/AuthService';
-import { CartWithDiscounts } from '../types/discounts';
+import { useCartWithDiscountsQuery } from './queries/useAuthQueries';
 
 export const useCartWithDiscounts = () => {
-  const { user, isAuthenticated } = useAuth();
-  const [cartWithDiscounts, setCartWithDiscounts] = useState<CartWithDiscounts | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
+  const query = useCartWithDiscountsQuery(isAuthenticated);
 
-  // Obtener carrito con descuentos
-  const fetchCartWithDiscounts = useCallback(async () => {
-    if (!isAuthenticated || !user?.id) {
-      setCartWithDiscounts(null);
-      return;
-    }
+  const refreshCart = useCallback(async () => {
+    await query.refetch();
+  }, [query]);
 
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const cart = await authService.getCartWithDiscounts();
-      setCartWithDiscounts(cart);
-    } catch (err) {
-      console.error('Error fetching cart with discounts:', err);
-      setError(err instanceof Error ? err.message : 'Error al cargar el carrito');
-      setCartWithDiscounts(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated, user?.id]);
-
-  // Auto-fetch cuando cambie la autenticación
-  useEffect(() => {
-    fetchCartWithDiscounts();
-  }, [fetchCartWithDiscounts]);
-
-  // Refrescar carrito
-  const refreshCart = useCallback(() => {
-    fetchCartWithDiscounts();
-  }, [fetchCartWithDiscounts]);
-
-  return {
-    cartWithDiscounts,
-    loading,
-    error,
-    refreshCart
-  };
+  return useMemo(() => ({
+    cartWithDiscounts: query.data ?? null,
+    loading: query.isLoading || query.isFetching,
+    error: query.error instanceof Error ? query.error.message : null,
+    refreshCart,
+  }), [query.data, query.error, query.isFetching, query.isLoading, refreshCart]);
 };
+
+export default useCartWithDiscounts;
 

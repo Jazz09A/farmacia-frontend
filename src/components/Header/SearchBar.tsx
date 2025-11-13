@@ -136,7 +136,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({ isScrolled }) => {
 
   const handleSearch = () => {
     if (query.trim()) {
-      console.log('Searching for:', query);
       setIsOpen(false);
       setActiveIndex(-1);
     }
@@ -146,7 +145,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({ isScrolled }) => {
     setQuery(suggestion.text);
     setIsOpen(false);
     setActiveIndex(-1);
-    console.log('Selected:', suggestion.text);
   };
 
   const clearSearch = () => {

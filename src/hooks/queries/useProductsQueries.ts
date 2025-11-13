@@ -7,7 +7,7 @@ export const useProductsQuery = (filters: ProductSearchParams) => {
   return useQuery<ProductsApiResponse>({
     queryKey: queryKeys.products.list(filters),
     queryFn: () => productService.searchProducts(filters),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
     placeholderData: (previousData) => previousData,
     refetchOnWindowFocus: false,
   });
@@ -18,7 +18,7 @@ export const useProductQuery = (id: string, enabled: boolean = true) => {
     queryKey: queryKeys.products.detail(id),
     queryFn: () => productService.getProductById(id),
     enabled,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
   });
 };
 
@@ -27,7 +27,7 @@ export const useProductBySlugQuery = (slug: string, enabled: boolean = true) => 
     queryKey: queryKeys.products.slug(slug),
     queryFn: () => productService.getProductBySlug(slug),
     enabled,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
   });
 };
 
@@ -35,7 +35,7 @@ export const useFeaturedProductsQuery = (limit: number = 10) => {
   return useQuery<Product[]>({
     queryKey: [...queryKeys.products.featured(), { limit }],
     queryFn: () => productService.getFeaturedProducts(limit),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
   });
 };
 
@@ -43,7 +43,7 @@ export const useOfferProductsQuery = (limit: number = 20) => {
   return useQuery<Product[]>({
     queryKey: [...queryKeys.products.offers(), { limit }],
     queryFn: () => productService.getOfferProducts(limit),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
   });
 };
 
@@ -83,7 +83,7 @@ export const useRelatedProductsQuery = (product: Product | null, limit: number =
     queryKey: [...queryKeys.products.lists(), 'related', product?.id ?? 'none', { limit }],
     queryFn: () => product ? productService.getRelatedProducts(product, limit) : Promise.resolve([]),
     enabled: !!product,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
   });
 };
 

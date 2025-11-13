@@ -49,7 +49,6 @@ class ProductService {
     // Construir array de imágenes
     const images: string[] = [];
     if (article.image_url) {
-      console.log(article)
       images.push(article.image_url);
     }
     if (images.length === 0) {

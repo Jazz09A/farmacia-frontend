@@ -7,6 +7,7 @@ export const useInvoiceSummaryQuery = () => {
     queryKey: queryKeys.invoices.summary,
     queryFn: () => invoiceService.getSummary(),
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -14,8 +15,9 @@ export const useInvoicesQuery = (status: 'pending' | 'paid' | 'all' = 'all') => 
   return useQuery({
     queryKey: queryKeys.invoices.list(status),
     queryFn: () => invoiceService.getAllInvoices(status === 'all' ? undefined : status),
-    staleTime: 2 * 60 * 1000,
-    keepPreviousData: true as any,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    keepPreviousData: true,
   });
 };
 
@@ -23,7 +25,8 @@ export const usePendingInvoicesQuery = () => {
   return useQuery({
     queryKey: queryKeys.invoices.pending,
     queryFn: () => invoiceService.getPendingInvoices(),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -31,7 +34,8 @@ export const usePaidInvoicesQuery = () => {
   return useQuery({
     queryKey: queryKeys.invoices.paid,
     queryFn: () => invoiceService.getPaidInvoices(),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -41,6 +45,7 @@ export const useInvoiceDetailsQuery = (invoiceNumber: string, enabled: boolean =
     queryFn: () => invoiceService.getInvoiceDetails(invoiceNumber),
     enabled: !!invoiceNumber && enabled,
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -49,6 +54,7 @@ export const useInvoicePaymentHistoryQuery = () => {
     queryKey: queryKeys.invoices.payments,
     queryFn: () => invoiceService.getPaymentHistory(),
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 

@@ -2,7 +2,6 @@ import { Product } from "../types/index";
 import { authService } from '../services/AuthService';
 
 const baseUrl = import.meta.env.VITE_API_URL  || 'http://localhost:8000';
-console.log('baseUrl: ', baseUrl);
 // Interface for paginated response matching the backend structure
 interface PaginatedResponse {
   products: Product[];
@@ -135,7 +134,6 @@ export const getProductsPaginated = async (page: number = 1, limit: number = 20)
 // Export function for backward compatibility - gets first page of products
 export const getProducts = async (): Promise<Product[]> => {
   const response = await fetchProductsPaginated(1, 100);
-  console.log("response: ", response);
   if (response.products.length === 0) {
     return [];
   }

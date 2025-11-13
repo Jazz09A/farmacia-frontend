@@ -35,11 +35,6 @@ class CreditService {
     // since admin users are also regular users with admin role
     const token = localStorage.getItem('auth_token');
     
-    console.log('🔍 Debug - Admin Headers:', {
-      token: token ? `${token.substring(0, 20)}...` : 'null',
-      hasToken: !!token
-    });
-    
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
@@ -55,14 +50,11 @@ class CreditService {
     return withErrorHandling(async () => {
       const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREDIT_INFO}`;
       const headers = await this.getHeaders();
-      console.log('url', url);
-      console.log('headers', headers);
       const response = await fetch(url, {
         method: 'GET',
         headers
       });
 
-      console.log('response', response);
       return validateApiResponse(response);
     }, 'getCreditInfo').then(result => {
       if (result.error) throw result.error;
@@ -79,8 +71,6 @@ class CreditService {
       headers: await this.getHeaders(),
       body: JSON.stringify(orderData)
     });
-
-    console.log('🔍 Debug - Create Credit Order Response:', response);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -102,8 +92,6 @@ class CreditService {
         payment_currency: paymentData.payment_currency || 'VES',
         payment_method: paymentData.payment_method || 'pago-movil'
       };
-
-      console.log('🔍 Debug - Create Payment Request:', normalizedData);
 
       const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREATE_PAYMENT}`, {
         method: 'POST',
@@ -398,22 +386,9 @@ class CreditService {
     const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.ADMIN_CREDIT_DASHBOARD}`;
     const headers = await this.getAdminHeaders();
     
-    console.log('🔍 Debug - Admin Dashboard Request:', {
-      url,
-      headers,
-      baseURL: this.baseURL,
-      endpoint: CREDIT_CONFIG.ENDPOINTS.ADMIN_CREDIT_DASHBOARD
-    });
-
     const response = await fetch(url, {
       method: 'GET',
       headers
-    });
-
-    console.log('🔍 Debug - Admin Dashboard Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
     });
 
     if (!response.ok) {
@@ -423,7 +398,6 @@ class CreditService {
     }
 
     const data = await response.json();
-    console.log('✅ Admin Dashboard Data:', data);
     return data;
   }
 

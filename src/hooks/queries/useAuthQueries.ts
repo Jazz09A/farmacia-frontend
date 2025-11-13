@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '../../services/AuthService';
 import type { User, Cart, Order } from '../../types';
-import type { CartWithDiscounts } from '../../types/discounts';
+import type { CartWithDiscounts, QuantityDiscount } from '../../types/discounts';
 import type { LoginData, JuridicoRegisterData, AuthResponse } from '../../types/auth';
 import { queryKeys } from './queryKeys';
 
@@ -12,8 +12,8 @@ export const useAuthUserQuery = (enabled: boolean = true) => {
     queryKey: queryKeys.auth.user,
     queryFn: () => authService.getMe(),
     enabled,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: true,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
     retry: false,
   });
 };
@@ -23,8 +23,8 @@ export const useCartQuery = (enabled: boolean = true) => {
     queryKey: queryKeys.auth.cart,
     queryFn: () => authService.getCart(),
     enabled,
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -33,8 +33,17 @@ export const useCartWithDiscountsQuery = (enabled: boolean = true) => {
     queryKey: queryKeys.auth.cartWithDiscounts,
     queryFn: () => authService.getCartWithDiscounts(),
     enabled,
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useQuantityDiscountQuery = (quantity: number, enabled: boolean) => {
+  return useQuery<QuantityDiscount | null>({
+    queryKey: queryKeys.auth.quantityDiscount(quantity),
+    queryFn: () => authService.getApplicableQuantityDiscount(quantity),
+    enabled: enabled && quantity > 0,
+    staleTime: 2 * 60 * 1000,
   });
 };
 
@@ -42,7 +51,8 @@ export const useUserOrdersQuery = () => {
   return useQuery<Order[]>({
     queryKey: queryKeys.auth.orders,
     queryFn: () => authService.getUserOrders(),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 

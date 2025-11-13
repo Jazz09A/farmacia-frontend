@@ -37,10 +37,6 @@ export const CreditOrderDetails: React.FC<CreditOrderDetailsProps> = ({
 }) => {
   const { data: order, isLoading: loading, error } = useCreditOrderDetailsQuery(orderId, !!orderId);
 
-  useEffect(() => {
-    console.log('[RQ] useCreditOrderDetailsQuery', { orderId, loading, error, hasData: !!order });
-  }, [orderId, loading, error, order]);
-
   const getStatusInfo = (status: string) => {
     switch (status) {
       case 'pending':

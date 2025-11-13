@@ -19,6 +19,8 @@ export const queryKeys = {
     user: ['auth', 'user'] as const,
     cart: ['auth', 'cart'] as const,
     cartWithDiscounts: ['auth', 'cart', 'discounts'] as const,
+    quantityDiscountRoot: ['auth', 'cart', 'quantity-discount'] as const,
+    quantityDiscount: (quantity: number) => ['auth', 'cart', 'quantity-discount', quantity] as const,
     orders: ['auth', 'orders'] as const,
     order: (id: string) => ['auth', 'orders', id] as const,
     addresses: ['auth', 'addresses'] as const,

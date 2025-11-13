@@ -154,7 +154,6 @@ class AdminService {
         throw new Error(`Error fetching order details: ${response.status}`);
       }
       const responseJson = await response.json();
-      console.log('🌐 Order details:', responseJson);
       return responseJson;
       
     } catch (error) {
@@ -417,7 +416,6 @@ class AdminService {
       }
 
       const response = await authService.authenticatedFetch(url.pathname + url.search);
-      console.log('RESPONSE CUSTOMERS', response);
       if (!response.ok) {
         throw new Error(`Error ${response.status}: Failed to fetch source customers`);
       }

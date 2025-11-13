@@ -2,7 +2,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
-import cartCache from '../utils/cartCache';
 
 interface OptimizedCartHook {
   cart: any;
@@ -68,11 +67,6 @@ export const useOptimizedCart = (): OptimizedCartHook => {
     try {
       await addToCart(productId, quantity);
       
-      // 💾 Actualizar caché después del éxito
-      if (cart) {
-        cartCache.setCart(user.id, cart);
-      }
-      
     } catch (error) {
       // ↩️ Revertir actualización optimista en caso de error
       setOptimisticUpdates(prev => {
@@ -102,10 +96,6 @@ export const useOptimizedCart = (): OptimizedCartHook => {
 
     try {
       await removeFromCart(itemId);
-      
-      if (cart) {
-        cartCache.setCart(user.id, cart);
-      }
       
     } catch (error) {
       // Revertir actualización optimista
@@ -139,10 +129,6 @@ export const useOptimizedCart = (): OptimizedCartHook => {
     try {
       await updateQuantity(itemId, quantity);
       
-      if (cart) {
-        cartCache.setCart(user.id, cart);
-      }
-      
     } catch (error) {
       // Revertir actualización optimista
       if (item) {
@@ -165,7 +151,6 @@ export const useOptimizedCart = (): OptimizedCartHook => {
     
     try {
       await clearCart();
-      cartCache.clearUserCart(user.id);
     } catch (error) {
       throw error;
     }

@@ -11,10 +11,6 @@ export const AdminCreditDashboard: React.FC<AdminCreditDashboardProps> = ({
 }) => {
   const { data: adminDashboard, isLoading: loading, error, refetch } = useAdminCreditDashboardQuery(true);
 
-  useEffect(() => {
-    console.log('[RQ] useAdminCreditDashboardQuery', { loading, error, hasData: !!adminDashboard });
-  }, [loading, error, adminDashboard]);
-
   const formatAmount = (amount: number): string => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
