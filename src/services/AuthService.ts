@@ -410,26 +410,17 @@ class AuthService {
     return data;
   }
 
-  async getUserAddresses(options?: {
+  async getUserAddresses(_options?: {
     include_checkout_preview?: boolean;
     cart_total?: number;
   }): Promise<any> {
-    let url = '/api/v1/user/addresses';
-    
-    if (options?.include_checkout_preview) {
-      const params = new URLSearchParams();
-      params.append('include_checkout_preview', 'true');
-      if (options.cart_total) {
-        params.append('cart_total', options.cart_total.toString());
-      }
-      url += `?${params.toString()}`;
-    }
-    
-    const response = await this.authenticatedFetch(url);
+    const response = await this.authenticatedFetch('/api/v1/user/customer-addresses');
     if (!response.ok) {
       throw new Error('Failed to fetch user addresses');
     }
-    return await response.json();
+    const data = await response.json();
+    console.log('[AuthService] Customer addresses response:', data);
+    return data;
   }
 
 
@@ -490,13 +481,16 @@ class AuthService {
       throw new Error('No authentication token - session terminated');
     }
 
+    // Construir headers asegurando que Authorization siempre esté presente
+    // Primero los headers personalizados, luego Authorization (para que no se sobrescriba)
+    const customHeaders = (options.headers || {}) as Record<string, string>;
     const headers: HeadersInit = {
-      'Authorization': `Bearer ${token}`,
-      ...(options.headers || {}),
+      ...customHeaders,
+      'Authorization': `Bearer ${token}`, // Siempre al final para asegurar que no se sobrescriba
     };
 
-    // Si NO es FormData, agregar Content-Type por defecto
-    if (!(options.body instanceof FormData)) {
+    // Si NO es FormData, agregar Content-Type por defecto (solo si no está ya presente)
+    if (!(options.body instanceof FormData) && !customHeaders['Content-Type']) {
       headers['Content-Type' as keyof HeadersInit] = 'application/json';
     }
 
@@ -505,7 +499,28 @@ class AuthService {
     // Si es relativa, agregar this.url
     const isAbsoluteUrl = url.startsWith('http://') || url.startsWith('https://');
     const fullUrl = isAbsoluteUrl ? url : `${this.url}${url}`;
-    const response = await fetch(fullUrl, { ...options, headers });
+    
+    // 🔍 VERIFICACIÓN: Log de headers para debugging
+    const headersObj = headers as Record<string, string>;
+    console.log('[AuthService] authenticatedFetch - Request details:', {
+      url: fullUrl,
+      method: options.method || 'GET',
+      headers: {
+        'Authorization': headersObj['Authorization'] ? 'Bearer ***' : 'MISSING',
+        'Content-Type': headersObj['Content-Type'] || 'NOT SET',
+        'X-Source-System': headersObj['X-Source-System'] || 'NOT SET',
+        ...Object.keys(headersObj).reduce((acc, key) => {
+          if (key !== 'Authorization') {
+            acc[key] = headersObj[key];
+          }
+          return acc;
+        }, {} as Record<string, string>)
+      }
+    });
+    
+    // Asegurar que options.headers no sobrescriba nuestros headers construidos
+    const { headers: _, ...restOptions } = options;
+    const response = await fetch(fullUrl, { ...restOptions, headers });
 
     // 🔥 MEJORADO: Manejar diferentes códigos de error de autenticación
     if (response.status === 401) {

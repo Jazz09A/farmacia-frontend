@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Star, CheckCircle, AlertTriangle, ChevronRight, ShoppingCart, Plus, Minus, Heart, Truck, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { Product } from '../types';
 import { useCurrency } from '../hooks/useCurrency';
-import { useCart } from '../contexts/CartContext';
 import { useProductQuery, useRelatedProductsQuery } from '../hooks/queries/useProductsQueries';
 import { ProductDetailSkeleton } from '../components/Skeleton';
+import ProductImage from '../components/common/ProductImage';
+import { useQuoteCart } from '../hooks/useQuoteCart';
 
 // Placeholder for a component of product carousel
 const ProductsCarousel: React.FC<{ products: Product[], title: string }> = ({ products, title }) => (
@@ -17,10 +18,12 @@ const ProductsCarousel: React.FC<{ products: Product[], title: string }> = ({ pr
       {products.map(product => (
         <div key={product.id} className="group relative bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-4 hover:shadow-xl transition-all duration-300">
           <Link to={`/product/${product.id}`}>
-            <img 
-              src={product.images && product.images.length > 1 ? product.images[1] : product.image} 
-              alt={product.name} 
-              className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform" 
+            <ProductImage
+              src={product.image}
+              images={product.images}
+              alt={product.name}
+              className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform"
+              size="md"
             />
             <h3 className="font-semibold text-gray-800 line-clamp-2">{product.name}</h3>
             <p className="text-sm text-medical-primary">{product.brand}</p>
@@ -40,7 +43,7 @@ const ProductDetailPage: React.FC = () => {
   const [activeImage, setActiveImage] = useState('');
 
   const { formatPrice, getDisplayPrice, currency } = useCurrency();
-  const { addToCart } = useCart();
+  const { items, addItem } = useQuoteCart();
   const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
@@ -51,6 +54,12 @@ const ProductDetailPage: React.FC = () => {
     // Debug hooks
     console.log('[RQ] useProductQuery', { id, status: statusProduct, hasData: !!productData });
   }, [productData, statusProduct, id]);
+
+  const cartQuantity = useMemo(() => {
+    if (!product) return 0;
+    const found = items.find(item => item.co_art === product.id);
+    return found?.cantidad ?? 0;
+  }, [items, product]);
 
   const { data: relatedData, status: statusRelated } = useRelatedProductsQuery(product, 6);
   useEffect(() => {
@@ -80,7 +89,7 @@ const ProductDetailPage: React.FC = () => {
     if (product) {
       setAddingToCart(true);
       try {
-        await addToCart(product.id, quantity);
+        addItem(product.id, quantity);
         // Maybe show a success notification
       } catch (error) {
         console.error("Failed to add item to cart", error);
@@ -115,7 +124,13 @@ const ProductDetailPage: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <img src={activeImage} alt={product.name} className="w-full h-80 sm:h-96 object-contain rounded-xl" />
+              <ProductImage
+                src={activeImage}
+                images={product.images}
+                alt={product.name}
+                className="w-full h-80 sm:h-96 object-contain rounded-xl"
+                size="xl"
+              />
             </motion.div>
             <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 sm:gap-4">
               {product.images?.filter((_, index) => index > 0).map((img, index) => (
@@ -124,7 +139,12 @@ const ProductDetailPage: React.FC = () => {
                   onClick={() => setActiveImage(img)}
                   className={`cursor-pointer rounded-xl p-1 sm:p-2 border-2 transition-all ${activeImage === img ? 'border-medical-primary' : 'border-transparent hover:border-medical-gray-200'}`}
                 >
-                  <img src={img} alt={`${product.name} view ${index + 2}`} className="w-full h-16 sm:h-20 object-cover rounded-md" />
+                  <ProductImage
+                    src={img}
+                    alt={`${product.name} view ${index + 2}`}
+                    className="w-full h-16 sm:h-20 object-cover rounded-md"
+                    size="sm"
+                  />
                 </div>
               ))}
             </div>
@@ -134,14 +154,26 @@ const ProductDetailPage: React.FC = () => {
           <div className="space-y-6">
             <h1 className="text-3xl lg:text-4xl font-bold text-medical-gray-900">{product.name}</h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {product.brand && (
+                <>
               <span className="text-lg font-medium text-medical-primary">{product.brand}</span>
               <span className="text-medical-gray-400 hidden sm:inline">|</span>
+                </>
+              )}
+              {product.category && (
+                <>
+                  <span className="text-lg font-medium text-medical-gray-600">{product.category}</span>
+                  {(product.brand || product.rating !== '0') && <span className="text-medical-gray-400 hidden sm:inline">|</span>}
+                </>
+              )}
+              {product.rating !== '0' && (
               <div className="flex items-center gap-2">
                 <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => <Star key={i} className={`w-5 h-5 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />)}
+                    {[...Array(5)].map((_, i) => <Star key={i} className={`w-5 h-5 ${i < Math.floor(parseFloat(product.rating)) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />)}
                 </div>
                 <span className="text-medical-gray-600">{product.rating} ({product.review_count} reviews)</span>
               </div>
+              )}
             </div>
 
             {/* Price */}
@@ -223,6 +255,11 @@ const ProductDetailPage: React.FC = () => {
                 </motion.button>
               </div>
             </div>
+            {cartQuantity > 0 && (
+              <p className="text-sm text-medical-gray-600 text-center sm:text-left">
+                Ya tienes {cartQuantity} {cartQuantity === 1 ? 'unidad' : 'unidades'} guardada{cartQuantity === 1 ? '' : 's'} en tu carrito local.
+              </p>
+            )}
 
             {/* Delivery Info */}
             <div className="space-y-3 pt-4">

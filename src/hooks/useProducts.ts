@@ -72,7 +72,6 @@ export const useProducts = (options: UseProductsOptions = {}) => {
   }, [pagination.total_pages, fetchProducts]);
 
   const refresh = useCallback(() => {
-    productService.clearCache();
     fetchProducts();
   }, [fetchProducts]);
 

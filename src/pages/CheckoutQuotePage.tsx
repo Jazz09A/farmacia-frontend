@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   AlertCircle,
@@ -9,26 +9,38 @@ import {
   MapPin,
   NotebookPen,
   Sparkles,
+  XCircle,
+  RefreshCw,
 } from 'lucide-react';
-import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useUserAddressesQuery } from '../hooks/queries/useAuthQueries';
 import quoteService, { QuoteConflictError, QuoteServiceError } from '../services/api/quotes';
-import type { QuoteCreateRequest, QuoteCreateResponse } from '../types/quotes';
+import type {
+  QuoteCreateRequest,
+  QuoteCreateResponse,
+  CartValidationResponse,
+  QuoteCurrency,
+} from '../types/quotes';
+import { useQuoteCart } from '../hooks/useQuoteCart';
 
 type Address = {
   id: string;
-  recipient_name: string;
-  street: string;
-  city: string;
-  state: string;
+  recipient_name?: string;
+  street?: string;
+  city?: string;
+  state?: string;
   postal_code?: string;
   country?: string;
   recipient_phone?: string;
   address_type?: string;
   is_default?: boolean;
+  co_tran?: string;
+  transport_code?: string;
+  label?: string;
+  raw_address?: string;
+  is_profit_address?: boolean;
 };
 
 const toDecimalString = (value: string | number | null | undefined): string => {
@@ -41,15 +53,58 @@ const toDecimalString = (value: string | number | null | undefined): string => {
   return '0.00';
 };
 
+const PAYMENT_TERMS_OPTIONS = [
+  { code: 'CON', label: 'CON · Contado' },
+  { code: '3D', label: '3D · 3 días de crédito' },
+  { code: '5D', label: '5D · 5 días de crédito' },
+  { code: '7D', label: '7D · 7 días de crédito' },
+  { code: '10D', label: '10D · 10 días de crédito' },
+  { code: '12D', label: '12D · 12 días de crédito' },
+  { code: '14D', label: '14D · 14 días de crédito' },
+  { code: '15D', label: '15D · 15 días de crédito' },
+  { code: '16D', label: '16D · 16 días de crédito' },
+  { code: '20D', label: '20D · 20 días de crédito' },
+  { code: '21D', label: '21D · 21 días de crédito' },
+  { code: '30D', label: '30D · 30 días de crédito' },
+  { code: '360D', label: '360D · 360 días de crédito' },
+];
+
+const TRANSPORT_OPTIONS = [
+  { code: '001', label: '001 · Entrega directa (Oficina)' },
+  { code: '002', label: '002 · Tealca Paraiso (Sra. Carmen 0414 3224289)' },
+  { code: '003', label: '003 · Zeus Express CA (Sr. Dennys 0414 8239491)' },
+  { code: '004', label: '004 · Transporte Alianza (Sr. Edgar 0412 5354934)' },
+  { code: '005', label: '005 · Zoom Montalban (Sr. Leandro 0412 2076171)' },
+  { code: '006', label: '006 · Zoom La Urbina (Sra. Gleimar 0414 2649087)' },
+  { code: '007', label: '007 · Marcha Express (Anmary Seijas 0412 8052157)' },
+];
+
+const DEFAULT_QUOTE_VALIDITY_DAYS = 30;
+const DEFAULT_PAYMENT_TERM = 'CON';
+const DEFAULT_TRANSPORT_CODE = '001';
+
+const computeValidUntil = (validityDays: number): string => {
+  const now = new Date();
+  const expiration = new Date(now);
+  expiration.setDate(expiration.getDate() + validityDays);
+  expiration.setHours(23, 59, 59, 0);
+  return expiration.toISOString();
+};
+
 const CheckoutQuotePage: React.FC = () => {
   const navigate = useNavigate();
-  const { cart, loading: cartLoading, clearCart } = useCart();
   const { user, loading: authLoading } = useAuth();
   const {
     currency,
     formatPriceFromBackend,
     getCurrencySymbol,
   } = useGlobalCurrency();
+  const {
+    items,
+    detailedItems,
+    loadingProducts,
+    clearItems,
+  } = useQuoteCart({ hydrateProducts: true });
 
   const [customerNotes, setCustomerNotes] = useState('');
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
@@ -58,14 +113,44 @@ const CheckoutQuotePage: React.FC = () => {
   const [conflictQuoteId, setConflictQuoteId] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastQuoteCreated, setLastQuoteCreated] = useState<QuoteCreateResponse | null>(null);
+  const [paymentTerm, setPaymentTerm] = useState<string>(DEFAULT_PAYMENT_TERM);
+  const [transportCode, setTransportCode] = useState<string>(DEFAULT_TRANSPORT_CODE);
+  
+  // Estados para validación del carrito
+  const [validationResult, setValidationResult] = useState<CartValidationResponse | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const isValidationInProgress = isValidating;
+  const hasValidationError = !isValidationInProgress && Boolean(validationError);
+  const hasValidationWarnings =
+    !isValidationInProgress && Boolean(validationResult && !validationResult.valido);
+  const isValidationSuccess =
+    !isValidationInProgress && Boolean(validationResult && validationResult.valido);
+
+  const localTotals = useMemo(() => {
+    const subtotal = detailedItems.reduce((sum, item) => {
+      const priceStr = item.product?.price ?? item.product?.current_price ?? '0';
+      const price = parseFloat(priceStr);
+      if (!Number.isFinite(price)) {
+        return sum;
+      }
+      return sum + price * item.cantidad;
+    }, 0);
+
+    const itemsCount = items.reduce((sum, item) => sum + item.cantidad, 0);
+
+    return {
+      subtotal,
+      total: subtotal,
+      itemsCount,
+    };
+  }, [detailedItems, items]);
 
   const {
     data: addressesData,
     isFetching: addressesLoading,
-  } = useUserAddressesQuery(
-    { include_checkout_preview: true, cart_total: cart?.total || 0 },
-    Boolean(user)
-  );
+  } = useUserAddressesQuery(undefined, Boolean(user));
 
   useEffect(() => {
     if (!addressesData) {
@@ -73,15 +158,145 @@ const CheckoutQuotePage: React.FC = () => {
     }
 
     const response = addressesData as any;
-    const list: Address[] = response.addresses || response;
+    const rawList = Array.isArray(response?.addresses)
+      ? response.addresses
+      : Array.isArray(response)
+      ? response
+      : [];
 
-    if (Array.isArray(list)) {
-      setAddresses(list);
+    if (!Array.isArray(rawList)) {
+      setAddresses([]);
+      return;
+    }
 
-      if (!selectedAddressId && list.length > 0) {
-        const defaultAddress = list.find(addr => addr.is_default) || list[0];
-        setSelectedAddressId(defaultAddress.id);
-      }
+    const normalizedList = rawList
+      .map((item: any, index: number): Address | null => {
+        if (!item || typeof item !== 'object') {
+          return null;
+        }
+
+        const trimmedId =
+          typeof item.id === 'string' && item.id.trim().length > 0
+            ? item.id.trim()
+            : null;
+
+        const primaryAddressField =
+          typeof item.address === 'string' && item.address.trim().length > 0
+            ? item.address.trim()
+            : undefined;
+
+        const street =
+          typeof item.street === 'string' && item.street.trim().length > 0
+            ? item.street.trim()
+            : primaryAddressField;
+
+        const city =
+          typeof item.city === 'string' && item.city.trim().length > 0
+            ? item.city.trim()
+            : undefined;
+
+        const state =
+          typeof item.state === 'string' && item.state.trim().length > 0
+            ? item.state.trim()
+            : undefined;
+
+        const postalCodeCandidates = [
+          item.postal_code,
+          item.zip,
+          item.zip_code,
+          item.postalCode,
+        ];
+        const postal_code = postalCodeCandidates.find(
+          value => typeof value === 'string' && value.trim().length > 0
+        ) as string | undefined;
+
+        const phoneCandidates = [
+          item.recipient_phone,
+          item.phone,
+          item.phones,
+          item.telefono,
+        ];
+        const recipient_phone = phoneCandidates.find(
+          value => typeof value === 'string' && value.trim().length > 0
+        ) as string | undefined;
+
+        const labelCandidates = [
+          item.label,
+          item.recipient_name,
+          item.customer_name,
+          item.alias,
+          item.address_name,
+        ];
+        const label = labelCandidates.find(
+          value => typeof value === 'string' && value.trim().length > 0
+        ) as string | undefined;
+
+        const address_type =
+          typeof item.address_type === 'string' && item.address_type.trim().length > 0
+            ? item.address_type.trim()
+            : typeof item.type === 'string' && item.type.trim().length > 0
+            ? item.type.trim()
+            : undefined;
+
+        const co_tran =
+          typeof item.co_tran === 'string' && item.co_tran.trim().length > 0
+            ? item.co_tran.trim()
+            : undefined;
+
+        const transport_code =
+          typeof item.transport_code === 'string' && item.transport_code.trim().length > 0
+            ? item.transport_code.trim()
+            : co_tran;
+
+        const country =
+          typeof item.country === 'string' && item.country.trim().length > 0
+            ? item.country.trim()
+            : undefined;
+
+        const raw_address = primaryAddressField ?? street ?? undefined;
+
+        const id =
+          trimmedId ??
+          (raw_address
+            ? `profit-address-${index}-${raw_address
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '')}`
+            : `address-${index}`);
+
+        const recipient_name = label ?? (raw_address ? 'Dirección de cliente' : undefined);
+
+        const is_default =
+          typeof item.is_default === 'boolean'
+            ? item.is_default
+            : address_type === 'principal';
+
+        return {
+          id,
+          recipient_name,
+          street,
+          city,
+          state,
+          postal_code,
+          country,
+          recipient_phone,
+          address_type,
+          is_default,
+          co_tran,
+          transport_code,
+          label,
+          raw_address,
+          is_profit_address: !trimmedId && Boolean(raw_address),
+        };
+      })
+      .filter((addr): addr is Address => Boolean(addr));
+
+    setAddresses(normalizedList);
+
+    if (!selectedAddressId && normalizedList.length > 0) {
+      const defaultAddress =
+        normalizedList.find(addr => addr.is_default) || normalizedList[0];
+      setSelectedAddressId(defaultAddress.id);
     }
   }, [addressesData, selectedAddressId]);
 
@@ -90,99 +305,215 @@ const CheckoutQuotePage: React.FC = () => {
     [addresses, selectedAddressId]
   );
 
-  const totals = useMemo(() => {
-    if (!cart) {
+  const transportOptions = useMemo(() => {
+    const inferredCode = selectedAddress?.co_tran ?? selectedAddress?.transport_code;
+    const hasInferredInList = inferredCode
+      ? TRANSPORT_OPTIONS.some(option => option.code === inferredCode)
+      : true;
+
+    if (inferredCode && !hasInferredInList) {
+      return [
+        ...TRANSPORT_OPTIONS,
+        {
+          code: inferredCode,
+          label: `${inferredCode} · Transporte asociado a la dirección`,
+        },
+      ];
+    }
+
+    return TRANSPORT_OPTIONS;
+  }, [selectedAddress]);
+
+  const selectedPaymentTermOption = useMemo(
+    () => PAYMENT_TERMS_OPTIONS.find(option => option.code === paymentTerm),
+    [paymentTerm]
+  );
+
+  const selectedTransportOption = useMemo(
+    () => transportOptions.find(option => option.code === transportCode),
+    [transportOptions, transportCode]
+  );
+
+  useEffect(() => {
+    if (!selectedAddress) {
+      setTransportCode(DEFAULT_TRANSPORT_CODE);
+      return;
+    }
+
+    const inferredCode = selectedAddress.co_tran ?? selectedAddress.transport_code;
+    if (inferredCode && inferredCode !== transportCode) {
+      setTransportCode(inferredCode);
+    }
+  }, [selectedAddress, transportCode]);
+
+  const validateCartContents = useCallback(async (): Promise<CartValidationResponse | null> => {
+    if (items.length === 0) {
+      setValidationResult(null);
       return null;
     }
 
-    const subtotal = cart.items.reduce((sum, item) => {
-      const lineSubtotal =
-        typeof item.subtotal === 'number'
-          ? item.subtotal
-          : Number(item.subtotal ?? 0);
-      return sum + (Number.isFinite(lineSubtotal) ? lineSubtotal : 0);
-    }, 0);
+    setIsValidating(true);
+    setValidationError(null);
+
+    try {
+      const result = await quoteService.validateCart(items);
+      setValidationResult(result);
+      return result;
+    } catch (error) {
+      console.error('Error validating cart:', error);
+      setValidationError(
+        error instanceof Error
+          ? error.message
+          : 'Error al validar el carrito. Por favor, inténtalo nuevamente.'
+      );
+      return null;
+    } finally {
+      setIsValidating(false);
+    }
+  }, [items]);
+
+  useEffect(() => {
+    validateCartContents();
+  }, [validateCartContents]);
+
+  // Totales basados en validación o carrito
+  const totals = useMemo(() => {
+    if (validationResult?.totales) {
+      const bruto = parseFloat(validationResult.totales.bruto);
+      const impuestos = parseFloat(validationResult.totales.impuestos);
+      const neto = parseFloat(validationResult.totales.neto);
+
+      return {
+        subtotal: bruto,
+        taxes: impuestos,
+        total: neto,
+        currencySymbol: getCurrencySymbol(currency),
+        itemsCount: validationResult.items_verificados.length,
+      };
+    }
+
+    if (items.length === 0) {
+      return null;
+    }
 
     return {
-      subtotal,
-      total: cart.total,
+      subtotal: localTotals.subtotal,
+      taxes: 0,
+      total: localTotals.total,
       currencySymbol: getCurrencySymbol(currency),
-      itemsCount: cart.total_items,
+      itemsCount: localTotals.itemsCount,
     };
-  }, [cart, currency, getCurrencySymbol]);
+  }, [validationResult, currency, getCurrencySymbol, localTotals, items.length]);
 
-  const buildQuotePayload = (): QuoteCreateRequest | null => {
-    if (!cart || !user) {
+  const buildQuotePayload = (validation: CartValidationResponse | null = validationResult): QuoteCreateRequest | null => {
+    if (!user) {
       setErrorMessage('No se pudo cargar la información necesaria para la cotización.');
       return null;
     }
 
-    if (cart.items.length === 0) {
+    if (items.length === 0) {
       setErrorMessage('Tu carrito está vacío. Agrega productos antes de generar una cotización.');
       return null;
     }
 
-    const customerCode = user.customer_code || user.rif;
-
-    if (!customerCode) {
+    // Si hay validación, usar datos autoritativos
+    if (!validation || !validation.valido) {
       setErrorMessage(
-        'No encontramos un código de cliente asociado a tu cuenta. Por favor, contacta a soporte.'
+        'El carrito contiene errores. Por favor, revisa los productos y corrígelos antes de continuar.'
       );
       return null;
     }
 
-    const items = cart.items.map((item, index) => {
-      const unitPriceValue = parseFloat(
-        item.product.current_price ?? item.product.price ?? '0'
-      );
-      const unitPrice = Number.isFinite(unitPriceValue) ? unitPriceValue : 0;
-      const subtotalValue =
-        typeof item.subtotal === 'number'
-          ? item.subtotal
-          : Number(item.subtotal ?? 0);
-      const lineSubtotal = Number.isFinite(subtotalValue) ? subtotalValue : 0;
-      const computedDiscount = Math.max(0, unitPrice * item.quantity - lineSubtotal);
+    // Usar datos de validación (autoritativos)
+    const itemsPayload = validation.items_verificados
+      .filter(item => item.error === null && item.stock_ok) // Solo items válidos
+      .map((item, index) => {
+        const precioUnitario = parseFloat(item.precio_unitario_real);
+        const subtotal = parseFloat(item.subtotal);
+        const computedDiscount = Math.max(0, precioUnitario * item.cantidad - subtotal);
 
-      return {
-        line_number: index + 1,
-        product_code: item.product.id,
-        product_name: item.product.name,
-        quantity: item.quantity,
-        unit_price: toDecimalString(item.product.current_price ?? unitPrice),
-        discount_amount: toDecimalString(computedDiscount),
-        tax_amount: '0.00',
-      };
-    });
+        return {
+          line_number: index + 1,
+          product_code: item.co_art,
+          product_name: item.descripcion || `Artículo ${item.co_art}`,
+          quantity: item.cantidad,
+          unit_price: toDecimalString(item.precio_unitario_real),
+          discount_amount: toDecimalString(computedDiscount),
+          tax_amount: toDecimalString(item.impuestos),
+        };
+      });
+
+    if (itemsPayload.length === 0) {
+      setErrorMessage('No hay productos válidos en el carrito para generar la cotización.');
+      return null;
+    }
+
+    const normalizedNotes = customerNotes.trim() ? customerNotes.trim() : undefined;
+    const deliveryTransportCode = selectedAddress
+      ? transportCode || DEFAULT_TRANSPORT_CODE
+      : undefined;
+
+    const deliveryPayload = selectedAddress
+      ? {
+          mode: 'delivery' as const,
+          ...(selectedAddress.is_profit_address ? {} : { address_id: selectedAddress.id }),
+          notes: normalizedNotes,
+          ...(deliveryTransportCode ? { co_tran: deliveryTransportCode } : {}),
+        }
+      : undefined;
+
+    const profitDirection = selectedAddress?.is_profit_address
+      ? (() => {
+          if (selectedAddress.raw_address && selectedAddress.raw_address.trim().length > 0) {
+            return selectedAddress.raw_address.trim();
+          }
+
+          const components = [
+            selectedAddress.street,
+            selectedAddress.city,
+            selectedAddress.state,
+            selectedAddress.postal_code,
+          ]
+            .map(part => (typeof part === 'string' && part.trim().length > 0 ? part.trim() : ''))
+            .filter(Boolean);
+
+          return components.length > 0 ? components.join(', ') : undefined;
+        })()
+      : undefined;
+
+    const backendCurrency: QuoteCurrency = 'US$';
 
     const payload: QuoteCreateRequest = {
       customer: {
-        code: customerCode,
         email: user.email,
         name: user.company_name || user.email || 'Cliente sin nombre',
         phone: user.phone,
       },
       channel: 'web_b2b',
-      currency,
-      payment_terms: 'CONTADO',
-      delivery: selectedAddressId
-        ? {
-            mode: 'delivery',
-            address_id: selectedAddressId,
-            notes: customerNotes || undefined,
-          }
-        : undefined,
-      notes: customerNotes || undefined,
-      items,
+      currency: backendCurrency,
+      valid_until: computeValidUntil(DEFAULT_QUOTE_VALIDITY_DAYS),
+      payment_terms: paymentTerm,
+      delivery: deliveryPayload,
+      ...(profitDirection ? { direc: profitDirection } : {}),
+      notes: normalizedNotes,
+      items: itemsPayload,
     };
 
     return payload;
+  };
+
+  const handleValidateCart = async () => {
+    await validateCartContents();
   };
 
   const handleCreateQuote = async () => {
     setErrorMessage(null);
     setConflictQuoteId(undefined);
 
-    const payload = buildQuotePayload();
+    // Revalidar antes de crear
+    const latestValidation = await validateCartContents();
+
+    const payload = buildQuotePayload(latestValidation);
     if (!payload) {
       return;
     }
@@ -191,7 +522,7 @@ const CheckoutQuotePage: React.FC = () => {
     try {
       const quote = await quoteService.createQuote(payload);
       setLastQuoteCreated(quote);
-      await clearCart();
+      clearItems();
       navigate('/checkout/quote/success', {
         state: {
           quote,
@@ -213,7 +544,7 @@ const CheckoutQuotePage: React.FC = () => {
             setErrorMessage(error.message || 'Revisa los datos de la cotización e inténtalo nuevamente.');
             break;
           case 502:
-            setErrorMessage('No pudimos conectar con Profit Plus. Reintenta en unos segundos.');
+            setErrorMessage('No pudimos confirmar los datos del carrito. Reintenta en unos segundos.');
             break;
           default:
             setErrorMessage(error.message || 'No se pudo crear la cotización. Intenta de nuevo.');
@@ -228,7 +559,7 @@ const CheckoutQuotePage: React.FC = () => {
     }
   };
 
-  if (authLoading || cartLoading) {
+  if (authLoading || (loadingProducts && items.length === 0)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-medical-gray-50">
         <LoadingSpinner message="Preparando tu cotización..." />
@@ -236,7 +567,7 @@ const CheckoutQuotePage: React.FC = () => {
     );
   }
 
-  if (!cart || cart.items.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="min-h-screen bg-medical-gray-50 pt-32 pb-16">
         <div className="medical-container text-center">
@@ -249,8 +580,8 @@ const CheckoutQuotePage: React.FC = () => {
               <p className="text-medical-gray-600">
                 Agrega productos al carrito para generar una cotización personalizada.
               </p>
-              <Link
-                to="/catalogo"
+                <Link
+                  to="/catalog"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-medical-primary text-white font-semibold shadow-lg hover:bg-medical-primary-dark transition-all"
               >
                 <Sparkles className="h-5 w-5" />
@@ -281,7 +612,7 @@ const CheckoutQuotePage: React.FC = () => {
             </h1>
             <p className="text-medical-gray-600 mt-2 max-w-2xl">
               Revisa tu resumen y confirma los datos de entrega. Enviaremos tu cotización al equipo
-              comercial para su procesamiento en Profit Plus.
+              comercial para su procesamiento interno.
             </p>
           </div>
           <div className="flex items-center gap-3 bg-white border border-medical-primary/30 rounded-2xl px-5 py-3 shadow-soft">
@@ -312,6 +643,77 @@ const CheckoutQuotePage: React.FC = () => {
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Validación del carrito */}
+        {isValidationInProgress && (
+          <div className="mb-8 rounded-2xl border border-blue-200 bg-blue-50 p-5">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+              <p className="text-blue-800 font-medium">Comprobando disponibilidad y precios actualizados...</p>
+            </div>
+          </div>
+        )}
+
+        {hasValidationError && validationError && (
+          <div className="mb-8 rounded-2xl border border-red-200 bg-red-50 p-5">
+            <div className="flex items-start gap-3">
+              <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
+              <div>
+                <p className="font-semibold text-red-800">Error al validar el carrito</p>
+                <p className="text-sm text-red-700 mt-1">{validationError}</p>
+                <button
+                  onClick={handleValidateCart}
+                  className="mt-3 inline-flex items-center gap-2 text-red-700 font-semibold hover:underline"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Reintentar validación
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {hasValidationWarnings && validationResult && (
+          <div className="mb-8 rounded-2xl border border-yellow-200 bg-yellow-50 p-5">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-yellow-800">El carrito contiene errores</p>
+                <p className="text-sm text-yellow-700 mt-1">
+                  Algunos productos tienen problemas. Revisa los detalles a continuación.
+                </p>
+                <ul className="mt-3 space-y-2">
+                  {validationResult.items_verificados
+                    .filter(item => item.error || !item.stock_ok)
+                    .map((item, idx) => (
+                      <li key={idx} className="text-sm text-yellow-800">
+                        <span className="font-semibold">{item.co_art}:</span>{' '}
+                        {item.error || (!item.stock_ok ? 'Stock insuficiente' : '')}
+                      </li>
+                    ))}
+                </ul>
+                <button
+                  onClick={handleValidateCart}
+                  className="mt-3 inline-flex items-center gap-2 text-yellow-700 font-semibold hover:underline"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Comprobar nuevamente
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isValidationSuccess && (
+          <div className="mb-8 rounded-2xl border border-green-200 bg-green-50 p-5">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <p className="text-green-800 font-medium">
+                Carrito validado correctamente. Todos los productos disponibles con precios confirmados.
+              </p>
             </div>
           </div>
         )}
@@ -358,6 +760,37 @@ const CheckoutQuotePage: React.FC = () => {
               <div className="space-y-4">
                 {addresses.map(address => {
                   const isSelected = address.id === selectedAddressId;
+                  const recipientLabel =
+                    (address.recipient_name && address.recipient_name.trim().length > 0
+                      ? address.recipient_name.trim()
+                      : undefined) ??
+                    (address.label && address.label.trim().length > 0
+                      ? address.label.trim()
+                      : undefined) ??
+                    'Dirección sin nombre';
+
+                  const locationParts = [
+                    address.street,
+                    address.city,
+                    address.state,
+                    address.postal_code,
+                  ]
+                    .map(value =>
+                      typeof value === 'string' && value.trim().length > 0 ? value.trim() : ''
+                    )
+                    .filter(Boolean);
+
+                  const locationLine =
+                    locationParts.join(', ') ||
+                    (address.raw_address && address.raw_address.trim().length > 0
+                      ? address.raw_address.trim()
+                      : 'Sin detalles de dirección');
+
+                  const phoneLine =
+                    address.recipient_phone && address.recipient_phone.trim().length > 0
+                      ? address.recipient_phone.trim()
+                      : undefined;
+
                   return (
                     <label
                       key={address.id}
@@ -375,21 +808,82 @@ const CheckoutQuotePage: React.FC = () => {
                         className="mt-1 h-5 w-5 text-medical-primary focus:ring-medical-primary"
                       />
                       <div>
-                        <p className="font-semibold text-medical-gray-900">
-                          {address.recipient_name || 'Dirección sin nombre'}
-                        </p>
-                        <p className="text-sm text-medical-gray-600 mt-1">
-                          {address.street}, {address.city}, {address.state}
-                        </p>
-                        {address.recipient_phone && (
-                          <p className="text-xs text-medical-gray-500 mt-1">
-                            {address.recipient_phone}
-                          </p>
+                        <p className="font-semibold text-medical-gray-900">{recipientLabel}</p>
+                        <p className="text-sm text-medical-gray-600 mt-1">{locationLine}</p>
+                        {phoneLine && (
+                          <p className="text-xs text-medical-gray-500 mt-1">{phoneLine}</p>
                         )}
                       </div>
                     </label>
                   );
                 })}
+              </div>
+            </section>
+
+            <section className="bg-white rounded-3xl shadow-soft border border-gray-100 p-8">
+              <header className="flex items-center gap-3 mb-6">
+                <NotebookPen className="h-5 w-5 text-medical-primary" />
+                <div>
+                  <h2 className="text-xl font-semibold text-medical-gray-900">
+                    Condiciones comerciales
+                  </h2>
+                  <p className="text-sm text-medical-gray-500">
+                    Elige la condición de pago y el transporte para enviar la solicitud correctamente.
+                  </p>
+                </div>
+              </header>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="payment_term" className="text-sm font-medium text-medical-gray-800">
+                      Condición de pago
+                    </label>
+                    <span className="text-xs text-medical-gray-500">Requerido</span>
+                  </div>
+                  <select
+                    id="payment_term"
+                    className="w-full rounded-2xl border border-gray-200 bg-white py-3 px-4 text-medical-gray-800 focus:border-medical-primary focus:ring-2 focus:ring-medical-primary/20 transition-all"
+                    value={paymentTerm}
+                    onChange={event => setPaymentTerm(event.target.value)}
+                  >
+                    {PAYMENT_TERMS_OPTIONS.map(option => (
+                      <option key={option.code} value={option.code}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-medical-gray-500">
+                    Coincide con las condiciones disponibles en Profit Plus. Puedes modificarlo según el acuerdo comercial.
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="transport_code" className="text-sm font-medium text-medical-gray-800">
+                      Código de transporte
+                    </label>
+                    <span className="text-xs text-medical-gray-500">
+                      {selectedAddressId ? 'Requerido' : 'Selecciona una dirección primero'}
+                    </span>
+                  </div>
+                  <select
+                    id="transport_code"
+                    className="w-full rounded-2xl border border-gray-200 bg-white py-3 px-4 text-medical-gray-800 focus:border-medical-primary focus:ring-2 focus:ring-medical-primary/20 transition-all disabled:opacity-60"
+                    value={transportCode}
+                    onChange={event => setTransportCode(event.target.value)}
+                    disabled={!selectedAddressId}
+                  >
+                    {transportOptions.map(option => (
+                      <option key={option.code} value={option.code}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-medical-gray-500">
+                    Define cómo se enviará la cotización. Si la dirección ya tiene un transporte asignado lo seleccionamos automáticamente.
+                  </p>
+                </div>
               </div>
             </section>
 
@@ -421,36 +915,151 @@ const CheckoutQuotePage: React.FC = () => {
 
           <aside className="lg:col-span-1 space-y-6">
             <section className="bg-white rounded-3xl shadow-soft border border-gray-100 p-6">
-              <header className="flex items-center gap-3 mb-6">
-                <FileText className="h-5 w-5 text-medical-primary" />
+              <header className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-medical-primary" />
+                  <div>
+                    <h2 className="text-xl font-semibold text-medical-gray-900">
+                      Resumen de productos
+                    </h2>
+                    <p className="text-sm text-medical-gray-500">
+                      {validationResult
+                        ? 'Precios y disponibilidad confirmados recientemente'
+                        : 'Confirmaremos estos productos antes de generar tu cotización.'}
+                    </p>
+                  </div>
+                </div>
+                {!isValidationInProgress && (
+                  <button
+                    onClick={handleValidateCart}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-medical-primary hover:bg-medical-blue-50 rounded-lg transition-colors"
+                    title="Actualizar precios y existencia"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Comprobar otra vez
+                  </button>
+                )}
+              </header>
+
+              <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
+                {validationResult && !isValidationInProgress
+                  ? validationResult.items_verificados.map((item, idx) => {
+                      const hasError = item.error !== null || !item.stock_ok;
+                      return (
+                        <div
+                          key={idx}
+                          className={`flex items-start justify-between gap-4 border-b border-gray-100 pb-3 last:border-none ${
+                            hasError ? 'bg-red-50/50 rounded-lg p-3 -mx-3' : ''
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-start gap-2">
+                              <p className="font-medium text-medical-gray-900">
+                                {item.descripcion || item.co_art}
+                              </p>
+                              {hasError && (
+                                <XCircle className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+                              )}
+                              {!hasError && item.stock_ok && (
+                                <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                              )}
+                            </div>
+                            <p className="text-xs text-medical-gray-500 mt-1">
+                              Código: <span className="font-semibold">{item.co_art}</span> • Cantidad:{' '}
+                              <span className="font-semibold">{item.cantidad}</span>
+                            </p>
+                            {item.error && (
+                              <p className="text-xs text-red-600 mt-1 font-medium">{item.error}</p>
+                            )}
+                            {!item.stock_ok && !item.error && (
+                              <p className="text-xs text-red-600 mt-1 font-medium">
+                                Stock insuficiente
+                              </p>
+                            )}
+                            {validationResult.valido && item.stock_ok && (
+                              <p className="text-xs text-green-600 mt-1">
+                                ✓ Disponible • Precio actualizado
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm font-semibold text-medical-gray-900">
+                              {formatPriceFromBackend(item.subtotal, currency)}
+                            </span>
+                            {parseFloat(item.impuestos) > 0 && (
+                              <p className="text-xs text-medical-gray-500 mt-0.5">
+                                +{formatPriceFromBackend(item.impuestos, currency)} imp.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  : detailedItems.map(item => {
+                      const productName = item.product?.name || `Artículo ${item.co_art}`;
+                      const estimatedSubtotal = (() => {
+                        const priceStr = item.product?.price ?? item.product?.current_price ?? '0';
+                        const price = parseFloat(priceStr);
+                        if (!Number.isFinite(price)) {
+                          return 0;
+                        }
+                        return price * item.cantidad;
+                      })();
+
+                      return (
+                      <div
+                        key={item.co_art}
+                        className="flex items-start justify-between gap-4 border-b border-gray-100 pb-3 last:border-none"
+                      >
+                        <div>
+                          <p className="font-medium text-medical-gray-900">{productName}</p>
+                          <p className="text-xs text-medical-gray-500 mt-1">
+                            Cantidad: <span className="font-semibold">{item.cantidad}</span>
+                          </p>
+                        </div>
+                        <span className="text-sm font-semibold text-medical-gray-900">
+                          {formatPriceFromBackend(estimatedSubtotal.toFixed(2), currency)}
+                        </span>
+                      </div>
+                      );
+                    })}
+              </div>
+            </section>
+
+            <section className="bg-white rounded-3xl shadow-soft border border-gray-100 p-6">
+              <header className="flex items-center gap-3 mb-5">
+                <Sparkles className="h-5 w-5 text-medical-primary" />
                 <div>
                   <h2 className="text-xl font-semibold text-medical-gray-900">
-                    Resumen de productos
+                    Preferencias de cotización
                   </h2>
                   <p className="text-sm text-medical-gray-500">
-                    Confirmaremos estos productos en Profit Plus.
+                    Estos datos se enviarán junto con la solicitud al equipo comercial.
                   </p>
                 </div>
               </header>
-
-            <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
-                {cart.items.map(item => (
-                  <div
-                    key={item.id}
-                    className="flex items-start justify-between gap-4 border-b border-gray-100 pb-3 last:border-none"
-                  >
-                    <div>
-                      <p className="font-medium text-medical-gray-900">{item.product.name}</p>
-                      <p className="text-xs text-medical-gray-500 mt-1">
-                        Cantidad: <span className="font-semibold">{item.quantity}</span>
-                      </p>
-                    </div>
-                    <span className="text-sm font-semibold text-medical-gray-900">
-                      {formatPriceFromBackend(item.subtotal, currency)}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <dl className="space-y-3 text-sm">
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="text-medical-gray-600">Condición de pago</dt>
+                  <dd className="font-semibold text-medical-gray-900 text-right">
+                    {selectedPaymentTermOption?.label || paymentTerm}
+                  </dd>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="text-medical-gray-600">Transporte asignado</dt>
+                  <dd className="font-semibold text-medical-gray-900 text-right">
+                    {selectedAddressId
+                      ? selectedTransportOption?.label || transportCode
+                      : 'Selecciona una dirección'}
+                  </dd>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="text-medical-gray-600">Vigencia estimada</dt>
+                  <dd className="font-semibold text-medical-gray-900 text-right">
+                    {DEFAULT_QUOTE_VALIDITY_DAYS} días a partir de hoy
+                  </dd>
+                </div>
+              </dl>
             </section>
 
             <section className="bg-white rounded-3xl shadow-soft border border-gray-100 p-6 space-y-3">
@@ -460,16 +1069,33 @@ const CheckoutQuotePage: React.FC = () => {
                   {totals ? formatPriceFromBackend(totals.subtotal, currency) : '--'}
                 </span>
               </div>
-              <div className="flex justify-between text-sm text-medical-gray-600">
-                <span>Impuestos estimados</span>
-                <span className="font-semibold text-medical-gray-900">Incluidos al generar</span>
-              </div>
+              {validationResult?.totales && parseFloat(validationResult.totales.impuestos) > 0 && (
+                <div className="flex justify-between text-sm text-medical-gray-600">
+                  <span>Impuestos</span>
+                  <span className="font-semibold text-medical-gray-900">
+                    {formatPriceFromBackend(validationResult.totales.impuestos, currency)}
+                  </span>
+                </div>
+              )}
+              {!validationResult && (
+                <div className="flex justify-between text-sm text-medical-gray-600">
+                  <span>Impuestos</span>
+                  <span className="font-semibold text-medical-gray-900 text-xs">
+                    Se calcularán al validar
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between text-lg font-semibold text-medical-gray-900 border-t border-gray-100 pt-3">
-                <span>Total estimado</span>
+                <span>Total {validationResult ? 'verificado' : 'estimado'}</span>
                 <span>
                   {totals ? formatPriceFromBackend(totals.total, currency) : '--'}
                 </span>
               </div>
+              {isValidationSuccess && (
+                <p className="text-xs text-green-600 text-center mt-2">
+                  ✓ Precios y disponibilidad confirmados
+                </p>
+              )}
               {lastQuoteCreated && (
                 <div className="mt-3 rounded-2xl bg-green-50 border border-green-200 p-3 text-sm text-green-700 flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4" />
@@ -480,13 +1106,34 @@ const CheckoutQuotePage: React.FC = () => {
 
             <button
               onClick={handleCreateQuote}
-              disabled={isSubmitting || !selectedAddressId}
+              disabled={
+                isSubmitting ||
+                isValidating ||
+                !selectedAddressId ||
+                (validationResult && !validationResult.valido) ||
+                !validationResult
+              }
               className="w-full inline-flex items-center justify-center gap-3 py-4 rounded-2xl bg-medical-primary text-white font-semibold text-lg shadow-xl hover:bg-medical-primary-dark transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
                   Generando cotización...
+                </>
+              ) : isValidating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Validando...
+                </>
+              ) : !validationResult ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Validando carrito...
+                </>
+              ) : !validationResult.valido ? (
+                <>
+                  <XCircle className="h-5 w-5" />
+                  Corrige los errores primero
                 </>
               ) : (
                 <>
@@ -497,8 +1144,7 @@ const CheckoutQuotePage: React.FC = () => {
             </button>
 
             <p className="text-xs text-medical-gray-500 text-center">
-              Al confirmar aceptas que nuestro equipo procesará la cotización en Profit Plus y te
-              notificará por correo electrónico.
+              Al confirmar aceptas que nuestro equipo procesará la cotización y te notificará por correo electrónico.
             </p>
           </aside>
         </div>

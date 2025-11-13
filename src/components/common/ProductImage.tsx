@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import ProductPlaceholder from './ProductPlaceholder';
 import OptimizedImage from './OptimizedImage';
+import AuthenticatedImage from './AuthenticatedImage';
 
 interface ProductImageProps {
   src?: string;
@@ -60,6 +61,29 @@ const ProductImage: React.FC<ProductImageProps> = ({
       <ProductPlaceholder 
         size={size} 
         className={fallbackClassName || className} 
+      />
+    );
+  }
+
+  // Si la imagen es de la API de artículos (requiere autenticación), usar AuthenticatedImage
+  // Detectar tanto URLs relativas como absolutas
+  const isArticleImage = imageToShow && (
+    imageToShow.includes('/api/v1/images/') || 
+    imageToShow.startsWith('/api/v1/images/')
+  );
+  
+  if (isArticleImage) {
+    return (
+      <AuthenticatedImage
+        src={imageToShow}
+        alt={alt}
+        className={className}
+        width={dimensions.width}
+        height={dimensions.height}
+        size={size}
+        onError={() => {
+          // Fallback a placeholder si falla
+        }}
       />
     );
   }

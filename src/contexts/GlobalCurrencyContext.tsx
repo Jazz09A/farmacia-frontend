@@ -1,7 +1,7 @@
 /* @refresh reset */
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { useCurrency } from '../hooks/useCurrency';
-import { useAuth } from './AuthContext';
+import { AuthContext } from './AuthContext';
 import { Currency } from '../types';
 
 interface GlobalCurrencyContextType {
@@ -57,8 +57,12 @@ export const GlobalCurrencyProvider: React.FC<GlobalCurrencyProviderProps> = ({
 
 // Wrapper component that uses useAuth and passes data to GlobalCurrencyProvider
 export const GlobalCurrencyProviderWithAuth: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // This will be used in App.tsx where useAuth is available
-  const { user, isAuthenticated } = useAuth();
+  // Use useContext directly to avoid hook order issues
+  const authContext = useContext(AuthContext);
+  
+  // Safely extract values, defaulting if context is not available yet
+  const user = authContext?.user ?? null;
+  const isAuthenticated = authContext?.isAuthenticated ?? false;
   
   return (
     <GlobalCurrencyProvider

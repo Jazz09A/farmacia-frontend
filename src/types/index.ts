@@ -374,7 +374,7 @@ export interface CustomerStats {
 
 // ===== SOURCE SYSTEM INTERFACES =====
 export type SourceSystemCustomer = {
-  customer_code: string;
+  customer_code?: string;
   customer_name: string;
   email?: string | null;
   alternate_email?: string | null;
@@ -398,7 +398,7 @@ export type CreateUsersFromSourceSystemRequest = {
 
 export type UserCreationResult = {
   success: boolean;
-  customer_code: string;
+  customer_code?: string;
   customer_name?: string;
   email?: string;
   user_id?: string;
@@ -420,3 +420,80 @@ export type CreateUsersResponse = {
     success_rate: number;
   };
 };
+
+// ===== ARTICLES (PROFIT PLUS) INTERFACES =====
+
+// ArticleSummary from /api/v1/articles
+export interface ArticleSummary {
+  co_art: string;
+  art_des: string;
+  category_code: string | null;
+  category_name: string | null;
+  price: string; // Decimal as string
+  currency: string;
+  stock: string; // Decimal as string
+  warehouse_code: string | null;
+  image_url: string | null;
+  has_image: boolean;
+}
+
+// ArticlePriceDetail from article detail
+export interface ArticlePriceDetail {
+  price_code: string;
+  price_name: string | null;
+  amount: string; // Decimal as string
+  currency: string;
+  desde: string | null; // ISO datetime
+}
+
+// ArticleStockDetail from article detail
+export interface ArticleStockDetail {
+  warehouse_code: string;
+  warehouse_name: string | null;
+  quantity: string; // Decimal as string
+}
+
+// ArticleImageResponse from article detail
+export interface ArticleImageResponse {
+  guid: string;
+  url: string;
+  description: string | null;
+  tip: string | null;
+}
+
+// ArticleDetail from /api/v1/articles/{co_art}
+export interface ArticleDetail {
+  co_art: string;
+  art_des: string;
+  modelo: string | null;
+  ref: string | null;
+  category_code: string | null;
+  category_name: string | null;
+  line_code: string | null;
+  sub_line_code: string | null;
+  presentation: string | null;
+  additional_data: Record<string, any>;
+  prices: ArticlePriceDetail[];
+  stock_by_warehouse: ArticleStockDetail[];
+  images: ArticleImageResponse[];
+}
+
+// Articles API Response from /api/v1/articles
+export interface ArticlesApiResponse {
+  articles: ArticleSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+  filters_applied: Record<string, any>;
+}
+
+// Image Upload Response
+export interface ImageUploadResponse {
+  success: boolean;
+  message: string;
+  image_guid: string;
+  url: string;
+}

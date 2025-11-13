@@ -19,20 +19,11 @@ export interface ExchangeRateData {
 
 class ExchangeRateService {
   private baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1';
-  private cache: ExchangeRateData | null = null;
-  private cacheExpiry: number = 5 * 60 * 1000; // 5 minutos en milisegundos
 
   /**
    * Obtiene la tasa de cambio actual del BCV
-   * @param forceRefresh - Si true, ignora la caché y obtiene datos frescos
    */
-  async getExchangeRate(forceRefresh: boolean = false): Promise<ExchangeRateData> {
-    // Verificar si tenemos datos en caché y no están expirados
-    
-    if (!forceRefresh && this.cache && this.isCacheValid()) {
-      return this.cache;
-    }
-
+  async getExchangeRate(): Promise<ExchangeRateData> {
     try {
       const response = await fetch(`${this.baseUrl}/exchange_rate/`, {
         method: 'GET',
@@ -47,7 +38,7 @@ class ExchangeRateService {
       
       const data: ExchangeRateResponse = await response.json();
       
-      // Procesar y almacenar en caché
+      // Procesar datos
       const exchangeRateData: ExchangeRateData = {
         rate: data.exchange_rate.price,
         timestamp: data.exchange_rate.timestamp,
@@ -56,29 +47,11 @@ class ExchangeRateService {
         lastUpdated: new Date()
       };
 
-      this.cache = exchangeRateData;
       return exchangeRateData;
     } catch (error) {
       console.error('Failed to fetch exchange rate:', error);
-      
-      // Si hay un error y tenemos datos en caché, devolver los datos en caché
-      if (this.cache) {
-        console.warn('Using cached exchange rate due to API error');
-        return this.cache;
-      }
-      
       throw error;
     }
-  }
-
-  /**
-   * Verifica si la caché es válida (no ha expirado)
-   */
-  private isCacheValid(): boolean {
-    if (!this.cache) return false;
-    const now = new Date();
-    const cacheAge = now.getTime() - this.cache.lastUpdated.getTime();
-    return cacheAge < this.cacheExpiry;
   }
 
   /**
@@ -113,23 +86,6 @@ class ExchangeRateService {
     return vesAmount * rate;
   }
 
-  /**
-   * Limpia la caché forzando la próxima llamada a obtener datos frescos
-   */
-  clearCache(): void {
-    this.cache = null;
-  }
-
-  /**
-   * Obtiene información de la caché actual
-   */
-  getCacheInfo(): { hasCache: boolean; lastUpdated?: Date; isExpired?: boolean } {
-    return {
-      hasCache: !!this.cache,
-      lastUpdated: this.cache?.lastUpdated,
-      isExpired: this.cache ? !this.isCacheValid() : undefined
-    };
-  }
 }
 
 export const exchangeRateService = new ExchangeRateService();

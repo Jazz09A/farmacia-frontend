@@ -17,7 +17,6 @@ import {
 import { motion } from 'framer-motion';
 import { productService } from '../../services/ProductService';
 import { Product } from '../../types';
-import { useUploadImage } from '../../hooks/useUploadImage';
 import { productImageService } from '../../services/ProductImageService';
 import { ImageEditor } from '../../components/Admin/ImageEditor';
 
@@ -45,8 +44,6 @@ const AdminEditProductPage: React.FC = () => {
   const [showImageEditor, setShowImageEditor] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<string>('');
   const [imageIndexToEdit, setImageIndexToEdit] = useState<number>(-1);
-  const {uploadImage, isUploading, error: uploadError} = useUploadImage();
-  const token = localStorage.getItem('token');
   useEffect(() => {
     const fetchProduct = async () => {
       if (id) {
@@ -125,41 +122,10 @@ const AdminEditProductPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSaving(true);
-    
-    try {
-      // Si hay una imagen marcada para eliminar, la eliminamos primero
-      if (imageToDelete && id) {
-        await productService.deleteProductImage(id, imageToDelete);
-        setImageToDelete(null); // Reseteamos el estado
-      }
-
-      // Crear una copia del formData sin las imágenes para la actualización
-      const { images, ...productDataWithoutImages } = formData as Product;
-      
-      // Agregar las imágenes de vuelta para mantener la compatibilidad con el tipo Product
-      const productDataForUpdate = {
-        ...productDataWithoutImages,
-        images: images || []
-      };
-      
-      const updatedProduct = await productService.updateProduct(id || '', productDataForUpdate);
-      if (updatedProduct) {
-        setShowUnsavedChanges(false);
-        navigate('/admin/products');
-      } else {
-        alert('Error al actualizar el producto, no se pudo guardar');
-      }
-    } catch (error) {
-      console.error('Error al guardar:', error);
-      alert('Error al guardar el producto. Por favor, intenta de nuevo.');
-    } finally {
-      setIsSaving(false);
-    } 
+    // Los artículos de Profit Plus son de solo lectura
+    // Solo se pueden subir imágenes, no editar otros campos
+    alert('Los artículos de Profit Plus son de solo lectura. Solo puedes subir imágenes usando el botón de carga de imágenes.');
+    setShowUnsavedChanges(false);
   };
 
   const handleCancel = () => {
@@ -178,26 +144,45 @@ const AdminEditProductPage: React.FC = () => {
       setIsImageOperationLoading(true);
       try {
         console.log('Starting image upload process...');
-        console.log('Product ID:', id);
-        console.log('Token present:', !!localStorage.getItem('token'));
+        console.log('Article code (co_art):', id);
         
-        const uploadedUrl = await uploadImage(file);
-        if (uploadedUrl) {
-          console.log('Image uploaded successfully:', uploadedUrl);
+        // Validar tipo de archivo
+        if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
+          alert('Solo se permiten archivos JPG o PNG');
+          return;
+        }
+
+        // Validar tamaño (máx 5 MB)
+        if (file.size > 5 * 1024 * 1024) {
+          alert('El archivo no debe exceder 5 MB');
+          return;
+        }
+
+        // Subir imagen directamente a la API de artículos
+        const result = await productImageService.uploadArticleImage(id, file, 'PRINC');
+        
+        if (result && result.url) {
+          console.log('Image uploaded successfully:', result.url);
           
-          // Agregar la imagen al producto usando el servicio de imágenes
-          await productImageService.addImagesToProduct(id, [uploadedUrl]);
-          
-          // Actualizar el estado local
+          // Actualizar el estado local - agregar la nueva imagen
           const currentImages = formData?.images || [];
-          handleInputChange('images', [...currentImages, uploadedUrl]);
+          handleInputChange('images', [...currentImages, result.url]);
           
           // Limpiar el input
           event.target.value = '';
+          
+          // Recargar el producto para obtener todas las imágenes actualizadas
+          const updatedProduct = await productService.getProductById(id);
+          if (updatedProduct) {
+            setFormData({
+              ...formData!,
+              images: updatedProduct.images || []
+            });
+          }
         }
-      } catch (error) {
-        console.error('Error adding image to product:', error);
-        alert('Error al agregar la imagen al producto');
+      } catch (error: any) {
+        console.error('Error uploading image:', error);
+        alert(error.message || 'Error al subir la imagen. Verifica que el archivo sea JPG o PNG y no exceda 5 MB.');
       } finally {
         setIsImageOperationLoading(false);
       }
@@ -208,19 +193,11 @@ const AdminEditProductPage: React.FC = () => {
   const handleDeleteImageFromArray = async (imageUrl: string) => {
     if (!formData?.images || !id) return;
     
-    setIsImageOperationLoading(true);
-    try {
-      // Eliminar la imagen del producto usando el servicio
-      await productImageService.deleteImageFromProduct(id, imageUrl);
-      
-      // Actualizar el estado local
+    // La API de artículos no permite eliminar imágenes individuales
+    // Solo podemos actualizar el estado local para ocultarla de la vista
+    if (window.confirm('¿Estás seguro de que deseas eliminar esta imagen de la vista? (Nota: La imagen permanecerá en el servidor)')) {
       const updatedImages = formData.images.filter(img => img !== imageUrl);
       handleInputChange('images', updatedImages);
-    } catch (error) {
-      console.error('Error deleting image from product:', error);
-      alert('Error al eliminar la imagen del producto');
-    } finally {
-      setIsImageOperationLoading(false);
     }
   };
 
@@ -238,28 +215,31 @@ const AdminEditProductPage: React.FC = () => {
       // Convertir blob a File
       const file = new File([editedImageBlob], 'edited-image.jpg', { type: 'image/jpeg' });
       
-      // Subir la imagen editada
-      const uploadedUrl = await uploadImage(file);
+      // Subir la imagen editada directamente a la API de artículos
+      const result = await productImageService.uploadArticleImage(id, file);
       
-      if (uploadedUrl && formData?.images) {
-        // Eliminar la imagen antigua del producto
-        await productImageService.deleteImageFromProduct(id, imageToEdit);
-        
-        // Agregar la nueva imagen
-        await productImageService.addImagesToProduct(id, [uploadedUrl]);
-        
+      if (result && result.url && formData?.images) {
         // Actualizar el estado local - reemplazar la imagen en la misma posición
         const updatedImages = [...formData.images];
-        updatedImages[imageIndexToEdit] = uploadedUrl;
+        updatedImages[imageIndexToEdit] = result.url;
         handleInputChange('images', updatedImages);
+        
+        // Recargar el producto para obtener todas las imágenes actualizadas
+        const updatedProduct = await productService.getProductById(id);
+        if (updatedProduct) {
+          setFormData({
+            ...formData,
+            images: updatedProduct.images || []
+          });
+        }
       }
       
       setShowImageEditor(false);
       setImageToEdit('');
       setImageIndexToEdit(-1);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving edited image:', error);
-      alert('Error al guardar la imagen editada');
+      alert(error.message || 'Error al guardar la imagen editada');
     } finally {
       setIsImageOperationLoading(false);
     }

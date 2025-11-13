@@ -1,81 +1,76 @@
 import { authService } from './AuthService';
+import { ImageUploadResponse } from '../types';
 
 class ProductImageService {
-  private baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1/admin';
+  private baseUrl = '/api/v1/articles';
 
   /**
-   * Agregar imágenes a un producto
+   * Subir una imagen a un artículo (co_art)
+   * @param coArt Código del artículo
+   * @param file Archivo de imagen
+   * @param tip Tipo de imagen (opcional, ej: "PRINC" para principal)
    */
-  async addImagesToProduct(productId: string, images: string[]): Promise<any> {
+  async uploadArticleImage(coArt: string, file: File, tip?: string): Promise<ImageUploadResponse> {
     try {
-      // Crear query parameters para las imágenes
-      const queryParams = images.map(img => `images=${encodeURIComponent(img)}`).join('&');
-      const url = `${this.baseUrl}/products/${productId}/images?${queryParams}`;
-      
-      console.log('Adding images to product:', { productId, images, url });
-      
-      const response = await authService.authenticatedFetch(url, {
-        method: 'POST',
-      });
-
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error response:', errorData);
-        throw new Error(`Error adding images: ${errorData.detail || response.statusText}`);
+      const formData = new FormData();
+      formData.append('file', file);
+      if (tip) {
+        formData.append('tip', tip);
       }
 
-      return await response.json();
-    } catch (error) {
-      console.error('Failed to add images to product:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Eliminar una imagen específica de un producto
-   */
-  async deleteImageFromProduct(productId: string, imageUrl: string): Promise<any> {
-    try {
-      // URL encode la imagen para evitar problemas con caracteres especiales
-      const encodedImageUrl = encodeURIComponent(imageUrl);
-      
       const response = await authService.authenticatedFetch(
-        `${this.baseUrl}/products/${productId}/images/${encodedImageUrl}`,
+        `${this.baseUrl}/${coArt}/images`,
         {
-          method: 'DELETE',
+          method: 'POST',
+          body: formData,
         }
       );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Error deleting image: ${errorData.detail || response.statusText}`);
+        throw new Error(`Error uploading image: ${errorData.detail || response.statusText}`);
       }
 
       return await response.json();
     } catch (error) {
-      console.error('Failed to delete image from product:', error);
+      console.error('Failed to upload article image:', error);
       throw error;
     }
   }
 
   /**
+   * Agregar imágenes a un producto (legacy support - ahora usa uploadArticleImage)
+   * @deprecated Usar uploadArticleImage en su lugar
+   */
+  async addImagesToProduct(productId: string, images: string[]): Promise<any> {
+    throw new Error('addImagesToProduct is deprecated. Use uploadArticleImage to upload files directly.');
+  }
+
+  /**
+   * Eliminar una imagen específica de un producto
+   * Nota: La API de artículos no tiene endpoint para eliminar imágenes individuales
+   */
+  async deleteImageFromProduct(productId: string, imageUrl: string): Promise<any> {
+    throw new Error('Delete image is not available for articles API.');
+  }
+
+  /**
    * Obtener todas las imágenes de un producto
+   * Obtiene el detalle del artículo y extrae las imágenes
    */
   async getProductImages(productId: string): Promise<string[]> {
     try {
       const response = await authService.authenticatedFetch(
-        `${this.baseUrl}/products/${productId}/images`
+        `${this.baseUrl}/${productId}`
       );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Error getting images: ${errorData.detail || response.statusText}`);
+        throw new Error(`Error getting article: ${errorData.detail || response.statusText}`);
       }
 
-      return await response.json();
+      const article = await response.json();
+      return article.images ? article.images.map((img: any) => img.url) : [];
     } catch (error) {
       console.error('Failed to get product images:', error);
       throw error;

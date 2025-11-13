@@ -5,7 +5,10 @@ import type {
   QuoteDetailResponse,
   QuoteListResponse,
   QuoteStatus,
-  QuoteStatusDescriptor
+  QuoteStatusDescriptor,
+  CartValidationResponse,
+  CartItemRequest,
+  CartValidationParams,
 } from '../../types/quotes';
 
 export interface QuoteListParams {
@@ -39,7 +42,7 @@ export class QuoteServiceError extends Error {
 }
 
 class QuoteService {
-  private baseUrl = '/api/v1/quotes';
+  private baseUrl = '/api/v1/quotes/';
   private userQuotesUrl = '/api/v1/user/quotes';
   private sourceSystemHeader = { 'X-Source-System': 'profit_plus' };
 
@@ -47,9 +50,16 @@ class QuoteService {
    * Crea una cotización a partir del carrito/checkout
    */
   async createQuote(payload: QuoteCreateRequest): Promise<QuoteCreateResponse> {
+    const headers = {
+      ...this.sourceSystemHeader,
+      'Content-Type': 'application/json',
+    };
+    
+    console.log('[QuoteService] Creating quote with headers:', headers);
+    
     const response = await authService.authenticatedFetch(this.baseUrl, {
       method: 'POST',
-      headers: this.sourceSystemHeader,
+      headers,
       body: JSON.stringify(payload),
     });
 
@@ -120,6 +130,49 @@ class QuoteService {
 
     if (!response.ok) {
       await this.handleError(response, 'No se pudieron obtener los estados de cotización.');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Valida un carrito de compras sin guardar nada en la base de datos.
+   * Devuelve información autoritativa (precios reales, stock, impuestos) calculada por el backend.
+   * 
+   * @param items Array de items con co_art y cantidad
+   * @param params Parámetros opcionales (price_code, warehouse_code)
+   * @returns Respuesta de validación con datos autoritativos
+   */
+  async validateCart(
+    items: CartItemRequest[],
+    params?: CartValidationParams
+  ): Promise<CartValidationResponse> {
+    // Construir query params si se proporcionan
+    const queryParams = new URLSearchParams();
+    if (params?.price_code) {
+      queryParams.set('price_code', params.price_code);
+    }
+    if (params?.warehouse_code) {
+      queryParams.set('warehouse_code', params.warehouse_code);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `${this.baseUrl}/verificar${queryString ? `?${queryString}` : ''}`;
+
+    const response = await authService.authenticatedFetch(url, {
+      method: 'POST',
+      headers: {
+        ...this.sourceSystemHeader,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ items }),
+    });
+
+    if (!response.ok) {
+      await this.handleError(
+        response,
+        'Error al validar el carrito. Por favor, verifica los productos e inténtalo nuevamente.'
+      );
     }
 
     return response.json();

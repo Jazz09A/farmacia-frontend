@@ -55,7 +55,7 @@ const AdminCreditPage = lazy(() => import('./pages/Admin/AdminCreditPage'));
 const AdminPaymentsPage = lazy(() => import('./pages/Admin/AdminPaymentsPage'));
 
 // Hooks
-import { useCart } from './contexts/CartContext'; 
+import { useQuoteCart } from './hooks/useQuoteCart';
 
 // Contexts
 import { ScrollProvider, useScrollContext } from './contexts/ScrollContext';
@@ -67,7 +67,7 @@ import { CreditProvider } from './contexts/CreditContext';
 
 const AppLayout = () => {
   const { isScrolled, showScrollTop } = useApp();
-  const { cart } = useCart();
+  const { totalQuantity } = useQuoteCart();
   const location = useLocation();
   const isAuthRoute = location.pathname.startsWith('/auth');
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -89,7 +89,7 @@ const AppLayout = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar
         isScrolled={isScrolled}
-        cartItemsCount={cart?.total_items || 0}
+        cartItemsCount={totalQuantity}
       />
       <main id="main-content" className="flex-1 flex flex-col">
         <PageLayout>

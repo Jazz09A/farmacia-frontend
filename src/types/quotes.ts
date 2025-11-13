@@ -2,7 +2,7 @@
 
 export type QuoteDecimal = string; // Montos como string para precisión decimal
 export type QuoteDateTime = string; // ISO 8601
-export type QuoteCurrency = 'VES' | 'USD' | (string & {}); // preparado para futuras monedas
+export type QuoteCurrency = 'US$' | (string & {}); // preparado para futuras monedas
 
 export type QuoteStatus =
   | 'pending'
@@ -12,7 +12,7 @@ export type QuoteStatus =
   | 'converted';
 
 export interface QuoteCustomerPayload {
-  code: string;
+  code?: string;
   email: string;
   name: string;
   phone?: string;
@@ -26,6 +26,7 @@ export interface QuoteDeliveryPayload {
   mode: QuoteDeliveryMode;
   address_id?: string;
   notes?: string;
+  co_tran?: string;
 }
 
 export interface QuoteCreateItemPayload {
@@ -39,12 +40,13 @@ export interface QuoteCreateItemPayload {
 }
 
 export interface QuoteCreateRequest {
-  customer: QuoteCustomerPayload;
+  customer?: QuoteCustomerPayload;
   channel: QuoteChannel;
   valid_until?: QuoteDateTime;
   currency: QuoteCurrency;
   payment_terms?: string;
   delivery?: QuoteDeliveryPayload;
+  direc?: string;
   notes?: string;
   items: QuoteCreateItemPayload[];
 }
@@ -145,5 +147,40 @@ export interface QuoteStatusDescriptor {
   code: QuoteStatus;
   label: string;
   description: string;
+}
+
+// ===== TIPOS PARA VALIDACIÓN DE CARRITO =====
+
+export interface CartItemRequest {
+  co_art: string;
+  cantidad: number;
+}
+
+export interface CartValidationItemResult {
+  co_art: string;
+  descripcion: string | null;
+  cantidad: number;
+  precio_unitario_real: QuoteDecimal;
+  subtotal: QuoteDecimal;
+  impuestos: QuoteDecimal;
+  stock_ok: boolean;
+  error: string | null;
+}
+
+export interface CartValidationTotals {
+  bruto: QuoteDecimal;
+  impuestos: QuoteDecimal;
+  neto: QuoteDecimal;
+}
+
+export interface CartValidationResponse {
+  valido: boolean;
+  items_verificados: CartValidationItemResult[];
+  totales: CartValidationTotals;
+}
+
+export interface CartValidationParams {
+  price_code?: string;
+  warehouse_code?: string;
 }
 
