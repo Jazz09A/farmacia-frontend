@@ -13,12 +13,12 @@ import { SimpleSearchInput } from '../common/SimpleSearchInput';
 import logoSrc from '../../public/logo/Logo.webp';
 
 interface NavbarProps {
-  isScrolled: boolean;
+  isScrolled?: boolean;
   cartItemsCount: number;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  isScrolled,
+  isScrolled = false,
   cartItemsCount,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -72,10 +72,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = '';
     }
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = '';
     };
   }, [isMobileMenuOpen]);
 

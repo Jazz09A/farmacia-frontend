@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import quoteService, { QuoteListParams } from '../../services/api/quotes';
 import { queryKeys } from './queryKeys';
-import type { QuoteDetailResponse, QuoteStatusDescriptor } from '../../types/quotes';
+import type { QuoteDetailResponse, QuoteStatusDescriptor, QuoteListResponse } from '../../types/quotes';
 
 export const useQuoteStatusesQuery = (enabled: boolean = true) =>
   useQuery<QuoteStatusDescriptor[]>({
@@ -12,7 +12,7 @@ export const useQuoteStatusesQuery = (enabled: boolean = true) =>
   });
 
 export const useQuoteListQuery = (params: QuoteListParams, enabled: boolean = true) =>
-  useQuery({
+  useQuery<QuoteListResponse>({
     queryKey: queryKeys.quotes.list(params),
     queryFn: () => quoteService.listUserQuotes(params),
     keepPreviousData: true,

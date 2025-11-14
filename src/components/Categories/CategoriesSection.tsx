@@ -7,11 +7,9 @@ import {
   Stethoscope, 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useScrollContext } from '../../contexts/ScrollContext';
 
 export const CategoriesSection: React.FC = () => {
   const navigate = useNavigate();
-  const { scrollToTop } = useScrollContext();
   const categories = [
     {
       icon: Pill,
@@ -164,8 +162,7 @@ export const CategoriesSection: React.FC = () => {
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
-                  scrollToTop({ smooth: true });
-                  setTimeout(() => navigate('/catalog'), 100);
+                  navigate('/catalog');
                 }}
               >
                 📋 Ver Catálogo Completo

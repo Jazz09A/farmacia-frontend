@@ -1,14 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, Grid, List, Heart, Pill, Stethoscope, Shield, Sparkles, X } from 'lucide-react';
-import { Product, SearchFilters } from '../types';
+import { SearchFilters } from '../types';
 import { ProductCard } from '../components/Products/ProductCard';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import Pagination from '../components/common/Pagination';
 import { ProductCardSkeleton } from '../components/Skeleton/ProductCardSkeleton';
 import MapSection from '../components/Map/MapSection';
 import { useProductsQuery } from '../hooks/queries/useProductsQueries';
-import { useScrollContext } from '../contexts/ScrollContext';
 import { usePrefetchNextPage } from '../hooks/useImagePrefetch';
 
 // Categorías temporales hasta que se obtengan de la API
@@ -33,7 +32,6 @@ const CatalogPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [productsPerPage] = useState(20);
   const { currency, formatPriceFromBackend, getDisplayPrice } = useGlobalCurrency();
-  const { scrollToTop } = useScrollContext();
   
   const [filters, setFilters] = useState<SearchFilters>({
     category: '',
@@ -101,7 +99,6 @@ const CatalogPage: React.FC = () => {
   // Manejar cambio de página
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    scrollToTop({ smooth: true, duration: 400 });
   };
 
   // Prefetch de imágenes de la página actual

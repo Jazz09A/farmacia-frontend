@@ -59,6 +59,20 @@ const formatDateTime = (isoString: string) => {
   }
 };
 
+const translateEvent = (event: string): string => {
+  const translations: Record<string, string> = {
+    'created': 'Creada',
+    'updated': 'Actualizada',
+    'sent': 'Enviada',
+    'accepted': 'Aceptada',
+    'converted': 'Convertida',
+    'expired': 'Vencida',
+    'cancelled': 'Anulada',
+  };
+  
+  return translations[event.toLowerCase()] || event;
+};
+
 const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({ quoteId, isOpen, onClose }) => {
   const detailQuery = useQuoteDetailQuery(quoteId || '', Boolean(quoteId && isOpen));
   const { hideNavbar, showNavbar } = useNavbar();
@@ -210,7 +224,9 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({ quoteId, isOpen, on
                               <p className="text-xs sm:text-sm text-medical-gray-500">Detalle de cada artículo enviado a Profit Plus.</p>
                             </div>
                           </header>
-                          <div className="overflow-x-auto -mx-4 sm:mx-0">
+                          
+                          {/* Vista de tabla - Desktop */}
+                          <div className="hidden lg:block overflow-x-auto -mx-4 sm:mx-0">
                             <div className="inline-block min-w-full align-middle px-4 sm:px-0">
                               <table className="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
                                 <thead className="bg-medical-blue-50 text-medical-gray-600">
@@ -252,6 +268,54 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({ quoteId, isOpen, on
                                 </tbody>
                               </table>
                             </div>
+                          </div>
+
+                          {/* Vista de tarjetas - Mobile/Tablet */}
+                          <div className="block lg:hidden space-y-4">
+                            {detailQuery.data.items.map(item => (
+                              <div key={item.line_number} className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="font-semibold text-medical-gray-700 text-sm">#{item.line_number}</span>
+                                    </div>
+                                    <h3 className="font-semibold text-medical-gray-900 text-sm break-words">{item.product_name?.trim()}</h3>
+                                    <p className="text-xs text-medical-gray-500 break-all mt-1">{item.product_code?.trim()}</p>
+                                  </div>
+                                  <div className="text-right ml-4">
+                                    <p className="font-bold text-medical-gray-900 text-base">
+                                      {formatCurrency(item.line_total, detailQuery.data.currency)}
+                                    </p>
+                                    <p className="text-xs text-medical-gray-500 mt-1">Total</p>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+                                  <div>
+                                    <p className="text-xs text-medical-gray-500 mb-1">Cantidad</p>
+                                    <p className="font-medium text-medical-gray-900 text-sm">{item.quantity}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-medical-gray-500 mb-1">Precio unit.</p>
+                                    <p className="font-medium text-medical-gray-900 text-sm">
+                                      {formatCurrency(item.unit_price, detailQuery.data.currency)}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-medical-gray-500 mb-1">Descuento</p>
+                                    <p className="font-medium text-medical-gray-700 text-sm">
+                                      {formatCurrency(item.discount_amount, detailQuery.data.currency)}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-medical-gray-500 mb-1">Impuesto</p>
+                                    <p className="font-medium text-medical-gray-700 text-sm">
+                                      {formatCurrency(item.tax_amount, detailQuery.data.currency)}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -331,7 +395,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({ quoteId, isOpen, on
                               <div key={`${item.timestamp}-${idx}`} className="relative pl-5 sm:pl-6">
                                 <span className="absolute left-0 top-1 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-medical-primary"></span>
                                 <p className="text-xs text-medical-gray-500 uppercase tracking-wide">{formatDateTime(item.timestamp)}</p>
-                                <p className="text-xs sm:text-sm font-semibold text-medical-gray-900 mt-1">{item.event}</p>
+                                <p className="text-xs sm:text-sm font-semibold text-medical-gray-900 mt-1">{translateEvent(item.event)}</p>
                                 {item.detail && (
                                   <p className="text-xs sm:text-sm text-medical-gray-600 break-words">{item.detail}</p>
                                 )}

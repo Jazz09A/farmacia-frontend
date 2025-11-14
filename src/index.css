@@ -38,30 +38,18 @@
 }
 
 html {
-  scroll-behavior: auto; /* Usamos JavaScript para smooth scroll optimizado */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  height: 100%;
-  /* Optimizaciones de scroll */
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
   overflow-y: scroll;
-  scroll-padding-top: 80px; /* Espacio para navbar fijo */
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-feature-settings: 'cv11', 'ss01';
-  font-variation-settings: 'opsz' 32;
-  background-color: var(--medical-gray-50);
-  color: #2c3e50;
-  line-height: 1.6;
-  height: 100%;
-  margin: 0;
-  padding: 0;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+  background-color: #f9fafb;
   overflow-x: hidden;
-  /* Optimizaciones de rendimiento para scroll */
+  position: relative;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
 }
 
 /* Fix for root container */

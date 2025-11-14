@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Star, ShieldCheck } from 'lucide-react';
+import { Star, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Product } from '../../types';
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';

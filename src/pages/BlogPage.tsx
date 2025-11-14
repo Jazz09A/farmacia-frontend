@@ -3,7 +3,6 @@ import BlogPostCard from '../components/Blog/BlogPostCard';
 import { mockBlogPosts } from '../data/blogMockData';
 import { Search, Calendar, Tag, TrendingUp } from 'lucide-react';
 import { BlogPostSkeleton, SkeletonBase } from '../components/Skeleton';
-import { useScrollContext } from '../contexts/ScrollContext';
 
 const BlogPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -12,8 +11,6 @@ const BlogPage: React.FC = () => {
   const [sortBy, setSortBy] = useState('publishedAt');
   const [isLoading, setIsLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
-  
-  const { scrollToTop } = useScrollContext();
   
   const postsPerPage = 6;
 
@@ -85,8 +82,7 @@ const BlogPage: React.FC = () => {
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-    scrollToTop({ smooth: true });
-  }, [scrollToTop]);
+  }, []);
 
   const handleCategoryChange = useCallback((category: string) => {
     setSelectedCategory(category);

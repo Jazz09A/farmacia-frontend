@@ -1,7 +1,5 @@
-import React, { useState, useEffect, lazy, Suspense, memo, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp } from 'lucide-react';
+import { lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // Components
 import { Navbar } from './components/Header/Navbar';
@@ -59,7 +57,6 @@ const AdminPaymentsPage = lazy(() => import('./pages/Admin/AdminPaymentsPage'));
 import { useQuoteCart } from './hooks/useQuoteCart';
 
 // Contexts
-import { ScrollProvider, useScrollContext } from './contexts/ScrollContext';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { GlobalCurrencyProviderWithAuth } from './contexts/GlobalCurrencyContext';
@@ -67,7 +64,6 @@ import { NavbarProvider } from './contexts/NavbarContext';
 import { CreditProvider } from './contexts/CreditContext';
 
 const AppLayout = () => {
-  const { isScrolled, showScrollTop } = useApp();
   const { totalQuantity } = useQuoteCart();
   const location = useLocation();
   const isAuthRoute = location.pathname.startsWith('/auth');
@@ -93,7 +89,6 @@ const AppLayout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar
-        isScrolled={isScrolled}
         cartItemsCount={totalQuantity}
       />
       <main id="main-content" className="flex-1 flex flex-col">
@@ -128,64 +123,10 @@ const AppLayout = () => {
         </PageLayout>
       </main>
       <Footer />
-      <OptimizedScrollToTopButton showScrollTop={showScrollTop} />
     </div>
   );
 };
 
-// Hook personalizado para evitar pasar props repetidamente
-const useApp = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      setIsScrolled(scrollY > 100);
-      setShowScrollTop(scrollY > 500);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  return { isScrolled, showScrollTop };
-}
-
-// Optimized component for scroll button to avoid re-renders
-const OptimizedScrollToTopButton: React.FC<{
-  showScrollTop: boolean;
-}> = memo(({ showScrollTop }) => {
-  const location = useLocation();
-  const { scrollToTop } = useScrollContext();
-  const isAdminRoute = location.pathname.startsWith('/admin');
-
-  const handleClick = useCallback(() => {
-    scrollToTop({ smooth: true });
-  }, [scrollToTop]);
-
-  if (isAdminRoute) return null;
-
-  return (
-    <AnimatePresence>
-      {showScrollTop && (
-        <motion.button
-          onClick={handleClick}
-          className="fixed bottom-8 right-8 z-40 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg backdrop-blur-sm"
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0 }}
-          whileHover={{ scale: 1.1, y: -2 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <ArrowUp className="h-5 w-5" />
-        </motion.button>
-      )}
-    </AnimatePresence>
-  );
-});
-
-OptimizedScrollToTopButton.displayName = 'OptimizedScrollToTopButton';
 
 const AdminRoutes = () => (
   <AdminRoute>
@@ -227,18 +168,16 @@ const AppContainer = () => {
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <AuthProvider>
         <GlobalCurrencyProviderWithAuth>
-          <ScrollProvider>
-            <ScrollToTop />
-            <NavbarProvider>
-              <CartProvider>
-                <CreditProvider>
-                  <AppContainer />
-                </CreditProvider>
-              </CartProvider>
-            </NavbarProvider>
-          </ScrollProvider>
+          <NavbarProvider>
+            <CartProvider>
+              <CreditProvider>
+                <AppContainer />
+              </CreditProvider>
+            </CartProvider>
+          </NavbarProvider>
         </GlobalCurrencyProviderWithAuth>
       </AuthProvider>
     </Router>

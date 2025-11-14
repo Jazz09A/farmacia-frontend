@@ -640,92 +640,15 @@ const WhyUsPage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-white">
-        <div className="medical-container">
-          <motion.div
-            className="max-w-4xl mx-auto text-center"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-900 mb-6">
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+          <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-900 mb-6">
               ¿Listo para transformar tu farmacia?
             </h2>
             <p className="text-xl text-gray-600 mb-12">
               Únete a las 500+ farmacias que ya confían en nosotros para su suministro farmacéutico.
             </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-              <motion.div
-                className="bg-gradient-to-br from-medical-blue-50 to-medical-green-50 rounded-2xl p-8 border border-medical-blue-200"
-                whileHover={{ y: -5 }}
-                transition={{ duration: 0.3 }}
-              >
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Contacto Directo</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Phone className="w-5 h-5 text-medical-blue-600" />
-                    <span>+58 212 555-0123</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Mail className="w-5 h-5 text-medical-blue-600" />
-                    <span>info@grupodrozainka.com</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <MapPin className="w-5 h-5 text-medical-blue-600" />
-                    <span>Caracas, Venezuela</span>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                className="bg-gradient-to-br from-medical-green-50 to-medical-blue-50 rounded-2xl p-8 border border-medical-green-200"
-                whileHover={{ y: -5 }}
-                transition={{ duration: 0.3 }}
-              >
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Solicitar Información</h3>
-                <form className="space-y-4">
-                  <input
-                    type="text"
-                    placeholder="Nombre de tu farmacia"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-medical-blue-500 focus:border-transparent"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email de contacto"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-medical-blue-500 focus:border-transparent"
-                  />
-                  <button
-                    type="submit"
-                    className="w-full bg-medical-blue-600 hover:bg-medical-blue-700 text-white font-semibold py-3 rounded-lg transition-colors duration-300"
-                  >
-                    Solicitar Información
-                  </button>
-                </form>
-              </motion.div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/catalog"
-                className="btn-medical-primary px-8 py-4 text-lg"
-              >
-                Ver Catálogo Completo
-              </Link>
-              <Link
-                to="/contact"
-                className="btn-medical-secondary px-8 py-4 text-lg"
-              >
-                Contactar Ahora
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
             <ContactForm />
           </div>
         </div>
