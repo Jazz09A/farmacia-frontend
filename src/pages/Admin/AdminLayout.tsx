@@ -2,7 +2,7 @@ import React, { useState, Suspense } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, 
-  ShoppingCart, 
+  FileText, 
   BookOpen, 
   Users, 
   Package, 
@@ -64,7 +64,7 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto">
+        <nav className="flex-1 p-3 lg:p-4 space-y-1 lg:space-y-2 overflow-hidden">
           <div className="mb-4">
             <p className="px-3 lg:px-4 pt-3 lg:pt-4 pb-1 lg:pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Principal
@@ -80,8 +80,8 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
               Gestión
             </p>
             <NavLink to="/admin/orders" className={navLinkClass} onClick={onClose}>
-              <ShoppingCart className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
-              <span className="truncate">Pedidos</span>
+              <FileText className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
+              <span className="truncate">Cotizaciones</span>
             </NavLink>
             <NavLink to="/admin/products" className={navLinkClass} onClick={onClose}>
               <Package className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
@@ -184,20 +184,13 @@ const AdminHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => 
 
         {/* Right part: Actions and User Menu */}
         <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-          <button
-            onClick={() => navigate('/admin/blog/new')}
-            className="hidden sm:flex items-center px-2 lg:px-3 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition-colors font-medium text-xs lg:text-sm"
-          >
-            <Plus className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
-            <span className="hidden md:inline">Nuevo Artículo</span>
-          </button>
-
-          <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100 active:bg-gray-200">
+          {/* Botón de notificaciones - Comentado por ahora */}
+          {/* <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100 active:bg-gray-200">
             <Bell className="w-5 h-5 lg:w-6 lg:h-6" />
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
               3
             </span>
-          </button>
+          </button> */}
 
           {/* Currency Toggle */}
           <CurrencyToggle />
@@ -218,7 +211,7 @@ const AdminHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => 
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
-            placeholder="Buscar pedidos, productos..."
+            placeholder="Buscar cotizaciones, productos..."
             className="pl-9 pr-4 py-2 w-full text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
           />
         </div>

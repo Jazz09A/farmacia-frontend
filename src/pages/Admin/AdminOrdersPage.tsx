@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState } from 'react';
 import { 
   Search, 
   Filter, 
@@ -6,97 +6,68 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Package,
+  FileText,
   RefreshCw,
   SortAsc,
   SortDesc,
   ChevronLeft,
   ChevronRight,
-  Eye,
-  CreditCard,
-  Truck,
   XCircle,
   Calendar
 } from 'lucide-react';
-import { Order } from '../../types';
+import { QuoteSummary, QuoteStatus } from '../../types/quotes';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { useAdminOrdersQuery, useUpdateOrderStatusMutation, useUpdatePaymentStatusMutation } from '../../hooks/queries/useAdminQueries';
+import { useAdminQuotesQuery } from '../../hooks/queries/useAdminQueries';
 import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
 import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
-
-const OrderModal = lazy(() => import('../../components/Admin/OrderModal'));
+import AdminQuoteModal from '../../components/Admin/AdminQuoteModal';
 
 const AdminOrdersPage: React.FC = () => {
   const { formatPrice } = useAdminCurrency();
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   
-  const [filters, setFilters] = useState({ status: 'all', search: '', sortBy: 'created_at', sortOrder: 'desc', limit: 20 });
+  const [filters, setFilters] = useState({ status: 'all', search: '', sortBy: 'created_at', sortOrder: 'desc', page_size: 10 });
   const [currentPage, setPage] = useState(1);
-  const { data: ordersResp, isLoading: loading, status, error, refetch } = useAdminOrdersQuery({
+  const { data: quotesResp, isLoading: loading, status, error, refetch } = useAdminQuotesQuery({
     page: currentPage,
-    limit: filters.limit,
-    status: filters.status,
+    page_size: filters.page_size,
+    status: filters.status !== 'all' ? filters.status : undefined,
     search: filters.search,
     sort_by: filters.sortBy,
     sort_order: filters.sortOrder as 'asc' | 'desc'
   });
-  const orders = ordersResp?.orders || [];
-  const total = ordersResp?.total || 0;
-  const pages = ordersResp?.pages || 0;
-  const updateOrderStatusMutation = useUpdateOrderStatusMutation();
-  const updatePaymentStatusMutation = useUpdatePaymentStatusMutation();
+  const quotes = quotesResp?.quotes || [];
+  const total = quotesResp?.total || 0;
+  const pages = quotesResp?.pages || 0;
 
-  // Función para traducir estados de órdenes
-  const getOrderStatusText = (status: string) => {
+  // Función para traducir estados de cotizaciones
+  const getQuoteStatusText = (status: QuoteStatus) => {
     switch (status) {
       case 'pending':
         return 'Pendiente';
-      case 'confirmed':
-        return 'Confirmado';
-      case 'processing':
-        return 'En Preparación';
-      case 'shipped':
-        return 'Enviado';
-      case 'delivered':
-        return 'Entregado';
+      case 'accepted':
+        return 'Aceptada';
+      case 'converted':
+        return 'Convertida';
+      case 'expired':
+        return 'Expirada';
       case 'cancelled':
-        return 'Cancelado';
+        return 'Cancelada';
       default:
         return status;
     }
   };
 
-  // Función para traducir estados de pago
-  const getPaymentStatusText = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'Pendiente';
-      case 'completed':
-        return 'Completado';
-      case 'failed':
-        return 'Fallido';
-      case 'refunded':
-        return 'Reembolsado';
-      case 'partially_paid':
-        return 'Pago Parcial';
-      default:
-        return status;
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: QuoteStatus) => {
     switch (status) {
       case 'pending':
         return <Clock className="w-4 h-4 text-yellow-500" />;
-      case 'confirmed':
+      case 'accepted':
         return <CheckCircle className="w-4 h-4 text-blue-500" />;
-      case 'processing':
-        return <AlertCircle className="w-4 h-4 text-orange-500" />;
-      case 'shipped':
-        return <Package className="w-4 h-4 text-purple-500" />;
-      case 'delivered':
+      case 'converted':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'expired':
+        return <AlertCircle className="w-4 h-4 text-gray-500" />;
       case 'cancelled':
         return <XCircle className="w-4 h-4 text-red-500" />;
       default:
@@ -104,34 +75,18 @@ const AdminOrdersPage: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: QuoteStatus) => {
     const baseClasses = "px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1";
     switch (status) {
       case 'pending':
         return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case 'confirmed':
+      case 'accepted':
         return `${baseClasses} bg-blue-100 text-blue-800`;
-      case 'processing':
-        return `${baseClasses} bg-orange-100 text-orange-800`;
-      case 'shipped':
-        return `${baseClasses} bg-purple-100 text-purple-800`;
-      case 'delivered':
+      case 'converted':
         return `${baseClasses} bg-green-100 text-green-800`;
-      case 'cancelled':
-        return `${baseClasses} bg-red-100 text-red-800`;
-      default:
+      case 'expired':
         return `${baseClasses} bg-gray-100 text-gray-800`;
-    }
-  };
-
-  const getPaymentStatusBadge = (status: string) => {
-    const baseClasses = "px-2 py-1 text-xs font-medium rounded-full";
-    switch (status) {
-      case 'pending':
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case 'completed':
-        return `${baseClasses} bg-green-100 text-green-800`;
-      case 'failed':
+      case 'cancelled':
         return `${baseClasses} bg-red-100 text-red-800`;
       default:
         return `${baseClasses} bg-gray-100 text-gray-800`;
@@ -150,67 +105,35 @@ const AdminOrdersPage: React.FC = () => {
     }).format(new Date(dateString));
   };
 
-  const handleViewOrder = (order: Order) => {
-    setSelectedOrder(order);
-    setShowOrderModal(true);
+  const removeCOTPrefix = (quoteId: string) => {
+    if (!quoteId) return quoteId;
+    return quoteId.startsWith('COT-') ? quoteId.substring(4) : quoteId;
   };
 
-  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
-    try {
-      // Verificar si la orden está en un estado final
-      const currentOrder = orders.find(order => order.id === orderId);
-      if (currentOrder && (currentOrder.status === 'delivered' || currentOrder.status === 'cancelled')) {
-        alert('No se puede modificar una orden entregada o cancelada');
-        return;
-      }
-
-      await updateOrderStatusMutation.mutateAsync({ orderId, status: newStatus });
-      
-      if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus });
-      }
-    } catch (err) {
-      console.error('Error updating order status:', err);
-      alert('Error al actualizar el estado de la orden');
-    }
-  };
-
-  const handleUpdatePaymentStatus = async (orderId: string, paymentStatus: 'completed' | 'failed') => {
-    try {
-      await updatePaymentStatusMutation.mutateAsync({ orderId, paymentStatus });
-      
-      // Update local state for the modal
-      if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder({ 
-          ...selectedOrder, 
-          payment_status: paymentStatus
-        });
-      }
-      
-      // Refetch handled by invalidation in mutation
-    } catch (error) {
-      console.error('Error updating payment status:', error);
-    }
+  const handleViewQuote = (quote: QuoteSummary) => {
+    setSelectedQuoteId(quote.quote_id);
   };
   
   const handleSearchChange = (value: string) => {
-    setFilters({ search: value });
+    setFilters(prev => ({ ...prev, search: value }));
+    setPage(1); // Reset to first page on search
   };
 
   const handleStatusFilterChange = (status: string) => {
-    setFilters({ status });
+    setFilters(prev => ({ ...prev, status }));
+    setPage(1); // Reset to first page on filter change
   };
 
   const handleSortChange = (sortBy: string) => {
     const newSortOrder = filters.sortBy === sortBy && filters.sortOrder === 'desc' ? 'asc' : 'desc';
-    setFilters({ sortBy, sortOrder: newSortOrder });
+    setFilters(prev => ({ ...prev, sortBy, sortOrder: newSortOrder }));
   };
 
   const handleRefresh = async () => {
     await refetch();
   };
 
-  if (loading && orders.length === 0) {
+  if (loading && quotes.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-96">
         <LoadingSpinner />
@@ -223,9 +146,9 @@ const AdminOrdersPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Pedidos</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Cotizaciones</h1>
           <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
-            Administra todos los pedidos de tu farmacia ({total} total)
+            Administra todas las cotizaciones de tu farmacia ({total} total)
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
@@ -237,10 +160,11 @@ const AdminOrdersPage: React.FC = () => {
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Actualizar</span>
           </button>
-          <button className="px-3 lg:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 transition-colors flex items-center justify-center font-medium text-sm">
+          {/* Botón de exportar - Comentado por ahora */}
+          {/* <button className="px-3 lg:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 transition-colors flex items-center justify-center font-medium text-sm">
             <Download className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Exportar</span>
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -250,14 +174,14 @@ const AdminOrdersPage: React.FC = () => {
           <div className="flex">
             <AlertCircle className="w-5 h-5 text-red-400 mr-2 flex-shrink-0 mt-0.5" />
             <div className="text-red-800 text-sm">
-              {error instanceof Error ? error.message : 'Error al cargar los pedidos'}
+              {error instanceof Error ? error.message : 'Error al cargar las cotizaciones'}
             </div>
           </div>
         </div>
       )}
 
-      {/* Filters & Search */}
-      <div className="p-3 lg:p-4 bg-white rounded-lg shadow-sm">
+      {/* Filters & Search - Comentado por ahora */}
+      {/* <div className="p-3 lg:p-4 bg-white rounded-lg shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
           <div className="relative sm:col-span-2 lg:col-span-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -276,11 +200,10 @@ const AdminOrdersPage: React.FC = () => {
           >
             <option value="all">Todos los estados</option>
             <option value="pending">Pendiente</option>
-            <option value="confirmed">Confirmado</option>
-            <option value="processing">Preparando</option>
-            <option value="shipped">Enviado</option>
-            <option value="delivered">Entregado</option>
-            <option value="cancelled">Cancelado</option>
+            <option value="accepted">Aceptada</option>
+            <option value="converted">Convertida</option>
+            <option value="expired">Expirada</option>
+            <option value="cancelled">Cancelada</option>
           </select>
           <select
             value={`${filters.sortBy}_${filters.sortOrder}`}
@@ -292,8 +215,8 @@ const AdminOrdersPage: React.FC = () => {
           >
             <option value="created_at_desc">Más recientes</option>
             <option value="created_at_asc">Más antiguos</option>
-            <option value="total_desc">Mayor valor</option>
-            <option value="total_asc">Menor valor</option>
+            <option value="total_gross_desc">Mayor valor</option>
+            <option value="total_gross_asc">Menor valor</option>
             <option value="status_asc">Estado A-Z</option>
           </select>
           <div className="sm:col-span-2 lg:col-span-1">
@@ -307,21 +230,21 @@ const AdminOrdersPage: React.FC = () => {
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
 
-      {/* Orders List/Table */}
+      {/* Quotes List/Table */}
       <div className="bg-white rounded-lg shadow-sm">
         <div className="p-3 lg:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <h3 className="text-base lg:text-lg font-semibold">Pedidos ({orders.length})</h3>
+          <h3 className="text-base lg:text-lg font-semibold">Cotizaciones ({quotes.length})</h3>
           <div className="text-xs lg:text-sm text-gray-500">
             Página {currentPage} de {pages}
           </div>
         </div>
         
-        {orders.length === 0 ? (
+        {quotes.length === 0 ? (
           <div className="p-8 lg:p-12 text-center text-gray-500">
-            <Package className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-3 lg:mb-4 text-gray-300" />
-            <p className="text-base lg:text-lg font-medium mb-1 lg:mb-2">No se encontraron pedidos</p>
+            <FileText className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-3 lg:mb-4 text-gray-300" />
+            <p className="text-base lg:text-lg font-medium mb-1 lg:mb-2">No se encontraron cotizaciones</p>
             <p className="text-sm lg:text-base">Intenta ajustar los filtros de búsqueda</p>
           </div>
         ) : (
@@ -329,72 +252,53 @@ const AdminOrdersPage: React.FC = () => {
             {/* Mobile View - Enhanced Cards */}
             <div className="md:hidden">
               <div className="divide-y divide-gray-200">
-                {orders.map((order) => (
-                  <div 
-                    key={order.id} 
-                    onClick={() => handleViewOrder(order)}
-                    className="p-3 lg:p-4 hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors"
+                {quotes.map((quote) => (
+                  <button
+                    key={quote.quote_id}
+                    onClick={() => handleViewQuote(quote)}
+                    className="w-full text-left p-3 lg:p-4 hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors"
                   >
-                    <div className="flex justify-between items-start mb-3">
+                    <div className="flex justify-between items-start mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <div className="font-bold text-gray-900 text-sm">#{order.order_number || order.id.substring(0, 8)}</div>
-                          <div className={getStatusBadge(order.status)}>
-                            {getStatusIcon(order.status)}
-                            <span className="text-xs">{getOrderStatusText(order.status)}</span>
+                          <div className="font-semibold text-gray-900 text-base">{removeCOTPrefix(quote.quote_id)}</div>
+                          <div className={getStatusBadge(quote.status)}>
+                            {getStatusIcon(quote.status)}
+                            <span className="text-xs">{getQuoteStatusText(quote.status)}</span>
                           </div>
                         </div>
-                        <div className="text-sm text-gray-600 truncate">{order.shipping_address.recipient_name}</div>
+                        {quote.profit_plus_id && (
+                          <div className="text-xs text-gray-500 mb-1">ID Sistema: {quote.profit_plus_id}</div>
+                        )}
+                        {quote.email_sent_at && (
+                          <div className="text-xs text-gray-400 mb-1">Email enviado</div>
+                        )}
                         <div className="text-xs text-gray-500 flex items-center gap-3 mt-1 flex-wrap">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            {formatDate(order.created_at)}
+                            {formatDate(quote.created_at)}
                           </span>
                           <span className="flex items-center gap-1">
-                            <Package className="w-3 h-3" />
-                            {order.item_count} items
+                            <FileText className="w-3 h-3" />
+                            {quote.items_count} {quote.items_count === 1 ? 'item' : 'items'}
                           </span>
                         </div>
+                        {quote.expires_at && (
+                          <div className="text-xs text-gray-400 mt-1">
+                            Expira: {formatDate(quote.expires_at)}
+                          </div>
+                        )}
                       </div>
                       <div className="text-right flex-shrink-0 ml-2">
                         <div className="font-bold text-gray-900 text-base lg:text-lg">
-                          <SmartPriceDisplay 
-                            amountUsd={order.total}
-                            className="font-bold text-gray-900 text-base lg:text-lg"
-                          />
+                          {quote.currency} {Number(quote.total_gross).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
-                        <div className={getPaymentStatusBadge(order.payment_status)}>
-                          {getPaymentStatusText(order.payment_status)}
-                        </div>
+                        {quote.email_sent_at && (
+                          <div className="text-xs text-gray-500 mt-1">Email enviado</div>
+                        )}
                       </div>
                     </div>
-                    
-                    {order.tracking_number && (
-                      <div className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-                        <Truck className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">Tracking: {order.tracking_number}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                      <div className="flex items-center gap-2 text-xs text-gray-500 min-w-0">
-                        <CreditCard className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{order.payment_method}</span>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewOrder(order);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 active:text-blue-900 flex items-center text-sm font-medium p-2 rounded-md hover:bg-blue-50"
-                          title="Ver detalles"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -407,16 +311,16 @@ const AdminOrdersPage: React.FC = () => {
                     <th 
                       scope="col" 
                       className="px-6 py-3 cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSortChange('order_number')}
+                      onClick={() => handleSortChange('quote_id')}
                     >
                       <div className="flex items-center gap-1">
-                        Pedido
-                        {filters.sortBy === 'order_number' && (
+                        Cotización
+                        {filters.sortBy === 'quote_id' && (
                           filters.sortOrder === 'desc' ? <SortDesc className="w-3 h-3" /> : <SortAsc className="w-3 h-3" />
                         )}
                       </div>
                     </th>
-                    <th scope="col" className="px-6 py-3">Cliente</th>
+                    <th scope="col" className="px-6 py-3">ID Sistema</th>
                     <th 
                       scope="col" 
                       className="px-6 py-3 cursor-pointer hover:bg-gray-100"
@@ -429,18 +333,20 @@ const AdminOrdersPage: React.FC = () => {
                         )}
                       </div>
                     </th>
+                    <th scope="col" className="px-6 py-3">Expira</th>
                     <th 
                       scope="col" 
                       className="px-6 py-3 cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSortChange('total')}
+                      onClick={() => handleSortChange('total_gross')}
                     >
                       <div className="flex items-center gap-1">
                         Total
-                        {filters.sortBy === 'total' && (
+                        {filters.sortBy === 'total_gross' && (
                           filters.sortOrder === 'desc' ? <SortDesc className="w-3 h-3" /> : <SortAsc className="w-3 h-3" />
                         )}
                       </div>
                     </th>
+                    <th scope="col" className="px-6 py-3">Items</th>
                     <th 
                       scope="col" 
                       className="px-6 py-3 cursor-pointer hover:bg-gray-100"
@@ -453,78 +359,44 @@ const AdminOrdersPage: React.FC = () => {
                         )}
                       </div>
                     </th>
-                    <th scope="col" className="px-6 py-3">Pago</th>
-                    <th scope="col" className="px-6 py-3 text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {orders.map((order) => (
+                  {quotes.map((quote) => (
                     <tr 
-                      key={order.id} 
-                      onClick={() => handleViewOrder(order)}
+                      key={quote.quote_id} 
+                      onClick={() => handleViewQuote(quote)}
                       className="hover:bg-gray-50 cursor-pointer transition-colors"
                     >
                       <td className="px-6 py-4">
-                        <div className="font-medium text-blue-600 hover:underline">
-                          #{order.order_number || order.id.substring(0, 8)}
+                        <div className="font-semibold text-gray-900 text-base">
+                          {removeCOTPrefix(quote.quote_id)}
                         </div>
-                        <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                          {order.tracking_number && (
-                            <>
-                              <Truck className="w-3 h-3" />
-                              {order.tracking_number}
-                            </>
-                          )}
-                        </div>
+                        {quote.email_sent_at && (
+                          <div className="text-xs text-gray-400 mt-0.5">Email enviado</div>
+                        )}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-medium">{order.shipping_address.recipient_name}</div>
-                        <div className="text-xs text-gray-500">{order.shipping_address.recipient_phone}</div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {order.item_count} {order.item_count === 1 ? 'item' : 'items'}
-                        </div>
+                        <div className="text-xs text-gray-500">{quote.profit_plus_id || '-'}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div>{formatDate(order.created_at)}</div>
+                        <div>{formatDate(quote.created_at)}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-xs">{quote.expires_at ? formatDate(quote.expires_at) : '-'}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="font-medium text-gray-900">
-                          <SmartPriceDisplay 
-                            amountUsd={order.total}
-                            className="font-medium text-gray-900"
-                          />
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {order.currency}
+                          {quote.currency} {Number(quote.total_gross).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className={getStatusBadge(order.status)}>
-                          {getStatusIcon(order.status)}
-                          <span>{getOrderStatusText(order.status)}</span>
-                        </div>
+                        <div className="text-sm">{quote.items_count}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className={getPaymentStatusBadge(order.payment_status)}>
-                          {getPaymentStatusText(order.payment_status)}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                          <CreditCard className="w-3 h-3" />
-                          {order.payment_method}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewOrder(order);
-                            }}
-                            className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 transition-colors"
-                            title="Ver detalles"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                        <div className={getStatusBadge(quote.status)}>
+                          {getStatusIcon(quote.status)}
+                          <span>{getQuoteStatusText(quote.status)}</span>
                         </div>
                       </td>
                     </tr>
@@ -539,7 +411,7 @@ const AdminOrdersPage: React.FC = () => {
         {pages > 1 && (
           <div className="px-3 lg:px-6 py-3 lg:py-4 border-t bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="text-xs lg:text-sm text-gray-700">
-              Mostrando {((currentPage - 1) * filters.limit) + 1} a {Math.min(currentPage * filters.limit, total)} de {total} pedidos
+              Mostrando {((currentPage - 1) * filters.page_size) + 1} a {Math.min(currentPage * filters.page_size, total)} de {total} cotizaciones
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -585,16 +457,12 @@ const AdminOrdersPage: React.FC = () => {
         )}
       </div>
 
-      {/* Order Modal */}
-      {showOrderModal && (
-        <Suspense fallback={<div>Cargando...</div>}>
-          <OrderModal
-            order={selectedOrder}
-            onClose={() => setShowOrderModal(false)}
-            onUpdateStatus={handleUpdateStatus}
-            onUpdatePaymentStatus={handleUpdatePaymentStatus}
-          />
-        </Suspense>
+      {/* Quote Modal */}
+      {selectedQuoteId && (
+        <AdminQuoteModal
+          quoteId={selectedQuoteId}
+          onClose={() => setSelectedQuoteId(null)}
+        />
       )}
     </div>
   );

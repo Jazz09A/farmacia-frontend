@@ -188,14 +188,14 @@ const AdminProductsPage: React.FC = () => {
           </p>
         </div>
         <div className="w-full sm:w-auto">
-          {/* Mobile Buttons */}
-          <div className="sm:hidden">
+          {/* Mobile Buttons - Comentado por ahora */}
+          {/* <div className="sm:hidden">
             <div className="grid grid-cols-3 gap-2 mb-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium"
               >
-                {/* <Filter className="w-4 h-4 mr-1" />
+                <Filter className="w-4 h-4 mr-1" />
                 <span className="truncate">Filtros</span>
               </button>
               <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
@@ -204,7 +204,7 @@ const AdminProductsPage: React.FC = () => {
               </button>
               <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
                 <Download className="w-4 h-4 mr-1" />
-                <span className="truncate">Exportar</span> */}
+                <span className="truncate">Exportar</span>
               </button>
             </div>
             <button 
@@ -214,9 +214,9 @@ const AdminProductsPage: React.FC = () => {
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Producto
             </button>
-          </div>
-          {/* Desktop Buttons */}
-          <div className="hidden sm:flex items-center space-x-3">
+          </div> */}
+          {/* Desktop Buttons - Comentado por ahora */}
+          {/* <div className="hidden sm:flex items-center space-x-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -239,7 +239,7 @@ const AdminProductsPage: React.FC = () => {
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Producto
           </button>
-          </div>
+          </div> */}
         </div>
       </div>
 

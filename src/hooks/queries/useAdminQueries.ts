@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../../services/AdminService';
 import type { Order } from '../../types';
+import type { QuoteDetailResponse } from '../../types/quotes';
 import { queryKeys } from './queryKeys';
 
 export const useAdminDashboardQuery = (timeRange: string = '7') => {
@@ -24,6 +25,31 @@ export const useAdminOrdersQuery = (params: {
     queryFn: () => adminService.getOrders(params),
     staleTime: 30 * 1000,
     keepPreviousData: true as any,
+  });
+};
+
+export const useAdminQuotesQuery = (params: {
+  page?: number;
+  page_size?: number;
+  status?: string;
+  search?: string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+}) => {
+  return useQuery({
+    queryKey: queryKeys.admin.quotes(params),
+    queryFn: () => adminService.getQuotes(params),
+    staleTime: 30 * 1000,
+    keepPreviousData: true as any,
+  });
+};
+
+export const useAdminQuoteDetailQuery = (quoteId: string, enabled: boolean = true) => {
+  return useQuery<QuoteDetailResponse>({
+    queryKey: queryKeys.admin.quote(quoteId),
+    queryFn: () => adminService.getQuoteDetail(quoteId),
+    enabled: !!quoteId && enabled,
+    staleTime: 2 * 60 * 1000,
   });
 };
 

@@ -30,6 +30,8 @@ export const queryKeys = {
     dashboard: (timeRange: string = '7') => ['admin', 'dashboard', timeRange] as const,
     orders: (params: any) => ['admin', 'orders', params] as const,
     order: (id: string) => ['admin', 'order', id] as const,
+    quotes: (params: any) => ['admin', 'quotes', params] as const,
+    quote: (id: string) => ['admin', 'quote', id] as const,
     customers: ['admin', 'customers'] as const,
     customerStats: (userId: string) => ['admin', 'customers', userId, 'stats'] as const,
     analytics: (timeRange: string = 'month') => ['admin', 'analytics', timeRange] as const,

@@ -30,8 +30,96 @@ export interface SearchSuggestion {
   type: 'product' | 'brand' | 'category';
 }
 
+/**
+ * Caché para propiedades de imágenes de artículos
+ * Almacena image_url y has_image por co_art para evitar peticiones repetidas
+ */
+interface ArticleImageCacheEntry {
+  image_url: string | null;
+  has_image: boolean;
+  timestamp: number;
+}
+
+class ArticleImageCache {
+  private cache: Map<string, ArticleImageCacheEntry>;
+  private maxAge: number; // 30 minutos por defecto
+
+  constructor(maxAge: number = 30 * 60 * 1000) {
+    this.cache = new Map();
+    this.maxAge = maxAge;
+  }
+
+  /**
+   * Obtener datos de imagen desde el caché
+   */
+  get(coArt: string): { image_url: string | null; has_image: boolean } | null {
+    const cached = this.cache.get(coArt);
+    if (!cached) {
+      return null;
+    }
+
+    // Verificar si el caché ha expirado
+    if (Date.now() - cached.timestamp > this.maxAge) {
+      this.cache.delete(coArt);
+      return null;
+    }
+
+    return {
+      image_url: cached.image_url,
+      has_image: cached.has_image
+    };
+  }
+
+  /**
+   * Guardar datos de imagen en el caché
+   */
+  set(coArt: string, image_url: string | null, has_image: boolean): void {
+    this.cache.set(coArt, {
+      image_url,
+      has_image,
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Invalidar caché de un artículo específico
+   */
+  invalidate(coArt: string): void {
+    this.cache.delete(coArt);
+  }
+
+  /**
+   * Limpiar entradas expiradas
+   */
+  cleanExpired(): void {
+    const now = Date.now();
+    for (const [coArt, entry] of this.cache.entries()) {
+      if (now - entry.timestamp > this.maxAge) {
+        this.cache.delete(coArt);
+      }
+    }
+  }
+
+  /**
+   * Limpiar todo el caché
+   */
+  clear(): void {
+    this.cache.clear();
+  }
+}
+
 class ProductService {
   private baseUrl = '/api/v1/articles';
+  private imageCache = new ArticleImageCache(30 * 60 * 1000); // 30 minutos de caché
+
+  constructor() {
+    // Limpiar entradas expiradas cada 5 minutos
+    if (typeof window !== 'undefined') {
+      setInterval(() => {
+        this.imageCache.cleanExpired();
+      }, 5 * 60 * 1000);
+    }
+  }
 
   /**
    * Mapea ArticleSummary a Product para mantener compatibilidad
@@ -46,10 +134,28 @@ class ProductService {
     const stockNum = parseNum(article.stock);
     const priceNum = parseNum(article.price);
 
+    // Usar valores del artículo (si vienen del API) o del caché
+    // Priorizar valores del API si están disponibles, sino usar caché
+    let imageUrl = article.image_url;
+    let hasImage = article.has_image;
+    
+    // Si el artículo no tiene image_url pero tenemos caché, usar el caché
+    if (!imageUrl) {
+      const cached = this.imageCache.get(article.co_art);
+      if (cached && cached.image_url) {
+        imageUrl = cached.image_url;
+        hasImage = cached.has_image;
+      }
+    }
+    
+    // Siempre actualizar el caché con los valores más recientes del API
+    // Esto asegura que el caché se mantenga actualizado
+    this.imageCache.set(article.co_art, imageUrl || null, hasImage);
+
     // Construir array de imágenes
     const images: string[] = [];
-    if (article.image_url) {
-      images.push(article.image_url);
+    if (imageUrl) {
+      images.push(imageUrl);
     }
     if (images.length === 0) {
       images.push('https://placehold.co/400x400/png');
@@ -119,6 +225,12 @@ class ProductService {
         if (img.url) images.push(img.url);
       });
     }
+    
+    // Actualizar caché con la primera imagen si existe
+    const firstImageUrl = images.length > 0 ? images[0] : null;
+    const hasImage = images.length > 0;
+    this.imageCache.set(article.co_art, firstImageUrl, hasImage);
+    
     if (images.length === 0) {
       images.push('https://placehold.co/400x400/png');
     }
@@ -162,69 +274,69 @@ class ProductService {
   /**
    * Normaliza los datos de un producto del backend para asegurar consistencia (legacy support)
    */
-  private normalizeProduct(backendProduct: any): Product {
-    // Si ya es un Product, devolverlo
-    if (backendProduct.id && backendProduct.name) {
-      return backendProduct;
-    }
+  // private normalizeProduct(backendProduct: any): Product {
+  //   // Si ya es un Product, devolverlo
+  //   if (backendProduct.id && backendProduct.name) {
+  //     return backendProduct;
+  //   }
 
-    // Si es ArticleSummary, mapearlo
-    if (backendProduct.co_art) {
-      if (backendProduct.prices) {
-        return this.mapArticleDetailToProduct(backendProduct as ArticleDetail);
-      }
-      return this.mapArticleSummaryToProduct(backendProduct as ArticleSummary);
-    }
+  //   // Si es ArticleSummary, mapearlo
+  //   if (backendProduct.co_art) {
+  //     if (backendProduct.prices) {
+  //       return this.mapArticleDetailToProduct(backendProduct as ArticleDetail);
+  //     }
+  //     return this.mapArticleSummaryToProduct(backendProduct as ArticleSummary);
+  //   }
 
-    // Fallback para formato legacy
-    const images = backendProduct.images && Array.isArray(backendProduct.images) 
-      ? backendProduct.images.filter((img: string) => img && img.trim() !== '')
-      : [];
+  //   // Fallback para formato legacy
+  //   const images = backendProduct.images && Array.isArray(backendProduct.images) 
+  //     ? backendProduct.images.filter((img: string) => img && img.trim() !== '')
+  //     : [];
 
-    if (images.length === 0) {
-      images.push('https://placehold.co/400x400/png');
-    }
+  //   if (images.length === 0) {
+  //     images.push('https://placehold.co/400x400/png');
+  //   }
 
-    const parseNum = (v: any): number => {
-      const n = typeof v === 'string' ? parseFloat(v) : v;
-      return Number.isFinite(n) ? n : 0;
-    };
+  //   const parseNum = (v: any): number => {
+  //     const n = typeof v === 'string' ? parseFloat(v) : v;
+  //     return Number.isFinite(n) ? n : 0;
+  //   };
 
-    return {
-      id: backendProduct.id || backendProduct.co_art,
-      name: backendProduct.name || backendProduct.art_des,
-      brand: backendProduct.brand || '',
-      category: backendProduct.category || backendProduct.category_name || '',
-      subcategory: backendProduct.subcategory || '',
-      patology: backendProduct.patology || '',
-      price: parseNum(backendProduct.price).toString(),
-      description: backendProduct.description || backendProduct.art_des || '',
-      ingredients: backendProduct.ingredients || [],
-      image: images[0] || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop',
-      images: images,
-      in_stock: backendProduct.in_stock !== undefined ? backendProduct.in_stock : (parseNum(backendProduct.stock) > 0),
-      stock: parseNum(backendProduct.stock),
-      prescription: backendProduct.prescription || false,
-      rating: parseNum(backendProduct.rating).toString(),
-      review_count: backendProduct.review_count || 0,
-      is_offer: backendProduct.is_offer || false,
-      original_price: backendProduct.original_price != null ? parseNum(backendProduct.original_price).toString() : null,
-      offer_end_time: backendProduct.offer_end_time ? new Date(backendProduct.offer_end_time).toISOString() : null,
-      featured: backendProduct.featured || false,
-      dosage: backendProduct.dosage || '',
-      presentation: backendProduct.presentation || '',
-      laboratorio: backendProduct.laboratorio || '',
-      registro_sanitario: backendProduct.registro_sanitario || '',
-      contraindicaciones: backendProduct.contraindicaciones || '',
-      efectos_secundarios: backendProduct.efectos_secundarios || '',
-      slug: backendProduct.slug || backendProduct.co_art || backendProduct.id,
-      discount_percentage: parseNum(backendProduct.discount_percentage).toString(),
-      current_price: parseNum(backendProduct.current_price ?? backendProduct.price).toString(),
-      is_available: backendProduct.is_available !== undefined ? backendProduct.is_available : (parseNum(backendProduct.stock) > 0),
-      created_at: backendProduct.created_at || '',
-      updated_at: backendProduct.updated_at || '',
-    };
-  }
+  //   return {
+  //     id: backendProduct.id || backendProduct.co_art,
+  //     name: backendProduct.name || backendProduct.art_des,
+  //     brand: backendProduct.brand || '',
+  //     category: backendProduct.category || backendProduct.category_name || '',
+  //     subcategory: backendProduct.subcategory || '',
+  //     patology: backendProduct.patology || '',
+  //     price: parseNum(backendProduct.price).toString(),
+  //     description: backendProduct.description || backendProduct.art_des || '',
+  //     ingredients: backendProduct.ingredients || [],
+  //     image: images[0] || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop',
+  //     images: images,
+  //     in_stock: backendProduct.in_stock !== undefined ? backendProduct.in_stock : (parseNum(backendProduct.stock) > 0),
+  //     stock: parseNum(backendProduct.stock),
+  //     prescription: backendProduct.prescription || false,
+  //     rating: parseNum(backendProduct.rating).toString(),
+  //     review_count: backendProduct.review_count || 0,
+  //     is_offer: backendProduct.is_offer || false,
+  //     original_price: backendProduct.original_price != null ? parseNum(backendProduct.original_price).toString() : null,
+  //     offer_end_time: backendProduct.offer_end_time ? new Date(backendProduct.offer_end_time).toISOString() : null,
+  //     featured: backendProduct.featured || false,
+  //     dosage: backendProduct.dosage || '',
+  //     presentation: backendProduct.presentation || '',
+  //     laboratorio: backendProduct.laboratorio || '',
+  //     registro_sanitario: backendProduct.registro_sanitario || '',
+  //     contraindicaciones: backendProduct.contraindicaciones || '',
+  //     efectos_secundarios: backendProduct.efectos_secundarios || '',
+  //     slug: backendProduct.slug || backendProduct.co_art || backendProduct.id,
+  //     discount_percentage: parseNum(backendProduct.discount_percentage).toString(),
+  //     current_price: parseNum(backendProduct.current_price ?? backendProduct.price).toString(),
+  //     is_available: backendProduct.is_available !== undefined ? backendProduct.is_available : (parseNum(backendProduct.stock) > 0),
+  //     created_at: backendProduct.created_at || '',
+  //     updated_at: backendProduct.updated_at || '',
+  //   };
+  // }
 
   /**
    * Mapea sort_by del frontend al formato de la API de artículos
@@ -331,6 +443,7 @@ class ProductService {
       }
 
       const data: ArticleDetail = await response.json();
+      
       return this.mapArticleDetailToProduct(data);
     } catch (error) {
       console.error('Failed to fetch product:', error);
@@ -549,6 +662,29 @@ class ProductService {
         you_may_also_like: [],
       };
     }
+  }
+
+  /**
+   * Invalidar caché de imagen de un artículo específico
+   * Útil cuando se actualiza la imagen de un artículo
+   */
+  invalidateImageCache(coArt: string): void {
+    this.imageCache.invalidate(coArt);
+  }
+
+  /**
+   * Actualizar caché de imagen de un artículo manualmente
+   * Útil cuando se sube una nueva imagen
+   */
+  updateImageCache(coArt: string, imageUrl: string | null, hasImage: boolean): void {
+    this.imageCache.set(coArt, imageUrl, hasImage);
+  }
+
+  /**
+   * Limpiar todo el caché de imágenes
+   */
+  clearImageCache(): void {
+    this.imageCache.clear();
   }
 }
 

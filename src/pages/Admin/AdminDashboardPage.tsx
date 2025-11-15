@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ShoppingCart, 
+  FileText, 
   TrendingUp, 
   Users, 
   DollarSign, 
@@ -37,18 +37,30 @@ const AdminDashboardPage: React.FC = () => {
 
   // 📊 Extraer datos del API o valores por defecto
   const stats = data?.stats || {
-    total_revenue: 0,
+    total_revenue: '0.00',
     total_orders: 0,
     new_customers: 0,
-    conversion_rate: 0
+    conversion_rate: '0.00',
+    total_discounts_given: '0.00',
+    orders_with_discounts: 0,
+    discount_usage_percentage: 0,
+    average_discount_per_order: '0.00'
   };
 
   // Asegurar que conversion_rate sea número antes de formatear
   const conversionRateNum = (() => {
-    const raw = (stats as any)?.conversion_rate;
+    const raw = stats?.conversion_rate;
     const num = typeof raw === 'number' ? raw : parseFloat(raw ?? '0');
     return Number.isFinite(num) ? num : 0;
   })();
+
+  const discountBreakdown = data?.discount_breakdown || {
+    quantity_discounts: 0,
+    flash_discounts: 0,
+    coupon_discounts: 0,
+    promotional_discounts: 0,
+    total_amount_by_type: {}
+  };
 
   const orderStatusSummary = data?.order_status_summary || {
     pending: 0,
@@ -173,7 +185,7 @@ const AdminDashboardPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Error updating order status:', err);
-      alert('Error al actualizar el estado de la orden');
+      alert('Error al actualizar el estado de la cotización');
     }
   };
 
@@ -223,7 +235,7 @@ const AdminDashboardPage: React.FC = () => {
   const QuickActions: React.FC = () => {
     const actions = [
       { title: 'Nuevo Producto', icon: Plus, action: () => navigate('/admin/products/create') },
-      { title: 'Gestionar Pedidos', icon: ShoppingCart, action: () => navigate('/admin/orders') },
+      { title: 'Gestionar Cotizaciones', icon: FileText, action: () => navigate('/admin/orders') },
     ];
 
     return (
@@ -306,9 +318,9 @@ const AdminDashboardPage: React.FC = () => {
           // changeType="up" 
         />
         <StatCard 
-          title="Total de Pedidos" 
+          title="Total de Cotizaciones" 
           value={stats.total_orders} 
-          icon={ShoppingCart} 
+          icon={FileText} 
           // change="+12.5%" 
           // changeType="up" 
         />
@@ -329,15 +341,15 @@ const AdminDashboardPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-        {/* Recent Orders Table */}
+        {/* Recent Quotes Table */}
         <div className="lg:col-span-2 bg-white rounded-lg shadow-md border border-gray-200">
           <div className="p-4 lg:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <h3 className="text-base lg:text-lg font-semibold text-gray-900">Pedidos Recientes</h3>
+            <h3 className="text-base lg:text-lg font-semibold text-gray-900">Cotizaciones Recientes</h3>
             <button
               onClick={() => navigate('/admin/orders')}
               className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors px-2 py-1 rounded hover:bg-blue-50"
             >
-              Ver todos
+              Ver todas
             </button>
           </div>
           <div className="overflow-x-auto">
@@ -399,10 +411,10 @@ const AdminDashboardPage: React.FC = () => {
                   <tr>
                     <td colSpan={5} className="px-3 lg:px-6 py-8 text-center">
                       <div className="flex flex-col items-center">
-                        <ShoppingCart className="w-8 h-8 lg:w-12 lg:h-12 text-gray-300 mb-3 lg:mb-4" />
-                        <h3 className="text-sm font-medium text-gray-900 mb-1">No hay órdenes recientes</h3>
+                        <FileText className="w-8 h-8 lg:w-12 lg:h-12 text-gray-300 mb-3 lg:mb-4" />
+                        <h3 className="text-sm font-medium text-gray-900 mb-1">No hay cotizaciones recientes</h3>
                         <p className="text-xs lg:text-sm text-gray-500 px-4">
-                          {loading ? 'Cargando datos...' : 'Las órdenes aparecerán aquí cuando los clientes realicen compras.'}
+                          {loading ? 'Cargando datos...' : 'Las cotizaciones aparecerán aquí cuando los clientes las soliciten.'}
                         </p>
                       </div>
                     </td>
@@ -456,7 +468,7 @@ const AdminDashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
-      {/* Order Modal o Loading Skeleton */}
+      {/* Quote Modal o Loading Skeleton */}
       {showOrderModal && (
         loadingOrderDetails ? (
           <OrderModalSkeleton 

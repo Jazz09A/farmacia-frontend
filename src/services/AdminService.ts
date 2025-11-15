@@ -10,12 +10,17 @@ import {
   CreateUsersResponse
 } from '../types';
 import { exchangeRateService, ExchangeRateData } from './ExchangeRateService';
+import { QuoteSummary, QuoteListResponse } from '../types/quotes';
 
 export interface DashboardStats {
-  total_revenue: number;
+  total_revenue: string;
   total_orders: number;
   new_customers: number;
-  conversion_rate: number;
+  conversion_rate: string;
+  total_discounts_given: string;
+  orders_with_discounts: number;
+  discount_usage_percentage: number;
+  average_discount_per_order: string;
 }
 
 export interface OrderStatusSummary {
@@ -31,14 +36,23 @@ export interface RecentOrder {
   id: string;
   customer_name: string;
   date: string;
-  total: number;
+  total: string;
   status: string;
+}
+
+export interface DiscountBreakdown {
+  quantity_discounts: number;
+  flash_discounts: number;
+  coupon_discounts: number;
+  promotional_discounts: number;
+  total_amount_by_type: Record<string, string | number>;
 }
 
 export interface DashboardResponse {
   stats: DashboardStats;
   order_status_summary: OrderStatusSummary;
   recent_orders: RecentOrder[];
+  discount_breakdown: DiscountBreakdown;
 }
 
 class AdminService {
@@ -214,6 +228,68 @@ class AdminService {
       }
     } catch (error) {
       console.error('Failed to fetch orders:', error);
+      throw error;
+    }
+  }
+
+  // 📋 Obtener cotizaciones (admin)
+  async getQuotes(params?: {
+    page?: number;
+    page_size?: number;
+    status?: string;
+    search?: string;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+  }): Promise<{ quotes: QuoteSummary[]; total: number; pages: number }> {
+    try {
+      const searchParams = new URLSearchParams();
+      
+      if (params?.page) searchParams.append('page', params.page.toString());
+      if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
+      if (params?.status && params.status !== 'all') searchParams.append('status', params.status);
+      if (params?.search) searchParams.append('search', params.search);
+      if (params?.sort_by) searchParams.append('sort_by', params.sort_by);
+      if (params?.sort_order) searchParams.append('sort_order', params.sort_order);
+
+      const url = `${this.baseUrl}/quotes${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+      const response = await authService.authenticatedFetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching quotes: ${response.status}`);
+      }
+      
+      const data: QuoteListResponse = await response.json();
+      
+      return {
+        quotes: data.results || [],
+        total: data.pagination?.total_items || 0,
+        pages: data.pagination?.total_pages || 0
+      };
+    } catch (error) {
+      console.error('Failed to fetch quotes:', error);
+      throw error;
+    }
+  }
+
+  // 📋 Obtener detalle de cotización (admin)
+  async getQuoteDetail(quoteId: string): Promise<QuoteDetailResponse> {
+    try {
+      const response = await authService.authenticatedFetch(
+        `${this.baseUrl}/quotes/${encodeURIComponent(quoteId)}`,
+        {
+          headers: {
+            'X-Source-System': 'profit_plus'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching quote detail: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch quote detail:', error);
       throw error;
     }
   }
