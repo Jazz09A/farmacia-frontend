@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Star, ShieldCheck } from 'lucide-react';
+import { Star, ShieldCheck, Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Product } from '../../types';
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
@@ -41,6 +41,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col space-y-2">
+            {product.is_offer && (
+              <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold flex items-center shadow-lg">
+                <Flame className="h-3 w-3 mr-1" />
+                FLASH
+              </span>
+            )}
             {product.prescription && (
               <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center">
                 <ShieldCheck className="h-3 w-3 mr-1" />
@@ -103,13 +109,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   {formatPriceFromBackend(product.original_price)}
                 </span>
               )}
-              <span className={`${isCompact ? 'text-base' : 'text-xl'} font-bold text-gray-900`}>
+              <span className={`${isCompact ? 'text-base' : 'text-xl'} font-bold ${product.is_offer ? 'text-red-600' : 'text-gray-900'}`}>
                 {formatPriceFromBackend(product.price)}
               </span>
             </div>
             {product.is_offer && !isCompact && (
-              <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded-full font-medium">
-                ¡Oferta!
+              <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] px-2 py-1 rounded-full font-bold shadow-md flex items-center whitespace-nowrap">
+                <Flame className="h-2.5 w-2.5 mr-0.5" />
+                OFERTA
               </span>
             )}
           </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Star, CheckCircle, AlertTriangle, ChevronRight, ShoppingCart, Plus, Minus, Truck, Clock } from 'lucide-react';
+import { Star, CheckCircle, AlertTriangle, ChevronRight, ShoppingCart, Plus, Minus, Truck, Clock, Flame } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { Product } from '../types';
@@ -85,13 +85,25 @@ const ProductDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-medical-gray-50 pt-24 lg:pt-32">
       <div className="medical-container mb-12">
-        <nav className="text-sm text-medical-gray-600 mb-8 flex items-center space-x-2">
-          <Link to="/" className="hover:text-medical-primary">Inicio</Link>
-          <ChevronRight className="w-4 h-4" />
-          <Link to="/catalog" className="hover:text-medical-primary">Catálogo</Link>
-          <ChevronRight className="w-4 h-4" />
-          <span className="font-medium text-medical-gray-800">{product.name}</span>
-        </nav>
+        <div className="flex items-center justify-between mb-4">
+          <nav className="text-sm text-medical-gray-600 flex items-center space-x-2">
+            <Link to="/" className="hover:text-medical-primary">Inicio</Link>
+            <ChevronRight className="w-4 h-4" />
+            <Link to="/catalog" className="hover:text-medical-primary">Catálogo</Link>
+            <ChevronRight className="w-4 h-4" />
+            <span className="font-medium text-medical-gray-800">{product.name}</span>
+          </nav>
+          {product.is_offer && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1.5 rounded-full font-bold flex items-center shadow-lg text-sm"
+            >
+              <Flame className="h-4 w-4 mr-1.5" />
+              OFERTA FLASH
+            </motion.div>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Gallery */}
@@ -129,7 +141,7 @@ const ProductDetailPage: React.FC = () => {
           </div>
 
           {/* Product Info & Actions */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <h1 className="text-3xl lg:text-4xl font-bold text-medical-gray-900">{product.name}</h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               {product.brand && (
@@ -155,25 +167,36 @@ const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Price */}
-            <div className="bg-medical-blue-50/50 rounded-2xl p-4 sm:p-6">
+            <div className={`rounded-xl p-2.5 sm:p-3 ${product.is_offer ? 'bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200' : 'bg-medical-blue-50/50'}`}>
               {product.is_offer && product.original_price ? (
-                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
-                  <span className="text-3xl lg:text-4xl font-bold text-medical-accent">
-                    {formatPrice(getDisplayPrice(product.price, currency), currency)}
-                  </span>
-                  <span className="text-lg lg:text-xl font-medium text-medical-gray-500 line-through">
-                    {formatPrice(getDisplayPrice(product.original_price, currency), currency)}
-                  </span>
-                  <span className="text-base lg:text-lg font-bold text-red-500 bg-red-100 px-3 py-1 rounded-full">
-                    - {Math.round(((parseFloat(product.original_price) - parseFloat(product.price)) / parseFloat(product.original_price)) * 100)}%
-                  </span>
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
+                    <span className="text-2xl lg:text-3xl font-bold text-red-600">
+                      {formatPrice(getDisplayPrice(product.price, currency), currency)}
+                    </span>
+                    <span className="text-base lg:text-lg font-medium text-medical-gray-500 line-through">
+                      {formatPrice(getDisplayPrice(product.original_price, currency), currency)}
+                    </span>
+                    <span className="text-sm lg:text-base font-bold text-white bg-gradient-to-r from-red-500 to-orange-500 px-2.5 py-0.5 rounded-full shadow-md">
+                      - {Math.round(((parseFloat(product.original_price) - parseFloat(product.price)) / parseFloat(product.original_price)) * 100)}%
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-green-600 font-semibold text-xs">
+                    <span>💰 Ahorra {formatPrice(getDisplayPrice((parseFloat(product.original_price) - parseFloat(product.price)).toString(), currency), currency)}</span>
+                  </div>
+                  {product.offer_end_time && (
+                    <div className="flex items-center gap-1.5 text-xs text-red-600 font-medium">
+                      <Clock className="w-3 h-3" />
+                      <span>Oferta válida hasta: {new Date(product.offer_end_time).toLocaleDateString('es-VE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <span className="text-3xl lg:text-4xl font-bold text-medical-primary">
+                <span className="text-2xl lg:text-3xl font-bold text-medical-primary">
                   {formatPrice(getDisplayPrice(product.price, currency), currency)}
                 </span>
               )}
-              <p className="text-base lg:text-lg text-medical-gray-600 mt-2">
+              <p className="text-xs lg:text-sm text-medical-gray-600 mt-1.5">
                 Aprox. {currency === 'VES' ? formatPrice(parseFloat(product.price), 'USD') : formatPrice(getDisplayPrice(product.price, 'VES'), 'VES')}
               </p>
             </div>

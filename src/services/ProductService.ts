@@ -161,6 +161,19 @@ class ProductService {
       images.push('https://placehold.co/400x400/png');
     }
 
+    // Verificar si hay oferta flash
+    const hasFlashOffer = article.flash_offer && article.flash_offer.id;
+    const flashOffer = article.flash_offer;
+    
+    // Si hay oferta flash, usar el precio de oferta, sino el precio normal
+    const finalPrice = hasFlashOffer && flashOffer?.offer_price 
+      ? flashOffer.offer_price.toString() 
+      : priceNum.toString();
+    
+    const originalPrice = hasFlashOffer && flashOffer?.original_price
+      ? flashOffer.original_price.toString()
+      : null;
+
     return {
       id: article.co_art, // Usar co_art como ID
       name: article.art_des,
@@ -168,7 +181,7 @@ class ProductService {
       category: article.category_name || article.category_code || '',
       subcategory: '',
       patology: '',
-      price: priceNum.toString(),
+      price: finalPrice,
       description: article.art_des, // Usar descripción como nombre por ahora
       ingredients: [],
       image: images[0],
@@ -178,9 +191,9 @@ class ProductService {
       prescription: false, // No disponible en ArticleSummary
       rating: '0', // No disponible en artículos
       review_count: 0,
-      is_offer: false,
-      original_price: null,
-      offer_end_time: null,
+      is_offer: !!hasFlashOffer,
+      original_price: originalPrice,
+      offer_end_time: hasFlashOffer && flashOffer?.end_time ? flashOffer.end_time : null,
       featured: false,
       dosage: '',
       presentation: '',
@@ -235,6 +248,19 @@ class ProductService {
       images.push('https://placehold.co/400x400/png');
     }
 
+    // Verificar si hay oferta flash
+    const hasFlashOffer = article.flash_offer && article.flash_offer.id;
+    const flashOffer = article.flash_offer;
+    
+    // Si hay oferta flash, usar el precio de oferta, sino el precio normal
+    const finalPrice = hasFlashOffer && flashOffer?.offer_price !== undefined
+      ? flashOffer.offer_price.toString()
+      : priceNum.toString();
+    
+    const originalPrice = hasFlashOffer && flashOffer?.original_price !== undefined
+      ? flashOffer.original_price.toString()
+      : null;
+
     return {
       id: article.co_art,
       name: article.art_des,
@@ -242,7 +268,7 @@ class ProductService {
       category: article.category_name || article.category_code || '',
       subcategory: article.sub_line_code || '',
       patology: '',
-      price: priceNum.toString(),
+      price: finalPrice,
       description: article.art_des,
       ingredients: [],
       image: images[0],
@@ -252,9 +278,9 @@ class ProductService {
       prescription: false,
       rating: '0',
       review_count: 0,
-      is_offer: false,
-      original_price: null,
-      offer_end_time: null,
+      is_offer: !!hasFlashOffer,
+      original_price: originalPrice,
+      offer_end_time: hasFlashOffer && flashOffer?.end_time ? flashOffer.end_time : null,
       featured: false,
       dosage: '',
       presentation: article.presentation || '',
@@ -263,8 +289,10 @@ class ProductService {
       contraindicaciones: '',
       efectos_secundarios: '',
       slug: article.co_art,
-      discount_percentage: '0',
-      current_price: priceNum.toString(),
+      discount_percentage: hasFlashOffer && flashOffer?.discount_percentage !== undefined
+        ? flashOffer.discount_percentage.toString()
+        : '0',
+      current_price: finalPrice,
       is_available: totalStock > 0,
       created_at: '',
       updated_at: '',

@@ -423,6 +423,19 @@ export type CreateUsersResponse = {
 
 // ===== ARTICLES (PROFIT PLUS) INTERFACES =====
 
+// Flash offer info from ArticleSummary
+export interface ArticleFlashOffer {
+  id: string;
+  discount_type: 'percentage' | 'fixed_amount';
+  discount_value: number;
+  original_price: number;
+  offer_price: number;
+  discount_percentage: number;
+  end_time: string;
+  max_quantity?: number;
+  remaining_quantity?: number;
+}
+
 // ArticleSummary from /api/v1/articles
 export interface ArticleSummary {
   co_art: string;
@@ -435,6 +448,7 @@ export interface ArticleSummary {
   warehouse_code: string | null;
   image_url: string | null;
   has_image: boolean;
+  flash_offer?: ArticleFlashOffer | null;
 }
 
 // ArticlePriceDetail from article detail
@@ -476,6 +490,7 @@ export interface ArticleDetail {
   prices: ArticlePriceDetail[];
   stock_by_warehouse: ArticleStockDetail[];
   images: ArticleImageResponse[];
+  flash_offer?: ArticleFlashOffer | null;
 }
 
 // Articles API Response from /api/v1/articles

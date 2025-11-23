@@ -32,7 +32,7 @@ class FlashOfferService {
       
       return {
         flash_offers: flash_offers,
-        total_count: data.total_count || data.total || flash_offers.length,
+        total_count: data.total_count || data.total || data.page || flash_offers.length,
         active_count: data.active_count || data.active || flash_offers.length
       };
     }
@@ -99,7 +99,7 @@ class FlashOfferService {
       
       return {
         flash_offers: this.enrichFlashOffers(flash_offers),
-        total_count: data.total_count || data.total || flash_offers.length,
+        total_count: data.total_count || data.total || data.page || flash_offers.length,
         active_count: data.active_count || data.active || flash_offers.length
       };
     } catch (error) {
@@ -215,35 +215,185 @@ class FlashOfferService {
     }
     
     // Handle different possible response structures
-    let flash_offers: FlashOfferWithProduct[] = [];
+    let rawOffers: any[] = [];
     
     // Check if the response directly contains an array of offers
     if (Array.isArray(data)) {
-      flash_offers = data;
+      rawOffers = data;
+    }
+    // Check if the response has offers property (new API structure)
+    else if (data.offers && Array.isArray(data.offers)) {
+      rawOffers = data.offers;
     }
     // Check if the response has flash_offers property
     else if (data.flash_offers && Array.isArray(data.flash_offers)) {
-      flash_offers = data.flash_offers;
-    }
-    // Check if the response has offers property
-    else if (data.offers && Array.isArray(data.offers)) {
-      flash_offers = data.offers;
+      rawOffers = data.flash_offers;
     }
     // Check if the response has data property with flash_offers
     else if (data.data && Array.isArray(data.data.flash_offers)) {
-      flash_offers = data.data.flash_offers;
+      rawOffers = data.data.flash_offers;
     }
     // Check if the response has data property that is an array
     else if (data.data && Array.isArray(data.data)) {
-      flash_offers = data.data;
+      rawOffers = data.data;
     }
     else {
       console.warn('Could not find flash offers array in response structure:', data);
       console.warn('flash_offers is not an array, defaulting to empty array');
-      flash_offers = [];
+      rawOffers = [];
     }
     
-    return flash_offers;
+    // Map raw offers to FlashOfferWithProduct format
+    return rawOffers.map(rawOffer => this.mapRawOfferToFlashOfferWithProduct(rawOffer));
+  }
+
+  // Map raw offer from API to FlashOfferWithProduct format
+  private mapRawOfferToFlashOfferWithProduct(rawOffer: any): FlashOfferWithProduct {
+    // Map article_details to Product if available
+    let product: any = null;
+    
+    if (rawOffer.article_details) {
+      product = this.mapArticleDetailsToProduct(rawOffer.article_details, rawOffer.article_code);
+    } else if (rawOffer.product) {
+      // Fallback to existing product structure
+      product = rawOffer.product;
+    } else {
+      // Create minimal product from offer data
+      const parsePrice = (v: any): string => {
+        if (v === null || v === undefined) return '0';
+        const num = typeof v === 'string' ? parseFloat(v) : v;
+        return Number.isFinite(num) ? num.toString() : '0';
+      };
+
+      const originalPriceStr = parsePrice(rawOffer.article_details?.original_price);
+      const offerPriceStr = parsePrice(rawOffer.article_details?.offer_price || rawOffer.article_details?.original_price);
+      
+      product = {
+        id: rawOffer.article_code || rawOffer.product_id || rawOffer.id,
+        name: rawOffer.article_details?.description || 'Producto sin nombre',
+        brand: '',
+        category: '',
+        subcategory: '',
+        patology: '',
+        price: originalPriceStr,
+        price_ref: originalPriceStr,
+        price_ves: '0',
+        description: rawOffer.article_details?.description || '',
+        ingredients: [],
+        image: rawOffer.article_details?.image_url || 'https://placehold.co/400x400/png',
+        images: rawOffer.article_details?.gallery && Array.isArray(rawOffer.article_details.gallery) && rawOffer.article_details.gallery.length > 0
+          ? rawOffer.article_details.gallery.map((img: any) => typeof img === 'string' ? img : img?.url || '')
+          : [rawOffer.article_details?.image_url || 'https://placehold.co/400x400/png'],
+        in_stock: parseFloat(rawOffer.article_details?.stock || '0') > 0,
+        stock: parseFloat(rawOffer.article_details?.stock || '0'),
+        prescription: false,
+        rating: '0',
+        review_count: 0,
+        is_offer: true,
+        original_price: originalPriceStr,
+        offer_end_time: rawOffer.end_time || null,
+        featured: false,
+        dosage: '',
+        presentation: '',
+        laboratorio: '',
+        registro_sanitario: '',
+        contraindicaciones: '',
+        efectos_secundarios: '',
+        slug: rawOffer.article_code || '',
+        discount_percentage: rawOffer.article_details?.discount_percentage?.toString() || rawOffer.discount_value?.toString() || '0',
+        current_price: offerPriceStr,
+        is_available: parseFloat(rawOffer.article_details?.stock || '0') > 0,
+        created_at: rawOffer.created_at || '',
+        updated_at: rawOffer.updated_at || '',
+      };
+    }
+
+    // Map used_quantity to claimed_quantity
+    const claimed_quantity = rawOffer.used_quantity !== undefined ? rawOffer.used_quantity : rawOffer.claimed_quantity;
+
+    return {
+      id: rawOffer.id,
+      product_id: rawOffer.product_id || rawOffer.article_code || rawOffer.id,
+      discount_type: rawOffer.discount_type,
+      discount_value: rawOffer.discount_value,
+      start_time: rawOffer.start_time,
+      end_time: rawOffer.end_time,
+      max_quantity: rawOffer.max_quantity,
+      is_active: rawOffer.is_active,
+      created_at: rawOffer.created_at,
+      updated_at: rawOffer.updated_at,
+      product: product,
+      claimed_quantity: claimed_quantity,
+      // is_valid will be checked in isOfferActive
+    };
+  }
+
+  // Map article_details to Product format
+  private mapArticleDetailsToProduct(articleDetails: any, articleCode: string): any {
+    const parseNum = (v: string | null | undefined): number => {
+      if (!v) return 0;
+      const n = parseFloat(v);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const stock = parseNum(articleDetails.stock);
+    const originalPrice = parseNum(articleDetails.original_price);
+    const offerPrice = parseNum(articleDetails.offer_price);
+    
+    // Build images array
+    const images: string[] = [];
+    if (articleDetails.image_url) {
+      images.push(articleDetails.image_url);
+    }
+    if (articleDetails.gallery && Array.isArray(articleDetails.gallery)) {
+      articleDetails.gallery.forEach((img: any) => {
+        if (typeof img === 'string' && img.trim()) {
+          images.push(img);
+        } else if (img && img.url) {
+          images.push(img.url);
+        }
+      });
+    }
+    if (images.length === 0) {
+      images.push('https://placehold.co/400x400/png');
+    }
+
+    return {
+      id: articleCode,
+      name: articleDetails.description || 'Producto sin nombre',
+      brand: '',
+      category: '',
+      subcategory: '',
+      patology: '',
+      price: originalPrice.toString(),
+      price_ref: originalPrice.toString(),
+      price_ves: '0', // Will be calculated if needed
+      description: articleDetails.description || '',
+      ingredients: [],
+      image: images[0],
+      images: images,
+      in_stock: stock > 0,
+      stock: stock,
+      prescription: false,
+      rating: '0',
+      review_count: 0,
+      is_offer: true,
+      original_price: originalPrice.toString(),
+      offer_end_time: null, // Will be set from offer data
+      featured: false,
+      dosage: '',
+      presentation: '',
+      laboratorio: '',
+      registro_sanitario: '',
+      contraindicaciones: '',
+      efectos_secundarios: '',
+      slug: articleCode,
+      discount_percentage: articleDetails.discount_percentage?.toString() || '0',
+      current_price: offerPrice.toString(),
+      is_available: stock > 0,
+      created_at: '',
+      updated_at: '',
+    };
   }
 
   // Enriquecer múltiples ofertas con datos calculados
@@ -267,6 +417,9 @@ class FlashOfferService {
       availability_percentage = Math.max(0, 
         ((offer.max_quantity - offer.claimed_quantity) / offer.max_quantity) * 100
       );
+    } else if (offer.max_quantity) {
+      // Si no hay claimed_quantity pero hay max_quantity, asumir 100% disponible
+      availability_percentage = 100;
     }
 
     return {
@@ -280,6 +433,9 @@ class FlashOfferService {
   isOfferActive(offer: FlashOfferWithProduct): boolean {
     if (!offer.is_active) return false;
     
+    // Check is_valid if present (new API structure)
+    if ((offer as any).is_valid === false) return false;
+    
     const now = Date.now();
     const startTime = new Date(offer.start_time).getTime();
     const endTime = new Date(offer.end_time).getTime();
@@ -291,11 +447,14 @@ class FlashOfferService {
   formatRemainingTime(remainingMs: number): string {
     if (remainingMs <= 0) return 'Expirado';
     
-    const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+    const days = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
     
-    if (hours > 0) {
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    } else if (hours > 0) {
       return `${hours}h ${minutes}m ${seconds}s`;
     } else if (minutes > 0) {
       return `${minutes}m ${seconds}s`;

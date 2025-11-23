@@ -27,17 +27,39 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
   const { addToCart } = useCart();
   const { formattedTime, isExpired } = useFlashOfferCountdown(offer.end_time);
 
-  // Calcular precios
-  const originalPrice = currency === 'VES' ? offer.product.price_ves : offer.product.price_ref;
+  // Calcular precios - asegurar que sean números
+  const parsePrice = (price: string | number | undefined): number => {
+    if (typeof price === 'number') return price;
+    if (typeof price === 'string') {
+      const parsed = parseFloat(price);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+    return 0;
+  };
+
+  // Obtener precio original según la moneda
+  let originalPriceValue: number;
+  if (currency === 'VES') {
+    originalPriceValue = parsePrice(offer.product.price_ves || offer.product.price);
+  } else {
+    // Para USD, usar price_ref, price, original_price o current_price
+    originalPriceValue = parsePrice(
+      offer.product.price_ref || 
+      offer.product.original_price || 
+      offer.product.price || 
+      offer.product.current_price
+    );
+  }
+
   const discountedPrice = flashOfferService.calculateDiscountedPrice(
-    originalPrice,
+    originalPriceValue,
     offer.discount_type,
     offer.discount_value
   );
-  const savings = flashOfferService.calculateSavings(originalPrice, discountedPrice);
+  const savings = flashOfferService.calculateSavings(originalPriceValue, discountedPrice);
   const discountPercentage = offer.discount_type === 'percentage' 
     ? offer.discount_value 
-    : Math.round((savings / originalPrice) * 100);
+    : (originalPriceValue > 0 ? Math.round((savings / originalPriceValue) * 100) : 0);
 
   const handleAddToCart = async () => {
     if (isExpired || !offer.product.in_stock) return;
@@ -158,8 +180,8 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
             </span>
             <span className={`${config.originalPrice} text-gray-500 line-through`}>
               {currency === 'VES' 
-                ? `Bs. ${originalPrice.toLocaleString('es-VE')}` 
-                : `$ ${originalPrice.toFixed(2)}`
+                ? `Bs. ${originalPriceValue.toLocaleString('es-VE')}` 
+                : `$ ${originalPriceValue.toFixed(2)}`
               }
             </span>
           </div>
