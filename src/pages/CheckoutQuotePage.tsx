@@ -8,6 +8,7 @@ import {
   Loader2,
   MapPin,
   NotebookPen,
+  Percent,
   Sparkles,
   XCircle,
   RefreshCw,
@@ -146,6 +147,31 @@ const CheckoutQuotePage: React.FC = () => {
       itemsCount,
     };
   }, [detailedItems, items]);
+
+  // Determinar el texto del modo de pago según la condición seleccionada
+  const paymentModeText = useMemo(() => {
+    if (!paymentTerm) {
+      return {
+        mode: 'Modo cotización',
+        description: 'Sin pago inmediato'
+      };
+    }
+    
+    if (paymentTerm === 'CON') {
+      return {
+        mode: 'Pago de contado',
+        description: 'Pago inmediato al recibir'
+      };
+    } else {
+      // Cualquier otro código es crédito
+      const selectedOption = PAYMENT_TERMS_OPTIONS.find(opt => opt.code === paymentTerm);
+      const days = selectedOption?.label.match(/\d+/)?.[0] || '';
+      return {
+        mode: 'Pago a crédito',
+        description: days ? `${days} días de crédito` : 'Pago diferido'
+      };
+    }
+  }, [paymentTerm]);
 
   const {
     data: addressesData,
@@ -382,10 +408,13 @@ const CheckoutQuotePage: React.FC = () => {
       const bruto = parseFloat(validationResult.totales.bruto);
       const impuestos = parseFloat(validationResult.totales.impuestos);
       const neto = parseFloat(validationResult.totales.neto);
+      // Manejar tanto descuento (singular) como descuentos (plural)
+      const descuentos = parseFloat(validationResult.totales.descuentos || validationResult.totales.descuento || '0');
 
       return {
         subtotal: bruto,
         taxes: impuestos,
+        discounts: descuentos,
         total: neto,
         currencySymbol: getCurrencySymbol(currency),
         itemsCount: validationResult.items_verificados.length,
@@ -425,23 +454,15 @@ const CheckoutQuotePage: React.FC = () => {
     }
 
     // Usar datos de validación (autoritativos)
+    // Según documentación: solo enviar line_number, product_code y quantity
+    // El backend calcula automáticamente: precios, nombres, descuentos e impuestos
     const itemsPayload = validation.items_verificados
       .filter(item => item.error === null && item.stock_ok) // Solo items válidos
-      .map((item, index) => {
-        const precioUnitario = parseFloat(item.precio_unitario_real);
-        const subtotal = parseFloat(item.subtotal);
-        const computedDiscount = Math.max(0, precioUnitario * item.cantidad - subtotal);
-
-        return {
-          line_number: index + 1,
-          product_code: item.co_art,
-          product_name: item.descripcion || `Artículo ${item.co_art}`,
-          quantity: item.cantidad,
-          unit_price: toDecimalString(item.precio_unitario_real),
-          discount_amount: toDecimalString(computedDiscount),
-          tax_amount: toDecimalString(item.impuestos),
-        };
-      });
+      .map((item, index) => ({
+        line_number: index + 1,
+        product_code: item.co_art,
+        quantity: item.cantidad,
+      }));
 
     if (itemsPayload.length === 0) {
       setErrorMessage('No hay productos válidos en el carrito para generar la cotización.');
@@ -618,9 +639,9 @@ const CheckoutQuotePage: React.FC = () => {
           <div className="flex items-center gap-3 bg-white border border-medical-primary/30 rounded-2xl px-5 py-3 shadow-soft">
             <Sparkles className="h-8 w-8 text-medical-primary" />
             <div>
-              <p className="text-sm text-medical-gray-500">Modo cotización</p>
+              <p className="text-sm text-medical-gray-500">{paymentModeText.mode}</p>
               <p className="text-lg font-semibold text-medical-gray-900">
-                Sin pago inmediato
+                {paymentModeText.description}
               </p>
             </div>
           </div>
@@ -677,31 +698,55 @@ const CheckoutQuotePage: React.FC = () => {
         )}
 
         {hasValidationWarnings && validationResult && (
-          <div className="mb-8 rounded-2xl border border-yellow-200 bg-yellow-50 p-5">
+          <div className="mb-8 rounded-2xl border-2 border-red-300 bg-red-50 p-6 shadow-lg">
             <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+              <XCircle className="h-6 w-6 text-red-600 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <p className="font-semibold text-yellow-800">El carrito contiene errores</p>
-                <p className="text-sm text-yellow-700 mt-1">
-                  Algunos productos tienen problemas. Revisa los detalles a continuación.
+                <p className="font-bold text-lg text-red-800 mb-2">La verificación del carrito falló</p>
+                <p className="text-sm text-red-700 mb-4">
+                  No se puede generar la cotización porque hay errores en los productos. Por favor, corrige los siguientes problemas:
                 </p>
-                <ul className="mt-3 space-y-2">
+                <div className="bg-white rounded-lg border border-red-200 p-4 space-y-3">
                   {validationResult.items_verificados
                     .filter(item => item.error || !item.stock_ok)
                     .map((item, idx) => (
-                      <li key={idx} className="text-sm text-yellow-800">
-                        <span className="font-semibold">{item.co_art}:</span>{' '}
-                        {item.error || (!item.stock_ok ? 'Stock insuficiente' : '')}
-                      </li>
+                      <div key={idx} className="border-b border-red-100 last:border-none pb-3 last:pb-0">
+                        <div className="flex items-start gap-2">
+                          <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="font-semibold text-red-900">
+                              {item.descripcion || item.co_art}
+                            </p>
+                            <p className="text-xs text-red-600 mt-1">
+                              Código: <span className="font-mono">{item.co_art}</span> • Cantidad solicitada: <span className="font-semibold">{item.cantidad}</span>
+                            </p>
+                            {item.error && (
+                              <p className="text-sm text-red-700 mt-2 font-medium bg-red-50 p-2 rounded border border-red-200">
+                                {item.error}
+                              </p>
+                            )}
+                            {!item.stock_ok && !item.error && (
+                              <p className="text-sm text-red-700 mt-2 font-medium bg-red-50 p-2 rounded border border-red-200">
+                                Stock insuficiente. Revisa la cantidad disponible.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                </ul>
-                <button
-                  onClick={handleValidateCart}
-                  className="mt-3 inline-flex items-center gap-2 text-yellow-700 font-semibold hover:underline"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  Comprobar nuevamente
-                </button>
+                </div>
+                <div className="mt-4 flex items-center gap-3">
+                  <button
+                    onClick={handleValidateCart}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Validar nuevamente
+                  </button>
+                  <p className="text-xs text-red-600">
+                    Ajusta las cantidades o elimina los productos con problemas antes de continuar.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -981,16 +1026,37 @@ const CheckoutQuotePage: React.FC = () => {
                                 ✓ Disponible • Precio actualizado
                               </p>
                             )}
+                            {item.descuento_info && parseFloat(item.descuento || '0') > 0 && (
+                              <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                                <div className="flex items-center gap-1 text-xs text-red-700 font-semibold">
+                                  <Percent className="w-3 h-3" />
+                                  <span>Descuento aplicado: {item.descuento_info.porcentaje}%</span>
+                                </div>
+                                <p className="text-xs text-red-600 mt-1">
+                                  Ahorro: {formatPriceFromBackend(item.descuento, currency)}
+                                </p>
+                                {item.descuento_info.disponibles < item.descuento_info.limite_total && (
+                                  <p className="text-xs text-red-500 mt-1 italic">
+                                    {item.descuento_info.disponibles} de {item.descuento_info.limite_total} disponibles
+                                  </p>
+                                )}
+                              </div>
+                            )}
                           </div>
                           <div className="text-right">
-                            <span className="text-sm font-semibold text-medical-gray-900">
-                              {formatPriceFromBackend(item.subtotal, currency)}
-                            </span>
-                            {parseFloat(item.impuestos) > 0 && (
-                              <p className="text-xs text-medical-gray-500 mt-0.5">
-                                +{formatPriceFromBackend(item.impuestos, currency)} imp.
-                              </p>
-                            )}
+                            <div className="flex flex-col items-end">
+                              {parseFloat(item.descuento || '0') > 0 && (
+                                <span className="text-xs text-medical-gray-500 line-through mb-0.5">
+                                  {formatPriceFromBackend((parseFloat(item.subtotal) + parseFloat(item.descuento)).toString(), currency)}
+                                </span>
+                              )}
+                              <span className="text-sm font-semibold text-medical-gray-900">
+                                {formatPriceFromBackend(item.subtotal, currency)}
+                              </span>
+                            </div>
+                            <p className="text-xs text-medical-gray-500 mt-0.5">
+                              +{formatPriceFromBackend(item.impuestos, currency)} imp.
+                            </p>
                           </div>
                         </div>
                       );
@@ -1069,15 +1135,25 @@ const CheckoutQuotePage: React.FC = () => {
                   {totals ? formatPriceFromBackend(totals.subtotal, currency) : '--'}
                 </span>
               </div>
-              {validationResult?.totales && parseFloat(validationResult.totales.impuestos) > 0 && (
+              {validationResult?.totales && (parseFloat(validationResult.totales.descuentos || validationResult.totales.descuento || '0') > 0) && (
+                <div className="flex justify-between text-sm text-red-600">
+                  <span className="flex items-center gap-1">
+                    <Percent className="w-4 h-4" />
+                    Descuento
+                  </span>
+                  <span className="font-semibold text-red-600">
+                    -{formatPriceFromBackend(validationResult.totales.descuentos || validationResult.totales.descuento || '0', currency)}
+                  </span>
+                </div>
+              )}
+              {validationResult?.totales ? (
                 <div className="flex justify-between text-sm text-medical-gray-600">
                   <span>Impuestos</span>
                   <span className="font-semibold text-medical-gray-900">
                     {formatPriceFromBackend(validationResult.totales.impuestos, currency)}
                   </span>
                 </div>
-              )}
-              {!validationResult && (
+              ) : (
                 <div className="flex justify-between text-sm text-medical-gray-600">
                   <span>Impuestos</span>
                   <span className="font-semibold text-medical-gray-900 text-xs">

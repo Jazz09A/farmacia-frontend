@@ -57,6 +57,21 @@ const formatDateTime = (isoString?: string | null) => {
   }
 };
 
+// Mapeo de estados a español
+const getStatusLabel = (status?: string): string => {
+  if (!status) return 'Pendiente';
+  
+  const statusMap: Record<string, string> = {
+    pending: 'Pendiente',
+    accepted: 'Aceptada',
+    converted: 'Convertida',
+    expired: 'Vencida',
+    cancelled: 'Anulada',
+  };
+  
+  return statusMap[status.toLowerCase()] || status;
+};
+
 const QuoteSuccessPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -110,7 +125,7 @@ const QuoteSuccessPage: React.FC = () => {
                     </span>
                     <span className="inline-flex items-center gap-1 text-sm font-semibold text-medical-primary">
                       <span className="h-2 w-2 rounded-full bg-medical-primary"></span>
-                      {quote?.status ? quote.status.toUpperCase() : 'PENDING'}
+                      {getStatusLabel(quote?.status)}
                     </span>
                   </li>
                   <li className="flex justify-between text-sm">

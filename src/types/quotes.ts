@@ -32,11 +32,7 @@ export interface QuoteDeliveryPayload {
 export interface QuoteCreateItemPayload {
   line_number: number;
   product_code: string;
-  product_name: string;
   quantity: number;
-  unit_price: QuoteDecimal;
-  discount_amount?: QuoteDecimal;
-  tax_amount?: QuoteDecimal;
 }
 
 export interface QuoteCreateRequest {
@@ -156,19 +152,30 @@ export interface CartItemRequest {
   cantidad: number;
 }
 
+export interface DescuentoInfo {
+  co_desc: string;
+  porcentaje: number;
+  disponibles: number;
+  limite_total: number;
+}
+
 export interface CartValidationItemResult {
   co_art: string;
   descripcion: string | null;
   cantidad: number;
   precio_unitario_real: QuoteDecimal;
   subtotal: QuoteDecimal;
+  descuento: QuoteDecimal;
   impuestos: QuoteDecimal;
+  descuento_info: DescuentoInfo | null;
   stock_ok: boolean;
   error: string | null;
 }
 
 export interface CartValidationTotals {
   bruto: QuoteDecimal;
+  descuento?: QuoteDecimal; // Singular (legacy)
+  descuentos?: QuoteDecimal; // Plural (nuevo formato del backend)
   impuestos: QuoteDecimal;
   neto: QuoteDecimal;
 }

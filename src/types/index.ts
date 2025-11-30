@@ -1,3 +1,22 @@
+export interface ProfitDiscountRange {
+  max_quantity: number;
+  discount_percentage: number;
+  range_number: number;
+}
+
+export interface ProfitDiscount {
+  co_desc: string;
+  des_des: string;
+  tip_cli: string;
+  des_tipo: string;
+  ranges: ProfitDiscountRange[];
+  fecha_ini: string;
+  fecha_fin: string;
+  is_active: boolean | string; // Puede venir como boolean o string del backend
+  best_discount_percentage: string;
+  min_quantity_for_discount: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -31,6 +50,7 @@ export interface Product {
   is_available: boolean;
   created_at: string;
   updated_at: string;
+  profit_discount?: ProfitDiscount | null; // Descuento automático de Profit Plus
 }
 
 export interface CartItem {
@@ -101,6 +121,7 @@ export interface FlashOfferWithProduct extends FlashOffer {
   product: Product;
   remaining_time?: number; // milliseconds until expiry
   claimed_quantity?: number;
+  remaining_quantity?: number; // Cantidad restante disponible (max_quantity - used)
   availability_percentage?: number; // 0-100 based on max_quantity vs claimed
 }
 

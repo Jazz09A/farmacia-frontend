@@ -341,14 +341,20 @@ const CartPage: React.FC = () => {
                         {formatPriceFromBackend(validationResult.totales.bruto, currency)}
                       </span>
                     </div>
-                    {parseFloat(validationResult.totales.impuestos) > 0 && (
-                      <div className="flex justify-between">
-                        <span>Impuestos</span>
+                    {(parseFloat(validationResult.totales.descuentos || validationResult.totales.descuento || '0') > 0) && (
+                      <div className="flex justify-between text-red-600">
+                        <span>Descuento</span>
                         <span className="font-semibold">
-                          {formatPriceFromBackend(validationResult.totales.impuestos, currency)}
+                          -{formatPriceFromBackend(validationResult.totales.descuentos || validationResult.totales.descuento || '0', currency)}
                         </span>
                       </div>
                     )}
+                    <div className="flex justify-between">
+                      <span>Impuestos</span>
+                      <span className="font-semibold">
+                        {formatPriceFromBackend(validationResult.totales.impuestos, currency)}
+                      </span>
+                    </div>
                     <div className="flex justify-between font-bold text-xl text-medical-gray-900 border-t pt-4 mt-4">
                       <span>Total</span>
                       <span>{formatPriceFromBackend(validationResult.totales.neto, currency)}</span>

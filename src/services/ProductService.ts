@@ -207,6 +207,7 @@ class ProductService {
       is_available: stockNum > 0,
       created_at: '',
       updated_at: '',
+      profit_discount: (article as any).profit_discount || null, // Mapear profit_discount del backend
     };
   }
 
@@ -296,6 +297,7 @@ class ProductService {
       is_available: totalStock > 0,
       created_at: '',
       updated_at: '',
+      profit_discount: (article as any).profit_discount || null, // Mapear profit_discount del backend
     };
   }
 

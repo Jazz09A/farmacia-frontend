@@ -21,19 +21,20 @@ class FlashOfferService {
 
   async getFlashOffersPublic(): Promise<FlashOfferResponse> {
     try {
+      // Endpoint: /api/v1/admin/flash-offers/public
       const response = await fetch(`${this.adminBaseUrl}/flash-offers/public`);
       if (!response.ok) {
         throw new Error(`Error fetching flash offers: ${response.status}`);
       }
       const data = await response.json();
       
-      // Parse the flash offers from the response with robust handling
+      // Nueva estructura de respuesta: { offers, total, page, pages, success }
       const flash_offers = this.parseFlashOffersFromResponse(data);
       
       return {
         flash_offers: flash_offers,
-        total_count: data.total_count || data.total || data.page || flash_offers.length,
-        active_count: data.active_count || data.active || flash_offers.length
+        total_count: data.total || data.total_count || flash_offers.length,
+        active_count: data.total || data.active_count || flash_offers.length
       };
     }
     catch (error) {
@@ -217,23 +218,23 @@ class FlashOfferService {
     // Handle different possible response structures
     let rawOffers: any[] = [];
     
-    // Check if the response directly contains an array of offers
-    if (Array.isArray(data)) {
-      rawOffers = data;
-    }
-    // Check if the response has offers property (new API structure)
-    else if (data.offers && Array.isArray(data.offers)) {
+    // Prioridad 1: Nueva estructura según documentación - { offers, total, page, pages, success }
+    if (data.offers && Array.isArray(data.offers)) {
       rawOffers = data.offers;
     }
-    // Check if the response has flash_offers property
+    // Prioridad 2: Si la respuesta directamente contiene un array de ofertas
+    else if (Array.isArray(data)) {
+      rawOffers = data;
+    }
+    // Prioridad 3: Estructura antigua con flash_offers
     else if (data.flash_offers && Array.isArray(data.flash_offers)) {
       rawOffers = data.flash_offers;
     }
-    // Check if the response has data property with flash_offers
+    // Prioridad 4: Estructura anidada con data.flash_offers
     else if (data.data && Array.isArray(data.data.flash_offers)) {
       rawOffers = data.data.flash_offers;
     }
-    // Check if the response has data property that is an array
+    // Prioridad 5: Estructura anidada con data como array
     else if (data.data && Array.isArray(data.data)) {
       rawOffers = data.data;
     }
@@ -308,8 +309,27 @@ class FlashOfferService {
       };
     }
 
-    // Map used_quantity to claimed_quantity
-    const claimed_quantity = rawOffer.used_quantity !== undefined ? rawOffer.used_quantity : rawOffer.claimed_quantity;
+    // Calcular claimed_quantity: max_quantity - remaining_quantity
+    // Según documentación: remaining_quantity = campo1 - campo2 (max_quantity - used)
+    let claimed_quantity: number | undefined;
+    let remaining_quantity: number | undefined;
+    
+    if (rawOffer.remaining_quantity !== undefined) {
+      remaining_quantity = rawOffer.remaining_quantity;
+      if (rawOffer.max_quantity !== undefined) {
+        claimed_quantity = rawOffer.max_quantity - rawOffer.remaining_quantity;
+      }
+    } else if (rawOffer.used_quantity !== undefined) {
+      claimed_quantity = rawOffer.used_quantity;
+      if (rawOffer.max_quantity !== undefined) {
+        remaining_quantity = rawOffer.max_quantity - rawOffer.used_quantity;
+      }
+    } else if (rawOffer.claimed_quantity !== undefined) {
+      claimed_quantity = rawOffer.claimed_quantity;
+      if (rawOffer.max_quantity !== undefined) {
+        remaining_quantity = rawOffer.max_quantity - rawOffer.claimed_quantity;
+      }
+    }
 
     return {
       id: rawOffer.id,
@@ -324,6 +344,7 @@ class FlashOfferService {
       updated_at: rawOffer.updated_at,
       product: product,
       claimed_quantity: claimed_quantity,
+      remaining_quantity: remaining_quantity,
       // is_valid will be checked in isOfferActive
     };
   }
@@ -412,14 +433,21 @@ class FlashOfferService {
     const remaining_time = Math.max(0, endTime - now);
     
     // Calcular porcentaje de disponibilidad si hay cantidad máxima
+    // Prioridad: usar remaining_quantity si está disponible (más directo)
     let availability_percentage = 100;
-    if (offer.max_quantity && offer.claimed_quantity !== undefined) {
-      availability_percentage = Math.max(0, 
-        ((offer.max_quantity - offer.claimed_quantity) / offer.max_quantity) * 100
-      );
-    } else if (offer.max_quantity) {
-      // Si no hay claimed_quantity pero hay max_quantity, asumir 100% disponible
-      availability_percentage = 100;
+    if (offer.max_quantity) {
+      if (offer.remaining_quantity !== undefined) {
+        // Usar remaining_quantity directamente del backend
+        availability_percentage = Math.max(0, 
+          (offer.remaining_quantity / offer.max_quantity) * 100
+        );
+      } else if (offer.claimed_quantity !== undefined) {
+        // Calcular desde claimed_quantity
+        availability_percentage = Math.max(0, 
+          ((offer.max_quantity - offer.claimed_quantity) / offer.max_quantity) * 100
+        );
+      }
+      // Si no hay ninguno, asumir 100% disponible
     }
 
     return {

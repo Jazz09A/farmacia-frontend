@@ -80,6 +80,7 @@ const mapBackendProductToProduct = (backendProduct: any): Product => {
     is_available: backendProduct.is_available,
     created_at: backendProduct.created_at,
     updated_at: backendProduct.updated_at,
+    profit_discount: backendProduct.profit_discount || null, // Mapear profit_discount del backend
   };
 };
 

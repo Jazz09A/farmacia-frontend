@@ -1,7 +1,8 @@
 // 🔥 Flash Offer Card Component
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Clock, Flame, ShoppingCart, Zap } from 'lucide-react';
+import { Clock, Flame, ShoppingCart, Zap, Eye } from 'lucide-react';
 import { FlashOfferWithProduct } from '../../types';
 import { useFlashOfferCountdown } from '../../hooks/useFlashOffers';
 import { flashOfferService } from '../../services/FlashOfferService';
@@ -23,6 +24,7 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
   showQuantity = true,
   className = '',
 }) => {
+  const navigate = useNavigate();
   const { currency } = useGlobalCurrency();
   const { addToCart } = useCart();
   const { formattedTime, isExpired } = useFlashOfferCountdown(offer.end_time);
@@ -70,6 +72,11 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
     } catch (error) {
       console.error('Error adding flash offer to cart:', error);
     }
+  };
+
+  const handleViewDetails = () => {
+    // Navegar a los detalles del producto
+    navigate(`/product/${offer.product.slug || offer.product.id}`);
   };
 
   // Configuraciones por tamaño
@@ -201,16 +208,13 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
           </span>
         </div>
 
-        {/* Add to Cart Button */}
+        {/* View Details Button */}
         <button
-          onClick={handleAddToCart}
-          disabled={!offer.product.in_stock || isExpired}
-          className={`w-full ${config.button} bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl`}
+          onClick={handleViewDetails}
+          className={`w-full ${config.button} bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl`}
         >
-          <ShoppingCart className="w-5 h-5" />
-          <span>
-            {!offer.product.in_stock ? 'Sin Stock' : 'Añadir al Carrito'}
-          </span>
+          <Eye className="w-5 h-5" />
+          <span>Ver Detalles</span>
         </button>
       </div>
     </motion.div>

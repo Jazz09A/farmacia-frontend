@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Star, CheckCircle, AlertTriangle, ChevronRight, ShoppingCart, Plus, Minus, Truck, Clock, Flame } from 'lucide-react';
+import { Star, CheckCircle, AlertTriangle, ChevronRight, ShoppingCart, Plus, Minus, Truck, Clock, Flame, Percent } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { Product } from '../types';
@@ -93,16 +93,28 @@ const ProductDetailPage: React.FC = () => {
             <ChevronRight className="w-4 h-4" />
             <span className="font-medium text-medical-gray-800">{product.name}</span>
           </nav>
-          {product.is_offer && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1.5 rounded-full font-bold flex items-center shadow-lg text-sm"
-            >
-              <Flame className="h-4 w-4 mr-1.5" />
-              OFERTA FLASH
-            </motion.div>
-          )}
+          <div className="flex items-center gap-2">
+            {product.is_offer && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1.5 rounded-full font-bold flex items-center shadow-lg text-sm"
+              >
+                <Flame className="h-4 w-4 mr-1.5" />
+                OFERTA FLASH
+              </motion.div>
+            )}
+            {product.profit_discount && (product.profit_discount.is_active === true || product.profit_discount.is_active === 'true') && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1.5 rounded-full font-bold flex items-center shadow-lg text-sm"
+              >
+                <Percent className="h-4 w-4 mr-1.5" />
+                DESCUENTO
+              </motion.div>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
@@ -167,7 +179,7 @@ const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Price */}
-            <div className={`rounded-xl p-2.5 sm:p-3 ${product.is_offer ? 'bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200' : 'bg-medical-blue-50/50'}`}>
+            <div className={`rounded-xl p-2.5 sm:p-3 ${product.is_offer ? 'bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200' : (product.profit_discount && (product.profit_discount.is_active === true || product.profit_discount.is_active === 'true')) ? 'bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200' : 'bg-medical-blue-50/50'}`}>
               {product.is_offer && product.original_price ? (
                 <div className="space-y-1.5">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
@@ -192,9 +204,42 @@ const ProductDetailPage: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <span className="text-2xl lg:text-3xl font-bold text-medical-primary">
-                  {formatPrice(getDisplayPrice(product.price, currency), currency)}
-                </span>
+                <div className="space-y-1.5">
+                  <span className="text-2xl lg:text-3xl font-bold text-medical-primary">
+                    {formatPrice(getDisplayPrice(product.price, currency), currency)}
+                  </span>
+                  {product.profit_discount && (product.profit_discount.is_active === true || product.profit_discount.is_active === 'true') && (
+                    <div className="space-y-2 mt-2 pt-2 border-t border-red-200">
+                      <div className="flex items-center gap-2 text-red-700 font-semibold text-sm">
+                        <Percent className="w-4 h-4" />
+                        <span>Descuento disponible</span>
+                      </div>
+                      <div className="text-xs text-red-600 space-y-1">
+                        <p>
+                          <strong>Hasta {product.profit_discount.best_discount_percentage}%</strong> de descuento según cantidad
+                        </p>
+                        <p>
+                          Cantidad mínima: <strong>{product.profit_discount.min_quantity_for_discount} unidades</strong>
+                        </p>
+                        {product.profit_discount.ranges && product.profit_discount.ranges.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            <p className="font-medium text-red-700">Escalas de descuento:</p>
+                            <ul className="list-disc list-inside space-y-0.5">
+                              {product.profit_discount.ranges.map((range, idx) => (
+                                <li key={idx} className="text-red-600">
+                                  {range.max_quantity} unidades: <strong>{range.discount_percentage}%</strong>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        <p className="text-red-500 italic mt-1">
+                          Válido hasta: {new Date(product.profit_discount.fecha_fin).toLocaleDateString('es-VE', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
               <p className="text-xs lg:text-sm text-medical-gray-600 mt-1.5">
                 Aprox. {currency === 'VES' ? formatPrice(parseFloat(product.price), 'USD') : formatPrice(getDisplayPrice(product.price, 'VES'), 'VES')}
