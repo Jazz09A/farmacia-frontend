@@ -25,6 +25,7 @@ export interface Product {
   subcategory: string;
   patology: string;
   price: string; // USD - viene como string del backend
+  currency?: string; // Moneda del precio (ej: "US$", "VES")
   description: string;
   ingredients: string[];
   image: string;

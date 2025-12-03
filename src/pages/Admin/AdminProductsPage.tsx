@@ -12,6 +12,8 @@ import {
   XCircle,
   DollarSign,
   ShoppingCart,
+  Search,
+  X as XIcon,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -76,6 +78,7 @@ const AdminProductsPage: React.FC = () => {
     return listProducts.filter(product => {
       const matchesSearch = 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.id.toLowerCase().includes(searchTerm.toLowerCase()) || // Buscar por código
         product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -241,6 +244,41 @@ const AdminProductsPage: React.FC = () => {
           </button>
           </div> */}
         </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 lg:p-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Reset to first page on search
+            }}
+            className="block w-full pl-10 pr-10 py-2.5 text-sm lg:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            placeholder="Buscar por nombre, código, marca o descripción..."
+          />
+          {searchTerm && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setCurrentPage(1);
+              }}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <XIcon className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+        {searchTerm && (
+          <div className="mt-2 text-xs lg:text-sm text-gray-600">
+            Mostrando {filteredProducts.length} de {listProducts.length} productos
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}

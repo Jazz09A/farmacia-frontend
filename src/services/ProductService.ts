@@ -182,6 +182,7 @@ class ProductService {
       subcategory: '',
       patology: '',
       price: finalPrice,
+      currency: article.currency || 'US$', // Moneda del artículo
       description: article.art_des, // Usar descripción como nombre por ahora
       ingredients: [],
       image: images[0],
@@ -226,6 +227,7 @@ class ProductService {
       ? article.prices[0] 
       : null;
     const priceNum = latestPrice ? parseNum(latestPrice.amount) : 0;
+    const currency = latestPrice?.currency || 'US$'; // Moneda del precio más reciente
 
     // Calcular stock total
     const totalStock = article.stock_by_warehouse.reduce((sum, stock) => {
@@ -270,6 +272,7 @@ class ProductService {
       subcategory: article.sub_line_code || '',
       patology: '',
       price: finalPrice,
+      currency: currency, // Moneda del precio
       description: article.art_des,
       ingredients: [],
       image: images[0],
