@@ -10,6 +10,7 @@ import { ProductDetailSkeleton } from '../components/Skeleton';
 import ProductImage from '../components/common/ProductImage';
 import { useQuoteCart } from '../hooks/useQuoteCart';
 import { RecommendedProductsSection } from '../components/Products/RecommendedProductsSection';
+import ImageZoom from '../components/Products/ImageZoom';
 
 
 const ProductDetailPage: React.FC = () => {
@@ -121,34 +122,45 @@ const ProductDetailPage: React.FC = () => {
           {/* Product Gallery */}
           <div className="space-y-4">
             <motion.div 
-              className="bg-white rounded-2xl shadow-soft p-4"
+              className="bg-white rounded-2xl shadow-soft p-4 overflow-hidden"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <ProductImage
+              <ImageZoom
                 src={activeImage}
-                images={product.images}
                 alt={product.name}
-                className="w-full h-80 sm:h-96 object-contain rounded-xl"
-                size="xl"
+                className="w-full h-80 sm:h-96"
               />
+              <p className="text-xs text-gray-500 text-center mt-2">
+                Pasa el cursor sobre la imagen para ampliar
+              </p>
             </motion.div>
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 sm:gap-4">
-              {product.images?.filter((_, index) => index > 0).map((img, index) => (
-                <div 
-                  key={index + 1}
-                  onClick={() => setActiveImage(img)}
-                  className={`cursor-pointer rounded-xl p-1 sm:p-2 border-2 transition-all ${activeImage === img ? 'border-medical-primary' : 'border-transparent hover:border-medical-gray-200'}`}
-                >
-                  <ProductImage
-                    src={img}
-                    alt={`${product.name} view ${index + 2}`}
-                    className="w-full h-16 sm:h-20 object-cover rounded-md"
-                    size="sm"
-                  />
-                </div>
-              ))}
+            
+            {/* Galería de miniaturas */}
+            <div className="bg-white rounded-xl shadow-soft p-3">
+              <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-2">
+                {product.images?.filter((_, index) => index > 0).map((img, index) => (
+                  <motion.div 
+                    key={index + 1}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setActiveImage(img)}
+                    className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                      activeImage === img 
+                        ? 'border-medical-primary shadow-md ring-2 ring-medical-primary ring-opacity-50' 
+                        : 'border-gray-200 hover:border-medical-primary hover:shadow-sm'
+                    }`}
+                  >
+                    <ProductImage
+                      src={img}
+                      alt={`${product.name} vista ${index + 2}`}
+                      className="w-full h-16 sm:h-20 object-cover"
+                      size="sm"
+                    />
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
 
