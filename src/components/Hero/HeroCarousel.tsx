@@ -25,6 +25,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
+  // Preload all carousel images for instant transitions
+  useEffect(() => {
+    images.forEach((image) => {
+      const img = new Image();
+      img.src = image.src;
+    });
+  }, [images]);
+
   // Auto-play functionality
   useEffect(() => {
     if (isHovered || !autoPlay) return;
@@ -61,6 +69,8 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
               alt={images[currentIndex].alt}
               className="w-full h-full object-cover object-center"
               loading="eager"
+              fetchpriority={currentIndex === 0 ? "high" : "auto"}
+              decoding="async"
             />
             
             {/* Gradient Overlay */}
