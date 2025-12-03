@@ -93,43 +93,45 @@ const ImageZoom: React.FC<ImageZoomProps> = ({ src, alt, className = '' }) => {
       </div>
 
       {/* Ventana de zoom usando Portal para escapar de overflow:hidden */}
-      {isZooming && createPortal(
-        <AnimatePresence>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bg-white shadow-2xl border-2 border-blue-500 rounded-xl z-[9999] overflow-hidden"
-            style={{
-              top: portalPosition.top - window.scrollY, // Ajustar para fixed position
-              left: portalPosition.left,
-              width: '650px', // Más largo horizontalmente
-              height: '500px', // Altura proporcional
-              pointerEvents: 'none',
-            }}
-          >
-            {/* Imagen ampliada */}
-            <div
-              className="absolute inset-0"
+      {createPortal(
+        <AnimatePresence mode="wait">
+          {isZooming && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="fixed bg-white shadow-2xl border-2 border-blue-500 rounded-xl z-[9999] overflow-hidden"
               style={{
-                backgroundImage: `url(${src})`,
-                backgroundSize: '250%', // Zoom 2.5x
-                backgroundPosition: `${position.x}% ${position.y}%`,
-                backgroundRepeat: 'no-repeat',
+                top: portalPosition.top - window.scrollY, // Ajustar para fixed position
+                left: portalPosition.left,
+                width: '650px', // Más largo horizontalmente
+                height: '500px', // Altura proporcional
+                pointerEvents: 'none',
               }}
-            />
-            
-            {/* Indicador de zoom */}
-            <div className="absolute top-3 left-3 bg-black bg-opacity-70 text-white px-3 py-1.5 rounded-lg text-xs font-medium">
-              <span className="flex items-center gap-1.5">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
-                </svg>
-                Zoom 2.5x
-              </span>
-            </div>
-          </motion.div>
+            >
+              {/* Imagen ampliada */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `url(${src})`,
+                  backgroundSize: '250%', // Zoom 2.5x
+                  backgroundPosition: `${position.x}% ${position.y}%`,
+                  backgroundRepeat: 'no-repeat',
+                }}
+              />
+              
+              {/* Indicador de zoom */}
+              <div className="absolute top-3 left-3 bg-black bg-opacity-70 text-white px-3 py-1.5 rounded-lg text-xs font-medium">
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                  </svg>
+                  Zoom 2.5x
+                </span>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>,
         document.body
       )}
