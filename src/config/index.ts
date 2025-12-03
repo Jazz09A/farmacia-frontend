@@ -35,6 +35,7 @@ export const config = {
     refreshTokenKey: 'refresh_token',
     userDataKey: 'user_data',
     sessionTimeout: 60 * 60 * 1000, // 1 hour in milliseconds
+    tokenRefreshThreshold: 120, // Refresh token 2 minutes before expiry (in seconds)
   },
 
   // Pagination

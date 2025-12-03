@@ -44,6 +44,7 @@ export interface AuthResponse {
     refresh_token?: string;
   };
   errors?: Record<string, string[]>;
+  expires_in?: number; // Token expiration time in seconds
 }
 
 export interface User {

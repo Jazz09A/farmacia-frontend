@@ -130,6 +130,48 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [queryClient, user?.id]);
 
+  // Listen for forceLogout events (from AuthService when refresh fails)
+  useEffect(() => {
+    const handleForceLogout = (event: CustomEvent) => {
+      console.warn('Force logout triggered:', event.detail);
+      logout();
+    };
+
+    window.addEventListener('forceLogout', handleForceLogout as EventListener);
+    return () => {
+      window.removeEventListener('forceLogout', handleForceLogout as EventListener);
+    };
+  }, [logout]);
+
+  // Proactive token refresh on app focus/visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && token) {
+        // App became visible - check if token needs refresh
+        authService.refreshToken().catch((error) => {
+          console.warn('Proactive token refresh on visibility change failed:', error);
+        });
+      }
+    };
+
+    const handleFocus = () => {
+      if (token) {
+        // Window gained focus - check if token needs refresh
+        authService.refreshToken().catch((error) => {
+          console.warn('Proactive token refresh on focus failed:', error);
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [token]);
+
   const value = useMemo(() => ({
     isAuthenticated,
     user,

@@ -167,7 +167,20 @@ const FlashOfferFormModal: React.FC<FlashOfferFormModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4" 
+      style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0, 
+        margin: 0,
+        padding: '16px',
+        width: '100vw',
+        height: '100vh'
+      }}
+    >
       <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-gray-200 flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-3xl">
@@ -355,7 +368,20 @@ const ArticleDiscountModal: React.FC<ArticleDiscountModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-3 sm:p-4 z-50">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-3 sm:p-4 z-[9999]" 
+      style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0, 
+        margin: 0,
+        padding: '12px',
+        width: '100vw',
+        height: '100vh'
+      }}
+    >
       <div className="bg-white rounded-xl lg:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] transform transition-all duration-300 ease-in-out flex flex-col">
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-gray-100 flex items-start justify-between bg-gradient-to-r from-gray-50 to-white rounded-t-xl lg:rounded-t-2xl">
@@ -503,7 +529,7 @@ const ArticleDiscountModal: React.FC<ArticleDiscountModalProps> = ({
         <div className="p-4 sm:p-6 border-t border-gray-100 bg-gray-50 rounded-b-xl lg:rounded-b-2xl flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           {(onEditFlashOffer || onDeleteFlashOffer) && (
             <div className="flex flex-col sm:flex-row gap-2">
-              {onEditFlashOffer && (
+              {/* {onEditFlashOffer && (
                 <button
                   onClick={onEditFlashOffer}
                   className="px-5 py-2.5 bg-amber-50 text-amber-700 rounded-lg border border-amber-200 hover:bg-amber-100 font-medium text-sm flex items-center gap-2 shadow-sm transition-all active:scale-95"
@@ -511,8 +537,8 @@ const ArticleDiscountModal: React.FC<ArticleDiscountModalProps> = ({
                   <Edit className="w-4 h-4" />
                   Editar oferta flash
                 </button>
-              )}
-              {onDeleteFlashOffer && (
+              )} */}
+              {/* {onDeleteFlashOffer && (
                 <button
                   onClick={onDeleteFlashOffer}
                   className="px-5 py-2.5 bg-red-50 text-red-700 rounded-lg border border-red-200 hover:bg-red-100 font-medium text-sm flex items-center gap-2 shadow-sm transition-all active:scale-95"
@@ -520,7 +546,7 @@ const ArticleDiscountModal: React.FC<ArticleDiscountModalProps> = ({
                   <Trash2 className="w-4 h-4" />
                   Eliminar oferta
                 </button>
-              )}
+              )} */}
             </div>
           )}
           <div className="flex justify-end gap-3">
@@ -669,7 +695,20 @@ const EditArticleDiscountModal: React.FC<EditArticleDiscountModalProps> = ({
   if (!isOpen || !data) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-3 sm:p-4 z-50">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-3 sm:p-4 z-[9999]" 
+      style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0, 
+        margin: 0,
+        padding: '12px',
+        width: '100vw',
+        height: '100vh'
+      }}
+    >
       <div className="bg-white rounded-xl lg:rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] transform transition-all duration-300 ease-in-out flex flex-col">
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-gray-100 flex items-start justify-between bg-gradient-to-r from-gray-50 to-white rounded-t-xl lg:rounded-t-2xl">

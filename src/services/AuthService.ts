@@ -17,11 +17,24 @@ class AuthService {
   private url = this.isDevelopment ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:8000');
   private baseUrl = '/api/v1/auth';
   private tokenKey = 'auth_token';
+  private refreshTokenKey = 'refresh_token';
+  private tokenExpiryKey = 'token_expiry';
   private userKey = 'auth_user';
   private cartUrl = '/api/v1/user/cart';
   private mePromise: Promise<User | null> | null = null;
   private isRequestInProgress = false;
   private requestAbortController: AbortController | null = null;
+  
+  // Refresh token state management
+  private isRefreshing = false;
+  private refreshPromise: Promise<AuthResponse> | null = null;
+  private pendingRequests: Array<{
+    resolve: (value: Response) => void;
+    reject: (error: Error) => void;
+    url: string;
+    options: RequestInit;
+  }> = [];
+  private readonly tokenRefreshThreshold = 120; // Refresh 2 minutes before expiry (in seconds)
 
   // Verificación de email
   async checkEmailAvailability(email: string): Promise<{ available: boolean; message: string }> {
@@ -84,9 +97,29 @@ class AuthService {
       }
       if (result.access_token) {
         this.setToken(result.access_token);
+        
+        // Store refresh_token if provided
+        if (result.refresh_token) {
+          this.setRefreshToken(result.refresh_token);
+        }
+        
+        // Store token expiry time
+        if (result.expires_in) {
+          this.setTokenExpiry(result.expires_in);
+        }
+        
         const user = await this.getMe(); // Fetch user data after setting token
         if (user) {
-          return { success: true, message: 'Login exitoso', data: { token: result.access_token, user } };
+          return { 
+            success: true, 
+            message: 'Login exitoso', 
+            data: { 
+              token: result.access_token, 
+              refresh_token: result.refresh_token,
+              user 
+            },
+            expires_in: result.expires_in
+          };
         } else {
             throw new Error('No se pudieron obtener los datos del usuario.');
         }
@@ -276,10 +309,19 @@ class AuthService {
     }
     
     this.removeToken();
+    this.removeRefreshToken();
+    this.removeTokenExpiry();
     this.removeUser();
     this.mePromise = null;
     this.isRequestInProgress = false;
     this.requestAbortController = null;
+    
+    // Clear refresh state
+    this.isRefreshing = false;
+    this.refreshPromise = null;
+    
+    // Reject all pending requests
+    this.rejectPendingRequests(new Error('User logged out'));
     
     // 🔥 CRÍTICO: Limpiar datos sensibles adicionales
     this.clearSessionData();
@@ -299,25 +341,62 @@ class AuthService {
 
   // Refrescar token
   async refreshToken(): Promise<AuthResponse> {
-    try {
-      const token = this.getToken();
-      if (!token) {
-        throw new Error('No token available');
-      }
+    // If already refreshing, return the existing promise
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
+    }
 
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      this.logout();
+      return {
+        success: false,
+        message: 'No refresh token available',
+        errors: {}
+      };
+    }
+
+    // Set refreshing flag and create promise
+    this.isRefreshing = true;
+    this.refreshPromise = this.performRefresh(refreshToken);
+
+    try {
+      const result = await this.refreshPromise;
+      return result;
+    } finally {
+      // Reset refreshing state after a short delay to allow queued requests to complete
+      setTimeout(() => {
+        this.isRefreshing = false;
+        this.refreshPromise = null;
+      }, 100);
+    }
+  }
+
+  private async performRefresh(refreshToken: string): Promise<AuthResponse> {
+    try {
       const fullUrl = `${this.url}${this.baseUrl}/refresh`;
       const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
       const result = await response.json();
       
       if (!response.ok) {
-        this.logout(); // Limpiar datos si el refresh falla
+        // Refresh token expired or invalid - force logout
+        this.logout();
+        
+        // Reject all pending requests
+        this.rejectPendingRequests(new Error('Session expired - please login again'));
+        
+        // Notify components of forced logout
+        window.dispatchEvent(new CustomEvent('forceLogout', { 
+          detail: { reason: 'Refresh token expired', status: response.status }
+        }));
+        
         return {
           success: false,
           message: 'Sesión expirada',
@@ -325,25 +404,97 @@ class AuthService {
         };
       }
 
-      // Actualizar token
-      if (result.data?.token) {
-        this.setToken(result.data.token);
+      // Token rotation: update both access_token and refresh_token
+      if (result.access_token) {
+        this.setToken(result.access_token);
       }
+      
+      if (result.refresh_token) {
+        this.setRefreshToken(result.refresh_token);
+      }
+      
+      // Update expiry time
+      if (result.expires_in) {
+        this.setTokenExpiry(result.expires_in);
+      }
+
+      // Retry all pending requests with new token
+      this.retryPendingRequests();
 
       return {
         success: true,
         message: 'Token renovado',
-        data: result.data
+        data: {
+          token: result.access_token,
+          refresh_token: result.refresh_token
+        },
+        expires_in: result.expires_in
       };
     } catch (error) {
       console.error('Error refreshing token:', error);
       this.logout();
+      
+      // Reject all pending requests
+      this.rejectPendingRequests(new Error('Error renovando sesión'));
+      
+      // Notify components of forced logout
+      window.dispatchEvent(new CustomEvent('forceLogout', { 
+        detail: { reason: 'Refresh token error', error: error }
+      }));
+      
       return {
         success: false,
         message: 'Error renovando sesión',
         errors: {}
       };
     }
+  }
+
+  private async retryPendingRequests(): Promise<void> {
+    const requests = [...this.pendingRequests];
+    this.pendingRequests = [];
+
+    for (const request of requests) {
+      try {
+        const response = await this.makeAuthenticatedRequest(request.url, request.options);
+        request.resolve(response);
+      } catch (error) {
+        request.reject(error as Error);
+      }
+    }
+  }
+
+  private rejectPendingRequests(error: Error): void {
+    const requests = [...this.pendingRequests];
+    this.pendingRequests = [];
+
+    for (const request of requests) {
+      request.reject(error);
+    }
+  }
+
+  private async makeAuthenticatedRequest(url: string, options: RequestInit): Promise<Response> {
+    const token = this.getToken();
+    
+    if (!token) {
+      throw new Error('No authentication token - session terminated');
+    }
+
+    const customHeaders = (options.headers || {}) as Record<string, string>;
+    const headers: HeadersInit = {
+      ...customHeaders,
+      'Authorization': `Bearer ${token}`,
+    };
+
+    if (!(options.body instanceof FormData) && !customHeaders['Content-Type']) {
+      headers['Content-Type' as keyof HeadersInit] = 'application/json';
+    }
+
+    const isAbsoluteUrl = url.startsWith('http://') || url.startsWith('https://');
+    const fullUrl = isAbsoluteUrl ? url : `${this.url}${url}`;
+    
+    const { headers: _, ...restOptions } = options;
+    return fetch(fullUrl, { ...restOptions, headers });
   }
 
   // Métodos privados para manejo de localStorage
@@ -357,6 +508,47 @@ class AuthService {
 
   private removeToken(): void {
     localStorage.removeItem(this.tokenKey);
+  }
+
+  // Refresh token management methods
+  private setRefreshToken(refreshToken: string): void {
+    localStorage.setItem(this.refreshTokenKey, refreshToken);
+  }
+
+  private getRefreshToken(): string | null {
+    return localStorage.getItem(this.refreshTokenKey);
+  }
+
+  private removeRefreshToken(): void {
+    localStorage.removeItem(this.refreshTokenKey);
+  }
+
+  // Token expiry management methods
+  private setTokenExpiry(expiresIn: number): void {
+    // expiresIn is in seconds, convert to milliseconds and add to current time
+    const expiryTime = Date.now() + (expiresIn * 1000);
+    localStorage.setItem(this.tokenExpiryKey, expiryTime.toString());
+  }
+
+  private getTokenExpiry(): number | null {
+    const expiryStr = localStorage.getItem(this.tokenExpiryKey);
+    if (!expiryStr) return null;
+    const expiry = parseInt(expiryStr, 10);
+    return isNaN(expiry) ? null : expiry;
+  }
+
+  private removeTokenExpiry(): void {
+    localStorage.removeItem(this.tokenExpiryKey);
+  }
+
+  // Check if token is expiring soon (within threshold)
+  private isTokenExpiring(): boolean {
+    const expiry = this.getTokenExpiry();
+    if (!expiry) return false;
+    
+    const now = Date.now();
+    const timeUntilExpiry = (expiry - now) / 1000; // Convert to seconds
+    return timeUntilExpiry <= this.tokenRefreshThreshold;
   }
 
   private setUser(user: User): void {
@@ -387,7 +579,9 @@ class AuthService {
       'temp_order_data',
       'search_history',
       'viewed_products',
-      'draft_orders'
+      'draft_orders',
+      this.refreshTokenKey,
+      this.tokenExpiryKey
     ];
     
     sensitiveKeys.forEach(key => {
@@ -578,40 +772,57 @@ class AuthService {
       throw new Error('No authentication token - session terminated');
     }
 
-    // Construir headers asegurando que Authorization siempre esté presente
-    // Primero los headers personalizados, luego Authorization (para que no se sobrescriba)
-    const customHeaders = (options.headers || {}) as Record<string, string>;
-    const headers: HeadersInit = {
-      ...customHeaders,
-      'Authorization': `Bearer ${token}`, // Siempre al final para asegurar que no se sobrescriba
-    };
-
-    // Si NO es FormData, agregar Content-Type por defecto (solo si no está ya presente)
-    if (!(options.body instanceof FormData) && !customHeaders['Content-Type']) {
-      headers['Content-Type' as keyof HeadersInit] = 'application/json';
+    // 🔥 PROACTIVE REFRESH: Check if token is expiring soon and refresh proactively
+    if (this.isTokenExpiring() && !this.isRefreshing) {
+      try {
+        await this.refreshToken();
+      } catch (error) {
+        // If proactive refresh fails, continue with original request
+        // It will fail with 401 and trigger reactive refresh
+        console.warn('Proactive token refresh failed, continuing with original request:', error);
+      }
     }
 
-    // Construir la URL correcta según el entorno
-    // Si la URL ya es completa (empieza con http:// o https://), usarla directamente
-    // Si es relativa, agregar this.url
-    const isAbsoluteUrl = url.startsWith('http://') || url.startsWith('https://');
-    const fullUrl = isAbsoluteUrl ? url : `${this.url}${url}`;
-    
-    // Asegurar que options.headers no sobrescriba nuestros headers construidos
-    const { headers: _, ...restOptions } = options;
-    const response = await fetch(fullUrl, { ...restOptions, headers });
+    // If already refreshing, queue this request
+    if (this.isRefreshing) {
+      return new Promise<Response>((resolve, reject) => {
+        this.pendingRequests.push({ resolve, reject, url, options });
+      });
+    }
 
-    // 🔥 MEJORADO: Manejar diferentes códigos de error de autenticación
+    // Make the request
+    let response: Response;
+    try {
+      response = await this.makeAuthenticatedRequest(url, options);
+    } catch (error) {
+      throw error;
+    }
+
+    // 🔥 REACTIVE REFRESH: Handle 401 errors
     if (response.status === 401) {
-      // Token inválido o expirado - hacer logout completo
-      this.logout();
-      
-      // 🔥 CRÍTICO: Notificar a otros componentes del logout forzado
-      window.dispatchEvent(new CustomEvent('forceLogout', { 
-        detail: { reason: 'Authentication failed', status: response.status }
-      }));
-      
-      throw new Error('Session expired - please login again');
+      // If not already refreshing, start refresh and queue this request
+      if (!this.isRefreshing) {
+        // Queue the original request
+        const retryPromise = new Promise<Response>((resolve, reject) => {
+          this.pendingRequests.push({ resolve, reject, url, options });
+        });
+
+        // Start refresh (this will retry all queued requests on success)
+        try {
+          await this.refreshToken();
+          // After refresh, the queued request should have been retried
+          // But if it wasn't, retry it now
+          return retryPromise;
+        } catch (error) {
+          // Refresh failed - reject the queued request
+          throw error;
+        }
+      } else {
+        // Already refreshing, just queue this request
+        return new Promise<Response>((resolve, reject) => {
+          this.pendingRequests.push({ resolve, reject, url, options });
+        });
+      }
     }
 
     if (response.status === 403) {

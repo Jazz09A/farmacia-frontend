@@ -103,8 +103,21 @@ export const useRegisterMutation = () => {
 };
 
 export const useRefreshTokenMutation = () => {
+  const queryClient = useQueryClient();
+  
   return useMutation<AuthResponse, Error, void>({
     mutationFn: () => authService.refreshToken(),
+    onError: (error) => {
+      // If refresh fails, invalidate all queries and clear cache
+      console.error('Refresh token mutation failed:', error);
+      queryClient.clear();
+    },
+    onSuccess: (response) => {
+      // If refresh succeeds, invalidate user query to refetch with new token
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.auth.user });
+      }
+    },
   });
 };
 

@@ -14,31 +14,13 @@ import {
   CreditOrdersResponse
 } from '../types/credit';
 import { validateApiResponse, withErrorHandling } from '../utils/errorHandling';
+import { authService } from './AuthService';
 
 class CreditService {
   private baseURL: string;
 
   constructor() {
     this.baseURL = CREDIT_CONFIG.API_BASE_URL;
-  }
-
-  private async getHeaders(): Promise<HeadersInit> {
-    const token = localStorage.getItem('auth_token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-  }
-
-  private async getAdminHeaders(): Promise<HeadersInit> {
-    // For admin operations, we use the same token as regular users
-    // since admin users are also regular users with admin role
-    const token = localStorage.getItem('auth_token');
-    
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
   }
 
   // ===== ENDPOINTS DE USUARIO =====
@@ -49,10 +31,8 @@ class CreditService {
   async getCreditInfo(): Promise<CreditInfo> {
     return withErrorHandling(async () => {
       const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREDIT_INFO}`;
-      const headers = await this.getHeaders();
-      const response = await fetch(url, {
+      const response = await authService.authenticatedFetch(url, {
         method: 'GET',
-        headers
       });
 
       return validateApiResponse(response);
@@ -66,9 +46,8 @@ class CreditService {
    * Crear orden con crédito
    */
   async createCreditOrder(orderData: CreditOrderData): Promise<CreditOrderResponse> {
-    const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREATE_CREDIT_ORDER}`, {
+    const response = await authService.authenticatedFetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREATE_CREDIT_ORDER}`, {
       method: 'POST',
-      headers: await this.getHeaders(),
       body: JSON.stringify(orderData)
     });
 
@@ -93,9 +72,8 @@ class CreditService {
         payment_method: paymentData.payment_method || 'pago-movil'
       };
 
-      const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREATE_PAYMENT}`, {
+      const response = await authService.authenticatedFetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREATE_PAYMENT}`, {
         method: 'POST',
-        headers: await this.getHeaders(),
         body: JSON.stringify(normalizedData)
       });
 
@@ -110,9 +88,8 @@ class CreditService {
    * Obtener pagos de una orden específica
    */
   async getOrderPayments(orderId: string): Promise<Payment[]> {
-    const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.GET_ORDER_PAYMENTS}/${orderId}/payments`, {
+    const response = await authService.authenticatedFetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.GET_ORDER_PAYMENTS}/${orderId}/payments`, {
       method: 'GET',
-      headers: await this.getHeaders()
     });
 
     if (!response.ok) {
@@ -127,12 +104,8 @@ class CreditService {
    */
   async getMyPayments(): Promise<Payment[]> {
     const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.GET_MY_PAYMENTS}`;
-    const headers = await this.getHeaders();
-    
-
-    const response = await fetch(url, {
+    const response = await authService.authenticatedFetch(url, {
       method: 'GET',
-      headers
     });
 
     if (!response.ok) {
@@ -147,11 +120,8 @@ class CreditService {
    */
   async getCreditDashboard(): Promise<CreditDashboard> {
     const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.CREDIT_DASHBOARD}`;
-    const headers = await this.getHeaders();
-    
-    const response = await fetch(url, {
+    const response = await authService.authenticatedFetch(url, {
       method: 'GET',
-      headers
     });
 
     if (!response.ok) {
@@ -165,9 +135,8 @@ class CreditService {
    * Obtener lista de órdenes de crédito del usuario
    */
   async getCreditOrders(page: number = 1, limit: number = 10): Promise<CreditOrdersResponse> {
-    const response = await fetch(`${this.baseURL}/credit/orders/credit`, {
+    const response = await authService.authenticatedFetch(`${this.baseURL}/credit/orders/credit`, {
       method: 'GET',
-      headers: await this.getHeaders()
     });
 
     if (!response.ok) {
@@ -194,9 +163,8 @@ class CreditService {
    * Obtener detalles de una orden de crédito específica
    */
   async getCreditOrderDetails(orderId: string): Promise<CreditOrder> {
-    const response = await fetch(`${this.baseURL}/credit/orders/${orderId}`, {
+    const response = await authService.authenticatedFetch(`${this.baseURL}/credit/orders/${orderId}`, {
       method: 'GET',
-      headers: await this.getHeaders()
     });
 
     if (!response.ok) {
@@ -214,9 +182,8 @@ class CreditService {
    * Buscar clientes para asignación de crédito
    */
   async searchClients(query: string, page: number = 1, limit: number = 10): Promise<ClientSearchResponse> {
-    const response = await fetch(`${this.baseURL}/admin/clients/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`, {
+    const response = await authService.authenticatedFetch(`${this.baseURL}/admin/clients/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`, {
       method: 'GET',
-      headers: await this.getAdminHeaders()
     });
 
     if (!response.ok) {
@@ -231,11 +198,8 @@ class CreditService {
    */
   async getAllClients(): Promise<Client[]> {
     const url = `${this.baseURL}/admin/customers`;
-    const headers = await this.getAdminHeaders();
-    
-    const response = await fetch(url, {
+    const response = await authService.authenticatedFetch(url, {
       method: 'GET',
-      headers
     });
 
     if (!response.ok) {
@@ -251,9 +215,8 @@ class CreditService {
    * Obtener detalles de un cliente específico
    */
   async getClientDetails(clientId: string): Promise<Client> {
-    const response = await fetch(`${this.baseURL}/admin/clients/${clientId}`, {
+    const response = await authService.authenticatedFetch(`${this.baseURL}/admin/clients/${clientId}`, {
       method: 'GET',
-      headers: await this.getAdminHeaders()
     });
 
     if (!response.ok) {
@@ -267,9 +230,8 @@ class CreditService {
    * Asignar crédito a un usuario
    */
   async assignCredit(userId: string, amount: number): Promise<{ message: string }> {
-    const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.ADMIN_ASSIGN_CREDIT}/${userId}/assign-credit?amount=${amount}`, {
+    const response = await authService.authenticatedFetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.ADMIN_ASSIGN_CREDIT}/${userId}/assign-credit?amount=${amount}`, {
       method: 'POST',
-      headers: await this.getAdminHeaders()
     });
 
     if (!response.ok) {
@@ -284,9 +246,8 @@ class CreditService {
    * Obtener pagos pendientes de aprobación
    */
   async getPendingPayments(): Promise<Payment[]> {
-    const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.ADMIN_PENDING_PAYMENTS}`, {
+    const response = await authService.authenticatedFetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.ADMIN_PENDING_PAYMENTS}`, {
       method: 'GET',
-      headers: await this.getAdminHeaders()
     });
 
     if (!response.ok) {
@@ -336,9 +297,8 @@ class CreditService {
 
     const url = `${this.baseURL}/credit/admin/credit/payments${params.toString() ? `?${params.toString()}` : ''}`;
     
-    const response = await fetch(url, {
+    const response = await authService.authenticatedFetch(url, {
       method: 'GET',
-      headers: await this.getAdminHeaders()
     });
 
     if (!response.ok) {
@@ -365,9 +325,8 @@ class CreditService {
    * Aprobar o rechazar un pago
    */
   async approvePayment(paymentId: string, approvalData: PaymentApprovalData): Promise<{ message: string }> {
-    const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.ADMIN_APPROVE_PAYMENT}/${paymentId}/approve`, {
+    const response = await authService.authenticatedFetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.ADMIN_APPROVE_PAYMENT}/${paymentId}/approve`, {
       method: 'POST',
-      headers: await this.getAdminHeaders(),
       body: JSON.stringify(approvalData)
     });
 
@@ -384,11 +343,8 @@ class CreditService {
    */
   async getAdminDashboard(): Promise<AdminDashboard> {
     const url = `${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.ADMIN_CREDIT_DASHBOARD}`;
-    const headers = await this.getAdminHeaders();
-    
-    const response = await fetch(url, {
+    const response = await authService.authenticatedFetch(url, {
       method: 'GET',
-      headers
     });
 
     if (!response.ok) {
@@ -405,9 +361,8 @@ class CreditService {
    * Obtener detalles de un pago específico
    */
   async getPaymentDetails(paymentId: string): Promise<Payment> {
-    const response = await fetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.ADMIN_PAYMENT_DETAILS}/${paymentId}/details`, {
+    const response = await authService.authenticatedFetch(`${this.baseURL}${CREDIT_CONFIG.ENDPOINTS.ADMIN_PAYMENT_DETAILS}/${paymentId}/details`, {
       method: 'GET',
-      headers: await this.getAdminHeaders()
     });
 
     if (!response.ok) {
@@ -426,11 +381,8 @@ class CreditService {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${this.baseURL}/upload`, {
+    const response = await authService.authenticatedFetch(`${this.baseURL}/upload`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-      },
       body: formData
     });
 
