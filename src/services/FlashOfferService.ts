@@ -18,11 +18,12 @@ export interface FlashOfferFilters {
 
 class FlashOfferService {
   private adminBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1/admin';
+  private adminFlashOffersBase = `${this.adminBaseUrl}/flash-offers`;
+  private publicFlashOffersUrl = `${this.adminFlashOffersBase}/public`;
 
   async getFlashOffersPublic(): Promise<FlashOfferResponse> {
     try {
-      // Endpoint: /api/v1/admin/flash-offers/public
-      const response = await fetch(`${this.adminBaseUrl}/flash-offers/public`);
+      const response = await fetch(this.publicFlashOffersUrl);
       if (!response.ok) {
         throw new Error(`Error fetching flash offers: ${response.status}`);
       }
@@ -50,7 +51,7 @@ class FlashOfferService {
   // 🔥 Obtener ofertas flash activas (público)
   async getActiveFlashOffers(): Promise<FlashOfferWithProduct[]> {
     try {
-      const response = await fetch(`${this.adminBaseUrl}/flash-offers/`);
+      const response = await fetch(this.publicFlashOffersUrl);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -86,7 +87,7 @@ class FlashOfferService {
         });
       }
 
-      const url = `${this.adminBaseUrl}/flash-offers${queryParams.toString() ? `?${queryParams}` : ''}`;
+      const url = `${this.adminFlashOffersBase}${queryParams.toString() ? `?${queryParams}` : ''}`;
       const response = await authService.authenticatedFetch(url);
       
       if (!response.ok) {
@@ -113,7 +114,7 @@ class FlashOfferService {
   async createFlashOffer(payload: CreateFlashOfferPayload): Promise<FlashOffer> {
     try {
       const response = await authService.authenticatedFetch(
-        `${this.adminBaseUrl}/flash-offers`,
+        this.adminFlashOffersBase,
         {
           method: 'POST',
           headers: {
@@ -139,7 +140,7 @@ class FlashOfferService {
   async updateFlashOffer(id: string, payload: Partial<CreateFlashOfferPayload>): Promise<FlashOffer> {
     try {
       const response = await authService.authenticatedFetch(
-        `${this.adminBaseUrl}/flash-offers/${id}`,
+        `${this.adminFlashOffersBase}/${id}`,
         {
           method: 'PUT',
           headers: {
@@ -165,7 +166,7 @@ class FlashOfferService {
   async deleteFlashOffer(id: string): Promise<void> {
     try {
       const response = await authService.authenticatedFetch(
-        `${this.adminBaseUrl}/flash-offers/${id}`,
+        `${this.adminFlashOffersBase}/${id}`,
         {
           method: 'DELETE',
         }
@@ -184,7 +185,7 @@ class FlashOfferService {
   async getFlashOfferById(id: string): Promise<FlashOfferWithProduct> {
     try {
       const response = await authService.authenticatedFetch(
-        `${this.adminBaseUrl}/flash-offers/${id}`
+        `${this.adminFlashOffersBase}/${id}`
       );
       
       if (!response.ok) {
@@ -202,6 +203,50 @@ class FlashOfferService {
   // 🔥 Activar/Desactivar oferta flash (admin)
   async toggleFlashOfferStatus(id: string, is_active: boolean): Promise<FlashOffer> {
     return this.updateFlashOffer(id, { is_active });
+  }
+
+  // 🔥 Obtener descuento de artículo por código (admin)
+  async getArticleDiscount(code: string): Promise<any> {
+    try {
+      const response = await authService.authenticatedFetch(
+        `${this.adminBaseUrl}/article-discounts/code/${code}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching article discount: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch article discount:', error);
+      throw error;
+    }
+  }
+
+  // 🔥 Actualizar descuento de artículo (admin)
+  async updateArticleDiscount(code: string, payload: any): Promise<any> {
+    try {
+      const response = await authService.authenticatedFetch(
+        `${this.adminBaseUrl}/article-discounts/code/${code}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Error updating article discount: ${response.status} - ${errorData.message || 'Unknown error'}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to update article discount:', error);
+      throw error;
+    }
   }
 
   // 🔥 Utilidades privadas

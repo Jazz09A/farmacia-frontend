@@ -459,9 +459,9 @@ const CheckoutQuotePage: React.FC = () => {
     const itemsPayload = validation.items_verificados
       .filter(item => item.error === null && item.stock_ok) // Solo items válidos
       .map((item, index) => ({
-        line_number: index + 1,
-        product_code: item.co_art,
-        quantity: item.cantidad,
+          line_number: index + 1,
+          product_code: item.co_art,
+          quantity: item.cantidad,
       }));
 
     if (itemsPayload.length === 0) {
@@ -736,13 +736,13 @@ const CheckoutQuotePage: React.FC = () => {
                     ))}
                 </div>
                 <div className="mt-4 flex items-center gap-3">
-                  <button
-                    onClick={handleValidateCart}
+                <button
+                  onClick={handleValidateCart}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
-                  >
-                    <RefreshCw className="h-4 w-4" />
+                >
+                  <RefreshCw className="h-4 w-4" />
                     Validar nuevamente
-                  </button>
+                </button>
                   <p className="text-xs text-red-600">
                     Ajusta las cantidades o elimina los productos con problemas antes de continuar.
                   </p>
@@ -1050,13 +1050,13 @@ const CheckoutQuotePage: React.FC = () => {
                                   {formatPriceFromBackend((parseFloat(item.subtotal) + parseFloat(item.descuento)).toString(), currency)}
                                 </span>
                               )}
-                              <span className="text-sm font-semibold text-medical-gray-900">
-                                {formatPriceFromBackend(item.subtotal, currency)}
-                              </span>
+                            <span className="text-sm font-semibold text-medical-gray-900">
+                              {formatPriceFromBackend(item.subtotal, currency)}
+                            </span>
                             </div>
-                            <p className="text-xs text-medical-gray-500 mt-0.5">
-                              +{formatPriceFromBackend(item.impuestos, currency)} imp.
-                            </p>
+                              <p className="text-xs text-medical-gray-500 mt-0.5">
+                                +{formatPriceFromBackend(item.impuestos, currency)} imp.
+                              </p>
                           </div>
                         </div>
                       );
