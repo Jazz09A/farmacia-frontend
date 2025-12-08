@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface CarouselImage {
   id: string;
-  src: string;
+  src: string; // Fallback image
+  srcMobile?: string; // Mobile image (opcional)
+  srcDesktop?: string; // Desktop image (opcional)
   alt: string;
   title?: string;
   description?: string;
@@ -28,6 +30,17 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
   // Preload all carousel images for instant transitions
   useEffect(() => {
     images.forEach((image) => {
+      // Preload mobile image if available
+      if (image.srcMobile) {
+        const imgMobile = new Image();
+        imgMobile.src = image.srcMobile;
+      }
+      // Preload desktop image if available
+      if (image.srcDesktop) {
+        const imgDesktop = new Image();
+        imgDesktop.src = image.srcDesktop;
+      }
+      // Preload fallback image
       const img = new Image();
       img.src = image.src;
     });
@@ -64,14 +77,33 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.8, ease: "easeInOut" }}
           >
-            <img
-              src={images[currentIndex].src}
-              alt={images[currentIndex].alt}
-              className="w-full h-full object-cover object-center"
-              loading="eager"
-              fetchpriority={currentIndex === 0 ? "high" : "auto"}
-              decoding="async"
-            />
+            {/* Responsive Image using picture element for production optimization */}
+            {/* object-cover para que la imagen llene todo el espacio sin espacios vacíos */}
+            <picture className="absolute inset-0 w-full h-full">
+              {/* Desktop image - shown on screens 768px and wider */}
+              {images[currentIndex].srcDesktop && (
+                <source
+                  media="(min-width: 768px)"
+                  srcSet={images[currentIndex].srcDesktop}
+                />
+              )}
+              {/* Mobile image - shown on screens smaller than 768px */}
+              {images[currentIndex].srcMobile && (
+                <source
+                  media="(max-width: 767px)"
+                  srcSet={images[currentIndex].srcMobile}
+                />
+              )}
+              {/* Fallback image */}
+              <img
+                src={images[currentIndex].src}
+                alt={images[currentIndex].alt}
+                className="w-full h-full object-cover object-center"
+                loading="eager"
+                fetchpriority={currentIndex === 0 ? "high" : "auto"}
+                decoding="async"
+              />
+            </picture>
             
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-transparent" />
