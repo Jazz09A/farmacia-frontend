@@ -6,16 +6,12 @@ import {
   BookOpen, 
   Users, 
   Package, 
-  Bell,
   Search,
   LogOut,
-  Plus,
   Menu,
   X,
   ExternalLink,
   Zap,
-  CreditCard,
-  DollarSign,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion } from 'framer-motion';
@@ -95,14 +91,6 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
               <Users className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
               <span className="truncate">Clientes</span>
             </NavLink>
-            <NavLink to="/admin/credit" className={navLinkClass} onClick={onClose}>
-              <CreditCard className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
-              <span className="truncate">Crédito</span>
-            </NavLink>
-            <NavLink to="/admin/payments" className={navLinkClass} onClick={onClose}>
-              <DollarSign className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
-              <span className="truncate">Pagos</span>
-            </NavLink>
           </div>
 
           <div className="mb-4">
@@ -144,7 +132,6 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
 
 const AdminHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const getUserDisplayName = () => {
     if (!user) return 'Usuario Admin';
