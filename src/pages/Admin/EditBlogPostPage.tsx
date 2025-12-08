@@ -1,38 +1,100 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BlogPost } from '../../types';
-import { mockBlogPosts } from '../../data/blogMockData';
+import { useAdminPostByIdQuery, useUpdatePostMutation } from '../../hooks/queries/useBlogQueries';
 import { BlogPostSkeleton } from '../../components/Skeleton';
+import Toast from '../../components/common/Toast';
 
 const BlogPostForm = lazy(() => import('../../components/Admin/BlogPostForm'));
 
 const EditBlogPostPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [toastVisible, setToastVisible] = useState(false);
+  
+  // Load post data
+  const { 
+    data: post, 
+    isLoading, 
+    error: postError 
+  } = useAdminPostByIdQuery(id || '', false, !!id);
 
-  // En una app real, aquí harías una petición a la API para obtener el post por su ID
-  const postToEdit = mockBlogPosts.find(p => p.id === id);
+  // Update mutation
+  const updatePostMutation = useUpdatePostMutation();
 
-  const handleUpdatePost = (postData: Omit<BlogPost, 'id' | 'createdAt' | 'updatedAt' | 'slug' | 'readTime'>) => {
-    if (!postToEdit) return;
+  // Show toast on success
+  useEffect(() => {
+    if (updatePostMutation.isSuccess) {
+      setToast({ type: 'success', message: 'Artículo actualizado exitosamente' });
+      setToastVisible(true);
+      // Navigate after showing success message
+      const timer = setTimeout(() => {
+        navigate('/admin/blog');
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [updatePostMutation.isSuccess, navigate]);
 
-    const updatedPost: BlogPost = {
-      ...postToEdit,
-      ...postData,
-      slug: postData.title.toLowerCase().replace(/\s+/g, '-'),
-      readTime: Math.ceil(postData.content.length / 1000),
-      updatedAt: new Date(),
-    };
+  // Show toast on error
+  useEffect(() => {
+    if (updatePostMutation.isError) {
+      const errorMessage = updatePostMutation.error instanceof Error 
+        ? updatePostMutation.error.message 
+        : 'Error al actualizar el artículo';
+      setToast({ type: 'error', message: errorMessage });
+      setToastVisible(true);
+    }
+  }, [updatePostMutation.isError, updatePostMutation.error]);
 
-    // TODO: Implementar actualización real
-    alert('Artículo actualizado con éxito (simulado).');
+  const handleUpdatePost = async (postData: {
+    title: string;
+    content: string;
+    category_id: string;
+    author_name?: string;
+    featured_image_url?: string;
+    status: 'draft' | 'published' | 'archived';
+  }) => {
+    if (!id) return;
 
-    // Aquí llamarías a tu API: updatePost(id, updatedPost)
-
-    navigate('/admin/blog');
+    try {
+      await updatePostMutation.mutateAsync({ postId: id, data: postData });
+    } catch (err) {
+      console.error('Error updating post:', err);
+      // Error toast is handled by useEffect
+    }
   };
 
-  if (!postToEdit) {
+  const handleCloseToast = () => {
+    setToastVisible(false);
+    setTimeout(() => setToast(null), 300);
+  };
+
+  if (isLoading) {
+    return (
+      <div>
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Editar Artículo</h1>
+        <BlogPostSkeleton />
+      </div>
+    );
+  }
+
+  const error = postError ? (postError instanceof Error ? postError.message : 'Error al cargar el artículo') : null;
+
+  if (error && !post) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-500 mb-4">{error}</div>
+        <button
+          onClick={() => navigate('/admin/blog')}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Volver al listado
+        </button>
+      </div>
+    );
+  }
+
+  if (!post) {
     return <div className="text-center text-red-500">Artículo no encontrado.</div>;
   }
 
@@ -40,8 +102,22 @@ const EditBlogPostPage: React.FC = () => {
     <div>
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Editar Artículo</h1>
       <Suspense fallback={<BlogPostSkeleton />}>
-        <BlogPostForm onSubmit={handleUpdatePost} post={postToEdit} isEditing />
+        <BlogPostForm onSubmit={handleUpdatePost} post={post} isEditing />
       </Suspense>
+      {updatePostMutation.isPending && (
+        <div className="mt-4 text-center text-gray-600">
+          Guardando cambios...
+        </div>
+      )}
+      
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toastVisible}
+          onClose={handleCloseToast}
+        />
+      )}
     </div>
   );
 };

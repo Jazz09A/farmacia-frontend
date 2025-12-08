@@ -144,7 +144,7 @@ const AdminRoutes = () => (
         <Route path="credit" element={<AdminCreditPage />} />
         <Route path="payments" element={<AdminPaymentsPage />} />
         <Route path="blog" element={<AdminBlogPage />} />
-        <Route path="blog/new" element={<CreateBlogPostPage />} />
+        <Route path="blog/create" element={<CreateBlogPostPage />} />
         <Route path="blog/edit/:id" element={<EditBlogPostPage />} />
       </Route>
     </Routes>

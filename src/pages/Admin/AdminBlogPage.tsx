@@ -1,7 +1,7 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, useMemo, lazy, Suspense, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { mockBlogPosts } from '../../data/blogMockData';
-import { BlogPost } from '../../types';
+import { useAdminPostsQuery, useAdminCategoriesQuery, useDeletePostMutation } from '../../hooks/queries/useBlogQueries';
+import Toast from '../../components/common/Toast';
 import { 
   Plus, 
   Edit, 
@@ -23,46 +23,101 @@ const ConfirmationModal = lazy(() => import('../../components/common/Confirmatio
 
 const AdminBlogPage: React.FC = () => {
   const navigate = useNavigate();
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(mockBlogPosts);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all');
   const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
-  const [postToDelete, setPostToDelete] = useState<BlogPost | null>(null);
+  const [postToDelete, setPostToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [toastVisible, setToastVisible] = useState(false);
 
-  // Filtrar posts
-  const filteredPosts = blogPosts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || post.category === categoryFilter;
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'published' && post.published) ||
-                         (statusFilter === 'draft' && !post.published);
-    return matchesSearch && matchesCategory && matchesStatus;
+  // Load categories
+  const { data: categories = [] } = useAdminCategoriesQuery();
+
+  // Get category ID for filtering
+  const categoryId = useMemo(() => {
+    if (categoryFilter === 'all') return undefined;
+    return categories.find(cat => cat.id === categoryFilter || cat.name === categoryFilter)?.id;
+  }, [categoryFilter, categories]);
+
+  // Load posts
+  const { 
+    data: postsResponse, 
+    isLoading, 
+    error: postsError 
+  } = useAdminPostsQuery({
+    page: currentPage,
+    limit: 10,
+    status_filter: statusFilter !== 'all' ? statusFilter : undefined,
+    category_id: categoryId,
+    search: searchTerm || undefined,
   });
 
-  // Obtener categorías únicas
-  const categories = Array.from(new Set(blogPosts.map(post => post.category)));
+  // Delete mutation
+  const deletePostMutation = useDeletePostMutation();
 
-  const handleDeleteRequest = (post: BlogPost) => {
+  const blogPosts = postsResponse?.items || [];
+  const totalPages = postsResponse?.pages || 1;
+  const total = postsResponse?.total || 0;
+  const error = postsError ? (postsError instanceof Error ? postsError.message : 'Error al cargar los artículos') : null;
+
+  const filteredPosts = blogPosts;
+
+  const handleDeleteRequest = (post: { id: string; title: string }) => {
     setPostToDelete(post);
   };
 
-  const handleConfirmDelete = () => {
-    if (!postToDelete) return;
+  // Show toast on delete success
+  useEffect(() => {
+    if (deletePostMutation.isSuccess) {
+      setToast({ type: 'success', message: 'Artículo eliminado exitosamente' });
+      setToastVisible(true);
+    }
+  }, [deletePostMutation.isSuccess]);
 
-    setBlogPosts(blogPosts.filter(p => p.id !== postToDelete.id));
-    setSelectedPosts(selectedPosts.filter(id => id !== postToDelete.id));
-    setPostToDelete(null);
+  // Show toast on delete error
+  useEffect(() => {
+    if (deletePostMutation.isError) {
+      const errorMessage = deletePostMutation.error instanceof Error 
+        ? deletePostMutation.error.message 
+        : 'Error al eliminar el artículo';
+      setToast({ type: 'error', message: errorMessage });
+      setToastVisible(true);
+    }
+  }, [deletePostMutation.isError, deletePostMutation.error]);
+
+  const handleCloseToast = () => {
+    setToastVisible(false);
+    setTimeout(() => setToast(null), 300);
   };
 
-  const handleBulkDelete = () => {
+  const handleConfirmDelete = async () => {
+    if (!postToDelete) return;
+
+    try {
+      await deletePostMutation.mutateAsync(postToDelete.id);
+      setSelectedPosts(selectedPosts.filter(id => id !== postToDelete.id));
+      setPostToDelete(null);
+    } catch (err) {
+      console.error('Error deleting post:', err);
+      // Error toast is handled by useEffect
+    }
+  };
+
+  const handleBulkDelete = async () => {
     if (selectedPosts.length === 0) return;
-    // Aquí podrías usar un modal de confirmación más grande si quisieras
     if (window.confirm(`¿Estás seguro de que quieres eliminar ${selectedPosts.length} artículos?`)) {
-      setBlogPosts(blogPosts.filter(post => !selectedPosts.includes(post.id)));
-      setSelectedPosts([]);
+      try {
+        await Promise.all(selectedPosts.map(id => deletePostMutation.mutateAsync(id)));
+        setSelectedPosts([]);
+        setToast({ type: 'success', message: `${selectedPosts.length} artículo(s) eliminado(s) exitosamente` });
+        setToastVisible(true);
+      } catch (err) {
+        console.error('Error deleting posts:', err);
+        setToast({ type: 'error', message: 'Error al eliminar algunos artículos' });
+        setToastVisible(true);
+      }
     }
   };
 
@@ -82,27 +137,41 @@ const AdminBlogPage: React.FC = () => {
     }
   };
 
-  const togglePublishStatus = (id: string) => {
-    setBlogPosts(posts => 
-      posts.map(post => 
-        post.id === id 
-          ? { 
-              ...post, 
-              published: !post.published,
-              publishedAt: !post.published ? new Date() : undefined
-            }
-          : post
-      )
-    );
-  };
-
-  const formatDate = (date?: Date) => {
-    if (!date) return 'Sin publicar';
-    return date.toLocaleDateString('es-ES', {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Sin publicar';
+    return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const getAuthorName = (post: BlogPostListItem): string => {
+    if (typeof post.author === 'string') return post.author;
+    return post.author?.full_name || 'Autor desconocido';
+  };
+
+  const getCategoryName = (post: BlogPostListItem): string => {
+    if (typeof post.category === 'string') return post.category;
+    return post.category?.name || 'Sin categoría';
+  };
+
+  const getStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'published': return 'Publicado';
+      case 'draft': return 'Borrador';
+      case 'archived': return 'Archivado';
+      default: return status;
+    }
+  };
+
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'published': return 'bg-green-100 text-green-800';
+      case 'draft': return 'bg-yellow-100 text-yellow-800';
+      case 'archived': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
@@ -167,7 +236,7 @@ const AdminBlogPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
               <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Total Artículos</p>
-              <p className="text-lg lg:text-2xl font-bold text-gray-900">{blogPosts.length}</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-900">{total}</p>
             </div>
              <div className="p-2 lg:p-3 bg-blue-100 rounded-full flex-shrink-0">
                <FileText className="w-4 h-4 lg:w-6 lg:h-6 text-blue-600" />
@@ -179,7 +248,7 @@ const AdminBlogPage: React.FC = () => {
             <div className="min-w-0 flex-1">
               <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Publicados</p>
               <p className="text-lg lg:text-2xl font-bold text-green-600">
-                {blogPosts.filter(post => post.published).length}
+                {blogPosts.filter(post => post.status === 'published').length}
               </p>
             </div>
             <div className="p-2 lg:p-3 bg-green-100 rounded-full flex-shrink-0">
@@ -192,7 +261,7 @@ const AdminBlogPage: React.FC = () => {
             <div className="min-w-0 flex-1">
               <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Borradores</p>
               <p className="text-lg lg:text-2xl font-bold text-yellow-600">
-                {blogPosts.filter(post => !post.published).length}
+                {blogPosts.filter(post => post.status === 'draft').length}
               </p>
             </div>
             <div className="p-2 lg:p-3 bg-yellow-100 rounded-full flex-shrink-0">
@@ -212,6 +281,13 @@ const AdminBlogPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">{error}</p>
+        </div>
+      )}
 
       {/* Blog Posts List */}
       <div className="bg-white rounded-lg shadow-sm">
@@ -244,19 +320,17 @@ const AdminBlogPage: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800 text-sm lg:text-base truncate">{post.title}</p>
                     <p className="text-xs lg:text-sm text-gray-500">
-                      Por {post.author} en <span className="font-medium text-blue-600">{post.category}</span>
+                      Por {getAuthorName(post)} en <span className="font-medium text-blue-600">{getCategoryName(post)}</span>
                     </p>
                   </div>
                   <div className="text-right ml-3 flex-shrink-0">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      post.published ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {post.published ? 'Publicado' : 'Borrador'}
+                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(post.status)}`}>
+                      {getStatusLabel(post.status)}
                     </span>
                   </div>
                 </div>
                 <div className="flex justify-between items-end mt-4">
-                  <p className="text-sm text-gray-500">{formatDate(post.publishedAt)}</p>
+                  <p className="text-sm text-gray-500">{formatDate(post.published_at)}</p>
                    <div className="flex items-center space-x-2">
                       <button 
                         onClick={(e) => {
@@ -271,7 +345,7 @@ const AdminBlogPage: React.FC = () => {
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteRequest(post);
+                          handleDeleteRequest({ id: post.id, title: post.title });
                         }}
                         className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
                         title="Eliminar Artículo"
@@ -300,7 +374,7 @@ const AdminBlogPage: React.FC = () => {
                     />
                   </div>
                 </th>
-                <th scope="col" className="px-6 py-3">Título</th>
+                  <th scope="col" className="px-6 py-3">Título</th>
                 <th scope="col" className="px-6 py-3">Autor</th>
                 <th scope="col" className="px-6 py-3">Categoría</th>
                 <th scope="col" className="px-6 py-3">Estado</th>
@@ -309,38 +383,49 @@ const AdminBlogPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredPosts.map(post => (
-                <tr 
-                  key={post.id}
-                  className="bg-white border-b hover:bg-gray-50 cursor-pointer"
-                  onClick={() => navigate(`/admin/blog/edit/${post.id}`)}
-                >
-                  <td className="w-4 p-4">
-                    <div className="flex items-center">
-                       <input 
-                        type="checkbox"
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                        checked={selectedPosts.includes(post.id)}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          handleSelectPost(post.id);
-                        }}
-                      />
-                    </div>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                    Cargando artículos...
                   </td>
-                  <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                    {post.title}
-                  </th>
-                  <td className="px-6 py-4">{post.author}</td>
-                  <td className="px-6 py-4">{post.category}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      post.published ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {post.published ? 'Publicado' : 'Borrador'}
-                    </span>
+                </tr>
+              ) : filteredPosts.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                    No se encontraron artículos
                   </td>
-                  <td className="px-6 py-4">{formatDate(post.publishedAt)}</td>
+                </tr>
+              ) : (
+                filteredPosts.map(post => (
+                  <tr 
+                    key={post.id}
+                    className="bg-white border-b hover:bg-gray-50 cursor-pointer"
+                    onClick={() => navigate(`/admin/blog/edit/${post.id}`)}
+                  >
+                    <td className="w-4 p-4">
+                      <div className="flex items-center">
+                         <input 
+                          type="checkbox"
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                          checked={selectedPosts.includes(post.id)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleSelectPost(post.id);
+                          }}
+                        />
+                      </div>
+                    </td>
+                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                      {post.title}
+                    </th>
+                    <td className="px-6 py-4">{getAuthorName(post)}</td>
+                    <td className="px-6 py-4">{getCategoryName(post)}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(post.status)}`}>
+                        {getStatusLabel(post.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">{formatDate(post.published_at)}</td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center space-x-2">
                        <button 
@@ -356,7 +441,7 @@ const AdminBlogPage: React.FC = () => {
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteRequest(post);
+                          handleDeleteRequest({ id: post.id, title: post.title });
                         }}
                         className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
                         title="Eliminar Artículo"
@@ -366,11 +451,49 @@ const AdminBlogPage: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6">
+          <nav className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Anterior
+            </button>
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-4 py-2 rounded-lg ${
+                  currentPage === page
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Siguiente
+            </button>
+          </nav>
+        </div>
+      )}
       
       {postToDelete && (
         <Suspense fallback={<div>Cargando...</div>}>
@@ -384,6 +507,15 @@ const AdminBlogPage: React.FC = () => {
             cancelText="Cancelar"
           />
         </Suspense>
+      )}
+
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toastVisible}
+          onClose={handleCloseToast}
+        />
       )}
     </div>
   );

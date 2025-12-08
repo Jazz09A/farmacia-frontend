@@ -1,39 +1,78 @@
-import React, { lazy, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BlogPost } from '../../types';
-import { BlogPostSkeleton } from '../../components/Skeleton';
-
-const BlogPostForm = lazy(() => import('../../components/Admin/BlogPostForm'));
-
-// En una app real, tendrías un estado global (Zustand, Redux) o un hook para manejar los posts.
-// Por ahora, simularemos la creación.
+import { useCreatePostMutation } from '../../hooks/queries/useBlogQueries';
+import Toast from '../../components/common/Toast';
+import BlogPostForm from '../../components/Admin/BlogPostForm';
 
 const CreateBlogPostPage: React.FC = () => {
   const navigate = useNavigate();
+  const createPostMutation = useCreatePostMutation();
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [toastVisible, setToastVisible] = useState(false);
 
-  const handleCreatePost = (postData: Omit<BlogPost, 'id' | 'createdAt' | 'updatedAt' | 'slug' | 'readTime'>) => {
-    const newPost: BlogPost = {
-      ...postData,
-      id: new Date().toISOString(), // ID temporal
-      slug: postData.title.toLowerCase().replace(/\s+/g, '-'), // Slug simple
-      readTime: Math.ceil(postData.content.length / 1000), // Cálculo simple
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+  // Show toast on success
+  useEffect(() => {
+    if (createPostMutation.isSuccess) {
+      setToast({ type: 'success', message: 'Artículo creado exitosamente' });
+      setToastVisible(true);
+      // Navigate after showing success message
+      const timer = setTimeout(() => {
+        navigate('/admin/blog');
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [createPostMutation.isSuccess, navigate]);
 
-    // TODO: Implementar creación real de blog post
-    
-    alert('Artículo creado con éxito (simulado).');
-    
-    navigate('/admin/blog');
+  // Show toast on error
+  useEffect(() => {
+    if (createPostMutation.isError) {
+      const errorMessage = createPostMutation.error instanceof Error 
+        ? createPostMutation.error.message 
+        : 'Error al crear el artículo';
+      setToast({ type: 'error', message: errorMessage });
+      setToastVisible(true);
+    }
+  }, [createPostMutation.isError, createPostMutation.error]);
+
+  const handleCreatePost = async (postData: {
+    title: string;
+    content: string;
+    category_id: string;
+    author_name?: string;
+    featured_image_url?: string;
+    status: 'draft' | 'published' | 'archived';
+  }) => {
+    try {
+      await createPostMutation.mutateAsync(postData);
+    } catch (err) {
+      console.error('Error creating post:', err);
+      // Error toast is handled by useEffect
+    }
+  };
+
+  const handleCloseToast = () => {
+    setToastVisible(false);
+    setTimeout(() => setToast(null), 300);
   };
 
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Crear Nuevo Artículo</h1>
-      <Suspense fallback={<BlogPostSkeleton />}>
-        <BlogPostForm onSubmit={handleCreatePost} />
-      </Suspense>
+      <BlogPostForm onSubmit={handleCreatePost} />
+      {createPostMutation.isPending && (
+        <div className="mt-4 text-center text-gray-600">
+          Guardando artículo...
+        </div>
+      )}
+      
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          isVisible={toastVisible}
+          onClose={handleCloseToast}
+        />
+      )}
     </div>
   );
 };

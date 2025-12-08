@@ -67,6 +67,21 @@ export const queryKeys = {
     admin: (filters?: any) => ['flashOffers', 'admin', filters || {}] as const,
     detail: (id: string) => ['flashOffers', 'detail', id] as const,
   },
+  blog: {
+    all: ['blog'] as const,
+    public: {
+      posts: (params?: any) => ['blog', 'public', 'posts', params || {}] as const,
+      post: (slug: string) => ['blog', 'public', 'posts', slug] as const,
+      categories: ['blog', 'public', 'categories'] as const,
+    },
+    admin: {
+      posts: (params?: any) => ['blog', 'admin', 'posts', params || {}] as const,
+      post: (id: string) => ['blog', 'admin', 'posts', id] as const,
+      categories: (includeDeleted?: boolean) => ['blog', 'admin', 'categories', includeDeleted || false] as const,
+      category: (id: string, includeDeleted?: boolean) => ['blog', 'admin', 'categories', id, includeDeleted || false] as const,
+      postImages: (postId: string) => ['blog', 'admin', 'posts', postId, 'images'] as const,
+    },
+  },
 };
 
 export type QueryKey = ReturnType<typeof queryKeys.products.list>;

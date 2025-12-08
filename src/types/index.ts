@@ -294,20 +294,105 @@ export interface Order {
   user: string;
 }
 
+// Blog Author from API
+export interface BlogAuthor {
+  id: string;
+  email: string;
+  full_name: string;
+}
+
+// Blog Category from API
+export interface BlogCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  created_at?: string;
+}
+
+// Blog Image from API
+export interface BlogImage {
+  id: string;
+  blog_post_id: string;
+  image_code: string;
+  description?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  image_url: string;
+}
+
+// Blog Post API Response (for list endpoints)
+export interface BlogPostListItem {
+  id: string;
+  title: string;
+  slug: string;
+  featured_image_url: string;
+  images: string[] | null;
+  status: 'draft' | 'published' | 'archived';
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+  author: BlogAuthor;
+  category: BlogCategory;
+  excerpt: string;
+}
+
+// Blog Post API Response (for detail endpoint)
+export interface BlogPostDetail {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  category_id: string;
+  featured_image_url: string | null;
+  status: 'draft' | 'published' | 'archived';
+  published_at: string | null;
+  author_id: string;
+  author: BlogAuthor;
+  category: BlogCategory;
+  created_at: string;
+  updated_at: string;
+  is_published: boolean;
+}
+
+// Blog Post API Paginated Response
+export interface BlogPostApiResponse {
+  items: BlogPostListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+// Blog Images Response
+export interface BlogImagesResponse {
+  images: BlogImage[];
+  total: number;
+}
+
+// Legacy BlogPost interface (for backward compatibility)
 export interface BlogPost {
   id: string;
   title: string;
   slug: string;
   content: string;
   excerpt: string;
-  author: string;
-  category: string;
+  author: string | BlogAuthor;
+  category: string | BlogCategory;
   tags: string[];
   image: string;
+  featured_image_url?: string;
+  images?: string[] | null;
   published: boolean;
+  status?: 'draft' | 'published' | 'archived';
   publishedAt?: Date;
+  published_at?: string | null;
+  category_id?: string;
   createdAt: Date;
+  created_at?: string;
   updatedAt: Date;
+  updated_at?: string;
   readTime: number;
 }
 

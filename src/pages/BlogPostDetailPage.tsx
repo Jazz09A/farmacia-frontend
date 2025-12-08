@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { mockBlogPosts } from '../data/blogMockData';
+import { usePublicPostBySlugQuery, usePublicPostsQuery } from '../hooks/queries/useBlogQueries';
 import FeaturedBlogPosts from '../components/Blog/FeaturedBlogPosts';
 import { BlogPostDetailSkeleton } from '../components/Skeleton';
 import { 
@@ -18,46 +18,69 @@ import {
 
 const BlogPostDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [post, setPost] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate loading delay
-  useEffect(() => {
-    setIsLoading(true);
-    setPost(null);
-    
-    setTimeout(() => {
-      const foundPost = mockBlogPosts.find(p => p.slug === slug);
-      setPost(foundPost);
-      setIsLoading(false);
-    }, 1000);
-  }, [slug]);
+  // Load post by slug
+  const { 
+    data: post, 
+    isLoading, 
+    error: postError 
+  } = usePublicPostBySlugQuery(slug || '', !!slug);
 
-  // Artículos relacionados (misma categoría, excluyendo el actual)
-  const relatedPosts = mockBlogPosts
-    .filter(p => p.published && p.id !== post?.id && p.category === post?.category)
-    .slice(0, 3);
+  // Load related posts (same category)
+  const { data: relatedPostsResponse } = usePublicPostsQuery({
+    page: 1,
+    limit: 4,
+    category_slug: post?.category.slug,
+  });
 
-  // Posts recientes para el sidebar
-  const recentPosts = mockBlogPosts
-    .filter(p => p.published && p.id !== post?.id)
-    .sort((a, b) => new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime())
-    .slice(0, 4);
+  const relatedPosts = useMemo(() => {
+    if (!post || !relatedPostsResponse) return [];
+    return relatedPostsResponse.items
+      .filter(p => p.id !== post.id)
+      .slice(0, 3);
+  }, [post, relatedPostsResponse]);
+
+  const error = postError ? (postError instanceof Error ? postError.message : 'Error al cargar el artículo') : null;
+
+  // Helper to get image URL
+  const getPostImage = (): string => {
+    if (!post) return '/images/blog/default.jpg';
+    if (post.featured_image_url) return post.featured_image_url;
+    return '/images/blog/default.jpg';
+  };
+
+  // Helper to get author name
+  const getAuthorName = (): string => {
+    if (!post) return 'Autor desconocido';
+    return post.author?.full_name || 'Autor desconocido';
+  };
+
+  // Helper to get category name
+  const getCategoryName = (): string => {
+    if (!post) return 'Sin categoría';
+    return post.category?.name || 'Sin categoría';
+  };
+
+  // Helper to get category slug
+  const getCategorySlug = (): string => {
+    if (!post) return '';
+    return post.category?.slug || '';
+  };
 
   // Show skeleton while loading
   if (isLoading) {
     return <BlogPostDetailSkeleton />;
   }
 
-  // Show not found message if post doesn't exist
-  if (!post) {
+  // Show error or not found message
+  if (error || !post) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <BookOpen className="w-24 h-24 mx-auto text-gray-400 mb-6" />
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Artículo no encontrado</h2>
           <p className="text-gray-600 mb-8">
-            Lo sentimos, no pudimos encontrar el artículo que buscas.
+            {error || 'Lo sentimos, no pudimos encontrar el artículo que buscas.'}
           </p>
           <Link 
             to="/blog" 
@@ -89,8 +112,8 @@ const BlogPostDetailPage: React.FC = () => {
                 </li>
                 <ChevronRight className="w-4 h-4" />
                 <li>
-                  <Link to={`/blog?category=${post.category}`} className="hover:text-blue-600">
-                    {post.category}
+                  <Link to={`/blog?category=${getCategorySlug()}`} className="hover:text-blue-600">
+                    {getCategoryName()}
                   </Link>
                 </li>
                 <ChevronRight className="w-4 h-4" />
@@ -103,7 +126,7 @@ const BlogPostDetailPage: React.FC = () => {
               {/* Category Badge */}
               <div className="mb-4">
                 <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm font-semibold rounded-full">
-                  {post.category}
+                  {getCategoryName()}
                 </span>
               </div>
 
@@ -112,29 +135,26 @@ const BlogPostDetailPage: React.FC = () => {
                 {post.title}
               </h1>
 
-              {/* Excerpt */}
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                {post.excerpt}
-              </p>
-
               {/* Metadata */}
               <div className="flex flex-wrap items-center justify-between mb-8 pb-8 border-b border-gray-200">
                 <div className="flex flex-wrap items-center space-x-6 mb-4 lg:mb-0">
                   <div className="flex items-center text-gray-500">
                     <User className="w-5 h-5 mr-2" />
-                    <span className="font-medium">{post.author}</span>
+                    <span className="font-medium">{getAuthorName()}</span>
                   </div>
-                  <div className="flex items-center text-gray-500">
-                    <Calendar className="w-5 h-5 mr-2" />
-                    <span>{new Date(post.publishedAt!).toLocaleDateString('es-ES', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}</span>
-                  </div>
+                  {post.published_at && (
+                    <div className="flex items-center text-gray-500">
+                      <Calendar className="w-5 h-5 mr-2" />
+                      <span>{new Date(post.published_at).toLocaleDateString('es-ES', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}</span>
+                    </div>
+                  )}
                   <div className="flex items-center text-gray-500">
                     <Clock className="w-5 h-5 mr-2" />
-                    <span>{post.readTime} min de lectura</span>
+                    <span>{Math.ceil(post.content.length / 1000)} min de lectura</span>
                   </div>
                 </div>
 
@@ -152,13 +172,18 @@ const BlogPostDetailPage: React.FC = () => {
               </div>
 
               {/* Featured Image */}
-              <div className="mb-10">
-                <img 
-                  src={post.image || '/images/blog/default.jpg'} 
-                  alt={post.title} 
-                  className="w-full h-96 object-cover rounded-xl shadow-lg"
-                />
-              </div>
+              {getPostImage() !== '/images/blog/default.jpg' && (
+                <div className="mb-10 relative w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden bg-gray-100 rounded-xl shadow-lg">
+                  <img 
+                    src={getPostImage()} 
+                    alt={post.title} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/images/blog/default.jpg';
+                    }}
+                  />
+                </div>
+              )}
 
               {/* Article Content */}
               <div className="prose prose-lg max-w-none">
@@ -168,25 +193,9 @@ const BlogPostDetailPage: React.FC = () => {
                 />
               </div>
 
-              {/* Tags */}
-              <div className="mt-12 pt-8 border-t border-gray-200">
-                <div className="flex items-center flex-wrap gap-3">
-                  <Tag className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-600 font-medium mr-2">Etiquetas:</span>
-                  {post.tags.map((tag: string) => (
-                    <Link
-                      key={tag}
-                      to={`/blog?tag=${tag}`}
-                      className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm transition-colors"
-                    >
-                      {tag}
-                    </Link>
-                  ))}
-                </div>
-              </div>
 
-              {/* Comments Section */}
-              <div className="mt-12 pt-8 border-t border-gray-200">
+              {/* Comments Section - Comentado temporalmente */}
+              {/* <div className="mt-12 pt-8 border-t border-gray-200">
                 <div className="flex items-center mb-6">
                   <MessageCircle className="w-6 h-6 mr-3 text-gray-600" />
                   <h3 className="text-2xl font-bold text-gray-900">Comentarios</h3>
@@ -199,7 +208,7 @@ const BlogPostDetailPage: React.FC = () => {
                     Agregar comentario
                   </button>
                 </div>
-              </div>
+              </div> */}
             </article>
 
             {/* Related Posts */}
@@ -207,30 +216,50 @@ const BlogPostDetailPage: React.FC = () => {
               <div className="mt-16">
                 <h3 className="text-2xl font-bold text-gray-900 mb-8">Artículos relacionados</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {relatedPosts.map(relatedPost => (
-                    <Link
-                      key={relatedPost.id}
-                      to={`/blog/${relatedPost.slug}`}
-                      className="group block bg-gray-50 rounded-lg overflow-hidden hover:bg-white hover:shadow-lg transition-all duration-300"
-                    >
-                      <img
-                        src={relatedPost.image}
-                        alt={relatedPost.title}
-                        className="w-full h-40 object-cover"
-                      />
-                      <div className="p-4">
-                        <span className="text-xs text-blue-600 font-semibold">
-                          {relatedPost.category}
-                        </span>
-                        <h4 className="mt-2 font-semibold text-gray-900 group-hover:text-blue-600 line-clamp-2">
-                          {relatedPost.title}
-                        </h4>
-                        <p className="mt-2 text-sm text-gray-600 line-clamp-2">
-                          {relatedPost.excerpt}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
+                  {relatedPosts.map(relatedPost => {
+                    const categoryName = typeof relatedPost.category === 'string' 
+                      ? relatedPost.category 
+                      : relatedPost.category?.name;
+                    const imageUrl = relatedPost.featured_image_url || 
+                      (relatedPost.images && relatedPost.images.length > 0 ? relatedPost.images[0] : '/images/blog/default.jpg');
+                    
+                    return (
+                      <Link
+                        key={relatedPost.id}
+                        to={`/blog/${relatedPost.slug}`}
+                        className="group block bg-gray-50 rounded-lg overflow-hidden hover:bg-white hover:shadow-lg transition-all duration-300"
+                      >
+                        <div className="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
+                          <img
+                            src={imageUrl}
+                            alt={relatedPost.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              const img = e.currentTarget;
+                              // Only set default if it's not already the default image
+                              if (!img.src.includes('/images/blog/default.jpg')) {
+                                img.src = '/images/blog/default.jpg';
+                                // Prevent further error handling
+                                img.onerror = null;
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className="p-4">
+                          <span className="text-xs text-blue-600 font-semibold">
+                            {categoryName}
+                          </span>
+                          <h4 className="mt-2 font-semibold text-gray-900 group-hover:text-blue-600 line-clamp-2">
+                            {relatedPost.title}
+                          </h4>
+                          <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+                            {relatedPost.excerpt}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -243,10 +272,10 @@ const BlogPostDetailPage: React.FC = () => {
               <div className="bg-gray-50 rounded-lg p-6">
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                    {post.author.charAt(0)}
+                    {getAuthorName().charAt(0).toUpperCase()}
                   </div>
                   <div className="ml-4">
-                    <h4 className="font-semibold text-gray-900">{post.author}</h4>
+                    <h4 className="font-semibold text-gray-900">{getAuthorName()}</h4>
                     <p className="text-sm text-gray-600">Experto Farmacéutico</p>
                   </div>
                 </div>
