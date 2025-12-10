@@ -7,6 +7,7 @@ import { useAdminCategoriesQuery, usePostImagesQuery, useUploadPostImageMutation
 import { BlogPostDetail } from '../../types';
 import { Upload, Check, Image as ImageIcon, Trash2, Loader2 } from 'lucide-react';
 import Toast from '../common/Toast';
+import { getApiUrl } from '../../config';
 
 interface BlogPostFormProps {
   post?: BlogPostDetail;
@@ -31,6 +32,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
   const [authorName, setAuthorName] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
   const [status, setStatus] = useState<'draft' | 'published' | 'archived'>('draft');
+  const [loadedPostId, setLoadedPostId] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [selectedImageForFeatured, setSelectedImageForFeatured] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -97,26 +99,43 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
     setTimeout(() => setToast(null), 300);
   };
 
-  // Load post data when editing
+  // Build absolute image URL when the API returns relative paths (e.g. /api/v1/...)
+  const apiOrigin = React.useMemo(() => {
+    try {
+      return new URL(getApiUrl('')).origin;
+    } catch {
+      return '';
+    }
+  }, []);
+
+  const resolveImageUrl = (url: string): string => {
+    if (!url) return '/images/blog/default.jpg';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/api/')) return `${apiOrigin}${url}`;
+    return url;
+  };
+
+  // Load post data when editing, only once per post id (evita sobrescribir estado al refetch)
   useEffect(() => {
-    if (isEditing && post) {
+    if (isEditing && post && post.id !== loadedPostId) {
       setTitle(post.title);
       setContent(post.content);
       setCategoryId(post.category_id);
       setAuthorName(post.author?.full_name || '');
-      setFeaturedImageUrl(post.featured_image_url || '');
+      setFeaturedImageUrl(resolveImageUrl(post.featured_image_url || ''));
       setStatus(post.status);
+      setLoadedPostId(post.id);
     }
-  }, [isEditing, post]);
+  }, [isEditing, post, loadedPostId, resolveImageUrl]);
 
   // Set featured image from loaded images if not set
   useEffect(() => {
     if (isEditing && post && images.length > 0 && !featuredImageUrl) {
-      const firstImageUrl = images[0].image_url;
+      const firstImageUrl = resolveImageUrl(images[0].image_url);
       setFeaturedImageUrl(firstImageUrl);
       setSelectedImageForFeatured(firstImageUrl);
     }
-  }, [images, featuredImageUrl, isEditing, post]);
+  }, [images, featuredImageUrl, isEditing, post, resolveImageUrl]);
 
   // Handle image upload
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,8 +165,9 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
       
       // If no featured image is set, use the newly uploaded one
       if (!featuredImageUrl) {
-        setFeaturedImageUrl(result.image_url);
-        setSelectedImageForFeatured(result.image_url);
+        const resolved = resolveImageUrl(result.image_url);
+        setFeaturedImageUrl(resolved);
+        setSelectedImageForFeatured(resolved);
       }
       
       // Reset file input
@@ -185,8 +205,10 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
 
   // Handle set featured image
   const handleSetFeaturedImage = (imageUrl: string) => {
-    setFeaturedImageUrl(imageUrl);
-    setSelectedImageForFeatured(imageUrl);
+    const resolved = resolveImageUrl(imageUrl);
+    console.log('[BlogPostForm] set featured image', { imageUrl, resolved });
+    setFeaturedImageUrl(resolved);
+    setSelectedImageForFeatured(resolved);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -271,7 +293,32 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
 
       {/* Image Gallery (only when editing) */}
       {isEditing && post && (
-        <div className="border-t border-gray-200 pt-6">
+        <div className="border-t border-gray-200 pt-6 space-y-4">
+          {/* Featured image summary */}
+          <div className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+            <div className="w-16 h-16 rounded-md overflow-hidden bg-white border border-blue-100">
+              <img
+                src={featuredImageUrl || '/images/blog/default.jpg'}
+                alt="Imagen destacada actual"
+                className="w-full h-full object-cover"
+                loading="lazy"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  if (img.src.includes('/images/blog/default.jpg')) {
+                    img.onerror = null;
+                    return;
+                  }
+                  img.src = '/images/blog/default.jpg';
+                  img.onerror = null;
+                }}
+              />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-blue-900">Imagen de portada actual</p>
+              <p className="text-xs text-blue-800">Selecciona una de la galería o sube una nueva para cambiarla.</p>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between mb-4">
             <label className="block text-sm font-medium text-gray-700">Galería de Imágenes</label>
             <input
@@ -398,11 +445,18 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
                   >
                     <div className="aspect-square bg-gray-100">
                       <img
-                        src={image.image_url}
+                        src={resolveImageUrl(image.image_url)}
                         alt={image.description || 'Imagen del blog'}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/images/blog/default.jpg';
+                          const img = e.target as HTMLImageElement;
+                          if (img.src.includes('/images/blog/default.jpg')) {
+                            img.onerror = null;
+                            return;
+                          }
+                          img.src = '/images/blog/default.jpg';
+                          img.onerror = null; // Evita loops y nuevas peticiones
                         }}
                       />
                     </div>
@@ -463,61 +517,37 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
 
       {/* Featured Image URL */}
       <div>
-        <label htmlFor="featured_image_url" className="block text-sm font-medium text-gray-700">
-          URL de la Imagen de Portada {isEditing && images.length > 0 && '(o selecciona una de la galería arriba)'}
-        </label>
-        <input
-          type="text"
-          id="featured_image_url"
-          value={featuredImageUrl}
-          onChange={(e) => {
-            setFeaturedImageUrl(e.target.value);
-            setSelectedImageForFeatured(null);
-          }}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          placeholder="https://images.unsplash.com/..."
-        />
-        <p className="text-xs text-gray-500 mt-1">
-          {isEditing 
-            ? 'URL externa de la imagen destacada (opcional). También puedes seleccionar una imagen de la galería arriba o subir nuevas imágenes.'
-            : 'URL externa de la imagen destacada (opcional). Podrás subir imágenes después de guardar el artículo.'}
-        </p>
-        
-        {/* Preview of featured image */}
-        {featuredImageUrl && (
-          <div className="mt-3">
-            <p className="text-xs text-gray-600 mb-2">Vista previa de la imagen destacada:</p>
-            <div className="relative w-full aspect-[16/9] border border-gray-300 rounded-lg overflow-hidden bg-gray-100">
-              <img
-                src={featuredImageUrl}
-                alt="Vista previa"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/images/blog/default.jpg';
-                }}
-              />
-            </div>
-          </div>
-        )}
+        {/* Campo de URL ocultado para no confundir al usuario final; se puede reactivar si se necesita carga externa */}
       </div>
 
       {/* Status */}
-      <div>
-        <label htmlFor="status" className="block text-sm font-medium text-gray-700">Estado</label>
-        <select
-          id="status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as 'draft' | 'published' | 'archived')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-        >
-          <option value="draft">Borrador</option>
-          <option value="published">Publicado</option>
-          <option value="archived">Archivado</option>
-        </select>
-        <p className="text-xs text-gray-500 mt-1">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label htmlFor="status" className="block text-sm font-medium text-gray-700">Estado</label>
+          <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+            {status === 'published' ? 'Visible al público' : status === 'draft' ? 'Solo borrador' : 'Archivado'}
+          </span>
+        </div>
+        <div className="relative">
+          <select
+            id="status"
+            value={status}
+            onChange={(e) => {
+              const value = e.target.value as 'draft' | 'published' | 'archived';
+              console.log('[BlogPostForm] set status from select', { from: status, to: value });
+              setStatus(value);
+            }}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          >
+            <option value="draft">Borrador</option>
+            <option value="published">Publicado</option>
+            <option value="archived">Archivado</option>
+          </select>
+        </div>
+        <p className="text-xs text-gray-600">
           {status === 'published' && 'El artículo será visible públicamente.'}
-          {status === 'draft' && 'El artículo se guardará como borrador y no será visible públicamente.'}
-          {status === 'archived' && 'El artículo será archivado y no será visible públicamente.'}
+          {status === 'draft' && 'Se guarda como borrador; no será visible hasta publicarlo.'}
+          {status === 'archived' && 'Quedará oculto del sitio, pero no se elimina.'}
         </p>
       </div>
 

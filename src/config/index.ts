@@ -2,7 +2,7 @@
 export const config = {
   // API Configuration
   api: {
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
     timeout: 30000,
     retryAttempts: 3,
   },
@@ -117,9 +117,10 @@ export const isDebug = () => config.debug;
 
 // API utilities
 export const getApiUrl = (endpoint: string = '') => {
-  console.log('getApiUrl', `${config.api.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`);
   const baseUrl = config.api.baseUrl;
-  return endpoint ? `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}` : baseUrl;
+  endpoint = endpoint ? `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}` : baseUrl;
+  console.log('getApiUrl', endpoint);
+  return endpoint;
 };
 
 // Feature flag utilities
