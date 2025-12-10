@@ -138,6 +138,8 @@ class BlogService {
    * Returns the image URL directly (can be used in <img src>)
    */
   getPublicImageUrl(imageId: string): string {
+    console.log('getPublicImageUrl', `${getApiUrl(this.publicBaseUrl)}/images/${imageId}`);
+    
     return `${getApiUrl(this.publicBaseUrl)}/images/${imageId}`;
   }
 

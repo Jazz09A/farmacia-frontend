@@ -117,6 +117,7 @@ export const isDebug = () => config.debug;
 
 // API utilities
 export const getApiUrl = (endpoint: string = '') => {
+  console.log('getApiUrl', `${config.api.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`);
   const baseUrl = config.api.baseUrl;
   return endpoint ? `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}` : baseUrl;
 };
