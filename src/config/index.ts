@@ -119,7 +119,6 @@ export const isDebug = () => config.debug;
 export const getApiUrl = (endpoint: string = '') => {
   const baseUrl = config.api.baseUrl;
   endpoint = endpoint ? `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}` : baseUrl;
-  console.log('getApiUrl', endpoint);
   return endpoint;
 };
 
@@ -128,7 +127,7 @@ export const isFeatureEnabled = (feature: keyof typeof config.features): boolean
   return config.features[feature] as boolean;
 };
 
-// Debug logger
+// Debug logger - solo se ejecuta en desarrollo
 export const debugLog = (message: string, ...args: any[]) => {
   if (config.debug) {
     console.log(`[Grupo Drozainka Debug] ${message}`, ...args);
@@ -147,4 +146,4 @@ export const debugError = (message: string, ...args: any[]) => {
   }
 };
 
-export default config; 
+export default config;

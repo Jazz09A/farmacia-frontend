@@ -36,6 +36,14 @@ export const useFeaturedProductsQuery = (limit: number = 10) => {
     queryKey: [...queryKeys.products.featured(), { limit }],
     queryFn: () => productService.getFeaturedProducts(limit),
     staleTime: 30 * 60 * 1000,
+    retry: false, // No reintentar si falla
+    refetchOnWindowFocus: false,
+    onError: (error) => {
+      // Error ya manejado en el servicio, solo loguear si es necesario
+      if (error instanceof Error && !error.message.includes('No authentication token')) {
+        console.error('Unexpected error fetching featured products:', error);
+      }
+    },
   });
 };
 
@@ -44,6 +52,14 @@ export const useOfferProductsQuery = (limit: number = 20) => {
     queryKey: [...queryKeys.products.offers(), { limit }],
     queryFn: () => productService.getOfferProducts(limit),
     staleTime: 10 * 60 * 1000,
+    retry: false, // No reintentar si falla
+    refetchOnWindowFocus: false,
+    onError: (error) => {
+      // Error ya manejado en el servicio, solo loguear si es necesario
+      if (error instanceof Error && !error.message.includes('No authentication token')) {
+        console.error('Unexpected error fetching offer products:', error);
+      }
+    },
   });
 };
 

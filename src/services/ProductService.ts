@@ -385,7 +385,10 @@ class ProductService {
 
       return mappedResponse;
     } catch (error) {
-      console.error('Failed to search products:', error);
+      // Si es un error de autenticación, lanzarlo para que el método que lo llama pueda manejarlo
+      if (error instanceof Error && error.message.includes('No authentication token')) {
+        throw error;
+      }
       throw error;
     }
   }
@@ -426,7 +429,6 @@ class ProductService {
       // En artículos, el slug es el co_art
       return this.getProductById(slug);
     } catch (error) {
-      console.error('Failed to fetch product by slug:', error);
       throw error;
     }
   }
@@ -446,7 +448,6 @@ class ProductService {
       // Por ahora retornamos array vacío para mantener compatibilidad
       return [];
     } catch (error) {
-      console.error('Failed to get search suggestions:', error);
       return [];
     }
   }
@@ -465,6 +466,10 @@ class ProductService {
 
       return response.products;
     } catch (error) {
+      // Manejar errores de autenticación de manera silenciosa
+      if (error instanceof Error && error.message.includes('No authentication token')) {
+        return [];
+      }
       console.error('Failed to fetch featured products:', error);
       return [];
     }
@@ -484,6 +489,10 @@ class ProductService {
 
       return response.products;
     } catch (error) {
+      // Manejar errores de autenticación de manera silenciosa
+      if (error instanceof Error && error.message.includes('No authentication token')) {
+        return [];
+      }
       console.error('Failed to fetch offer products:', error);
       return [];
     }
@@ -523,7 +532,6 @@ class ProductService {
       // Filtrar el producto actual
       return response.products.filter(p => p.id !== product.id).slice(0, limit);
     } catch (error) {
-      console.error('Failed to fetch related products:', error);
       return [];
     }
   }
@@ -621,7 +629,6 @@ class ProductService {
         ),
       };
     } catch (error) {
-      console.error('Failed to fetch product recommendations:', error);
       // Retornar estructura vacía en caso de error
       return {
         related_articles: [],

@@ -112,7 +112,6 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
     if (!url) return '/images/blog/default.jpg';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
     if (url.startsWith('/api/')) return `${apiOrigin}${url}`;
-    console.log('[BlogPostForm] resolveImageUrl', { url, apiOrigin });
     return url;
   };
 
@@ -176,7 +175,6 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
         fileInputRef.current.value = '';
       }
     } catch (err) {
-      console.error('Error uploading image:', err);
       // Error toast is handled by useEffect
     }
   };
@@ -199,7 +197,6 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
         setSelectedImageForFeatured(null);
       }
     } catch (err) {
-      console.error('Error deleting image:', err);
       // Error toast is handled by useEffect
     }
   };
@@ -207,7 +204,6 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
   // Handle set featured image
   const handleSetFeaturedImage = (imageUrl: string) => {
     const resolved = resolveImageUrl(imageUrl);
-    console.log('[BlogPostForm] set featured image', { imageUrl, resolved });
     setFeaturedImageUrl(resolved);
     setSelectedImageForFeatured(resolved);
   };
@@ -535,7 +531,6 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
             value={status}
             onChange={(e) => {
               const value = e.target.value as 'draft' | 'published' | 'archived';
-              console.log('[BlogPostForm] set status from select', { from: status, to: value });
               setStatus(value);
             }}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"

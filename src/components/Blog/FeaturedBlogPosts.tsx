@@ -40,29 +40,17 @@ const FeaturedBlogPosts: React.FC<FeaturedBlogPostsProps> = ({
   };
 
   const getImageUrl = (post: BlogPostListItem): string => {
-    console.log('[FeaturedBlogPosts] getImageUrl called for post:', {
-      postId: post.id,
-      postTitle: post.title,
-      featured_image_url: post.featured_image_url,
-      images: post.images,
-      imagesLength: post.images?.length
-    });
-
     let url: string | undefined;
     
     if (post.featured_image_url) {
       url = post.featured_image_url;
-      console.log('[FeaturedBlogPosts] Using featured_image_url:', url);
     } else if (post.images && post.images.length > 0) {
       url = post.images[0];
-      console.log('[FeaturedBlogPosts] Using first image from images array:', url);
     } else {
-      console.log('[FeaturedBlogPosts] No image found, using default');
       return '/images/blog/default.jpg';
     }
 
     const resolvedUrl = resolveImageUrl(url);
-    console.log('[FeaturedBlogPosts] Final resolved URL:', resolvedUrl);
     return resolvedUrl;
   };
 
@@ -252,4 +240,4 @@ const FeaturedBlogPosts: React.FC<FeaturedBlogPostsProps> = ({
   );
 };
 
-export default FeaturedBlogPosts; 
+export default FeaturedBlogPosts;

@@ -139,7 +139,6 @@ class BlogService {
    */
   getPublicImageUrl(imageId: string): string {
     const image_url = getApiUrl(`${this.publicBaseUrl}/images/${imageId}`);
-    console.log('getPublicImageUrl', image_url);
     return image_url;
   }
 
@@ -417,7 +416,6 @@ class BlogService {
    */
   async getPostImages(postId: string): Promise<BlogImagesResponse> {
     const url = `${getApiUrl(this.adminBaseUrl)}/posts/${postId}/images`;
-    console.log('getPostImages', url);
     const response = await authService.authenticatedFetch(url, {
       method: 'GET',
       headers: {

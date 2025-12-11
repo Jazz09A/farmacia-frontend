@@ -37,8 +37,6 @@ export default defineConfig(({ mode }) => {
         changeOrigin: true,
         secure: true,
         configure: (proxy, options) => {
-          console.log('proxy', proxy);
-          console.log('options', options);
       }
     },
     
