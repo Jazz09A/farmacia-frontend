@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { BlogPost, BlogPostListItem } from '../../types';
 import { Calendar, User } from 'lucide-react';
+import { getApiUrl } from '../../config';
 
 interface BlogPostCardProps {
   post: BlogPost | BlogPostListItem;
@@ -23,18 +24,28 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
     return post.category?.name || 'Sin categoría';
   };
 
+  const resolveImageUrl = (url?: string): string => {
+    if (!url) return '/images/blog/default.jpg';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/api/')) {
+      // Ensure single slash join
+      return `${getApiUrl('').replace(/\/$/, '')}${url}`;
+    }
+    return url;
+  };
+
   const getImageUrl = (): string => {
     // Try featured_image_url first (new API structure)
     if ('featured_image_url' in post && post.featured_image_url) {
-      return post.featured_image_url;
+      return resolveImageUrl(post.featured_image_url);
     }
     // Try images array (new API structure)
     if ('images' in post && post.images && post.images.length > 0) {
-      return post.images[0];
+      return resolveImageUrl(post.images[0]);
     }
     // Fallback to old image field
     if ('image' in post && post.image) {
-      return post.image;
+      return resolveImageUrl(post.image);
     }
     return '/images/blog/default.jpg';
   };

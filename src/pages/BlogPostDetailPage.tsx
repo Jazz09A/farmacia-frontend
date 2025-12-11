@@ -15,6 +15,7 @@ import {
   MessageCircle,
   ChevronRight
 } from 'lucide-react';
+import { getApiUrl } from '../config';
 
 const BlogPostDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -42,10 +43,19 @@ const BlogPostDetailPage: React.FC = () => {
 
   const error = postError ? (postError instanceof Error ? postError.message : 'Error al cargar el artículo') : null;
 
+  const resolveImageUrl = (url?: string): string => {
+    if (!url) return '/images/blog/default.jpg';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/api/')) {
+      return `${getApiUrl('').replace(/\/$/, '')}${url}`;
+    }
+    return url;
+  };
+
   // Helper to get image URL
   const getPostImage = (): string => {
     if (!post) return '/images/blog/default.jpg';
-    if (post.featured_image_url) return post.featured_image_url;
+    if (post.featured_image_url) return resolveImageUrl(post.featured_image_url);
     return '/images/blog/default.jpg';
   };
 
@@ -220,8 +230,10 @@ const BlogPostDetailPage: React.FC = () => {
                     const categoryName = typeof relatedPost.category === 'string' 
                       ? relatedPost.category 
                       : relatedPost.category?.name;
-                    const imageUrl = relatedPost.featured_image_url || 
-                      (relatedPost.images && relatedPost.images.length > 0 ? relatedPost.images[0] : '/images/blog/default.jpg');
+                    const imageUrl = resolveImageUrl(
+                      relatedPost.featured_image_url || 
+                      (relatedPost.images && relatedPost.images.length > 0 ? relatedPost.images[0] : '/images/blog/default.jpg')
+                    );
                     
                     return (
                       <Link
