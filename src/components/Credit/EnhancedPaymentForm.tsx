@@ -15,7 +15,7 @@ import {
 import { useCredit } from '../../contexts/CreditContext';
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
 import { LoadingSpinner } from '../common/LoadingSpinner';
-import ImageUploader from '../common/ImageUploader';
+// import ImageUploader from '../common/ImageUploader';
 import { paymentMethods } from '../../config/paymentMethods';
 import { getPaymentMethodCurrency, formatVES, formatUSD } from '../../utils/currencyUtils';
 
@@ -604,11 +604,11 @@ export const EnhancedPaymentForm: React.FC<EnhancedPaymentFormProps> = ({
         </p>
       </div>
 
-      <ImageUploader
-        onImageUploaded={handleImageUploaded}
-        onError={handleImageError}
-        currentImageUrl={formData.paymentCaptureUrl}
-      />
+        {/* <ImageUploader
+          onImageUploaded={handleImageUploaded}
+          onError={handleImageError}
+          currentImageUrl={formData.paymentCaptureUrl}
+        /> */}
 
       {validationErrors.paymentCaptureUrl && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">

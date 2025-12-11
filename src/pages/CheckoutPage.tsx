@@ -5,7 +5,6 @@ import { ChevronRight, ArrowLeft, User, MapPin, CreditCard, ShieldCheck, UploadC
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
-import { authService } from '../services/AuthService';
 import { useUserAddressesQuery, useCreateOrderMutation, useCreateAddressMutation } from '../hooks/queries/useAuthQueries';
 import { useUploadImage } from '../hooks/useUploadImage';
 import { getPaymentMethodCurrency } from '../utils/currencyUtils';
