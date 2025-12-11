@@ -3,6 +3,64 @@
  * Incluye transformaciones de Cloudinary y progressive loading
  */
 
+import { getApiUrl } from '../config';
+
+/**
+ * Resolver URL de imagen para que funcione tanto en desarrollo como en producción
+ * 
+ * El backend devuelve URLs relativas como: /api/v1/public/blog/images/{image_id}
+ * En desarrollo, Vite tiene un proxy que redirige /api al backend.
+ * En producción, estas URLs relativas necesitan ser convertidas a URLs absolutas del backend.
+ * 
+ * @param url - URL de la imagen (puede ser relativa o absoluta)
+ * @returns URL resuelta que funcionará en cualquier entorno
+ */
+export const resolveImageUrl = (url?: string | null): string => {
+  console.log('[resolveImageUrl] Input URL:', url);
+  
+  // Si no hay URL, devolver imagen por defecto
+  if (!url) {
+    console.log('[resolveImageUrl] No URL provided, returning default');
+    return '/images/blog/default.jpg';
+  }
+
+  // Si ya es una URL absoluta (http/https), devolverla tal cual
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    console.log('[resolveImageUrl] Already absolute URL:', url);
+    return url;
+  }
+
+  // Si es una ruta de API relativa, convertirla a URL absoluta del backend
+  // Esto es necesario en producción donde no hay proxy de Vite
+  if (url.startsWith('/api/')) {
+    const apiBaseUrl = getApiUrl('').replace(/\/$/, ''); // Remover trailing slash si existe
+    // Asegurar que la URL relativa empiece con /
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    // Construir URL completa: apiBaseUrl + cleanUrl
+    // Ejemplo: https://backend.com + /api/v1/public/blog/images/...
+    const resolvedUrl = `${apiBaseUrl}${cleanUrl}`;
+    console.log('[resolveImageUrl] Resolved API URL:', {
+      original: url,
+      apiBaseUrl,
+      cleanUrl,
+      resolved: resolvedUrl
+    });
+    return resolvedUrl;
+  }
+
+  // Si es una ruta local (como /images/...), devolverla tal cual
+  // Estas rutas funcionan tanto en desarrollo como en producción
+  if (url.startsWith('/')) {
+    console.log('[resolveImageUrl] Local path, returning as-is:', url);
+    return url;
+  }
+
+  // Si es una ruta relativa sin slash inicial, agregarlo
+  const finalUrl = `/${url}`;
+  console.log('[resolveImageUrl] Relative path, adding slash:', finalUrl);
+  return finalUrl;
+};
+
 interface CloudinaryTransformOptions {
   width?: number;
   height?: number;
@@ -287,6 +345,7 @@ export default {
   getOptimalImageSize,
   getBlurDataUrl,
   imageCache,
-  loadImageWithCache
+  loadImageWithCache,
+  resolveImageUrl
 };
 

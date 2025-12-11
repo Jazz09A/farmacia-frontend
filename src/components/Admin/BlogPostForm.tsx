@@ -112,6 +112,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({ post, onSubmit, isEditing =
     if (!url) return '/images/blog/default.jpg';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
     if (url.startsWith('/api/')) return `${apiOrigin}${url}`;
+    console.log('[BlogPostForm] resolveImageUrl', { url, apiOrigin });
     return url;
   };
 

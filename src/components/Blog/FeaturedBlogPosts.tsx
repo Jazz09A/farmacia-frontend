@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { usePublicPostsQuery } from '../../hooks/queries/useBlogQueries';
 import { ArrowRight, Calendar, Clock, User, ChevronRight } from 'lucide-react';
 import { BlogPostSkeleton } from '../Skeleton';
-
+import { BlogPostListItem } from '../../types';
+import { resolveImageUrl } from '../../utils/imageOptimization';
 interface FeaturedBlogPostsProps {
   showSidebar?: boolean;
   maxPosts?: number;
@@ -39,9 +40,30 @@ const FeaturedBlogPosts: React.FC<FeaturedBlogPostsProps> = ({
   };
 
   const getImageUrl = (post: BlogPostListItem): string => {
-    if (post.featured_image_url) return post.featured_image_url;
-    if (post.images && post.images.length > 0) return post.images[0];
-    return '/images/blog/default.jpg';
+    console.log('[FeaturedBlogPosts] getImageUrl called for post:', {
+      postId: post.id,
+      postTitle: post.title,
+      featured_image_url: post.featured_image_url,
+      images: post.images,
+      imagesLength: post.images?.length
+    });
+
+    let url: string | undefined;
+    
+    if (post.featured_image_url) {
+      url = post.featured_image_url;
+      console.log('[FeaturedBlogPosts] Using featured_image_url:', url);
+    } else if (post.images && post.images.length > 0) {
+      url = post.images[0];
+      console.log('[FeaturedBlogPosts] Using first image from images array:', url);
+    } else {
+      console.log('[FeaturedBlogPosts] No image found, using default');
+      return '/images/blog/default.jpg';
+    }
+
+    const resolvedUrl = resolveImageUrl(url);
+    console.log('[FeaturedBlogPosts] Final resolved URL:', resolvedUrl);
+    return resolvedUrl;
   };
 
   const getReadTime = (post: BlogPostListItem): number => {
