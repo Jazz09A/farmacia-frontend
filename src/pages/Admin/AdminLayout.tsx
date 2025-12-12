@@ -34,35 +34,35 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
 
   return (
     <>
-      {/* Mobile-first sidebar: fixed, with transition */}
-      <aside className={`admin-sidebar fixed inset-y-0 left-0 z-40 w-72 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:shadow-none ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-4 lg:p-6 border-b border-gray-200 flex items-center justify-between">
-          <div className="flex items-center space-x-2 lg:space-x-3">
-            <div className="w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center flex-shrink-0">
+      {/* Mobile-first sidebar: fixed, with transition - Responsive width */}
+      <aside className={`admin-sidebar fixed inset-y-0 left-0 z-40 w-[280px] max-w-[85vw] sm:w-72 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:w-72 lg:shadow-none ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-3 sm:p-4 lg:p-6 border-b border-gray-200 flex items-center justify-between">
+          <div className="flex items-center space-x-2 lg:space-x-3 min-w-0 flex-1">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 flex items-center justify-center flex-shrink-0">
               <img 
                 src={logo} 
                 alt="Logo Grupo Drozainka" 
-                className="w-6 h-6 lg:w-8 lg:h-8 object-contain"
+                className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 object-contain"
               />
             </div>
             <div className="min-w-0">
-              <h2 className="text-lg lg:text-xl font-bold text-gray-800 truncate">GRUPO DROZAINKA</h2>
-              <p className="text-xs lg:text-sm text-gray-600">Panel de Control</p>
+              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-800 truncate">GRUPO DROZAINKA</h2>
+              <p className="text-xs lg:text-sm text-gray-600 truncate">Panel de Control</p>
             </div>
           </div>
           <button 
             onClick={onClose} 
-            className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
             aria-label="Cerrar menú"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-3 lg:p-4 space-y-1 lg:space-y-2 overflow-hidden">
-          <div className="mb-4">
-            <p className="px-3 lg:px-4 pt-3 lg:pt-4 pb-1 lg:pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        {/* Navigation - Optimizado para móviles */}
+        <nav className="flex-1 p-2 sm:p-3 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto">
+          <div className="mb-3 sm:mb-4">
+            <p className="px-2 sm:px-3 lg:px-4 pt-2 sm:pt-3 lg:pt-4 pb-1 lg:pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Principal
             </p>
             <NavLink to="/admin/dashboard" className={navLinkClass} onClick={onClose}>
@@ -71,8 +71,8 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
             </NavLink>
           </div>
 
-          <div className="mb-4">
-            <p className="px-3 lg:px-4 pb-1 lg:pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          <div className="mb-3 sm:mb-4">
+            <p className="px-2 sm:px-3 lg:px-4 pb-1 lg:pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Gestión
             </p>
             <NavLink to="/admin/orders" className={navLinkClass} onClick={onClose}>
@@ -93,8 +93,8 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
             </NavLink>
           </div>
 
-          <div className="mb-4">
-            <p className="px-3 lg:px-4 pb-1 lg:pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          <div className="mb-3 sm:mb-4">
+            <p className="px-2 sm:px-3 lg:px-4 pb-1 lg:pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Contenido
             </p>
             <NavLink to="/admin/blog" className={navLinkClass} onClick={onClose}>
@@ -105,21 +105,21 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
 
         </nav>
 
-        {/* Footer */}
-        <div className="p-3 lg:p-4 border-t border-gray-200 space-y-1 lg:space-y-2">
+        {/* Footer - Compacto para móviles */}
+        <div className="p-2 sm:p-3 lg:p-4 border-t border-gray-200 space-y-1 lg:space-y-2 flex-shrink-0">
           <button 
             onClick={() => { 
               window.open('/', '_blank'); 
               onClose(); 
             }}
-            className="w-full flex items-center px-3 lg:px-4 py-2 lg:py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors text-sm lg:text-base"
+            className="w-full flex items-center px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors text-sm lg:text-base"
           >
             <ExternalLink className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
             <span className="truncate">Ir al Sitio Web</span>
           </button>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center px-3 lg:px-4 py-2 lg:py-3 text-gray-700 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors text-sm lg:text-base"
+            className="w-full flex items-center px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-gray-700 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors text-sm lg:text-base"
           >
             <LogOut className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
             <span className="truncate">Cerrar Sesión</span>
@@ -264,8 +264,8 @@ const AdminLayout: React.FC = () => {
             onClick={() => setSidebarOpen(false)}
           />
           
-          {/* Sidebar */}
-          <div className={`fixed inset-y-0 left-0 flex flex-col w-72 max-w-xs bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
+          {/* Sidebar - Responsive width para móviles */}
+          <div className={`fixed inset-y-0 left-0 flex flex-col w-[280px] max-w-[85vw] sm:w-72 sm:max-w-xs bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}>
             <AdminSidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />

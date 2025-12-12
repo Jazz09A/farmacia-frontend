@@ -307,28 +307,28 @@ const AdminOrdersPage: React.FC = () => {
                         <div className="font-bold text-gray-900 text-lg leading-tight">
                           {formatPriceLocal(quote.total_gross)}
                         </div>
-                      </div>
-                    </div>
+                          </div>
+                        </div>
 
                     {/* Información secundaria optimizada para móviles */}
                     <div className="space-y-2">
-                      {quote.profit_plus_id && (
+                        {quote.profit_plus_id && (
                         <div className="text-xs text-gray-600 flex items-center gap-1.5">
                           <span className="font-medium">ID:</span>
                           <span className="font-mono text-gray-700">{quote.profit_plus_id}</span>
                         </div>
-                      )}
+                        )}
                       
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-gray-600">
                         <span className="flex items-center gap-1.5 min-w-0">
                           <Calendar className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
                           <span className="truncate">{formatDate(quote.created_at, true)}</span>
-                        </span>
+                          </span>
                         <span className="flex items-center gap-1.5">
                           <FileText className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
                           <span className="font-medium">{quote.items_count}</span>
-                        </span>
-                      </div>
+                          </span>
+                        </div>
 
                       {quote.email_sent_at && (
                         <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
@@ -337,12 +337,12 @@ const AdminOrdersPage: React.FC = () => {
                         </div>
                       )}
 
-                      {quote.expires_at && (
+                        {quote.expires_at && (
                         <div className="flex items-center gap-1.5 text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded">
                           <Clock className="w-3.5 h-3.5 flex-shrink-0" />
                           <span className="truncate">Expira: {formatDate(quote.expires_at, true)}</span>
-                        </div>
-                      )}
+                          </div>
+                        )}
                     </div>
                   </button>
                 ))}

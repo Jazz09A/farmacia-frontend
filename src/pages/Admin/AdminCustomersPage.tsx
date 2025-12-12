@@ -464,7 +464,7 @@ const AdminCustomersPage: React.FC = () => {
       {/* Results Info - Simplified */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-sm text-gray-600">
         <div className="flex items-center gap-2 flex-wrap">
-          <p>
+        <p>
             Mostrando <span className="font-semibold text-gray-900">{paginatedCustomers.length}</span> de{' '}
             <span className="font-semibold text-gray-900">{totalCustomers}</span> clientes
           </p>
@@ -565,8 +565,8 @@ const AdminCustomersPage: React.FC = () => {
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className={`p-2 rounded-lg flex-shrink-0 ${!customer.inactive ? 'bg-green-100' : 'bg-gray-100'}`}>
                       <Building className={`w-5 h-5 ${!customer.inactive ? 'text-green-600' : 'text-gray-600'}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
+                  </div>
+                  <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-900 text-base truncate mb-1">
                         {getCustomerDisplayName(customer)}
                       </p>
@@ -579,13 +579,13 @@ const AdminCustomersPage: React.FC = () => {
                         ) : (
                           <span className="text-xs text-gray-400">Sin email</span>
                         )}
-                      </div>
+                  </div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        {getStatusBadge(customer)}
-                      </div>
-                    </div>
+                    {getStatusBadge(customer)}
                   </div>
                 </div>
+                    </div>
+                  </div>
               </div>
             ))}
           </div>
@@ -598,13 +598,13 @@ const AdminCustomersPage: React.FC = () => {
               <tr>
                 <th scope="col" className="p-4 w-14">
                   <div className="flex items-center">
-                    <input
+                  <input
                       id="checkbox-all-search" 
-                      type="checkbox"
+                    type="checkbox"
                       className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                      checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
-                      onChange={handleSelectAll}
-                    />
+                    checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
+                    onChange={handleSelectAll}
+                  />
                     <label htmlFor="checkbox-all-search" className="sr-only">Seleccionar todos</label>
                   </div>
                 </th>
@@ -621,12 +621,12 @@ const AdminCustomersPage: React.FC = () => {
                 >
                   <td className="p-4">
                     <div className="flex items-center">
-                      <input
+                    <input
                         id={`checkbox-table-search-${customer.customer_code}`} 
-                        type="checkbox"
+                      type="checkbox"
                         className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                        checked={selectedCustomers.includes(customer.customer_code)}
-                        onChange={() => handleSelectCustomer(customer.customer_code)}
+                      checked={selectedCustomers.includes(customer.customer_code)}
+                      onChange={() => handleSelectCustomer(customer.customer_code)}
                         onClick={(e) => e.stopPropagation()}
                       />
                       <label htmlFor={`checkbox-table-search-${customer.customer_code}`} className="sr-only">
@@ -643,7 +643,7 @@ const AdminCustomersPage: React.FC = () => {
                         <div className="text-base font-semibold text-gray-900 truncate max-w-md">
                           {getCustomerDisplayName(customer)}
                         </div>
-                      </div>
+                    </div>
                     </div>
                   </th>
                   <td className="px-6 py-4">

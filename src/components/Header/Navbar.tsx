@@ -69,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, [isMobile]);
 
   useEffect(() => {
-    if (isMobileMenuOpen) {
+    if (isMobileMenuOpen || isUserMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -77,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isMobileMenuOpen]);
+  }, [isMobileMenuOpen, isUserMenuOpen]);
 
 
   useEffect(() => {
@@ -244,80 +244,197 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </Link>
 
                 {isAuthenticated && user ? (
-                  <div className="relative">
-                    <motion.button
-                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                      className={`p-2 lg:p-3 rounded-2xl transition-all duration-300 group relative ${getActionButtonClasses()}`}
-                      whileHover={{ scale: 1.1, y: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <UserIcon className="h-5 w-5" />
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <div className="bg-medical-gray-900 text-white text-xs px-2 py-1 rounded-lg whitespace-nowrap">Hola, {getUserDisplayName(user).split(' ')[0]}</div>
-                      </div>
-                    </motion.button>
-                    <AnimatePresence>
-                      {isUserMenuOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute right-0 top-full mt-2 w-72 glass-card rounded-2xl shadow-elegant border border-medical-gray-200/50 z-50"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="p-4 border-b border-medical-gray-200/50">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-12 h-12 bg-medical-blue-gradient rounded-full flex items-center justify-center text-white font-bold text-lg">{getUserInitials(user)}</div>
-                              <div>
-                                <div className="font-semibold text-medical-gray-900">{getUserDisplayName(user)}</div>
-                                <div className="text-sm text-medical-gray-600">{user.email}</div>
-                                <div className="text-xs text-medical-blue-600 font-medium">Cliente Comercial (Farmacia)</div>
+                  <>
+                    {/* Desktop: Menú desplegable tradicional */}
+                    <div className="hidden lg:block relative">
+                      <motion.button
+                        onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                        className={`p-2 lg:p-3 rounded-2xl transition-all duration-300 group relative ${getActionButtonClasses()}`}
+                        whileHover={{ scale: 1.1, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <UserIcon className="h-5 w-5" />
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className="bg-medical-gray-900 text-white text-xs px-2 py-1 rounded-lg whitespace-nowrap">Hola, {getUserDisplayName(user).split(' ')[0]}</div>
+                        </div>
+                      </motion.button>
+                      <AnimatePresence>
+                        {isUserMenuOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute right-0 top-full mt-2 w-72 glass-card rounded-2xl shadow-elegant border border-medical-gray-200/50 z-50"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="p-4 border-b border-medical-gray-200/50">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-12 h-12 bg-medical-blue-gradient rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">{getUserInitials(user)}</div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-semibold text-medical-gray-900 text-base truncate">{getUserDisplayName(user)}</div>
+                                  <div className="text-sm text-medical-gray-600 truncate">{user.email}</div>
+                                  <div className="text-xs text-medical-blue-600 font-medium truncate">Cliente Comercial (Farmacia)</div>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="p-2">
-                            {user && (user.role === 'super_admin' || user.role === 'admin') && (
-                              <Link to="/admin" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-medical-blue-50 transition-colors duration-200 group" onClick={() => setIsUserMenuOpen(false)}>
-                                <Shield className="h-4 w-4 text-medical-gray-500 group-hover:text-medical-blue-600" />
-                                <span className="text-medical-gray-700 group-hover:text-medical-gray-900">Admin</span>
-                              </Link>
-                            )}
-                            <Link to="/profile" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-medical-blue-50 transition-colors duration-200 group" onClick={() => setIsUserMenuOpen(false)}>
-                              <UserIcon className="h-4 w-4 text-medical-gray-500 group-hover:text-medical-blue-600" />
-                              <span className="text-medical-gray-700 group-hover:text-medical-gray-900">Mi Perfil</span>
-                            </Link>
-                            <div className="border-t border-medical-gray-200/50 my-2"></div>
-                            <motion.button
-                              onClick={async () => {
-                                setIsLoggingOut(true);
-                                setTimeout(async () => {
-                                  setIsUserMenuOpen(false);
-                                  await logout();
-                                  navigate('/');
-                                  setIsLoggingOut(false);
-                                }, 500); // Delay for visual feedback
-                              }}
-                              className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-red-50 transition-colors duration-200 group"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              disabled={isLoggingOut}
-                            >
-                              {isLoggingOut ? (
-                                <LoadingSpinner variant="button" size="sm" className="text-red-500" />
-                              ) : (
-                                <LogOut className="h-4 w-4 text-red-500" />
+                            <div className="p-2">
+                              {user && (user.role === 'super_admin' || user.role === 'admin') && (
+                                <Link to="/admin" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-medical-blue-50 transition-colors duration-200 group" onClick={() => setIsUserMenuOpen(false)}>
+                                  <Shield className="h-4 w-4 text-medical-gray-500 group-hover:text-medical-blue-600 flex-shrink-0" />
+                                  <span className="text-base text-medical-gray-700 group-hover:text-medical-gray-900">Admin</span>
+                                </Link>
                               )}
-                              <span className="text-red-600 group-hover:text-red-700">
-                                {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar Sesión'}
-                              </span>
-                            </motion.button>
-                          </div>
-                        </motion.div>
+                              <Link to="/profile" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-medical-blue-50 transition-colors duration-200 group" onClick={() => setIsUserMenuOpen(false)}>
+                                <UserIcon className="h-4 w-4 text-medical-gray-500 group-hover:text-medical-blue-600 flex-shrink-0" />
+                                <span className="text-base text-medical-gray-700 group-hover:text-medical-gray-900">Mi Perfil</span>
+                              </Link>
+                              <div className="border-t border-medical-gray-200/50 my-2"></div>
+                              <motion.button
+                                onClick={async () => {
+                                  setIsLoggingOut(true);
+                                  setTimeout(async () => {
+                                    setIsUserMenuOpen(false);
+                                    await logout();
+                                    navigate('/');
+                                    setIsLoggingOut(false);
+                                  }, 500);
+                                }}
+                                className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-red-50 transition-colors duration-200 group"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                disabled={isLoggingOut}
+                              >
+                                {isLoggingOut ? (
+                                  <LoadingSpinner variant="button" size="sm" className="text-red-500" />
+                                ) : (
+                                  <LogOut className="h-4 w-4 text-red-500 flex-shrink-0" />
+                                )}
+                                <span className="text-base text-red-600 group-hover:text-red-700">
+                                  {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar Sesión'}
+                                </span>
+                              </motion.button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Mobile: Botón del avatar */}
+                    <button
+                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                      className={`lg:hidden p-2 rounded-2xl transition-all duration-300 relative ${getActionButtonClasses()}`}
+                      aria-label="Abrir menú de usuario"
+                    >
+                      <UserIcon className="h-5 w-5 text-medical-blue-900" />
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    </button>
+
+                    {/* Mobile: Menú desplegable debajo del navbar */}
+                    <AnimatePresence>
+                      {isUserMenuOpen && (
+                        <>
+                          {/* Backdrop - Cubre toda la página sin blur */}
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/60 z-[55] lg:hidden"
+                            style={{ 
+                              margin: 0,
+                              padding: 0
+                            }}
+                            onClick={() => setIsUserMenuOpen(false)}
+                          />
+                          
+                          {/* Menú móvil - Posicionado debajo del navbar, ancho limitado */}
+                          <motion.div
+                            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="fixed top-[56px] right-4 w-[320px] max-w-[calc(100vw-2rem)] bg-white shadow-2xl z-[60] lg:hidden rounded-2xl overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* Header con información del usuario y botón cerrar */}
+                            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
+                              <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-medical-blue-gradient rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl flex-shrink-0 shadow-md">
+                                  {getUserInitials(user)}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-bold text-gray-900 text-base sm:text-lg truncate">{getUserDisplayName(user)}</div>
+                                  <div className="text-sm sm:text-base text-gray-600 truncate mt-0.5">{user.email}</div>
+                                  <div className="text-xs sm:text-sm text-medical-blue-600 font-semibold truncate mt-1">Cliente Comercial (Farmacia)</div>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => setIsUserMenuOpen(false)}
+                                className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-white rounded-lg transition-colors flex-shrink-0 shadow-sm min-w-[44px] min-h-[44px] flex items-center justify-center"
+                                aria-label="Cerrar menú"
+                              >
+                                <X className="h-6 w-6" />
+                              </button>
+                            </div>
+
+                            {/* Opciones del menú - Botones grandes y accesibles */}
+                            <div className="p-4 sm:p-5 space-y-3">
+                              {user && (user.role === 'super_admin' || user.role === 'admin') && (
+                                <Link
+                                  to="/admin"
+                                  className="flex items-center space-x-4 p-4 sm:p-5 rounded-xl bg-white border-2 border-gray-100 hover:border-blue-200 hover:bg-blue-50 active:bg-blue-100 transition-all duration-200 group min-h-[64px] w-full shadow-sm hover:shadow-md"
+                                  onClick={() => setIsUserMenuOpen(false)}
+                                >
+                                  <div className="p-2.5 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors flex-shrink-0">
+                                    <Shield className="h-6 w-6 text-blue-600" />
+                                  </div>
+                                  <span className="text-base sm:text-lg font-semibold text-gray-800 group-hover:text-blue-700">Admin</span>
+                                </Link>
+                              )}
+                              <Link
+                                to="/profile"
+                                className="flex items-center space-x-4 p-4 sm:p-5 rounded-xl bg-white border-2 border-gray-100 hover:border-blue-200 hover:bg-blue-50 active:bg-blue-100 transition-all duration-200 group min-h-[64px] w-full shadow-sm hover:shadow-md"
+                                onClick={() => setIsUserMenuOpen(false)}
+                              >
+                                <div className="p-2.5 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors flex-shrink-0">
+                                  <UserIcon className="h-6 w-6 text-blue-600" />
+                                </div>
+                                <span className="text-base sm:text-lg font-semibold text-gray-800 group-hover:text-blue-700">Mi Perfil</span>
+                              </Link>
+                              <div className="border-t-2 border-gray-200 my-4"></div>
+                              <motion.button
+                                onClick={async () => {
+                                  setIsLoggingOut(true);
+                                  setTimeout(async () => {
+                                    setIsUserMenuOpen(false);
+                                    await logout();
+                                    navigate('/');
+                                    setIsLoggingOut(false);
+                                  }, 500);
+                                }}
+                                className="w-full flex items-center space-x-4 p-4 sm:p-5 rounded-xl bg-white border-2 border-red-100 hover:border-red-300 hover:bg-red-50 active:bg-red-100 transition-all duration-200 group min-h-[64px] shadow-sm hover:shadow-md"
+                                whileTap={{ scale: 0.98 }}
+                                disabled={isLoggingOut}
+                              >
+                                <div className="p-2.5 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors flex-shrink-0">
+                                  {isLoggingOut ? (
+                                    <LoadingSpinner variant="button" size="sm" className="text-red-600" />
+                                  ) : (
+                                    <LogOut className="h-6 w-6 text-red-600" />
+                                  )}
+                                </div>
+                                <span className="text-base sm:text-lg font-semibold text-red-600 group-hover:text-red-700">
+                                  {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar Sesión'}
+                                </span>
+                              </motion.button>
+                            </div>
+                          </motion.div>
+                        </>
                       )}
                     </AnimatePresence>
-                  </div>
+                  </>
                 ) : (
                   <Link to="/auth">
                     <motion.button
@@ -364,42 +481,42 @@ export const Navbar: React.FC<NavbarProps> = ({
         {isMobileMenuOpen && (
           <motion.div className="fixed inset-0 z-40 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <motion.div className="fixed inset-0 bg-black/60 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsMobileMenuOpen(false)} />
-            <motion.div className="fixed right-0 top-0 h-full w-80 max-w-sm glass-card shadow-elegant border-l border-white/30" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+            <motion.div className="fixed right-0 top-0 h-full w-[280px] max-w-[85vw] sm:w-80 sm:max-w-sm glass-card shadow-elegant border-l border-white/30" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
               <div className="flex flex-col h-full">
-                {/* Header fijo */}
-                <div className="flex justify-between items-center p-6 border-b border-medical-gray-200 flex-shrink-0">
-                  <div className="flex items-center space-x-3">
-                    <div className="rounded-xl overflow-hidden"><img src={logoSrc} alt="Grupo Drozainka Logo" className="h-8 w-auto object-contain" /></div>
-                    <div>
-                      <div className="text-lg font-serif font-bold text-medical-gray-900">Grupo Drozainka</div>
-                      <div className="text-sm text-medical-gray-600">Professional Care</div>
+                {/* Header fijo - Compacto para móviles */}
+                <div className="flex justify-between items-center p-4 sm:p-6 border-b border-medical-gray-200 flex-shrink-0">
+                  <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                    <div className="rounded-xl overflow-hidden flex-shrink-0"><img src={logoSrc} alt="Grupo Drozainka Logo" className="h-7 sm:h-8 w-auto object-contain" /></div>
+                    <div className="min-w-0">
+                      <div className="text-base sm:text-lg font-serif font-bold text-medical-gray-900 truncate">Grupo Drozainka</div>
+                      <div className="text-xs sm:text-sm text-medical-gray-600 truncate">Professional Care</div>
                     </div>
                   </div>
-                  <motion.button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-full text-medical-gray-600 hover:bg-medical-gray-100 transition-colors" aria-label="Cerrar menú" whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }}>
-                    <X className="h-6 w-6" />
+                  <motion.button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-full text-medical-gray-600 hover:bg-medical-gray-100 transition-colors flex-shrink-0" aria-label="Cerrar menú" whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }}>
+                    <X className="h-5 w-5 sm:h-6 sm:w-6" />
                   </motion.button>
                 </div>
                 
-                {/* Contenido scrolleable */}
+                {/* Contenido scrolleable - Optimizado para móviles */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                  <div className="p-6 space-y-2">
+                  <div className="p-4 sm:p-6 space-y-1.5 sm:space-y-2">
                     {menuItems.map((item, index) => (
-                      <motion.a key={item.name} href={item.href} className="flex items-center space-x-3 p-4 rounded-xl text-medical-gray-700 hover:text-medical-blue-700 hover:bg-medical-blue-50 transition-all duration-200 group" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.1 }} onClick={() => setIsMobileMenuOpen(false)}>
-                        <div className="p-2 bg-medical-blue-50 text-medical-blue-600 rounded-lg group-hover:bg-medical-blue-100 transition-colors duration-200">
-                          <item.icon className="h-4 w-4" />
+                      <motion.a key={item.name} href={item.href} className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4 rounded-xl text-medical-gray-700 hover:text-medical-blue-700 hover:bg-medical-blue-50 transition-all duration-200 group" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} onClick={() => setIsMobileMenuOpen(false)}>
+                        <div className="p-1.5 sm:p-2 bg-medical-blue-50 text-medical-blue-600 rounded-lg group-hover:bg-medical-blue-100 transition-colors duration-200 flex-shrink-0">
+                          <item.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
-                        <span className="font-medium">{item.name}</span>
+                        <span className="font-medium text-sm sm:text-base truncate">{item.name}</span>
                       </motion.a>
                     ))}
                   </div>
                 </div>
                 
-                {/* Footer fijo */}
+                {/* Footer fijo - Compacto para móviles */}
                 <div className="flex-shrink-0">
-                  <div className="p-6 border-t border-medical-gray-200 bg-medical-blue-50">
+                  <div className="p-4 sm:p-6 border-t border-medical-gray-200 bg-medical-blue-50">
                     <div className="text-center">
-                      <p className="text-sm text-medical-gray-600 mb-2">¿Necesitas asesoría comercial?</p>
-                      <motion.button className="btn-medical-primary w-full" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>Contacto Comercial 24/7</motion.button>
+                      <p className="text-xs sm:text-sm text-medical-gray-600 mb-2">¿Necesitas asesoría comercial?</p>
+                      <motion.button className="btn-medical-primary w-full text-sm sm:text-base py-2.5 sm:py-3" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>Contacto Comercial 24/7</motion.button>
                     </div>
                   </div>
                 </div>
