@@ -28,8 +28,12 @@ const SmartPriceDisplay: React.FC<SmartPriceDisplayProps> = ({
   const numericValue = typeof priceValue === 'string' ? parseFloat(priceValue) : priceValue;
 
   if (typeof numericValue === 'number' && !isNaN(numericValue) && numericValue > 0) {
-    // Siempre mostrar en USD ya que es la moneda de la base de datos
-    return <span className={className}>{formatPrice(numericValue, 'USD')}</span>;
+    // Formatear solo con símbolo $ (sin texto adicional)
+    const formatted = numericValue.toLocaleString('es-VE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    return <span className={className}>${formatted}</span>;
   }
 
   // No hay datos para mostrar

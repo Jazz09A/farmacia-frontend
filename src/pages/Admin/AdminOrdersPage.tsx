@@ -95,19 +95,44 @@ const AdminOrdersPage: React.FC = () => {
 
 
 
-  const formatDate = (dateString: string) => {
+  // Formatear fecha de forma compacta para móviles
+  const formatDate = (dateString: string, compact: boolean = false) => {
+    const date = new Date(dateString);
+    if (compact) {
+      // Formato compacto para móviles: "30 nov 2025, 7:16 PM"
+      return new Intl.DateTimeFormat('es-VE', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }).format(date);
+    }
+    // Formato estándar para desktop
     return new Intl.DateTimeFormat('es-VE', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    }).format(new Date(dateString));
+    }).format(date);
   };
 
   const removeCOTPrefix = (quoteId: string) => {
     if (!quoteId) return quoteId;
     return quoteId.startsWith('COT-') ? quoteId.substring(4) : quoteId;
+  };
+
+  // Formatear precio con símbolo de dólar (solo $, sin texto adicional)
+  const formatPriceLocal = (amount: number | string) => {
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(numericAmount)) return '$0.00';
+    const formatted = numericAmount.toLocaleString('es-VE', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
+    return `$${formatted}`;
   };
 
   const handleViewQuote = (quote: QuoteSummary) => {
@@ -143,28 +168,27 @@ const AdminOrdersPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      {/* Header - Optimizado para móviles */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Cotizaciones</h1>
-          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
-            Administra todas las cotizaciones de tu farmacia ({total} total)
+          <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
+            Gestión de Cotizaciones
+          </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600">
+            Administra todas las cotizaciones
+            <span className="ml-1.5 font-semibold text-gray-700">({total})</span>
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+        <div className="flex flex-row gap-2 w-full sm:w-auto">
           <button 
             onClick={handleRefresh}
             disabled={loading}
-            className="px-3 lg:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-400 transition-colors flex items-center justify-center font-medium text-sm"
+            className="flex-1 sm:flex-none px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center font-medium text-sm shadow-sm hover:shadow-md min-h-[44px]"
+            aria-label="Actualizar cotizaciones"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Actualizar</span>
           </button>
-          {/* Botón de exportar - Comentado por ahora */}
-          {/* <button className="px-3 lg:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 transition-colors flex items-center justify-center font-medium text-sm">
-            <Download className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Exportar</span>
-          </button> */}
         </div>
       </div>
 
@@ -233,70 +257,92 @@ const AdminOrdersPage: React.FC = () => {
       </div> */}
 
       {/* Quotes List/Table */}
-      <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-3 lg:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <h3 className="text-base lg:text-lg font-semibold">Cotizaciones ({quotes.length})</h3>
-          <div className="text-xs lg:text-sm text-gray-500">
-            Página {currentPage} de {pages}
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="p-3 sm:p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900">Cotizaciones</h3>
+            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+              {quotes.length}
+            </span>
+          </div>
+          <div className="text-xs text-gray-600 font-medium">
+            Página <span className="font-bold text-gray-900">{currentPage}</span> de <span className="font-bold text-gray-900">{pages}</span>
           </div>
         </div>
         
         {quotes.length === 0 ? (
-          <div className="p-8 lg:p-12 text-center text-gray-500">
-            <FileText className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-3 lg:mb-4 text-gray-300" />
-            <p className="text-base lg:text-lg font-medium mb-1 lg:mb-2">No se encontraron cotizaciones</p>
-            <p className="text-sm lg:text-base">Intenta ajustar los filtros de búsqueda</p>
+          <div className="p-12 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+              <FileText className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-lg font-semibold text-gray-900 mb-2">No se encontraron cotizaciones</p>
+            <p className="text-sm text-gray-500">Intenta ajustar los filtros de búsqueda</p>
           </div>
         ) : (
           <>
-            {/* Mobile View - Enhanced Cards */}
+            {/* Mobile View - Enhanced Cards with Professional UX/UI */}
             <div className="md:hidden">
               <div className="divide-y divide-gray-200">
                 {quotes.map((quote) => (
                   <button
                     key={quote.quote_id}
                     onClick={() => handleViewQuote(quote)}
-                    className="w-full text-left p-3 lg:p-4 hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors"
+                    className="w-full text-left p-4 hover:bg-blue-50 active:bg-blue-100 cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
                   >
-                    <div className="flex justify-between items-start mb-2">
+                    {/* Header: ID, Monto y Estado */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <div className="font-semibold text-gray-900 text-base">{removeCOTPrefix(quote.quote_id)}</div>
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <h3 className="font-bold text-gray-900 text-base leading-tight">
+                            {removeCOTPrefix(quote.quote_id)}
+                          </h3>
                           <div className={getStatusBadge(quote.status)}>
                             {getStatusIcon(quote.status)}
-                            <span className="text-xs">{getQuoteStatusText(quote.status)}</span>
+                            <span className="text-xs whitespace-nowrap">{getQuoteStatusText(quote.status)}</span>
                           </div>
                         </div>
-                        {quote.profit_plus_id && (
-                          <div className="text-xs text-gray-500 mb-1">ID Sistema: {quote.profit_plus_id}</div>
-                        )}
-                        {quote.email_sent_at && (
-                          <div className="text-xs text-gray-400 mb-1">Email enviado</div>
-                        )}
-                        <div className="text-xs text-gray-500 flex items-center gap-3 mt-1 flex-wrap">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(quote.created_at)}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FileText className="w-3 h-3" />
-                            {quote.items_count} {quote.items_count === 1 ? 'item' : 'items'}
-                          </span>
-                        </div>
-                        {quote.expires_at && (
-                          <div className="text-xs text-gray-400 mt-1">
-                            Expira: {formatDate(quote.expires_at)}
-                          </div>
-                        )}
                       </div>
-                      <div className="text-right flex-shrink-0 ml-2">
-                        <div className="font-bold text-gray-900 text-base lg:text-lg">
-                          {quote.currency} {Number(quote.total_gross).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {/* Monto destacado - Solo símbolo $ */}
+                      <div className="text-right flex-shrink-0">
+                        <div className="font-bold text-gray-900 text-lg leading-tight">
+                          {formatPriceLocal(quote.total_gross)}
                         </div>
-                        {quote.email_sent_at && (
-                          <div className="text-xs text-gray-500 mt-1">Email enviado</div>
-                        )}
                       </div>
+                    </div>
+
+                    {/* Información secundaria optimizada para móviles */}
+                    <div className="space-y-2">
+                      {quote.profit_plus_id && (
+                        <div className="text-xs text-gray-600 flex items-center gap-1.5">
+                          <span className="font-medium">ID:</span>
+                          <span className="font-mono text-gray-700">{quote.profit_plus_id}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-gray-600">
+                        <span className="flex items-center gap-1.5 min-w-0">
+                          <Calendar className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
+                          <span className="truncate">{formatDate(quote.created_at, true)}</span>
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
+                          <span className="font-medium">{quote.items_count}</span>
+                        </span>
+                      </div>
+
+                      {quote.email_sent_at && (
+                        <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                          <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span className="truncate">Email enviado</span>
+                        </div>
+                      )}
+
+                      {quote.expires_at && (
+                        <div className="flex items-center gap-1.5 text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded">
+                          <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span className="truncate">Expira: {formatDate(quote.expires_at, true)}</span>
+                        </div>
+                      )}
                     </div>
                   </button>
                 ))}
@@ -306,94 +352,99 @@ const AdminOrdersPage: React.FC = () => {
             {/* Desktop View - Enhanced Table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm text-left text-gray-500">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th 
                       scope="col" 
-                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                      className="px-4 lg:px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors"
                       onClick={() => handleSortChange('quote_id')}
                     >
-                      <div className="flex items-center gap-1">
-                        Cotización
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">Cotización</span>
                         {filters.sortBy === 'quote_id' && (
-                          filters.sortOrder === 'desc' ? <SortDesc className="w-3 h-3" /> : <SortAsc className="w-3 h-3" />
+                          filters.sortOrder === 'desc' ? <SortDesc className="w-3.5 h-3.5" /> : <SortAsc className="w-3.5 h-3.5" />
                         )}
                       </div>
                     </th>
-                    <th scope="col" className="px-6 py-3">ID Sistema</th>
+                    <th scope="col" className="px-4 lg:px-6 py-3 font-semibold">ID Sistema</th>
                     <th 
                       scope="col" 
-                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                      className="px-4 lg:px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors"
                       onClick={() => handleSortChange('created_at')}
                     >
-                      <div className="flex items-center gap-1">
-                        Fecha
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">Fecha</span>
                         {filters.sortBy === 'created_at' && (
-                          filters.sortOrder === 'desc' ? <SortDesc className="w-3 h-3" /> : <SortAsc className="w-3 h-3" />
+                          filters.sortOrder === 'desc' ? <SortDesc className="w-3.5 h-3.5" /> : <SortAsc className="w-3.5 h-3.5" />
                         )}
                       </div>
                     </th>
-                    <th scope="col" className="px-6 py-3">Expira</th>
+                    <th scope="col" className="px-4 lg:px-6 py-3 font-semibold">Expira</th>
                     <th 
                       scope="col" 
-                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                      className="px-4 lg:px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors"
                       onClick={() => handleSortChange('total_gross')}
                     >
-                      <div className="flex items-center gap-1">
-                        Total
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">Total</span>
                         {filters.sortBy === 'total_gross' && (
-                          filters.sortOrder === 'desc' ? <SortDesc className="w-3 h-3" /> : <SortAsc className="w-3 h-3" />
+                          filters.sortOrder === 'desc' ? <SortDesc className="w-3.5 h-3.5" /> : <SortAsc className="w-3.5 h-3.5" />
                         )}
                       </div>
                     </th>
-                    <th scope="col" className="px-6 py-3">Items</th>
+                    <th scope="col" className="px-4 lg:px-6 py-3 font-semibold">Items</th>
                     <th 
                       scope="col" 
-                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                      className="px-4 lg:px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors"
                       onClick={() => handleSortChange('status')}
                     >
-                      <div className="flex items-center gap-1">
-                        Estado
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">Estado</span>
                         {filters.sortBy === 'status' && (
-                          filters.sortOrder === 'desc' ? <SortDesc className="w-3 h-3" /> : <SortAsc className="w-3 h-3" />
+                          filters.sortOrder === 'desc' ? <SortDesc className="w-3.5 h-3.5" /> : <SortAsc className="w-3.5 h-3.5" />
                         )}
                       </div>
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-gray-200">
                   {quotes.map((quote) => (
                     <tr 
                       key={quote.quote_id} 
                       onClick={() => handleViewQuote(quote)}
-                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="hover:bg-blue-50 cursor-pointer transition-colors duration-150 active:bg-blue-100"
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-4 lg:px-6 py-4">
                         <div className="font-semibold text-gray-900 text-base">
                           {removeCOTPrefix(quote.quote_id)}
                         </div>
                         {quote.email_sent_at && (
-                          <div className="text-xs text-gray-400 mt-0.5">Email enviado</div>
+                          <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />
+                            Email enviado
+                          </div>
                         )}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-xs text-gray-500">{quote.profit_plus_id || '-'}</div>
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className="text-xs text-gray-600 font-mono">{quote.profit_plus_id || '-'}</div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div>{formatDate(quote.created_at)}</div>
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className="text-sm text-gray-700">{formatDate(quote.created_at)}</div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-xs">{quote.expires_at ? formatDate(quote.expires_at) : '-'}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-gray-900">
-                          {quote.currency} {Number(quote.total_gross).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className="text-xs text-gray-600">
+                          {quote.expires_at ? formatDate(quote.expires_at) : <span className="text-gray-400">-</span>}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm">{quote.items_count}</div>
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className="font-bold text-gray-900 text-base">
+                          {formatPriceLocal(quote.total_gross)}
+                        </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className="text-sm font-medium text-gray-700">{quote.items_count}</div>
+                      </td>
+                      <td className="px-4 lg:px-6 py-4">
                         <div className={getStatusBadge(quote.status)}>
                           {getStatusIcon(quote.status)}
                           <span>{getQuoteStatusText(quote.status)}</span>
@@ -407,17 +458,20 @@ const AdminOrdersPage: React.FC = () => {
           </>
         )}
 
-        {/* Pagination */}
+        {/* Pagination - Optimizada para móviles */}
         {pages > 1 && (
-          <div className="px-3 lg:px-6 py-3 lg:py-4 border-t bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="text-xs lg:text-sm text-gray-700">
-              Mostrando {((currentPage - 1) * filters.page_size) + 1} a {Math.min(currentPage * filters.page_size, total)} de {total} cotizaciones
+          <div className="px-3 sm:px-4 py-3 sm:py-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+            <div className="text-xs sm:text-sm text-gray-600 order-2 sm:order-1 text-center sm:text-left">
+              Mostrando <span className="font-semibold text-gray-900">{((currentPage - 1) * filters.page_size) + 1}</span> a{' '}
+              <span className="font-semibold text-gray-900">{Math.min(currentPage * filters.page_size, total)}</span> de{' '}
+              <span className="font-semibold text-gray-900">{total}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 order-1 sm:order-2 w-full sm:w-auto justify-center sm:justify-end">
               <button
                 onClick={() => setPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-2 lg:px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-150 shadow-sm hover:shadow-md flex items-center justify-center min-w-[44px]"
+                aria-label="Página anterior"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -429,11 +483,12 @@ const AdminOrdersPage: React.FC = () => {
                     <button
                       key={pageNum}
                       onClick={() => setPage(pageNum)}
-                      className={`px-2 lg:px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150 min-w-[40px] ${
                         currentPage === pageNum
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 active:bg-gray-100'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 active:bg-gray-100 shadow-sm hover:shadow'
                       }`}
+                      aria-label={`Ir a página ${pageNum}`}
                     >
                       {pageNum}
                     </button>
@@ -441,14 +496,15 @@ const AdminOrdersPage: React.FC = () => {
                 })}
               </div>
               
-              <div className="sm:hidden text-xs text-gray-500">
+              <div className="sm:hidden px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg min-w-[80px] text-center">
                 {currentPage} / {pages}
               </div>
 
               <button
                 onClick={() => setPage(currentPage + 1)}
                 disabled={currentPage === pages}
-                className="px-2 lg:px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-150 shadow-sm hover:shadow-md flex items-center justify-center min-w-[44px]"
+                aria-label="Página siguiente"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

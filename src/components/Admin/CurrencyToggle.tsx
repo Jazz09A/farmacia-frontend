@@ -42,8 +42,8 @@ const CurrencyToggle: React.FC = () => {
         <div className="flex items-center space-x-2">
           <span className="text-lg">{getCurrencyFlag(currency)}</span>
           <div className="flex items-center space-x-1">
-            <span className="font-medium text-gray-700">{getCurrencySymbol(currency)}</span>
-            <span className="text-sm text-gray-500">{currency}</span>
+            <span className="font-semibold text-gray-700 text-base">{getCurrencySymbol(currency)}</span>
+            {currency === 'VES' && <span className="text-sm text-gray-500">VES</span>}
           </div>
         </div>
         <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -88,7 +88,7 @@ const CurrencyToggle: React.FC = () => {
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
                         {curr === 'VES' && 'Bolívares Venezolanos'}
-                        {curr === 'USD' && 'Dólares Estadounidenses'}
+                        {curr === 'USD' && 'Dólares'}
                       </div>
                     </div>
                     

@@ -47,7 +47,7 @@ const FeaturedBlogPosts: React.FC<FeaturedBlogPostsProps> = ({
     } else if (post.images && post.images.length > 0) {
       url = post.images[0];
     } else {
-      return '/images/blog/default.jpg';
+    return '/images/blog/default.jpg';
     }
 
     const resolvedUrl = resolveImageUrl(url);
@@ -240,4 +240,4 @@ const FeaturedBlogPosts: React.FC<FeaturedBlogPostsProps> = ({
   );
 };
 
-export default FeaturedBlogPosts;
+export default FeaturedBlogPosts; 

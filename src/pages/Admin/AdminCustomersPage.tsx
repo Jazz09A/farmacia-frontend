@@ -226,15 +226,15 @@ const AdminCustomersPage: React.FC = () => {
 
   return (
     <div className="space-y-4 lg:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      {/* Header - Optimized */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-            <Users className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
+            <Users className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             <span className="truncate">Gestión de Clientes</span>
           </h1>
-          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
-            Administra y supervisa todos los clientes registrados en tu plataforma.
+          <p className="mt-1 text-xs sm:text-sm text-gray-600">
+            Administra todos los clientes registrados
           </p>
         </div>
         <div className="w-full sm:w-auto">
@@ -297,68 +297,68 @@ const AdminCustomersPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
-        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
+      {/* Stats Cards - Compact */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Total Clientes</p>
-              <p className="text-lg lg:text-2xl font-bold text-gray-900">{stats.total}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
             </div>
-            <div className="p-2 lg:p-3 bg-blue-100 rounded-full flex-shrink-0">
-              <Users className="w-4 h-4 lg:w-6 lg:h-6 text-blue-600" />
+            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Clientes Activos</p>
-              <p className="text-lg lg:text-2xl font-bold text-green-600">{stats.active}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Activos</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 mt-1">{stats.active}</p>
             </div>
-            <div className="p-2 lg:p-3 bg-green-100 rounded-full flex-shrink-0">
-              <UserCheck className="w-4 h-4 lg:w-6 lg:h-6 text-green-600" />
+            <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
+              <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Con Email</p>
-              <p className="text-lg lg:text-2xl font-bold text-blue-600">{stats.with_email}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Con Email</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 mt-1">{stats.with_email}</p>
             </div>
-            <div className="p-2 lg:p-3 bg-blue-100 rounded-full flex-shrink-0">
-              <Mail className="w-4 h-4 lg:w-6 lg:h-6 text-blue-600" />
+            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+              <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-3 lg:p-6 border border-gray-200">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Jurídicos</p>
-              <p className="text-lg lg:text-2xl font-bold text-purple-600">{stats.juridico}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Jurídicos</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-600 mt-1">{stats.juridico}</p>
             </div>
-            <div className="p-2 lg:p-3 bg-purple-100 rounded-full flex-shrink-0">
-              <Building className="w-4 h-4 lg:w-6 lg:h-6 text-purple-600" />
+            <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
+              <Building className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200">
-        <div className="p-3 lg:p-6">
+      {/* Search and Filters - Simplified */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-3 sm:p-4 lg:p-6">
           {/* Search Bar */}
-          <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 mb-3 lg:mb-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
                 <input
                   type="text"
-                  placeholder="Buscar por nombre, email, RIF, código..."
+                  placeholder="Buscar por nombre, email, RIF..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={(e) => {
@@ -366,11 +366,12 @@ const AdminCustomersPage: React.FC = () => {
                       handleSearch();
                     }
                   }}
-                  className="pl-9 pr-4 py-2 w-full text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="pl-9 sm:pl-10 pr-10 sm:pr-12 py-2.5 w-full text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
                 <button
                   onClick={handleSearch}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-600 hover:text-blue-800"
+                  className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition-colors"
+                  aria-label="Buscar"
                 >
                   <Search className="w-4 h-4" />
                 </button>
@@ -383,16 +384,19 @@ const AdminCustomersPage: React.FC = () => {
                   setOnlyWithEmail(!onlyWithEmail);
                   setCurrentPage(1);
                 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 font-medium transition-colors ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg border-2 font-medium transition-colors min-h-[44px] ${
                   onlyWithEmail
                     ? 'bg-blue-50 border-blue-500 text-blue-700 hover:bg-blue-100'
                     : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
                 }`}
-                title={onlyWithEmail ? 'Mostrando solo clientes con email. Click para incluir sin email' : 'Mostrando todos los clientes. Click para solo con email'}
+                title={onlyWithEmail ? 'Mostrando solo clientes con email' : 'Mostrando todos los clientes'}
               >
-                <Mail className={`w-4 h-4 ${onlyWithEmail ? 'text-blue-600' : 'text-gray-500'}`} />
-                <span className="text-sm whitespace-nowrap">
+                <Mail className={`w-4 h-4 flex-shrink-0 ${onlyWithEmail ? 'text-blue-600' : 'text-gray-500'}`} />
+                <span className="text-sm whitespace-nowrap hidden sm:inline">
                   {onlyWithEmail ? 'Solo con email' : 'Todos'}
+                </span>
+                <span className="text-sm sm:hidden">
+                  {onlyWithEmail ? 'Con email' : 'Todos'}
                 </span>
               </button>
             </div>
@@ -457,30 +461,26 @@ const AdminCustomersPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Results Info */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-sm text-gray-600">
-        <p>
-          Mostrando {paginatedCustomers.length} de {filteredCustomers.length} clientes
+      {/* Results Info - Simplified */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-sm text-gray-600">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p>
+            Mostrando <span className="font-semibold text-gray-900">{paginatedCustomers.length}</span> de{' '}
+            <span className="font-semibold text-gray-900">{totalCustomers}</span> clientes
+          </p>
           {selectedCustomers.length > 0 && (
-            <span className="ml-2 text-blue-600 font-medium">
-              ({selectedCustomers.length} seleccionados)
+            <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+              {selectedCustomers.length} seleccionados
             </span>
           )}
-        </p>
+        </div>
         {createSummary && (
-          <div className="mt-2 sm:mt-0 bg-blue-50 border border-blue-200 text-blue-800 px-3 py-2 rounded-lg">
+          <div className="bg-blue-50 border border-blue-200 text-blue-800 px-3 py-2 rounded-lg text-xs sm:text-sm">
             <span className="font-semibold">Resultado:</span>
-            {' '}Usuarios creados {createSummary.users_created}, fallidos {createSummary.users_failed} · Correos enviados {createSummary.emails_sent}, fallidos {createSummary.emails_failed} · Éxito {createSummary.success_rate}%
+            {' '}Usuarios: {createSummary.users_created} creados, {createSummary.users_failed} fallidos · 
+            {' '}Correos: {createSummary.emails_sent} enviados · Éxito: {createSummary.success_rate}%
           </div>
         )}
-        <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-          <span>Elementos por página:</span>
-          <select className="border border-gray-300 rounded px-2 py-1 text-sm">
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-          </select>
-        </div>
       </div>
 
       {/* Loading State */}
@@ -519,143 +519,151 @@ const AdminCustomersPage: React.FC = () => {
       {/* Customers List/Table */}
       {!loading && !error && (
         <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Clientes ({filteredCustomers.length})</h3>
+        <div className="p-3 sm:p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900">
+            Clientes <span className="text-blue-600">({totalCustomers})</span>
+          </h3>
           {selectedCustomers.length > 0 && (
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500">{selectedCustomers.length} seleccionados</span>
-              <button className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50">
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm text-gray-600 font-medium">
+                {selectedCustomers.length} seleccionados
+              </span>
+              <button 
+                className="p-2 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                title="Eliminar seleccionados"
+              >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
           )}
         </div>
         
-        {/* Mobile View - Cards */}
+        {/* Mobile View - Simplified Cards with Checkbox */}
         <div className="md:hidden">
           <div className="divide-y divide-gray-200">
             {paginatedCustomers.map((customer) => (
               <div 
                 key={customer.customer_code} 
-                className="p-4"
+                className="p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors"
               >
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-full ${!customer.inactive ? 'bg-green-100' : 'bg-gray-100'}`}>
-                    <Building className={`w-6 h-6 ${!customer.inactive ? 'text-green-600' : 'text-gray-600'}`} />
+                <div className="flex items-start justify-between gap-3">
+                  {/* Checkbox para selección */}
+                  <div className="flex items-center pt-1 flex-shrink-0">
+                    <input
+                      id={`checkbox-mobile-${customer.customer_code}`}
+                      type="checkbox"
+                      className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                      checked={selectedCustomers.includes(customer.customer_code)}
+                      onChange={() => handleSelectCustomer(customer.customer_code)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <label htmlFor={`checkbox-mobile-${customer.customer_code}`} className="sr-only">
+                      Seleccionar {getCustomerDisplayName(customer)}
+                    </label>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-800 truncate">{getCustomerDisplayName(customer)}</p>
-                    <p className="text-sm text-gray-500">{customer.email || customer.alternate_email || 'Sin email'}</p>
-                    <p className="text-xs text-gray-400">Código: {customer.customer_code} • RIF: {customer.rif || 'N/A'}</p>
-                  </div>
-                  <div className="text-right space-y-1">
-                    {getStatusBadge(customer)}
-                    {getTypeBadge(customer)}
+                  
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className={`p-2 rounded-lg flex-shrink-0 ${!customer.inactive ? 'bg-green-100' : 'bg-gray-100'}`}>
+                      <Building className={`w-5 h-5 ${!customer.inactive ? 'text-green-600' : 'text-gray-600'}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 text-base truncate mb-1">
+                        {getCustomerDisplayName(customer)}
+                      </p>
+                      <div className="flex items-center gap-2 mb-2">
+                        {customer.email || customer.alternate_email ? (
+                          <span className="text-sm text-gray-600 truncate flex items-center gap-1">
+                            <Mail className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
+                            <span className="truncate">{customer.email || customer.alternate_email}</span>
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">Sin email</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {getStatusBadge(customer)}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                 <div className="flex justify-between items-end mt-4">
-                    <div className="text-sm text-gray-600">
-                      {customer.phones && <p className="flex items-center gap-1"><Phone className="w-3 h-3" />{customer.phones}</p>}
-                      {getEmailBadge(customer)}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                       <button 
-                        onClick={(e) => handleDeleteRequest(e, customer)}
-                        className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
-                        title="Eliminar Cliente"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Desktop View - Table */}
+        {/* Desktop View - Simplified Table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
               <tr>
-                <th scope="col" className="p-4">
+                <th scope="col" className="p-4 w-14">
                   <div className="flex items-center">
-                  <input
+                    <input
                       id="checkbox-all-search" 
-                    type="checkbox"
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
-                    onChange={handleSelectAll}
-                  />
-                    <label htmlFor="checkbox-all-search" className="sr-only">checkbox</label>
+                      type="checkbox"
+                      className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                      checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
+                      onChange={handleSelectAll}
+                    />
+                    <label htmlFor="checkbox-all-search" className="sr-only">Seleccionar todos</label>
                   </div>
                 </th>
-                <th scope="col" className="px-6 py-3">Cliente</th>
-                <th scope="col" className="px-6 py-3">Email</th>
-                <th scope="col" className="px-6 py-3">Teléfono</th>
-                <th scope="col" className="px-6 py-3">RIF</th>
-                <th scope="col" className="px-6 py-3">Tipo</th>
-                <th scope="col" className="px-6 py-3">Estado</th>
-                <th scope="col" className="px-6 py-3 text-center">Acciones</th>
+                <th scope="col" className="px-6 py-4 font-semibold">Cliente</th>
+                <th scope="col" className="px-6 py-4 font-semibold">Email</th>
+                <th scope="col" className="px-6 py-4 font-semibold">Estado</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {paginatedCustomers.map(customer => (
                 <tr 
                   key={customer.customer_code}
-                  className="bg-white border-b hover:bg-gray-50"
+                  className="bg-white hover:bg-blue-50 transition-colors cursor-pointer"
                 >
-                  <td className="w-4 p-4">
+                  <td className="p-4">
                     <div className="flex items-center">
-                    <input
+                      <input
                         id={`checkbox-table-search-${customer.customer_code}`} 
-                      type="checkbox"
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                      checked={selectedCustomers.includes(customer.customer_code)}
-                      onChange={() => handleSelectCustomer(customer.customer_code)}
+                        type="checkbox"
+                        className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                        checked={selectedCustomers.includes(customer.customer_code)}
+                        onChange={() => handleSelectCustomer(customer.customer_code)}
                         onClick={(e) => e.stopPropagation()}
                       />
-                      <label htmlFor={`checkbox-table-search-${customer.customer_code}`} className="sr-only">checkbox</label>
+                      <label htmlFor={`checkbox-table-search-${customer.customer_code}`} className="sr-only">
+                        Seleccionar {getCustomerDisplayName(customer)}
+                      </label>
                     </div>
                   </td>
-                  <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center space-x-3">
-                    <div className={`p-3 rounded-full ${!customer.inactive ? 'bg-green-100' : 'bg-gray-100'}`}>
-                      <Building className={`w-6 h-6 ${!customer.inactive ? 'text-green-600' : 'text-gray-600'}`} />
-                    </div>
-                    <div>
-                      <div className="text-base font-semibold">{getCustomerDisplayName(customer)}</div>
-                      <div className="text-xs text-gray-400">Código: {customer.customer_code}</div>
+                  <th scope="row" className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg flex-shrink-0 ${!customer.inactive ? 'bg-green-100' : 'bg-gray-100'}`}>
+                        <Building className={`w-5 h-5 ${!customer.inactive ? 'text-green-600' : 'text-gray-600'}`} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-base font-semibold text-gray-900 truncate max-w-md">
+                          {getCustomerDisplayName(customer)}
+                        </div>
+                      </div>
                     </div>
                   </th>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">
-                      {customer.email || customer.alternate_email || 'Sin email'}
+                    <div className="text-sm text-gray-900 truncate max-w-xs">
+                      {customer.email || customer.alternate_email || (
+                        <span className="text-gray-400 italic">Sin email</span>
+                      )}
                     </div>
-                    {customer.alternate_email && customer.email && (
-                      <div className="text-xs text-gray-500">Alt: {customer.alternate_email}</div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">
-                      {customer.phones || 'N/A'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="font-mono text-sm text-gray-900">
-                      {customer.rif || 'N/A'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {getTypeBadge(customer)}
                   </td>
                   <td className="px-6 py-4">
                     {getStatusBadge(customer)}
                   </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex items-center justify-center space-x-1">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-center gap-2">
                       <button
-                        onClick={(e) => handleDeleteRequest(e, customer)}
-                        className="p-2 text-gray-500 rounded-full hover:bg-red-100 hover:text-red-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteRequest(e, customer);
+                        }}
+                        className="p-2 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors"
                         title="Eliminar Cliente"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -668,24 +676,27 @@ const AdminCustomersPage: React.FC = () => {
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination - Optimized */}
         {totalPages > 1 && (
-          <div className="p-4 border-t flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
-            <span className="text-sm text-gray-700">
-              Página <span className="font-semibold">{currentPage}</span> de <span className="font-semibold">{totalPages}</span>
-            </span>
-            <div className="flex items-center space-x-2">
+          <div className="px-3 sm:px-4 py-3 sm:py-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div className="text-xs sm:text-sm text-gray-600">
+              Página <span className="font-semibold text-gray-900">{currentPage}</span> de{' '}
+              <span className="font-semibold text-gray-900">{totalPages}</span>
+            </div>
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 sm:px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-150 shadow-sm hover:shadow-md min-h-[44px] min-w-[100px]"
+                aria-label="Página anterior"
               >
                 Anterior
               </button>
               <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 sm:px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-150 shadow-sm hover:shadow-md min-h-[44px] min-w-[100px]"
+                aria-label="Página siguiente"
               >
                 Siguiente
               </button>
