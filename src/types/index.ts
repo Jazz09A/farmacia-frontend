@@ -107,6 +107,7 @@ export type Currency = 'VES' | 'USD';
 export interface FlashOffer {
   id?: string;
   product_id: string;
+  co_desc?: string; // Código del descuento (ej: "DESC01", "DESC02")
   discount_type: 'percentage' | 'fixed_amount';
   discount_value: number;
   start_time: string;
@@ -126,14 +127,17 @@ export interface FlashOfferWithProduct extends FlashOffer {
   availability_percentage?: number; // 0-100 based on max_quantity vs claimed
 }
 
-// 🔥 Flash Offer creation payload
+// 🔥 Flash Offer creation payload (Article Discount)
 export interface CreateFlashOfferPayload {
-  product_id: string;
-  discount_type: 'percentage' | 'fixed_amount';
-  discount_value: number;
-  start_time: string;
-  end_time: string;
-  max_quantity?: number;
+  co_art: string;
+  des_des: string;
+  fecha_ini: string;
+  fecha_fin: string;
+  hasta1: number;
+  porc1: number;
+  hasta2?: number;
+  porc2?: number;
+  campo1?: string;
   is_active?: boolean;
 }
 

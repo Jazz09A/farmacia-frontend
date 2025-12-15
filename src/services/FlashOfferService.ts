@@ -19,6 +19,7 @@ export interface FlashOfferFilters {
 class FlashOfferService {
   private adminBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1/admin';
   private adminFlashOffersBase = `${this.adminBaseUrl}/flash-offers`;
+  private articleDiscountsBase = `${this.adminBaseUrl}/article-discounts`;
   private publicFlashOffersUrl = `${this.adminFlashOffersBase}/public`;
 
   async getFlashOffersPublic(): Promise<FlashOfferResponse> {
@@ -87,7 +88,7 @@ class FlashOfferService {
         });
       }
 
-      const url = `${this.adminFlashOffersBase}${queryParams.toString() ? `?${queryParams}` : ''}`;
+      const url = `${this.articleDiscountsBase}${queryParams.toString() ? `?${queryParams}` : ''}`;
       const response = await authService.authenticatedFetch(url);
       
       if (!response.ok) {
@@ -110,11 +111,11 @@ class FlashOfferService {
     }
   }
 
-  // 🔥 Crear nueva oferta flash (admin)
+  // 🔥 Crear nueva oferta flash (admin) - Usa article-discounts endpoint
   async createFlashOffer(payload: CreateFlashOfferPayload): Promise<FlashOffer> {
     try {
       const response = await authService.authenticatedFetch(
-        this.adminFlashOffersBase,
+        this.articleDiscountsBase,
         {
           method: 'POST',
           headers: {
@@ -136,11 +137,11 @@ class FlashOfferService {
     }
   }
 
-  // 🔥 Actualizar oferta flash (admin)
+  // 🔥 Actualizar oferta flash (admin) - Usa article-discounts endpoint
   async updateFlashOffer(id: string, payload: Partial<CreateFlashOfferPayload>): Promise<FlashOffer> {
     try {
       const response = await authService.authenticatedFetch(
-        `${this.adminFlashOffersBase}/${id}`,
+        `${this.articleDiscountsBase}/${id}`,
         {
           method: 'PUT',
           headers: {
@@ -162,11 +163,11 @@ class FlashOfferService {
     }
   }
 
-  // 🔥 Eliminar oferta flash (admin)
+  // 🔥 Eliminar oferta flash (admin) - Usa article-discounts endpoint
   async deleteFlashOffer(id: string): Promise<void> {
     try {
       const response = await authService.authenticatedFetch(
-        `${this.adminFlashOffersBase}/${id}`,
+        `${this.articleDiscountsBase}/${id}`,
         {
           method: 'DELETE',
         }
@@ -181,11 +182,11 @@ class FlashOfferService {
     }
   }
 
-  // 🔥 Obtener oferta flash específica (admin)
+  // 🔥 Obtener oferta flash específica (admin) - Usa article-discounts endpoint
   async getFlashOfferById(id: string): Promise<FlashOfferWithProduct> {
     try {
       const response = await authService.authenticatedFetch(
-        `${this.adminFlashOffersBase}/${id}`
+        `${this.articleDiscountsBase}/${id}`
       );
       
       if (!response.ok) {
@@ -206,10 +207,10 @@ class FlashOfferService {
   }
 
   // 🔥 Obtener descuento de artículo por código (admin)
-  async getArticleDiscount(code: string): Promise<any> {
+  async getArticleDiscount(coDesc: string): Promise<any> {
     try {
       const response = await authService.authenticatedFetch(
-        `${this.adminBaseUrl}/article-discounts/code/${code}`
+        `${this.adminBaseUrl}/article-discounts/code/${coDesc}`
       );
       
       if (!response.ok) {
@@ -267,19 +268,23 @@ class FlashOfferService {
     if (data.offers && Array.isArray(data.offers)) {
       rawOffers = data.offers;
     }
-    // Prioridad 2: Si la respuesta directamente contiene un array de ofertas
+    // Prioridad 2: Estructura con items - { items, total, page, limit, success }
+    else if (data.items && Array.isArray(data.items)) {
+      rawOffers = data.items;
+    }
+    // Prioridad 3: Si la respuesta directamente contiene un array de ofertas
     else if (Array.isArray(data)) {
       rawOffers = data;
     }
-    // Prioridad 3: Estructura antigua con flash_offers
+    // Prioridad 4: Estructura antigua con flash_offers
     else if (data.flash_offers && Array.isArray(data.flash_offers)) {
       rawOffers = data.flash_offers;
     }
-    // Prioridad 4: Estructura anidada con data.flash_offers
+    // Prioridad 5: Estructura anidada con data.flash_offers
     else if (data.data && Array.isArray(data.data.flash_offers)) {
       rawOffers = data.data.flash_offers;
     }
-    // Prioridad 5: Estructura anidada con data como array
+    // Prioridad 6: Estructura anidada con data como array
     else if (data.data && Array.isArray(data.data)) {
       rawOffers = data.data;
     }
@@ -295,11 +300,23 @@ class FlashOfferService {
 
   // Map raw offer from API to FlashOfferWithProduct format
   private mapRawOfferToFlashOfferWithProduct(rawOffer: any): FlashOfferWithProduct {
+    // Normalize API field names - handle both old and new API structures
+    const articleCode = rawOffer.co_art?.trim() || rawOffer.article_code || rawOffer.product_id || rawOffer.id;
+    const articleDescription = rawOffer.art_des?.trim() || rawOffer.article_details?.description || rawOffer.product?.name || 'Producto sin nombre';
+    const discountCode = rawOffer.co_desc?.trim() || rawOffer.co_desc || rawOffer.discount_code;
+    const startTime = rawOffer.fecha_ini || rawOffer.start_time;
+    const endTime = rawOffer.fecha_fin || rawOffer.end_time;
+    const discountPercentage = rawOffer.porc1 ? parseFloat(rawOffer.porc1) : (rawOffer.discount_value || 0);
+    const maxQuantity = rawOffer.hasta1 ? parseFloat(rawOffer.hasta1) : rawOffer.max_quantity;
+    const isActive = rawOffer.is_active !== undefined ? rawOffer.is_active : true;
+    const createdAt = rawOffer.fe_us_in || rawOffer.created_at || '';
+    const updatedAt = rawOffer.fe_us_mo || rawOffer.updated_at || '';
+    
     // Map article_details to Product if available
     let product: any = null;
     
     if (rawOffer.article_details) {
-      product = this.mapArticleDetailsToProduct(rawOffer.article_details, rawOffer.article_code);
+      product = this.mapArticleDetailsToProduct(rawOffer.article_details, articleCode);
     } else if (rawOffer.product) {
       // Fallback to existing product structure
       product = rawOffer.product;
@@ -315,8 +332,8 @@ class FlashOfferService {
       const offerPriceStr = parsePrice(rawOffer.article_details?.offer_price || rawOffer.article_details?.original_price);
       
       product = {
-        id: rawOffer.article_code || rawOffer.product_id || rawOffer.id,
-        name: rawOffer.article_details?.description || 'Producto sin nombre',
+        id: articleCode,
+        name: articleDescription,
         brand: '',
         category: '',
         subcategory: '',
@@ -324,7 +341,7 @@ class FlashOfferService {
         price: originalPriceStr,
         price_ref: originalPriceStr,
         price_ves: '0',
-        description: rawOffer.article_details?.description || '',
+        description: articleDescription,
         ingredients: [],
         image: rawOffer.article_details?.image_url || 'https://placehold.co/400x400/png',
         images: rawOffer.article_details?.gallery && Array.isArray(rawOffer.article_details.gallery) && rawOffer.article_details.gallery.length > 0
@@ -337,7 +354,7 @@ class FlashOfferService {
         review_count: 0,
         is_offer: true,
         original_price: originalPriceStr,
-        offer_end_time: rawOffer.end_time || null,
+        offer_end_time: endTime || null,
         featured: false,
         dosage: '',
         presentation: '',
@@ -345,12 +362,12 @@ class FlashOfferService {
         registro_sanitario: '',
         contraindicaciones: '',
         efectos_secundarios: '',
-        slug: rawOffer.article_code || '',
-        discount_percentage: rawOffer.article_details?.discount_percentage?.toString() || rawOffer.discount_value?.toString() || '0',
+        slug: articleCode,
+        discount_percentage: discountPercentage.toString(),
         current_price: offerPriceStr,
         is_available: parseFloat(rawOffer.article_details?.stock || '0') > 0,
-        created_at: rawOffer.created_at || '',
-        updated_at: rawOffer.updated_at || '',
+        created_at: createdAt,
+        updated_at: updatedAt,
       };
     }
 
@@ -361,32 +378,33 @@ class FlashOfferService {
     
     if (rawOffer.remaining_quantity !== undefined) {
       remaining_quantity = rawOffer.remaining_quantity;
-      if (rawOffer.max_quantity !== undefined) {
-        claimed_quantity = rawOffer.max_quantity - rawOffer.remaining_quantity;
+      if (maxQuantity !== undefined) {
+        claimed_quantity = maxQuantity - rawOffer.remaining_quantity;
       }
     } else if (rawOffer.used_quantity !== undefined) {
       claimed_quantity = rawOffer.used_quantity;
-      if (rawOffer.max_quantity !== undefined) {
-        remaining_quantity = rawOffer.max_quantity - rawOffer.used_quantity;
+      if (maxQuantity !== undefined) {
+        remaining_quantity = maxQuantity - rawOffer.used_quantity;
       }
     } else if (rawOffer.claimed_quantity !== undefined) {
       claimed_quantity = rawOffer.claimed_quantity;
-      if (rawOffer.max_quantity !== undefined) {
-        remaining_quantity = rawOffer.max_quantity - rawOffer.claimed_quantity;
+      if (maxQuantity !== undefined) {
+        remaining_quantity = maxQuantity - rawOffer.claimed_quantity;
       }
     }
 
     return {
-      id: rawOffer.id,
-      product_id: rawOffer.product_id || rawOffer.article_code || rawOffer.id,
-      discount_type: rawOffer.discount_type,
-      discount_value: rawOffer.discount_value,
-      start_time: rawOffer.start_time,
-      end_time: rawOffer.end_time,
-      max_quantity: rawOffer.max_quantity,
-      is_active: rawOffer.is_active,
-      created_at: rawOffer.created_at,
-      updated_at: rawOffer.updated_at,
+      id: rawOffer.id || articleCode,
+      product_id: articleCode,
+      co_desc: discountCode,
+      discount_type: rawOffer.discount_type || 'percentage',
+      discount_value: discountPercentage,
+      start_time: startTime,
+      end_time: endTime,
+      max_quantity: maxQuantity,
+      is_active: isActive,
+      created_at: createdAt,
+      updated_at: updatedAt,
       product: product,
       claimed_quantity: claimed_quantity,
       remaining_quantity: remaining_quantity,

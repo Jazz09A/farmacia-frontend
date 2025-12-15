@@ -1,5 +1,5 @@
 // 🔥 Admin Flash Offers Management Page
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   Flame, 
   Plus, 
@@ -14,7 +14,10 @@ import {
   Calendar,
   Layers,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  Search,
+  ChevronDown,
+  Package
 } from 'lucide-react';
 import { 
   useAdminFlashOffersQuery, 
@@ -24,28 +27,33 @@ import {
   useToggleFlashOfferStatusMutation
 } from '../../hooks/queries/useFlashOffersQueries';
 import { FlashOfferFilters, flashOfferService } from '../../services/FlashOfferService';
-import { FlashOfferWithProduct, CreateFlashOfferPayload } from '../../types';
+import { FlashOfferWithProduct, CreateFlashOfferPayload, Product } from '../../types';
 import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
 import { useQueryClient } from '@tanstack/react-query';
+import { useProductsQuery } from '../../hooks/queries/useProductsQueries';
 
 type FlashOfferFormValues = {
-  productCode: string;
-  discountType: 'percentage' | 'fixed_amount';
-  discountValue: string;
-  startDate: string;
-  endDate: string;
-  maxQuantity: string;
-  isActive: boolean;
+  productCode: string; // co_art
+  desDes: string; // des_des - Descripción de la promoción
+  startDate: string; // fecha_ini
+  endDate: string; // fecha_fin
+  hasta1: string; // hasta1 - Cantidad máxima para primer descuento
+  porc1: string; // porc1 - Porcentaje del primer descuento
+  hasta2: string; // hasta2 - Cantidad máxima para segundo descuento (opcional)
+  porc2: string; // porc2 - Porcentaje del segundo descuento (opcional)
+  campo1: string; // campo1 - Observación interna (opcional)
 };
 
 const defaultFormValues: FlashOfferFormValues = {
   productCode: '',
-  discountType: 'percentage',
-  discountValue: '',
+  desDes: 'Promo Web',
   startDate: '',
   endDate: '',
-  maxQuantity: '',
-  isActive: true,
+  hasta1: '',
+  porc1: '',
+  hasta2: '',
+  porc2: '',
+  campo1: '',
 };
 
 const formatDateForInput = (iso?: string) => {
@@ -104,24 +112,73 @@ const FlashOfferFormModal: React.FC<FlashOfferFormModalProps> = ({
     }));
   };
 
+  // Obtener productos con cache
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
+  const productSearchRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const { data: productsData, isLoading: productsLoading } = useProductsQuery({
+    search: searchQuery,
+    limit: 50,
+    page: 1
+  });
+
+  const products = productsData?.products || [];
+  const selectedProduct = useMemo(() => {
+    if (!values.productCode) return null;
+    return products.find(p => p.id === values.productCode);
+  }, [values.productCode, products]);
+
+  // Cerrar dropdown al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        productSearchRef.current &&
+        !productSearchRef.current.contains(event.target as Node)
+      ) {
+        setIsProductDropdownOpen(false);
+      }
+    };
+
+    if (isProductDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isProductDropdownOpen]);
+
+  const handleProductSelect = (product: Product) => {
+    setValues(prev => ({ ...prev, productCode: product.id }));
+    setIsProductDropdownOpen(false);
+    setSearchQuery('');
+  };
+
   const handleSyncProfit = async () => {
-    if (!onFetchProfitData || !values.productCode.trim()) return;
+    if (!onFetchProfitData || !selectedProduct) return;
+    
+    // Obtener el código del producto para sincronizar con Profit
+    // Asumiendo que el id del producto es el código de Profit
+    const productCode = selectedProduct.id;
     
     setSyncing(true);
     setFormError(null);
     try {
-      const data = await onFetchProfitData(values.productCode.trim());
+      const data = await onFetchProfitData(productCode);
       
       if (data) {
         setValues(prev => ({
           ...prev,
           // Mapeo de campos basado en el JSON de Profit
-          discountType: 'percentage', // Asumimos porcentaje por defecto si viene de Profit
-          discountValue: data.porc1 ? parseFloat(data.porc1).toString() : prev.discountValue,
+          desDes: data.des_des || prev.desDes || 'Promo Web',
+          porc1: data.porc1 ? parseFloat(data.porc1).toString() : prev.porc1,
+          hasta1: data.hasta1 ? data.hasta1.toString() : prev.hasta1,
+          porc2: data.porc2 ? parseFloat(data.porc2).toString() : prev.porc2,
+          hasta2: data.hasta2 ? data.hasta2.toString() : prev.hasta2,
           startDate: data.fecha_ini ? new Date(data.fecha_ini).toISOString().slice(0, 16) : prev.startDate,
           endDate: data.fecha_fin ? new Date(data.fecha_fin).toISOString().slice(0, 16) : prev.endDate,
-          maxQuantity: data.campo1 ? data.campo1.toString() : prev.maxQuantity,
-          isActive: true // Activar por defecto si viene de Profit
+          campo1: data.campo1 || prev.campo1 || ''
         }));
       } else {
         setFormError('No se encontró información de descuento para este artículo.');
@@ -139,11 +196,19 @@ const FlashOfferFormModal: React.FC<FlashOfferFormModalProps> = ({
     setFormError(null);
 
     if (!values.productCode.trim()) {
-      setFormError('Debes indicar el código del artículo.');
+      setFormError('Debes seleccionar un producto.');
       return;
     }
-    if (!values.discountValue || Number(values.discountValue) <= 0) {
-      setFormError('Define un valor de descuento válido.');
+    if (!values.desDes.trim()) {
+      setFormError('Debes ingresar una descripción de la promoción.');
+      return;
+    }
+    if (!values.porc1 || Number(values.porc1) <= 0 || Number(values.porc1) > 100) {
+      setFormError('Define un porcentaje de descuento válido (1-100).');
+      return;
+    }
+    if (!values.hasta1 || Number(values.hasta1) <= 0) {
+      setFormError('Define una cantidad máxima válida para el primer descuento.');
       return;
     }
     if (!values.startDate || !values.endDate) {
@@ -153,6 +218,17 @@ const FlashOfferFormModal: React.FC<FlashOfferFormModalProps> = ({
     if (new Date(values.startDate) >= new Date(values.endDate)) {
       setFormError('La fecha de inicio debe ser menor a la de fin.');
       return;
+    }
+    // Validar segundo descuento si está completo
+    if (values.hasta2 && values.porc2) {
+      if (Number(values.hasta2) <= Number(values.hasta1)) {
+        setFormError('La cantidad del segundo descuento debe ser mayor que la del primero.');
+        return;
+      }
+      if (Number(values.porc2) <= 0 || Number(values.porc2) > 100) {
+        setFormError('El porcentaje del segundo descuento debe ser válido (1-100).');
+        return;
+      }
     }
 
     try {
@@ -202,20 +278,52 @@ const FlashOfferFormModal: React.FC<FlashOfferFormModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="flex flex-col text-sm font-medium text-gray-700">
-              Código del artículo (Profit)
-                <div className="flex gap-2 mt-1">
-              <input
-                type="text"
-                value={values.productCode}
-                onChange={(e) => handleChange('productCode', e.target.value.toUpperCase())}
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500 uppercase"
-                placeholder="Ej: FITOS004"
-              />
-                  {onFetchProfitData && (
+              Producto
+              <div className="relative mt-1">
+                <div className="flex gap-2">
+                  <div className="flex-1 relative">
+                    <input
+                      ref={productSearchRef}
+                      type="text"
+                      value={selectedProduct ? selectedProduct.name : searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setIsProductDropdownOpen(true);
+                        if (!e.target.value) {
+                          setValues(prev => ({ ...prev, productCode: '' }));
+                        }
+                      }}
+                      onFocus={() => {
+                        if (!selectedProduct) {
+                          setIsProductDropdownOpen(true);
+                        }
+                      }}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      placeholder={selectedProduct ? selectedProduct.name : "Buscar producto por nombre..."}
+                      readOnly={!!selectedProduct}
+                    />
+                    {selectedProduct ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setValues(prev => ({ ...prev, productCode: '' }));
+                          setSearchQuery('');
+                          setIsProductDropdownOpen(false);
+                        }}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        title="Limpiar selección"
+                      >
+                        <XCircle className="h-5 w-5" />
+                      </button>
+                    ) : (
+                      <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    )}
+                  </div>
+                  {onFetchProfitData && selectedProduct && (
                     <button
                       type="button"
                       onClick={handleSyncProfit}
-                      disabled={syncing || !values.productCode}
+                      disabled={syncing}
                       className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 disabled:opacity-50 transition-colors"
                       title="Sincronizar con Profit"
                     >
@@ -223,42 +331,175 @@ const FlashOfferFormModal: React.FC<FlashOfferFormModalProps> = ({
                     </button>
                   )}
                 </div>
+                
+                {/* Dropdown de productos */}
+                {isProductDropdownOpen && !selectedProduct && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                  >
+                    {productsLoading ? (
+                      <div className="p-4 text-center text-gray-500">
+                        <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />
+                        <p className="text-sm">Cargando productos...</p>
+                      </div>
+                    ) : products.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">
+                        <Package className="w-5 h-5 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm">No se encontraron productos</p>
+                        {searchQuery && (
+                          <p className="text-xs text-gray-400 mt-1">Intenta con otro término de búsqueda</p>
+                        )}
+                      </div>
+                    ) : (
+                      <ul className="py-1">
+                        {products.map((product) => (
+                          <li
+                            key={product.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleProductSelect(product);
+                            }}
+                            onMouseDown={(e) => e.preventDefault()}
+                            className="px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {product.name}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  {product.brand && (
+                                    <p className="text-xs text-gray-500 truncate">
+                                      {product.brand}
+                                    </p>
+                                  )}
+                                  {product.category && (
+                                    <>
+                                      <span className="text-xs text-gray-300">•</span>
+                                      <p className="text-xs text-gray-500 truncate">
+                                        {product.category}
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+                
+              </div>
             </label>
 
-            <label className="flex flex-col text-sm font-medium text-gray-700">
-              Tipo de descuento
-              <select
-                value={values.discountType}
-                onChange={(e) => handleChange('discountType', e.target.value as FlashOfferFormValues['discountType'])}
-                className="mt-1 rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white"
-              >
-                <option value="percentage">Porcentaje (%)</option>
-                <option value="fixed_amount">Monto fijo</option>
-              </select>
-            </label>
+            {/* Mostrar información del producto seleccionado */}
+            {selectedProduct ? (
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-700 mb-1">Producto seleccionado</span>
+                <div className="p-4 bg-white border border-blue-200 rounded-lg shadow-sm">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-base font-semibold text-gray-900 mb-2">
+                        {selectedProduct.name}
+                      </p>
+                      {selectedProduct.category && (
+                        <p className="text-sm text-gray-600 mb-1">
+                          Categoría: {selectedProduct.category}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-500 font-mono">
+                        Código: {selectedProduct.id}
+                      </p>
+                    </div>
+                    <CheckCircle className="h-6 w-6 text-blue-600 flex-shrink-0 ml-3" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-700 mb-1">Producto seleccionado</span>
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <p className="text-sm text-gray-400 text-center">
+                    Selecciona un producto para continuar
+                  </p>
+                </div>
+              </div>
+            )}
 
             <label className="flex flex-col text-sm font-medium text-gray-700">
-              Valor del descuento
+              Descripción de la promoción
               <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={values.discountValue}
-                onChange={(e) => handleChange('discountValue', e.target.value)}
+                type="text"
+                value={values.desDes}
+                onChange={(e) => handleChange('desDes', e.target.value)}
                 className="mt-1 rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                placeholder={values.discountType === 'percentage' ? 'Ej: 20 (para 20%)' : 'Ej: 5 (monto)'}
+                placeholder="Ej: Promo Web"
               />
             </label>
 
             <label className="flex flex-col text-sm font-medium text-gray-700">
-              Unidades disponibles (opcional)
+              Primer descuento - Cantidad máxima
               <input
                 type="number"
-                min="0"
-                value={values.maxQuantity}
-                onChange={(e) => handleChange('maxQuantity', e.target.value)}
+                min="1"
+                value={values.hasta1}
+                onChange={(e) => handleChange('hasta1', e.target.value)}
                 className="mt-1 rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                placeholder="Ej: 500"
+                placeholder="Ej: 100"
+              />
+            </label>
+
+            <label className="flex flex-col text-sm font-medium text-gray-700">
+              Primer descuento - Porcentaje (%)
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={values.porc1}
+                onChange={(e) => handleChange('porc1', e.target.value)}
+                className="mt-1 rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                placeholder="Ej: 15 (para 15%)"
+              />
+            </label>
+
+            <label className="flex flex-col text-sm font-medium text-gray-700">
+              Segundo descuento - Cantidad máxima (opcional)
+              <input
+                type="number"
+                min="1"
+                value={values.hasta2}
+                onChange={(e) => handleChange('hasta2', e.target.value)}
+                className="mt-1 rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                placeholder="Ej: 200"
+              />
+            </label>
+
+            <label className="flex flex-col text-sm font-medium text-gray-700">
+              Segundo descuento - Porcentaje % (opcional)
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={values.porc2}
+                onChange={(e) => handleChange('porc2', e.target.value)}
+                className="mt-1 rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                placeholder="Ej: 20 (para 20%)"
+              />
+            </label>
+
+            <label className="flex flex-col text-sm font-medium text-gray-700">
+              Observación interna (opcional)
+              <input
+                type="text"
+                value={values.campo1}
+                onChange={(e) => handleChange('campo1', e.target.value)}
+                className="mt-1 rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                placeholder="Ej: Observación interna"
               />
             </label>
 
@@ -282,15 +523,6 @@ const FlashOfferFormModal: React.FC<FlashOfferFormModalProps> = ({
               />
             </label>
 
-              <label className="flex items-center gap-3 text-sm font-medium text-gray-700 md:col-span-2 mt-2">
-              <input
-                type="checkbox"
-                checked={values.isActive}
-                onChange={(e) => handleChange('isActive', e.target.checked)}
-                  className="rounded border-gray-300 text-red-600 focus:ring-red-500 w-5 h-5"
-              />
-              Activar inmediatamente
-            </label>
           </div>
 
           {(formError || errorMessage) && (
@@ -498,22 +730,26 @@ const ArticleDiscountModal: React.FC<ArticleDiscountModalProps> = ({
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {[1, 2, 3, 4, 5].map((level) => {
-                    const hasta = data[`hasta${level}`];
-                    const porc = data[`porc${level}`];
-                    
-                    if (!hasta && !porc) return null;
+                  {[1, 2, 3, 4, 5]
+                    .filter((level) => {
+                      const hasta = data[`hasta${level}`];
+                      const porc = data[`porc${level}`];
+                      return hasta || porc;
+                    })
+                    .map((level) => {
+                      const hasta = data[`hasta${level}`];
+                      const porc = data[`porc${level}`];
 
-                    return (
-                      <tr key={level}>
-                        <td className="px-4 py-2 text-sm text-gray-900 font-medium">{level}</td>
-                        <td className="px-4 py-2 text-sm text-gray-500">{hasta ? parseFloat(hasta).toString() : '-'}</td>
-                        <td className="px-4 py-2 text-sm text-green-600 font-bold">{porc ? `${parseFloat(porc)}%` : '-'}</td>
-                      </tr>
-                    );
-                  })}
+                      return (
+                        <tr key={level}>
+                          <td className="px-4 py-2 text-sm text-gray-900 font-medium">{level}</td>
+                          <td className="px-4 py-2 text-sm text-gray-500">{hasta ? parseFloat(hasta).toString() : '-'}</td>
+                          <td className="px-4 py-2 text-sm text-green-600 font-bold">{porc ? `${parseFloat(porc)}%` : '-'}</td>
+                        </tr>
+                      );
+                    })}
                   {!data.hasta1 && !data.porc1 && (
-                    <tr>
+                    <tr key="no-scales">
                       <td colSpan={3} className="px-4 py-4 text-sm text-gray-500 text-center italic">
                         No hay escalas definidas
                       </td>
@@ -954,9 +1190,10 @@ const AdminFlashOffersPage: React.FC = () => {
     };
   }, []);
 
-  const fetchArticleDiscountCached = React.useCallback(async (code: string) => {
-    const normalizedCode = code?.trim();
-    if (!normalizedCode) {
+  const fetchArticleDiscountCached = React.useCallback(async (coDesc: string) => {
+    const normalizedCode = coDesc?.trim();
+    
+    if (!coDesc) {
       throw new Error('Código de descuento inválido');
     }
 
@@ -969,7 +1206,9 @@ const AdminFlashOffersPage: React.FC = () => {
   }, [queryClient]);
 
   const handleOfferRowClick = (offer: FlashOfferWithProduct) => {
-    const discountCode = offer.id || offer.product_id || offer.product?.id;
+    // Usar co_desc (código del descuento) en lugar de co_art (código del artículo)
+    const discountCode = offer.co_desc;
+    
     if (!discountCode) {
       showNotification('error', 'No se encontró el código del descuento.');
       return;
@@ -1036,25 +1275,45 @@ const AdminFlashOffersPage: React.FC = () => {
     }
   };
 
-  const mapFormValuesToPayload = (values: FlashOfferFormValues): CreateFlashOfferPayload => ({
-    product_id: values.productCode.trim(),
-    discount_type: values.discountType,
-    discount_value: Number(values.discountValue),
-    start_time: toIsoString(values.startDate) || new Date().toISOString(),
-    end_time: toIsoString(values.endDate) || new Date().toISOString(),
-    max_quantity: values.maxQuantity ? Number(values.maxQuantity) : undefined,
-    is_active: values.isActive,
-  });
+  const mapFormValuesToPayload = (values: FlashOfferFormValues): CreateFlashOfferPayload => {
+    const payload: CreateFlashOfferPayload = {
+      co_art: values.productCode.trim(),
+      des_des: values.desDes.trim(),
+      fecha_ini: toIsoString(values.startDate) || new Date().toISOString(),
+      fecha_fin: toIsoString(values.endDate) || new Date().toISOString(),
+      hasta1: Number(values.hasta1),
+      porc1: Number(values.porc1),
+    };
+    
+    // Agregar segundo descuento solo si ambos campos están completos
+    if (values.hasta2 && values.porc2) {
+      payload.hasta2 = Number(values.hasta2);
+      payload.porc2 = Number(values.porc2);
+    }
+    
+    // Agregar observación interna si está presente
+    if (values.campo1.trim()) {
+      payload.campo1 = values.campo1.trim();
+    }
+    
+    return payload;
+  };
 
-  const mapOfferToFormValues = (offer: FlashOfferWithProduct): FlashOfferFormValues => ({
-    productCode: offer.product_id || offer.product?.id || '',
-    discountType: offer.discount_type,
-    discountValue: offer.discount_value.toString(),
-    startDate: formatDateForInput(offer.start_time),
-    endDate: formatDateForInput(offer.end_time),
-    maxQuantity: offer.max_quantity ? offer.max_quantity.toString() : '',
-    isActive: offer.is_active,
-  });
+  const mapOfferToFormValues = (offer: FlashOfferWithProduct): FlashOfferFormValues => {
+    // Nota: Esta función puede necesitar ajustes según la estructura de respuesta del backend
+    // Por ahora, mapeamos a valores por defecto ya que el backend puede devolver datos en formato diferente
+    return {
+      productCode: offer.product_id || offer.product?.id || '',
+      desDes: 'Promo Web', // Valor por defecto, debería venir del backend
+      startDate: formatDateForInput(offer.start_time),
+      endDate: formatDateForInput(offer.end_time),
+      hasta1: offer.max_quantity ? offer.max_quantity.toString() : '',
+      porc1: offer.discount_value ? offer.discount_value.toString() : '',
+      hasta2: '',
+      porc2: '',
+      campo1: '',
+    };
+  };
 
   const editInitialValues = useMemo(() => {
     return selectedOffer ? mapOfferToFormValues(selectedOffer) : defaultFormValues;
@@ -1073,18 +1332,15 @@ const AdminFlashOffersPage: React.FC = () => {
 
   const openEditModal = async (offer: FlashOfferWithProduct) => {
     try {
-      const productCode = offer.product_id || offer.product?.id;
+      const discountCode = offer.co_desc;
       let updatedOffer = { ...offer };
 
-      if (productCode) {
+      if (discountCode) {
         try {
-          // Obtener datos del ERP usando el código del artículo
-          // La respuesta incluirá co_desc que luego usaremos para futuras peticiones
-          const erpData = await flashOfferService.getArticleDiscount(productCode);
+          // Obtener datos del ERP usando el código del descuento (co_desc)
+          const erpData = await flashOfferService.getArticleDiscount(discountCode);
           
           if (erpData && erpData.success) {
-            console.log('Datos ERP obtenidos para edición:', erpData);
-            
             updatedOffer = {
               ...updatedOffer,
               // Mapear valor del descuento (asumiendo porcentaje si viene en porc1)
@@ -1253,17 +1509,17 @@ const AdminFlashOffersPage: React.FC = () => {
 
       {/* Offers Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-500">
+        <div className="w-full">
+          <table className="w-full text-sm text-left text-gray-500 table-fixed">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th scope="col" className="px-3 lg:px-6 py-3">Producto</th>
-                <th scope="col" className="px-3 lg:px-6 py-3 hidden sm:table-cell">Descuento</th>
-                <th scope="col" className="px-3 lg:px-6 py-3 hidden md:table-cell">Precio Original</th>
-                <th scope="col" className="px-3 lg:px-6 py-3">Precio Oferta</th>
-                <th scope="col" className="px-3 lg:px-6 py-3 hidden lg:table-cell">Vencimiento</th>
-                <th scope="col" className="px-3 lg:px-6 py-3 hidden sm:table-cell">Estado</th>
-                <th scope="col" className="sr-only">Ver detalles</th>
+                <th scope="col" className="px-2 lg:px-4 py-3 w-[25%]">Producto</th>
+                <th scope="col" className="px-2 lg:px-4 py-3 w-[12%] hidden sm:table-cell">Descuento</th>
+                <th scope="col" className="px-2 lg:px-4 py-3 w-[12%] hidden md:table-cell">Precio Original</th>
+                <th scope="col" className="px-2 lg:px-4 py-3 w-[12%]">Precio Oferta</th>
+                <th scope="col" className="px-2 lg:px-4 py-3 w-[15%] hidden lg:table-cell">Vencimiento</th>
+                <th scope="col" className="px-2 lg:px-4 py-3 w-[12%] hidden sm:table-cell">Estado</th>
+                <th scope="col" className="px-2 lg:px-4 py-3 w-[12%]">Ver detalles</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -1271,41 +1527,40 @@ const AdminFlashOffersPage: React.FC = () => {
                 // Loading skeleton
                 [...Array(5)].map((_, i) => (
                   <tr key={i} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse"></div>
-                        <div className="space-y-2">
-                          <div className="w-32 h-3 bg-gray-200 rounded animate-pulse"></div>
-                          <div className="w-24 h-2 bg-gray-200 rounded animate-pulse"></div>
+                    <td className="px-2 lg:px-4 py-3 lg:py-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gray-200 rounded-lg animate-pulse flex-shrink-0"></div>
+                        <div className="space-y-2 flex-1 min-w-0">
+                          <div className="w-full h-3 bg-gray-200 rounded animate-pulse"></div>
+                          <div className="w-2/3 h-2 bg-gray-200 rounded animate-pulse hidden sm:block"></div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-2 lg:px-4 py-3 lg:py-4 hidden sm:table-cell">
+                      <div className="w-12 h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="px-2 lg:px-4 py-3 lg:py-4 hidden md:table-cell">
                       <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <td className="px-2 lg:px-4 py-3 lg:py-4">
+                      <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <td className="px-2 lg:px-4 py-3 lg:py-4 hidden lg:table-cell">
+                      <div className="space-y-1">
+                        <div className="w-20 h-3 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="w-16 h-2 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="w-24 h-4 bg-gray-200 rounded animate-pulse"></div>
-                    </td>
-                    <td className="px-6 py-4">
+                    <td className="px-2 lg:px-4 py-3 lg:py-4 hidden sm:table-cell">
                       <div className="w-16 h-6 bg-gray-200 rounded-full animate-pulse"></div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex space-x-2">
-                        <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
-                        <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
-                        <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
-                      </div>
+                    <td className="px-2 lg:px-4 py-3 lg:py-4">
+                      <div className="w-12 h-4 bg-gray-200 rounded animate-pulse ml-auto"></div>
                     </td>
                   </tr>
                 ))
               ) : offers.length > 0 ? (
-                offers.map((offer) => {
+                offers.map((offer, index) => {
                   const statusColor = getStatusColor(offer.is_active, offer.end_time);
                   const statusText = getStatusText(offer.is_active, offer.end_time);
 
@@ -1335,7 +1590,7 @@ const AdminFlashOffersPage: React.FC = () => {
 
                   return (
                     <tr
-                      key={offer.id || offer.product_id}
+                      key={offer.id || offer.product_id || `offer-${index}`}
                       className="group hover:bg-gray-50 focus-within:bg-gray-50 cursor-pointer transition-colors"
                       onClick={() => handleOfferRowClick(offer)}
                       onKeyDown={(event) => handleOfferRowKeyDown(event, offer)}
@@ -1343,18 +1598,18 @@ const AdminFlashOffersPage: React.FC = () => {
                       tabIndex={0}
                       aria-label={`Ver descuento de ${offer.product.name}`}
                     >
-                      <td className="px-3 lg:px-6 py-3 lg:py-4">
-                        <div className="flex items-center space-x-2 lg:space-x-3">
+                      <td className="px-2 lg:px-4 py-3 lg:py-4">
+                        <div className="flex items-center space-x-2">
                           <img
                             src={offer.product.images && offer.product.images.length > 1 ? offer.product.images[1] : offer.product.image}
                             alt={offer.product.name}
-                            className="w-10 h-10 lg:w-12 lg:h-12 rounded-lg object-cover flex-shrink-0"
+                            className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg object-cover flex-shrink-0"
                           />
-                          <div className="min-w-0">
-                            <div className="font-medium text-gray-900 text-sm lg:text-base truncate max-w-32 lg:max-w-xs">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-gray-900 text-xs lg:text-sm truncate">
                               {offer.product.name}
                             </div>
-                            <div className="text-xs lg:text-sm text-gray-500 truncate">{offer.product.brand}</div>
+                            <div className="text-xs text-gray-500 truncate hidden sm:block">{offer.product.brand}</div>
                             {/* Mobile info */}
                             <div className="sm:hidden mt-1">
                               <div className="flex items-center text-xs text-red-600 font-semibold">
@@ -1371,44 +1626,46 @@ const AdminFlashOffersPage: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap hidden sm:table-cell">
-                        <div className="flex items-center text-sm font-semibold text-red-600">
-                          <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
+                      <td className="px-2 lg:px-4 py-3 lg:py-4 hidden sm:table-cell">
+                        <div className="flex items-center text-xs lg:text-sm font-semibold text-red-600">
+                          <TrendingDown className="w-3 h-3 lg:w-4 lg:h-4 text-red-500 mr-1 flex-shrink-0" />
+                          <span className="truncate">
                             {offer.discount_type === 'percentage' 
                               ? `${offer.discount_value}%` 
                               : `Bs ${offer.discount_value}`}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap hidden md:table-cell">
-                        <SmartPriceDisplay amount={originalPriceValue} className="text-sm" />
+                      <td className="px-2 lg:px-4 py-3 lg:py-4 hidden md:table-cell">
+                        <SmartPriceDisplay amount={originalPriceValue} className="text-xs lg:text-sm" />
                       </td>
-                      <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
+                      <td className="px-2 lg:px-4 py-3 lg:py-4">
                         <div className="font-bold text-green-600">
-                          <SmartPriceDisplay amount={discountedPriceValue} className="text-sm lg:text-base" />
+                          <SmartPriceDisplay amount={discountedPriceValue} className="text-xs lg:text-sm" />
                         </div>
                         {/* Mobile original price */}
                         <div className="md:hidden text-xs text-gray-500 line-through">
                           <SmartPriceDisplay amount={originalPriceValue} className="text-xs" />
                         </div>
                       </td>
-                      <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap hidden lg:table-cell">
-                        <div className="text-sm text-gray-900">
+                      <td className="px-2 lg:px-4 py-3 lg:py-4 hidden lg:table-cell">
+                        <div className="text-xs lg:text-sm text-gray-900 truncate">
                           {new Date(offer.end_time).toLocaleDateString('es-VE')}
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {new Date(offer.end_time).toLocaleTimeString('es-VE')}
+                        <div className="text-xs text-gray-500 truncate">
+                          {new Date(offer.end_time).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </td>
-                      <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap hidden sm:table-cell">
-                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-${statusColor}-100 text-${statusColor}-800`}>
-                          <span className={`w-1.5 h-1.5 mr-1.5 bg-${statusColor}-500 rounded-full`}></span>
-                          {statusText}
+                      <td className="px-2 lg:px-4 py-3 lg:py-4 hidden sm:table-cell">
+                        <div className={`inline-flex items-center px-1.5 lg:px-2 py-0.5 lg:py-1 rounded-full text-xs font-semibold bg-${statusColor}-100 text-${statusColor}-800`}>
+                          <span className={`w-1.5 h-1.5 mr-1 bg-${statusColor}-500 rounded-full flex-shrink-0`}></span>
+                          <span className="truncate">{statusText}</span>
                         </div>
                       </td>
-                      <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end text-sm text-blue-600 font-medium gap-2">
-                          <span className="hidden lg:inline">Ver detalles</span>
-                          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                      <td className="px-2 lg:px-4 py-3 lg:py-4">
+                        <div className="flex items-center justify-end text-xs lg:text-sm text-blue-600 font-medium gap-1 lg:gap-2">
+                          <span className="hidden xl:inline">Ver detalles</span>
+                          <ArrowRight className="w-3 h-3 lg:w-4 lg:h-4 transition-transform group-hover:translate-x-1 flex-shrink-0" />
                         </div>
                       </td>
                     </tr>
@@ -1416,7 +1673,7 @@ const AdminFlashOffersPage: React.FC = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-3 lg:px-6 py-8 text-center">
+                  <td colSpan={7} className="px-2 lg:px-4 py-8 text-center">
                     <div className="flex flex-col items-center">
                       <Flame className="w-8 h-8 lg:w-12 lg:h-12 text-gray-300 mb-3 lg:mb-4" />
                       <h3 className="text-sm font-medium text-gray-900 mb-1">
