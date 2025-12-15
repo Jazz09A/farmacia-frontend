@@ -14,7 +14,6 @@ import {
   Calendar,
   Layers,
   CheckCircle,
-  ArrowRight,
   Search,
   ChevronDown,
   Package
@@ -28,7 +27,6 @@ import {
 } from '../../hooks/queries/useFlashOffersQueries';
 import { FlashOfferFilters, flashOfferService } from '../../services/FlashOfferService';
 import { FlashOfferWithProduct, CreateFlashOfferPayload, Product } from '../../types';
-import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
 import { useQueryClient } from '@tanstack/react-query';
 import { useProductsQuery } from '../../hooks/queries/useProductsQueries';
 
@@ -1117,6 +1115,7 @@ const AdminFlashOffersPage: React.FC = () => {
   const [showEditDiscountModal, setShowEditDiscountModal] = useState(false);
   const [discountData, setDiscountData] = useState<any>(null);
   const [updatingDiscount, setUpdatingDiscount] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [notificationVisible, setNotificationVisible] = useState(false);
   const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1133,18 +1132,62 @@ const AdminFlashOffersPage: React.FC = () => {
   const activeCount = flashOffersResponse?.active_count || 0;
 
   const actions = {
-    refresh: () => refetch(),
+    refresh: async () => {
+      setIsRefreshing(true);
+      try {
+        await refetch();
+        showNotification('success', 'Ofertas actualizadas correctamente');
+      } catch (error) {
+        showNotification('error', 'Error al actualizar las ofertas');
+      } finally {
+        setIsRefreshing(false);
+      }
+    },
     create: async (payload: CreateFlashOfferPayload) => {
-      await createMutation.mutateAsync(payload);
+      try {
+        await createMutation.mutateAsync(payload);
+        // Invalidar y refetch para mostrar el nuevo offer inmediatamente
+        await queryClient.invalidateQueries({ queryKey: ['flashOffers'] });
+        await refetch();
+        showNotification('success', 'Oferta flash creada correctamente');
+        setShowCreateModal(false);
+      } catch (error) {
+        showNotification('error', 'Error al crear la oferta flash');
+        throw error;
+      }
     },
     update: async (id: string, payload: Partial<CreateFlashOfferPayload>) => {
-      await updateMutation.mutateAsync({ id, payload });
+      try {
+        await updateMutation.mutateAsync({ id, payload });
+        await queryClient.invalidateQueries({ queryKey: ['flashOffers'] });
+        await refetch();
+        showNotification('success', 'Oferta flash actualizada correctamente');
+      } catch (error) {
+        showNotification('error', 'Error al actualizar la oferta flash');
+        throw error;
+      }
     },
     delete: async (id: string) => {
-      await deleteMutation.mutateAsync(id);
+      try {
+        await deleteMutation.mutateAsync(id);
+        await queryClient.invalidateQueries({ queryKey: ['flashOffers'] });
+        await refetch();
+        showNotification('success', 'Oferta flash eliminada correctamente');
+      } catch (error) {
+        showNotification('error', 'Error al eliminar la oferta flash');
+        throw error;
+      }
     },
     toggleStatus: async (id: string, is_active: boolean) => {
-      await toggleStatusMutation.mutateAsync({ id, is_active });
+      try {
+        await toggleStatusMutation.mutateAsync({ id, is_active });
+        await queryClient.invalidateQueries({ queryKey: ['flashOffers'] });
+        await refetch();
+        showNotification('success', `Oferta ${is_active ? 'activada' : 'desactivada'} correctamente`);
+      } catch (error) {
+        showNotification('error', 'Error al cambiar el estado de la oferta');
+        throw error;
+      }
     },
   };
 
@@ -1320,8 +1363,13 @@ const AdminFlashOffersPage: React.FC = () => {
   }, [selectedOffer]);
 
   const handleCreateSubmit = async (values: FlashOfferFormValues) => {
-    const payload = mapFormValuesToPayload(values);
-    await actions.create(payload);
+    try {
+      const payload = mapFormValuesToPayload(values);
+      await actions.create(payload);
+    } catch (error) {
+      // El error ya se maneja en actions.create
+      console.error('Error creating flash offer:', error);
+    }
   };
 
   const handleEditSubmit = async (values: FlashOfferFormValues) => {
@@ -1430,11 +1478,13 @@ const AdminFlashOffersPage: React.FC = () => {
           {/* Refresh Button */}
           <button
             onClick={() => actions.refresh()}
-            disabled={loading}
+            disabled={loading || isRefreshing}
             className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Actualizar</span>
+            <RefreshCw className={`w-4 h-4 ${loading || isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">
+              {isRefreshing ? 'Actualizando...' : 'Actualizar'}
+            </span>
           </button>
 
           {/* Create Button */}
@@ -1509,53 +1559,43 @@ const AdminFlashOffersPage: React.FC = () => {
 
       {/* Offers Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="w-full">
-          <table className="w-full text-sm text-left text-gray-500 table-fixed">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
               <tr>
-                <th scope="col" className="px-2 lg:px-4 py-3 w-[25%]">Producto</th>
-                <th scope="col" className="px-2 lg:px-4 py-3 w-[12%] hidden sm:table-cell">Descuento</th>
-                <th scope="col" className="px-2 lg:px-4 py-3 w-[12%] hidden md:table-cell">Precio Original</th>
-                <th scope="col" className="px-2 lg:px-4 py-3 w-[12%]">Precio Oferta</th>
-                <th scope="col" className="px-2 lg:px-4 py-3 w-[15%] hidden lg:table-cell">Vencimiento</th>
-                <th scope="col" className="px-2 lg:px-4 py-3 w-[12%] hidden sm:table-cell">Estado</th>
-                <th scope="col" className="px-2 lg:px-4 py-3 w-[12%]">Ver detalles</th>
+                <th scope="col" className="px-4 lg:px-8 py-4 font-semibold tracking-wide">Producto</th>
+                <th scope="col" className="px-4 lg:px-8 py-4 font-semibold tracking-wide hidden md:table-cell">Código</th>
+                <th scope="col" className="px-4 lg:px-8 py-4 font-semibold tracking-wide hidden lg:table-cell">Promoción</th>
+                <th scope="col" className="px-4 lg:px-8 py-4 font-semibold tracking-wide">Descuento</th>
+                <th scope="col" className="px-4 lg:px-8 py-4 font-semibold tracking-wide hidden sm:table-cell">Vencimiento</th>
+                <th scope="col" className="px-4 lg:px-8 py-4 font-semibold tracking-wide hidden sm:table-cell">Estado</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-100">
               {loading ? (
                 // Loading skeleton
                 [...Array(5)].map((_, i) => (
-                  <tr key={i} className="hover:bg-gray-50">
-                    <td className="px-2 lg:px-4 py-3 lg:py-4">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gray-200 rounded-lg animate-pulse flex-shrink-0"></div>
-                        <div className="space-y-2 flex-1 min-w-0">
-                          <div className="w-full h-3 bg-gray-200 rounded animate-pulse"></div>
-                          <div className="w-2/3 h-2 bg-gray-200 rounded animate-pulse hidden sm:block"></div>
-                        </div>
+                  <tr key={i} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 lg:px-8 py-5">
+                      <div className="space-y-2.5">
+                        <div className="w-full h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="w-2/3 h-3 bg-gray-200 rounded animate-pulse"></div>
                       </div>
                     </td>
-                    <td className="px-2 lg:px-4 py-3 lg:py-4 hidden sm:table-cell">
+                    <td className="px-4 lg:px-8 py-5 hidden md:table-cell">
+                      <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="px-4 lg:px-8 py-5 hidden lg:table-cell">
+                      <div className="w-24 h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="px-4 lg:px-8 py-5">
                       <div className="w-12 h-4 bg-gray-200 rounded animate-pulse"></div>
                     </td>
-                    <td className="px-2 lg:px-4 py-3 lg:py-4 hidden md:table-cell">
-                      <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <td className="px-4 lg:px-8 py-5 hidden sm:table-cell">
+                      <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
                     </td>
-                    <td className="px-2 lg:px-4 py-3 lg:py-4">
-                      <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
-                    </td>
-                    <td className="px-2 lg:px-4 py-3 lg:py-4 hidden lg:table-cell">
-                      <div className="space-y-1">
-                        <div className="w-20 h-3 bg-gray-200 rounded animate-pulse"></div>
-                        <div className="w-16 h-2 bg-gray-200 rounded animate-pulse"></div>
-                      </div>
-                    </td>
-                    <td className="px-2 lg:px-4 py-3 lg:py-4 hidden sm:table-cell">
+                    <td className="px-4 lg:px-8 py-5 hidden sm:table-cell">
                       <div className="w-16 h-6 bg-gray-200 rounded-full animate-pulse"></div>
-                    </td>
-                    <td className="px-2 lg:px-4 py-3 lg:py-4">
-                      <div className="w-12 h-4 bg-gray-200 rounded animate-pulse ml-auto"></div>
                     </td>
                   </tr>
                 ))
@@ -1563,109 +1603,86 @@ const AdminFlashOffersPage: React.FC = () => {
                 offers.map((offer, index) => {
                   const statusColor = getStatusColor(offer.is_active, offer.end_time);
                   const statusText = getStatusText(offer.is_active, offer.end_time);
-
-                  const parsePrice = (value: any): number => {
-                    if (value === null || value === undefined) return 0;
-                    const num = typeof value === 'string' ? parseFloat(value) : value;
-                    return Number.isFinite(num) ? num : 0;
-                  };
-
-                  const originalPriceValue = parsePrice(
-                    offer.product.original_price ??
-                      offer.product.price ??
-                      offer.product.current_price
-                  );
-
-                  const discountedPriceValue = (() => {
-                    const fromProduct = parsePrice(offer.product.current_price);
-                    if (fromProduct > 0) {
-                      return fromProduct;
-                    }
-                    return flashOfferService.calculateDiscountedPrice(
-                      originalPriceValue,
-                      offer.discount_type,
-                      offer.discount_value
-                    );
-                  })();
+                  
+                  // Obtener datos directamente del offer (que viene del mapeo)
+                  const productName = offer.product?.name || 'Producto sin nombre';
+                  const discountCode = offer.co_desc || '-';
+                  const promoName = offer.des_des || 'Promoción';
+                  const discountValue = offer.discount_value || 0;
+                  const discountType = offer.discount_type || 'percentage';
 
                   return (
                     <tr
                       key={offer.id || offer.product_id || `offer-${index}`}
-                      className="group hover:bg-gray-50 focus-within:bg-gray-50 cursor-pointer transition-colors"
+                      className="group hover:bg-gray-50 focus-within:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100"
                       onClick={() => handleOfferRowClick(offer)}
                       onKeyDown={(event) => handleOfferRowKeyDown(event, offer)}
                       role="button"
                       tabIndex={0}
-                      aria-label={`Ver descuento de ${offer.product.name}`}
+                      aria-label={`Ver descuento de ${productName}`}
                     >
-                      <td className="px-2 lg:px-4 py-3 lg:py-4">
-                        <div className="flex items-center space-x-2">
-                          <img
-                            src={offer.product.images && offer.product.images.length > 1 ? offer.product.images[1] : offer.product.image}
-                            alt={offer.product.name}
-                            className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg object-cover flex-shrink-0"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium text-gray-900 text-xs lg:text-sm truncate">
-                              {offer.product.name}
+                      <td className="px-4 lg:px-8 py-5">
+                        <div className="min-w-0">
+                          <div className="font-medium text-gray-900 text-sm lg:text-base leading-relaxed">
+                            {productName}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1.5 font-mono">
+                            {offer.product_id || offer.product?.id || '-'}
+                          </div>
+                          {/* Mobile: mostrar descuento y estado */}
+                          <div className="md:hidden mt-3 space-y-2">
+                            <div className="flex items-center text-xs text-red-600 font-semibold">
+                              <TrendingDown className="w-3.5 h-3.5 mr-1.5" />
+                              {discountType === 'percentage' 
+                                ? `${discountValue}%` 
+                                : `Bs ${discountValue}`}
                             </div>
-                            <div className="text-xs text-gray-500 truncate hidden sm:block">{offer.product.brand}</div>
-                            {/* Mobile info */}
-                            <div className="sm:hidden mt-1">
-                              <div className="flex items-center text-xs text-red-600 font-semibold">
-                                <TrendingDown className="w-3 h-3 mr-1" />
-                                {offer.discount_type === 'percentage' 
-                                  ? `${offer.discount_value}%` 
-                                  : `Bs ${offer.discount_value}`}
-                              </div>
-                              <div className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium mt-1 bg-${statusColor}-100 text-${statusColor}-800`}>
-                                <span className={`w-1.5 h-1.5 mr-1 bg-${statusColor}-500 rounded-full`}></span>
-                                {statusText}
-                              </div>
+                            <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800`}>
+                              <span className={`w-1.5 h-1.5 mr-1.5 bg-${statusColor}-500 rounded-full`}></span>
+                              {statusText}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-2 lg:px-4 py-3 lg:py-4 hidden sm:table-cell">
-                        <div className="flex items-center text-xs lg:text-sm font-semibold text-red-600">
-                          <TrendingDown className="w-3 h-3 lg:w-4 lg:h-4 text-red-500 mr-1 flex-shrink-0" />
-                          <span className="truncate">
-                            {offer.discount_type === 'percentage' 
-                              ? `${offer.discount_value}%` 
-                              : `Bs ${offer.discount_value}`}
+                      <td className="px-4 lg:px-8 py-5 hidden md:table-cell">
+                        <div className="text-sm font-mono text-gray-700 font-semibold">
+                          {discountCode}
+                        </div>
+                      </td>
+                      <td className="px-4 lg:px-8 py-5 hidden lg:table-cell">
+                        <div className="text-sm text-gray-700 truncate max-w-xs">
+                          {promoName}
+                        </div>
+                      </td>
+                      <td className="px-4 lg:px-8 py-5">
+                        <div className="flex items-center text-sm lg:text-base font-semibold text-red-600">
+                          <TrendingDown className="w-4 h-4 lg:w-5 lg:h-5 text-red-500 mr-2 flex-shrink-0" />
+                          <span>
+                            {discountType === 'percentage' 
+                              ? `${discountValue}%` 
+                              : `Bs ${discountValue}`}
                           </span>
                         </div>
                       </td>
-                      <td className="px-2 lg:px-4 py-3 lg:py-4 hidden md:table-cell">
-                        <SmartPriceDisplay amount={originalPriceValue} className="text-xs lg:text-sm" />
-                      </td>
-                      <td className="px-2 lg:px-4 py-3 lg:py-4">
-                        <div className="font-bold text-green-600">
-                          <SmartPriceDisplay amount={discountedPriceValue} className="text-xs lg:text-sm" />
+                      <td className="px-4 lg:px-8 py-5 hidden sm:table-cell">
+                        <div className="text-sm text-gray-900 font-medium">
+                          {new Date(offer.end_time).toLocaleDateString('es-VE', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })}
                         </div>
-                        {/* Mobile original price */}
-                        <div className="md:hidden text-xs text-gray-500 line-through">
-                          <SmartPriceDisplay amount={originalPriceValue} className="text-xs" />
-                        </div>
-                      </td>
-                      <td className="px-2 lg:px-4 py-3 lg:py-4 hidden lg:table-cell">
-                        <div className="text-xs lg:text-sm text-gray-900 truncate">
-                          {new Date(offer.end_time).toLocaleDateString('es-VE')}
-                        </div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {new Date(offer.end_time).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })}
+                        <div className="text-xs text-gray-500 mt-1">
+                          {new Date(offer.end_time).toLocaleTimeString('es-VE', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
                         </div>
                       </td>
-                      <td className="px-2 lg:px-4 py-3 lg:py-4 hidden sm:table-cell">
-                        <div className={`inline-flex items-center px-1.5 lg:px-2 py-0.5 lg:py-1 rounded-full text-xs font-semibold bg-${statusColor}-100 text-${statusColor}-800`}>
-                          <span className={`w-1.5 h-1.5 mr-1 bg-${statusColor}-500 rounded-full flex-shrink-0`}></span>
-                          <span className="truncate">{statusText}</span>
-                        </div>
-                      </td>
-                      <td className="px-2 lg:px-4 py-3 lg:py-4">
-                        <div className="flex items-center justify-end text-xs lg:text-sm text-blue-600 font-medium gap-1 lg:gap-2">
-                          <span className="hidden xl:inline">Ver detalles</span>
-                          <ArrowRight className="w-3 h-3 lg:w-4 lg:h-4 transition-transform group-hover:translate-x-1 flex-shrink-0" />
+                      <td className="px-4 lg:px-8 py-5 hidden sm:table-cell">
+                        <div className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-semibold bg-${statusColor}-100 text-${statusColor}-800`}>
+                          <span className={`w-2 h-2 mr-2 bg-${statusColor}-500 rounded-full flex-shrink-0`}></span>
+                          {statusText}
                         </div>
                       </td>
                     </tr>
@@ -1673,7 +1690,7 @@ const AdminFlashOffersPage: React.FC = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-2 lg:px-4 py-8 text-center">
+                  <td colSpan={6} className="px-4 lg:px-8 py-12 text-center">
                     <div className="flex flex-col items-center">
                       <Flame className="w-8 h-8 lg:w-12 lg:h-12 text-gray-300 mb-3 lg:mb-4" />
                       <h3 className="text-sm font-medium text-gray-900 mb-1">
@@ -1758,9 +1775,8 @@ const AdminFlashOffersPage: React.FC = () => {
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold text-gray-900">
-                {notification.type === 'success' ? 'Cambios guardados' : 'No se pudo completar'}
+                {notification.message}
               </p>
-              <p className="text-xs text-gray-600 mt-0.5">{notification.message}</p>
             </div>
             <button
               onClick={handleCloseNotification}

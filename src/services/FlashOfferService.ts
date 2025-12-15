@@ -408,6 +408,7 @@ class FlashOfferService {
       product: product,
       claimed_quantity: claimed_quantity,
       remaining_quantity: remaining_quantity,
+      des_des: rawOffer.des_des || '',
       // is_valid will be checked in isOfferActive
     };
   }

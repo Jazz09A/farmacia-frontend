@@ -125,6 +125,7 @@ export interface FlashOfferWithProduct extends FlashOffer {
   claimed_quantity?: number;
   remaining_quantity?: number; // Cantidad restante disponible (max_quantity - used)
   availability_percentage?: number; // 0-100 based on max_quantity vs claimed
+  des_des?: string; // Descripción de la promoción (ej: "Promo Web", "Promo Web 2.0")
 }
 
 // 🔥 Flash Offer creation payload (Article Discount)
