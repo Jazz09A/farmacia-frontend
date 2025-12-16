@@ -735,17 +735,17 @@ const ArticleDiscountModal: React.FC<ArticleDiscountModalProps> = ({
                       return hasta || porc;
                     })
                     .map((level) => {
-                      const hasta = data[`hasta${level}`];
-                      const porc = data[`porc${level}`];
+                    const hasta = data[`hasta${level}`];
+                    const porc = data[`porc${level}`];
 
-                      return (
-                        <tr key={level}>
-                          <td className="px-4 py-2 text-sm text-gray-900 font-medium">{level}</td>
-                          <td className="px-4 py-2 text-sm text-gray-500">{hasta ? parseFloat(hasta).toString() : '-'}</td>
-                          <td className="px-4 py-2 text-sm text-green-600 font-bold">{porc ? `${parseFloat(porc)}%` : '-'}</td>
-                        </tr>
-                      );
-                    })}
+                    return (
+                      <tr key={level}>
+                        <td className="px-4 py-2 text-sm text-gray-900 font-medium">{level}</td>
+                        <td className="px-4 py-2 text-sm text-gray-500">{hasta ? parseFloat(hasta).toString() : '-'}</td>
+                        <td className="px-4 py-2 text-sm text-green-600 font-bold">{porc ? `${parseFloat(porc)}%` : '-'}</td>
+                      </tr>
+                    );
+                  })}
                   {!data.hasta1 && !data.porc1 && (
                     <tr key="no-scales">
                       <td colSpan={3} className="px-4 py-4 text-sm text-gray-500 text-center italic">
@@ -1145,7 +1145,7 @@ const AdminFlashOffersPage: React.FC = () => {
     },
     create: async (payload: CreateFlashOfferPayload) => {
       try {
-        await createMutation.mutateAsync(payload);
+      await createMutation.mutateAsync(payload);
         // Invalidar y refetch para mostrar el nuevo offer inmediatamente
         await queryClient.invalidateQueries({ queryKey: ['flashOffers'] });
         await refetch();
@@ -1158,7 +1158,7 @@ const AdminFlashOffersPage: React.FC = () => {
     },
     update: async (id: string, payload: Partial<CreateFlashOfferPayload>) => {
       try {
-        await updateMutation.mutateAsync({ id, payload });
+      await updateMutation.mutateAsync({ id, payload });
         await queryClient.invalidateQueries({ queryKey: ['flashOffers'] });
         await refetch();
         showNotification('success', 'Oferta flash actualizada correctamente');
@@ -1169,7 +1169,7 @@ const AdminFlashOffersPage: React.FC = () => {
     },
     delete: async (id: string) => {
       try {
-        await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(id);
         await queryClient.invalidateQueries({ queryKey: ['flashOffers'] });
         await refetch();
         showNotification('success', 'Oferta flash eliminada correctamente');
@@ -1180,7 +1180,7 @@ const AdminFlashOffersPage: React.FC = () => {
     },
     toggleStatus: async (id: string, is_active: boolean) => {
       try {
-        await toggleStatusMutation.mutateAsync({ id, is_active });
+      await toggleStatusMutation.mutateAsync({ id, is_active });
         await queryClient.invalidateQueries({ queryKey: ['flashOffers'] });
         await refetch();
         showNotification('success', `Oferta ${is_active ? 'activada' : 'desactivada'} correctamente`);
@@ -1364,8 +1364,8 @@ const AdminFlashOffersPage: React.FC = () => {
 
   const handleCreateSubmit = async (values: FlashOfferFormValues) => {
     try {
-      const payload = mapFormValuesToPayload(values);
-      await actions.create(payload);
+    const payload = mapFormValuesToPayload(values);
+    await actions.create(payload);
     } catch (error) {
       // El error ya se maneja en actions.create
       console.error('Error creating flash offer:', error);
@@ -1603,7 +1603,7 @@ const AdminFlashOffersPage: React.FC = () => {
                 offers.map((offer, index) => {
                   const statusColor = getStatusColor(offer.is_active, offer.end_time);
                   const statusText = getStatusText(offer.is_active, offer.end_time);
-                  
+
                   // Obtener datos directamente del offer (que viene del mapeo)
                   const productName = offer.product?.name || 'Producto sin nombre';
                   const discountCode = offer.co_desc || '-';
@@ -1622,27 +1622,27 @@ const AdminFlashOffersPage: React.FC = () => {
                       aria-label={`Ver descuento de ${productName}`}
                     >
                       <td className="px-4 lg:px-8 py-5">
-                        <div className="min-w-0">
+                          <div className="min-w-0">
                           <div className="font-medium text-gray-900 text-sm lg:text-base leading-relaxed">
                             {productName}
-                          </div>
+                            </div>
                           <div className="text-xs text-gray-500 mt-1.5 font-mono">
                             {offer.product_id || offer.product?.id || '-'}
                           </div>
                           {/* Mobile: mostrar descuento y estado */}
                           <div className="md:hidden mt-3 space-y-2">
-                            <div className="flex items-center text-xs text-red-600 font-semibold">
+                              <div className="flex items-center text-xs text-red-600 font-semibold">
                               <TrendingDown className="w-3.5 h-3.5 mr-1.5" />
                               {discountType === 'percentage' 
                                 ? `${discountValue}%` 
                                 : `Bs ${discountValue}`}
-                            </div>
+                              </div>
                             <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800`}>
                               <span className={`w-1.5 h-1.5 mr-1.5 bg-${statusColor}-500 rounded-full`}></span>
-                              {statusText}
+                                {statusText}
+                              </div>
                             </div>
                           </div>
-                        </div>
                       </td>
                       <td className="px-4 lg:px-8 py-5 hidden md:table-cell">
                         <div className="text-sm font-mono text-gray-700 font-semibold">

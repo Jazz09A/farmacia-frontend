@@ -35,7 +35,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
             Catálogo Farmacéutico
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Medicamentos certificados y productos farmacéuticos para tu farmacia
+            Medicamentos certificados y productos nutraceuticos y farmacéuticos para tu farmacia
           </p>
         </motion.div>
 

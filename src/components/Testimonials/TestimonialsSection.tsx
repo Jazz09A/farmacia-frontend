@@ -134,43 +134,6 @@ export const TestimonialsSection: React.FC = () => {
             </motion.div>
           ))}
         </motion.div>
-
-        {/* Call to Action */}
-        <motion.div
-          className="text-center mt-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 1.0 }}
-          viewport={{ once: true }}
-        >
-          <div className="bg-gradient-to-r from-medical-blue-50 to-medical-green-50 border border-medical-blue-200 rounded-2xl p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              ¿Quieres ser nuestro próximo cliente satisfecho?
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Únete a más de 500 farmacias que ya confían en nosotros. 
-              Descubre por qué somos el distribuidor farmacéutico más confiable de Venezuela.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.button
-                className="btn-medical-primary px-8 py-3 text-base font-semibold"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/cliente-drozainka')}
-              >
-                🚀 Convierte en Cliente
-              </motion.button>
-              <motion.button
-                className="btn-medical-secondary px-8 py-3 text-base font-semibold border-2"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => window.open('https://wa.me/584241806018?text=Hola,%20quiero%20información%20sobre%20convertirme%20en%20cliente%20de%20Drozainka', '_blank')}
-              >
-                📞 Contactar Ventas
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </section>
   );

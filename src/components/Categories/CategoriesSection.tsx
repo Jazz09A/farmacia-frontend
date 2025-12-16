@@ -237,7 +237,7 @@ export const CategoriesSection: React.FC = () => {
               ¿No encuentras lo que buscas?
             </h3>
             <p className="text-gray-600 mb-6">
-              Tenemos acceso a más de 10,000 productos farmacéuticos. 
+              Tenemos acceso a más de 1.000 productos nutraceuticos y farmacéuticos. 
               Contáctanos para consultas especializadas y pedidos personalizados.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

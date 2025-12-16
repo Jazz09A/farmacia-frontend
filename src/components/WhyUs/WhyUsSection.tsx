@@ -1,58 +1,35 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Clock, Truck, Award, Users, Heart } from 'lucide-react';
+import { Shield, Clock, Truck, Award, Users, Heart, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const WhyUsSection: React.FC = () => {
   const features = [
     {
-      icon: Shield,
-      title: 'Productos 100% Certificados',
-      description: 'Garantizamos medicamentos con registro sanitario vigente y certificaciones internacionales. Tu farmacia siempre estará protegida.',
+      icon: Award,
+      title: 'Expertos en nutracéuticos en Venezuela',
+      description: 'Más de 15 años de experiencia especializada en la distribución de nutracéuticos y productos farmacéuticos de alta calidad.',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200'
     },
     {
-      icon: Clock,
-      title: 'Servicio 24/7 Garantizado',
-      description: 'Emergencias farmacéuticas cubiertas las 24 horas. Nunca te quedes sin stock cuando más lo necesites.',
+      icon: MapPin,
+      title: 'Atención a todos los estados del país',
+      description: 'Cobertura nacional con logística especializada que garantiza entregas puntuales en cualquier rincón de Venezuela.',
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200'
     },
     {
-      icon: Truck,
-      title: 'Entrega Nacional Express',
-      description: 'Red logística especializada con entrega segura y controlada de temperatura en toda Venezuela.',
+      icon: Clock,
+      title: 'Despachos en tiempo récord',
+      description: 'Sistema de distribución optimizado que permite entregas en 24-48 horas en las principales ciudades del país.',
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
       borderColor: 'border-purple-200'
     },
-    {
-      icon: Award,
-      title: '15+ Años de Experiencia',
-      description: 'Líderes en distribución farmacéutica con más de 500 farmacias satisfechas en todo el país.',
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200'
-    },
-    {
-      icon: Users,
-      title: 'Asesoría Farmacéutica Premium',
-      description: 'Equipo de farmacéuticos especializados listos para optimizar tu inventario y aumentar tus ventas.',
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
-      borderColor: 'border-indigo-200'
-    },
-    {
-      icon: Heart,
-      title: 'Impacto Social Positivo',
-      description: 'Contribuimos al bienestar comunitario llevando medicamentos de calidad a todos los rincones del país.',
-      color: 'text-pink-600',
-      bgColor: 'bg-pink-50',
-      borderColor: 'border-pink-200'
-    }
+    
   ];
 
   return (
@@ -206,7 +183,7 @@ export const WhyUsSection: React.FC = () => {
               <div className="bg-gradient-to-r from-medical-blue-50 to-medical-green-50 border border-medical-blue-200 rounded-xl p-4">
                 <div className="text-center">
                   <h4 className="text-lg font-bold text-gray-900 mb-2">
-                    🚀 ¡Únete a las 500+ farmacias exitosas!
+                    🚀 ¡Únete a las 1200+ farmacias exitosas!
                   </h4>
                   <p className="text-gray-600 text-sm">
                     Obtén acceso inmediato a nuestro catálogo completo y comienza a 
