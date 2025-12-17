@@ -165,7 +165,7 @@ const AdminAnalyticsPage: React.FC = () => {
             <option value="last_7_days">Últimos 7 días</option>
             <option value="last_30_days">Últimos 30 días</option>
             <option value="last_3_months">Últimos 3 meses</option>
-            <option value="last_year">Último año</option>
+            {/* <option value="last_year">Último año</option> */}
           </select>
           <button className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
             <Download className="w-4 h-4 mr-2" />

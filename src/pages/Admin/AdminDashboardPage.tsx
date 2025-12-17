@@ -304,7 +304,8 @@ const AdminDashboardPage: React.FC = () => {
           >
             <option value={7}>Últimos 7 días</option>
             <option value={30}>Últimos 30 días</option>
-            <option value={365}>Último año</option>
+            <option value={60}>Últimos 2 meses</option>
+            <option value={90}>Últimos 3 meses</option>
           </select>
         </div>
       </div>

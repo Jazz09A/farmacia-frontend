@@ -1,6 +1,8 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAdminPostByIdQuery, useUpdatePostMutation } from '../../hooks/queries/useBlogQueries';
+import { queryKeys } from '../../hooks/queries/queryKeys';
 import { BlogPostSkeleton } from '../../components/Skeleton';
 import Toast from '../../components/common/Toast';
 
@@ -8,6 +10,7 @@ const BlogPostForm = lazy(() => import('../../components/Admin/BlogPostForm'));
 
 const EditBlogPostPage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { id } = useParams<{ id: string }>();
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
@@ -22,18 +25,63 @@ const EditBlogPostPage: React.FC = () => {
   // Update mutation
   const updatePostMutation = useUpdatePostMutation();
 
-  // Show toast on success
+  // Show toast on success and invalidate cache
   useEffect(() => {
-    if (updatePostMutation.isSuccess) {
+    if (updatePostMutation.isSuccess && id) {
+      // Invalidar todos los queries relacionados con este post para forzar refetch
+      // Solo si la actualización fue exitosa
+      const updatedPost = updatePostMutation.data;
+      
+      // Invalidar query del post por ID (admin)
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.blog.admin.post(id) 
+      });
+      
+      // Invalidar query del post por slug (público) si existe
+      if (updatedPost?.slug) {
+        queryClient.invalidateQueries({ 
+          queryKey: queryKeys.blog.public.post(updatedPost.slug) 
+        });
+      }
+      
+      // Invalidar también el slug anterior si el post tenía uno diferente
+      if (post?.slug && post.slug !== updatedPost?.slug) {
+        queryClient.invalidateQueries({ 
+          queryKey: queryKeys.blog.public.post(post.slug) 
+        });
+      }
+      
+      // Invalidar listas de posts
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.blog.admin.posts() 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.blog.public.posts() 
+      });
+      
+      // Remover el post del cache para forzar refetch completo
+      queryClient.removeQueries({ 
+        queryKey: queryKeys.blog.admin.post(id) 
+      });
+      if (updatedPost?.slug) {
+        queryClient.removeQueries({ 
+          queryKey: queryKeys.blog.public.post(updatedPost.slug) 
+        });
+      }
+
       setToast({ type: 'success', message: 'Artículo actualizado exitosamente' });
       setToastVisible(true);
-      // Navigate after showing success message
-      const timer = setTimeout(() => {
+      // Navigate after showing success message, then reload after transition
+      const navigateTimer = setTimeout(() => {
         navigate('/admin/blog');
+        // Reload page after navigation transition completes (allow time for route transition)
+        setTimeout(() => {
+          window.location.reload();
+        }, 100); // Small delay to allow navigation transition to start
       }, 1500);
-      return () => clearTimeout(timer);
+      return () => clearTimeout(navigateTimer);
     }
-  }, [updatePostMutation.isSuccess, navigate]);
+  }, [updatePostMutation.isSuccess, updatePostMutation.data, navigate, queryClient, id, post]);
 
   // Show toast on error
   useEffect(() => {

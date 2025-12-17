@@ -2,6 +2,7 @@ import React, { useState, useMemo, lazy, Suspense, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAdminPostsQuery, useAdminCategoriesQuery, useDeletePostMutation } from '../../hooks/queries/useBlogQueries';
 import Toast from '../../components/common/Toast';
+import { BlogPostListItem } from '../../types';
 import { 
   Plus, 
   Edit, 
@@ -192,14 +193,14 @@ const AdminBlogPage: React.FC = () => {
                 <Filter className="w-4 h-4 mr-1" />
                 <span className="truncate">Filtros</span>
               </button>
-              <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
+              {/* <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
                 <Upload className="w-4 h-4 mr-1" />
                 <span className="truncate">Importar</span>
               </button>
               <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
                 <Download className="w-4 h-4 mr-1" />
                 <span className="truncate">Exportar</span>
-              </button>
+              </button> */}
             </div>
             <Link
               to="/admin/blog/create"
