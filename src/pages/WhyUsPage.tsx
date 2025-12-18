@@ -43,7 +43,7 @@ const WhyUsPage: React.FC = () => {
   // Image carousel data
   const facilityImages = [
     {
-      src: '/images-local/Drogueria-del-Sud.jpeg',
+      src: '/images-local/establecimiento_Drozainka.webp',
       title: 'Nuestras Instalaciones',
       description: 'Instalaciones modernas y equipadas para la distribución farmacéutica'
     }
@@ -299,7 +299,7 @@ const WhyUsPage: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.9 }}
             >
               {[
-                { number: '500+', label: 'Farmacias Satisfechas' },
+                { number: '1200+', label: 'Farmacias Satisfechas' },
                 { number: '15+', label: 'Años de Experiencia' },
                 { number: '24/7', label: 'Servicio Disponible' },
                 { number: '99.8%', label: 'Tiempo de Entrega' }

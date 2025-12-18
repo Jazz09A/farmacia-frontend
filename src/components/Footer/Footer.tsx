@@ -26,12 +26,8 @@ export const Footer: React.FC = () => {
   ];
 
   const customerService = [
-    'Centro de Ayuda Comercial',
-    'Política de Devoluciones B2B',
-    'Términos Comerciales',
-    'Política de Privacidad',
-    'Logística y Distribución',
-    'Garantía de Productos'
+    'Términos Comerciales y Política de Devoluciones B2B.',
+    'Política de Privacidad.',
   ];
 
 

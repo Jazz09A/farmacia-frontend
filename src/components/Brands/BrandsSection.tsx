@@ -6,7 +6,7 @@ const brands = [
   {
     id: 1,
     name: 'By Naturlifes',
-    logo: '/brands/LOGO BY NATURLIFES.jpg'
+    logo: '/brands/ByNatureLife2.png'
   },
   {
     id: 2,
@@ -21,7 +21,7 @@ const brands = [
   {
     id: 4,
     name: 'Grupo Fonti',
-    logo: '/brands/Logo Grupo Fonti.png'
+    logo: '/brands/GrupoFonti.png'
   },
   {
     id: 5,
