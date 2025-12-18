@@ -20,21 +20,15 @@ import {
 
 // Hooks
 import { useHomeCache } from '../hooks/usePageCache';
-import { useFeaturedProductsQuery, useOfferProductsQuery } from '../hooks/queries/useProductsQueries';
 
 const HomePage: React.FC = () => {
   const [cartModalOpen, setCartModalOpen] = useState(false);
-  // Prefetch de datos clave con React Query
-  const { data: featuredProducts, status: statusFeatured } = useFeaturedProductsQuery(8);
-  const { data: offerProducts, status: statusOffers } = useOfferProductsQuery(8);
   
-  // Usar caché para estado de loading
   const { cachedData: cachedLoadingState, setCachedData: setCachedLoadingState } = useHomeCache(
     'loading-states',
     { version: '1.0' }
   );
 
-  // Loading states for different sections
   const [loadingStates, setLoadingStates] = useState<{
     hero: boolean;
     whyUs: boolean;
@@ -61,24 +55,22 @@ const HomePage: React.FC = () => {
     }
   );
 
-  // Simulate realistic loading times for different sections
   useEffect(() => {
-    // Si hay caché, usar tiempos más cortos
     const hasCache = !!cachedLoadingState;
-    const baseDelay = hasCache ? 100 : 800;
-    const increment = hasCache ? 50 : 200;
+    const baseDelay = hasCache ? 50 : 100;
+    const increment = hasCache ? 20 : 50;
 
     const loadingSims = [
       { section: 'hero', delay: baseDelay },
       { section: 'whyUs', delay: baseDelay + increment },
-      { section: 'brands', delay: baseDelay + increment * 1.5 },
-      { section: 'categories', delay: baseDelay + increment * 2 },
-      { section: 'stats', delay: baseDelay + increment * 3 },
-      { section: 'testimonials', delay: baseDelay + increment * 4 },
-      { section: 'flashOffers', delay: baseDelay + increment * 5 },
-      { section: 'blog', delay: baseDelay + increment * 6 },
-      { section: 'products', delay: baseDelay + increment * 7 },
-      { section: 'contact', delay: baseDelay + increment * 8 }
+      { section: 'brands', delay: baseDelay + increment * 1 },
+      { section: 'categories', delay: baseDelay + increment * 1.5 },
+      { section: 'stats', delay: baseDelay + increment * 2 },
+      { section: 'testimonials', delay: baseDelay + increment * 2.5 },
+      { section: 'flashOffers', delay: baseDelay + increment * 3 },
+      { section: 'blog', delay: baseDelay + increment * 3.5 },
+      { section: 'products', delay: baseDelay + increment * 4 },
+      { section: 'contact', delay: baseDelay + increment * 4.5 }
     ];
 
     loadingSims.forEach(({ section, delay }) => {

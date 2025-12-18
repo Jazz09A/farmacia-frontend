@@ -217,27 +217,21 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Cart and User Actions */}
               <div className="flex items-center space-x-1 lg:space-x-2">
-                <Link to="/cart">
+                <Link to="/cart" className="relative">
                   <motion.button
                     className={`relative p-2 lg:p-3 rounded-2xl transition-all duration-300 group ${getActionButtonClasses()}`}
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <ShoppingCart className="h-5 w-5" />
-                    <AnimatePresence>
-                      {cartItemsCount > 0 && (
-                        <motion.span
-                          className="absolute -top-1 -right-1 bg-medical-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0 }}
-                          transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                        >
-                          {cartItemsCount}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <ShoppingCart className="h-5 w-5 lg:h-6 lg:w-6" />
+                    {cartItemsCount > 0 && (
+                      <span
+                        className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] lg:text-xs font-bold rounded-full min-w-[18px] h-[18px] lg:min-w-[20px] lg:h-5 px-1 flex items-center justify-center shadow-lg z-50 border-2 border-white pointer-events-none"
+                      >
+                        {cartItemsCount > 99 ? '99+' : cartItemsCount}
+                      </span>
+                    )}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                       <div className="bg-medical-gray-900 text-white text-xs px-2 py-1 rounded-lg whitespace-nowrap">Ver Carrito</div>
                     </div>
                   </motion.button>

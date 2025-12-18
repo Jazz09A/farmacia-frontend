@@ -313,11 +313,6 @@ const ProductDetailPage: React.FC = () => {
                 </motion.button> */}
               </div>
             </div>
-            {cartQuantity > 0 && (
-              <p className="text-sm text-medical-gray-600 text-center sm:text-left">
-                Ya tienes {cartQuantity} {cartQuantity === 1 ? 'unidad' : 'unidades'} guardada{cartQuantity === 1 ? '' : 's'} en tu carrito local.
-              </p>
-            )}
 
             {/* Delivery Info */}
             <div className="space-y-3 pt-4">

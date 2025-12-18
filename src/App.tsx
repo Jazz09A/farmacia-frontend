@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // Components
@@ -65,6 +65,10 @@ import { CreditProvider } from './contexts/CreditContext';
 
 const AppLayout = () => {
   const { totalQuantity } = useQuoteCart();
+  // Debug: verificar que totalQuantity se actualice
+  useEffect(() => {
+    console.log('Cart totalQuantity:', totalQuantity);
+  }, [totalQuantity]);
   const location = useLocation();
   const isAuthRoute = location.pathname.startsWith('/auth');
   const isAdminRoute = location.pathname.startsWith('/admin');

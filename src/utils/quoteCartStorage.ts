@@ -62,12 +62,15 @@ export function saveQuoteCart(items: QuoteCartItem[]): void {
         item.cantidad > 0
     );
     localStorage.setItem(QUOTE_CART_KEY, JSON.stringify(validItems));
+    // Disparar evento personalizado para notificar cambios en la misma pestaña
+    window.dispatchEvent(new CustomEvent('quoteCartUpdated'));
   } catch (error) {
     console.error('Error saving quote cart to localStorage:', error);
     // Si hay error de quota, intentar limpiar y guardar de nuevo
     try {
       localStorage.removeItem(QUOTE_CART_KEY);
       localStorage.setItem(QUOTE_CART_KEY, JSON.stringify(items));
+      window.dispatchEvent(new CustomEvent('quoteCartUpdated'));
     } catch (retryError) {
       console.error('Failed to save quote cart after cleanup:', retryError);
     }
@@ -148,6 +151,8 @@ export function removeFromQuoteCart(co_art: string): QuoteCartItem[] {
  */
 export function clearQuoteCart(): void {
   localStorage.removeItem(QUOTE_CART_KEY);
+  // Disparar evento personalizado para notificar cambios en la misma pestaña
+  window.dispatchEvent(new CustomEvent('quoteCartUpdated'));
 }
 
 /**

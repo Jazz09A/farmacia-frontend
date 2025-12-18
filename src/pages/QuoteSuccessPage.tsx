@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -10,6 +10,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import type { QuoteCreateResponse } from '../types/quotes';
+import { useQuoteCart } from '../hooks/useQuoteCart';
 
 type LocationState = {
   quote?: QuoteCreateResponse;
@@ -77,6 +78,12 @@ const QuoteSuccessPage: React.FC = () => {
   const location = useLocation();
   const state = (location.state || {}) as LocationState;
   const quote = state.quote;
+  const { clearItems } = useQuoteCart();
+
+  // Limpiar el carrito cuando se carga la página de éxito
+  useEffect(() => {
+    clearItems();
+  }, [clearItems]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-medical-blue-50 via-white to-medical-green-50 pt-28 pb-20">

@@ -53,9 +53,20 @@ export function useQuoteCart(options: QuoteCartOptions = {}): UseQuoteCartResult
       }
     };
 
+    // Listener para cambios en otras pestañas
     window.addEventListener('storage', handleStorageChange);
+    
+    // Listener personalizado para cambios en la misma pestaña
+    const handleCustomStorageChange = () => {
+      refreshItems();
+    };
+    
+    // Escuchar eventos personalizados de cambio de carrito
+    window.addEventListener('quoteCartUpdated', handleCustomStorageChange);
+    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('quoteCartUpdated', handleCustomStorageChange);
     };
   }, [refreshItems]);
 
