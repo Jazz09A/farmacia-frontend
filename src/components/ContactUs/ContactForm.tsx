@@ -31,7 +31,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
       <form className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-gray-50 rounded-2xl shadow-lg">
         {showTitle && (
           <div className="md:col-span-2 text-center mb-4">
-            <h2 className="text-3xl font-serif font-bold text-gray-800">{title}</h2>
+            <h2 className="text-3xl font-bold text-gray-800">{title}</h2>
           </div>
         )}
         {/* Nombre y Apellido */}

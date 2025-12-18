@@ -246,7 +246,7 @@ const WhyUsPage: React.FC = () => {
             </motion.div>
 
             <motion.h1
-              className="text-5xl lg:text-8xl font-serif font-bold leading-tight mb-8"
+              className="text-4xl md:text-5xl font-bold leading-tight mb-8"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
@@ -353,7 +353,7 @@ const WhyUsPage: React.FC = () => {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Nuestras <span className="text-medical-blue-600">Instalaciones</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -443,7 +443,7 @@ const WhyUsPage: React.FC = () => {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Nuestro <span className="text-medical-green-600">Proceso</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -493,7 +493,7 @@ const WhyUsPage: React.FC = () => {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Lo que dicen nuestros <span className="text-medical-blue-600">clientes</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -597,7 +597,7 @@ const WhyUsPage: React.FC = () => {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Nuestro <span className="text-medical-green-600">Equipo</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -643,11 +643,11 @@ const WhyUsPage: React.FC = () => {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-900 mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               ¿Listo para transformar tu farmacia?
             </h2>
             <p className="text-xl text-gray-600 mb-12">
-              Únete a las 500+ farmacias que ya confían en nosotros para su suministro farmacéutico.
+              Únete a las 1200+ farmacias que ya confían en nosotros para su suministro farmacéutico.
             </p>
             <ContactForm />
           </div>

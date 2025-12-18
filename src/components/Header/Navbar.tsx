@@ -102,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { name: 'Convertirse en cliente Drozainka', href: '/cliente-drozainka', icon: UserIcon },
     { name: '¿Quieres ser proveedor Drozainka?', href: '/proveedor-drozainka', icon: Briefcase },
     { name: 'Blog', href: '/blog', icon: BookText },
-    { name: 'Querémos conocerte', href: '/queremos-conocerte', icon: Phone },
+    { name: 'Trabaja con Nosotros', href: '/trabaja-con-nosotros', icon: Briefcase },
   ];
 
   const getNavbarClasses = () => {

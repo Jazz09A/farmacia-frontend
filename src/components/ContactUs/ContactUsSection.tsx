@@ -22,7 +22,7 @@ export const ContactUsSection: React.FC = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-800 lg:-mt-24 mb-6">LISTO PARA TRANSFORMAR TU FARMACIA?</h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-800 lg:-mt-24 mb-6">LISTO PARA TRANSFORMAR TU FARMACIA?</h2>
             <p className="text-lg text-gray-600 mb-6 leading-relaxed">
               Gracias por tu interés en asociarte con Drozainka como distribuidor farmacéutico. Por favor, completa el formulario y uno de nuestros asesores comerciales te contactará para establecer una alianza comercial.
             </p>
@@ -54,7 +54,7 @@ export const ContactUsSection: React.FC = () => {
           >
             <form className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-gray-50 rounded-2xl shadow-lg">
               <div className="md:col-span-2 text-center mb-4">
-                 <h2 className="text-3xl font-serif font-bold text-gray-800">Formulario de Contacto</h2>
+                 <h2 className="text-3xl font-bold text-gray-800">Formulario de Contacto</h2>
               </div>
               {/* Nombre y Apellido */}
               <div className="relative">

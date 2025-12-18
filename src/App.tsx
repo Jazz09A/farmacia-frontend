@@ -99,7 +99,7 @@ const AppLayout = () => {
               <Route path="/why-us" element={<WhyUsPage />} />
               <Route path="/cliente-drozainka" element={<ClienteDrozainkaPage />} />
               <Route path="/proveedor-drozainka" element={<ProveedorDrozainkaPage />} />
-              <Route path="/queremos-conocerte" element={<QueremosConocertePage />} />
+              <Route path="/trabaja-con-nosotros" element={<QueremosConocertePage />} />
               <Route path="/catalog" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
               <Route path="/product/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
               <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />

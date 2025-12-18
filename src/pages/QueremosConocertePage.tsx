@@ -5,8 +5,9 @@ import {
   User, 
   Phone, 
   MessageSquare, 
-  Building, 
-  Home, 
+  Briefcase,
+  Upload,
+  FileText,
   MapPin, 
   AlertCircle,
   CheckCircle,
@@ -20,20 +21,25 @@ const QueremosConocertePage: React.FC = () => {
     apellido: '',
     email: '',
     telefono: '',
-    farmacia: '',
-    direccion: '',
-    estado: '',
+    cargo: '',
     mensaje: ''
   });
 
+  const [cvFile, setCvFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const venezuelanStates = [
-    'Amazonas', 'Anzoátegui', 'Apure', 'Aragua', 'Barinas', 'Bolívar', 'Carabobo', 
-    'Cojedes', 'Delta Amacuro', 'Distrito Capital', 'Falcón', 'Guárico', 'Lara', 
-    'Mérida', 'Miranda', 'Monagas', 'Nueva Esparta', 'Portuguesa', 'Sucre', 
-    'Táchira', 'Trujillo', 'Vargas', 'Yaracuy', 'Zulia'
+  const availablePositions = [
+    'Farmacéutico',
+    'Asistente de Farmacia',
+    'Vendedor',
+    'Representante de Ventas',
+    'Analista de Inventario',
+    'Auxiliar Administrativo',
+    'Contador',
+    'Recursos Humanos',
+    'Marketing',
+    'Otro'
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -44,8 +50,32 @@ const QueremosConocertePage: React.FC = () => {
     }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      // Validar que sea PDF o DOC/DOCX
+      const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (validTypes.includes(file.type) || file.name.endsWith('.pdf') || file.name.endsWith('.doc') || file.name.endsWith('.docx')) {
+        // Validar tamaño máximo (5MB)
+        if (file.size <= 5 * 1024 * 1024) {
+          setCvFile(file);
+        } else {
+          alert('El archivo es demasiado grande. Por favor, sube un archivo de máximo 5MB.');
+        }
+      } else {
+        alert('Por favor, sube un archivo PDF o Word (.pdf, .doc, .docx)');
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!cvFile) {
+      alert('Por favor, sube tu CV');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     // Simular envío del formulario
@@ -75,12 +105,12 @@ const QueremosConocertePage: React.FC = () => {
             </motion.div>
             
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              ¡Solicitud Enviada Exitosamente!
+              ¡Postulación Enviada Exitosamente!
             </h1>
             
             <p className="text-lg text-gray-600 mb-8">
-              Gracias por tu interés en asociarte con Drozainka. 
-              Uno de nuestros asesores comerciales se pondrá en contacto contigo pronto.
+              Gracias por tu interés en trabajar con Drozainka. 
+              Hemos recibido tu CV y postulación. Nos pondremos en contacto contigo pronto.
             </p>
             
             <div className="space-y-4">
@@ -126,19 +156,19 @@ const QueremosConocertePage: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <User className="w-5 h-5" />
-              <span>Conectemos contigo</span>
+              <Briefcase className="w-5 h-5" />
+              <span>Únete a nuestro equipo</span>
             </motion.div>
 
             <motion.h1
-              className="text-5xl lg:text-7xl font-serif font-bold leading-tight mb-8"
+              className="text-4xl md:text-5xl font-bold leading-tight mb-8"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
             >
-              Queremos{' '}
+              Trabaja{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300">
-                Conocerte
+                con Nosotros
               </span>
             </motion.h1>
 
@@ -148,8 +178,8 @@ const QueremosConocertePage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
             >
-              Gracias por tu interés en asociarte con Drozainka como distribuidor farmacéutico. 
-              Completa el formulario y uno de nuestros asesores comerciales te contactará.
+              ¿Deseas trabajar con nosotros? Completa el formulario, sube tu CV y postúlate para el cargo de tu interés. 
+              Estamos buscando talento para formar parte de nuestro equipo.
             </motion.p>
 
             <motion.div
@@ -185,7 +215,7 @@ const QueremosConocertePage: React.FC = () => {
             >
               <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-gray-50 rounded-2xl shadow-lg">
                 <div className="md:col-span-2 text-center mb-4">
-                  <h2 className="text-3xl font-serif font-bold text-gray-800">Formulario de Contacto</h2>
+                  <h2 className="text-3xl font-bold text-gray-800">Formulario de Postulación</h2>
                 </div>
                 
                 {/* Nombre y Apellido */}
@@ -240,49 +270,62 @@ const QueremosConocertePage: React.FC = () => {
                   />
                 </div>
                 
-                {/* Nombre de la Farmacia */}
+                {/* Cargo */}
                 <div className="md:col-span-2 relative">
-                  <Building className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input 
-                    type="text" 
-                    name="farmacia"
-                    value={formData.farmacia}
-                    onChange={handleInputChange}
-                    placeholder="Nombre de la Farmacia" 
-                    required
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-medical-blue-500"
-                  />
-                </div>
-                
-                {/* Dirección */}
-                <div className="md:col-span-2 relative">
-                  <Home className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input 
-                    type="text" 
-                    name="direccion"
-                    value={formData.direccion}
-                    onChange={handleInputChange}
-                    placeholder="Dirección" 
-                    required
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-medical-blue-500"
-                  />
-                </div>
-                
-                {/* Estado */}
-                <div className="md:col-span-2 relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                   <select 
-                    name="estado"
-                    value={formData.estado}
+                    name="cargo"
+                    value={formData.cargo}
                     onChange={handleInputChange}
                     required
                     className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-medical-blue-500 bg-white"
                   >
-                    <option value="" disabled>Seleccione un estado</option>
-                    {venezuelanStates.sort().map(state => (
-                      <option key={state} value={state}>{state}</option>
+                    <option value="" disabled>Seleccione un cargo</option>
+                    {availablePositions.map(position => (
+                      <option key={position} value={position}>{position}</option>
                     ))}
                   </select>
+                </div>
+                
+                {/* Subir CV */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Subir CV (PDF o Word, máximo 5MB)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleFileChange}
+                      required
+                      className="hidden"
+                      id="cv-upload"
+                    />
+                    <label
+                      htmlFor="cv-upload"
+                      className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-medical-blue-500 transition-colors bg-white"
+                    >
+                      <div className="flex items-center space-x-3">
+                        {cvFile ? (
+                          <>
+                            <FileText className="w-5 h-5 text-green-600" />
+                            <span className="text-sm text-gray-700">{cvFile.name}</span>
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-5 h-5 text-gray-400" />
+                            <span className="text-sm text-gray-600">Haz clic para subir tu CV</span>
+                          </>
+                        )}
+                      </div>
+                    </label>
+                  </div>
+                  {cvFile && (
+                    <p className="mt-2 text-xs text-gray-500">
+                      Archivo seleccionado: {cvFile.name} ({(cvFile.size / 1024).toFixed(2)} KB)
+                    </p>
+                  )}
                 </div>
                 
                 {/* Mensaje */}
@@ -292,7 +335,7 @@ const QueremosConocertePage: React.FC = () => {
                     name="mensaje"
                     value={formData.mensaje}
                     onChange={handleInputChange}
-                    placeholder="Mensaje (Opcional)" 
+                    placeholder="Mensaje adicional (Opcional)" 
                     rows={5} 
                     className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-medical-blue-500"
                   />
@@ -301,10 +344,10 @@ const QueremosConocertePage: React.FC = () => {
                 <div className="md:col-span-2 text-center">
                   <motion.button 
                     type="submit" 
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !cvFile}
                     className="btn-medical-primary disabled:opacity-50 disabled:cursor-not-allowed" 
-                    whileHover={{ scale: isSubmitting ? 1 : 1.05 }} 
-                    whileTap={{ scale: isSubmitting ? 1 : 0.95 }}
+                    whileHover={{ scale: isSubmitting || !cvFile ? 1 : 1.05 }} 
+                    whileTap={{ scale: isSubmitting || !cvFile ? 1 : 0.95 }}
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center space-x-2">
@@ -312,7 +355,7 @@ const QueremosConocertePage: React.FC = () => {
                         <span>Enviando...</span>
                       </div>
                     ) : (
-                      'Enviar Solicitud'
+                      'Enviar Postulación'
                     )}
                   </motion.button>
                 </div>
@@ -327,23 +370,37 @@ const QueremosConocertePage: React.FC = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-800 mb-6">QUEREMOS CONOCERTE</h2>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">TRABAJA CON NOSOTROS</h2>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Gracias por tu interés en asociarte con Drozainka como distribuidor farmacéutico. Por favor, completa el formulario y uno de nuestros asesores comerciales te contactará para establecer una alianza comercial.
+                ¿Deseas trabajar con nosotros? En Drozainka estamos siempre buscando talento comprometido y apasionado por la industria farmacéutica. Completa el formulario, sube tu CV y postúlate para el cargo de tu interés.
               </p>
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-6">
                 <div className="flex items-start">
                   <AlertCircle className="h-6 w-6 text-blue-600 mr-4 mt-1" />
                   <div>
-                    <h3 className="font-bold text-gray-800 text-lg mb-2">Documentación Comercial Requerida</h3>
-                    <p className="text-gray-700">
-                      Para establecer una relación comercial, necesitarás tener actualizados los siguientes documentos de tu farmacia:
+                    <h3 className="font-bold text-gray-800 text-lg mb-2">Proceso de Selección</h3>
+                    <p className="text-gray-700 mb-3">
+                      Una vez que envíes tu postulación:
                     </p>
-                    <ul className="list-disc list-inside mt-4 space-y-2 text-gray-600">
-                      <li>RIF vigente de la farmacia</li>
-                      <li>Registro Mercantil actualizado</li>
-                      <li>Permiso de funcionamiento farmacéutico</li>
-                      <li>Licencia del farmacéutico responsable</li>
+                    <ul className="list-disc list-inside space-y-2 text-gray-600">
+                      <li>Revisaremos tu CV y perfil</li>
+                      <li>Te contactaremos si tu perfil coincide con nuestras necesidades</li>
+                      <li>Programaremos una entrevista</li>
+                      <li>Te informaremos sobre el resultado del proceso</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-lg">
+                <div className="flex items-start">
+                  <CheckCircle className="h-6 w-6 text-green-600 mr-4 mt-1" />
+                  <div>
+                    <h3 className="font-bold text-gray-800 text-lg mb-2">¿Qué ofrecemos?</h3>
+                    <ul className="list-disc list-inside space-y-2 text-gray-600">
+                      <li>Ambiente de trabajo colaborativo</li>
+                      <li>Oportunidades de crecimiento profesional</li>
+                      <li>Capacitación continua</li>
+                      <li>Beneficios competitivos</li>
                     </ul>
                   </div>
                 </div>
@@ -381,7 +438,7 @@ const QueremosConocertePage: React.FC = () => {
                   <Mail className="w-6 h-6" />
                 </div>
                 <h3 className="font-semibold">Email</h3>
-                <p className="text-white/80">comercial@grupodrozainka.com</p>
+                <p className="text-white/80">rrhh@grupodrozainka.com</p>
               </div>
               
               <div className="flex flex-col items-center space-y-3">

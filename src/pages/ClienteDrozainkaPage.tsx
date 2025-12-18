@@ -76,7 +76,7 @@ const ClienteDrozainkaPage: React.FC = () => {
             </motion.div>
 
             <motion.h1
-              className="text-5xl lg:text-7xl font-serif font-bold leading-tight mb-8"
+              className="text-4xl md:text-5xl font-bold leading-tight mb-8"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
@@ -128,7 +128,7 @@ const ClienteDrozainkaPage: React.FC = () => {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               ¿Por qué elegir{' '}
               <span className="text-medical-blue-600">Grupo Drozainka</span>?
             </h2>
@@ -181,7 +181,7 @@ const ClienteDrozainkaPage: React.FC = () => {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Solicita tu{' '}
               <span className="text-medical-blue-600">Registro</span>
             </h2>

@@ -46,7 +46,7 @@ export const Footer: React.FC = () => {
             viewport={{ once: true }}
           >
             <div>
-              <h3 className="text-2xl font-bold font-serif mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-green-200">
+              <h3 className="text-2xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-green-200">
                 Grupo Drozainka
               </h3>
               <p className="text-blue-100 leading-relaxed">
