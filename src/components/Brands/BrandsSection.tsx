@@ -11,7 +11,7 @@ const brands = [
   {
     id: 2,
     name: 'Dulcilina',
-    logo: '/brands/Logo Dulcilina.jpg'
+    logo: '/brands/Logo Dulcilina2.png'
   },
   {
     id: 3,
