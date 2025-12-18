@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { 
   Mail, 
   Phone, 
-  MapPin, 
   Facebook, 
   Linkedin, 
   Instagram
@@ -64,10 +63,6 @@ export const Footer: React.FC = () => {
               <div className="flex items-center space-x-3 text-blue-100">
                 <Mail className="h-5 w-5 text-blue-300" />
                 <a href="mailto:info@grupodrozainka.com" className="hover:text-white transition-colors">info@grupodrozainka.com</a>
-              </div>
-              <div className="flex items-center space-x-3 text-blue-100">
-                <MapPin className="h-5 w-5 text-blue-300" />
-                <a href="https://www.google.com/maps/search/?api=1&query=Caracas%2C+Venezuela" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Caracas, Venezuela</a>
               </div>
             </div>
 

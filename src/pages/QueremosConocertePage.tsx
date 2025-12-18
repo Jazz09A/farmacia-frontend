@@ -8,7 +8,6 @@ import {
   Briefcase,
   Upload,
   FileText,
-  MapPin, 
   AlertCircle,
   CheckCircle,
   ArrowRight
@@ -441,13 +440,6 @@ const QueremosConocertePage: React.FC = () => {
                 <p className="text-white/80">rrhh@grupodrozainka.com</p>
               </div>
               
-              <div className="flex flex-col items-center space-y-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <MapPin className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold">Ubicación</h3>
-                <p className="text-white/80">Caracas, Venezuela</p>
-              </div>
             </div>
           </motion.div>
         </div>

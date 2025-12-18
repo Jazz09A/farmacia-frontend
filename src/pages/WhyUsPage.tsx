@@ -31,7 +31,6 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import MapSection from '../components/Map/MapSection';
 import { ContactForm } from '../components/ContactUs/ContactForm';
 
 const WhyUsPage: React.FC = () => {
@@ -654,12 +653,6 @@ const WhyUsPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Map Section - debe ir de último en el WhyUs */}
-      <section>
-        <MapSection
-          subtitle="Distribuidor líder de productos nutraceuticos y farmacéuticos en Venezuela. Suministramos productos certificados a farmacias con la más alta calidad y confiabilida."
-        />
-      </section>
     </div>
   );
 };

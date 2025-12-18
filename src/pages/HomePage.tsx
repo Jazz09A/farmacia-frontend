@@ -10,7 +10,6 @@ import { BrandsSection } from '../components/Brands/BrandsSection';
 import { CartModal } from '../components/Cart/CartModal';
 import FeaturedBlogPosts from '../components/Blog/FeaturedBlogPosts';
 import { ContactUsSection } from '../components/ContactUs/ContactUsSection';
-import MapSection from '../components/Map/MapSection';
 
 // Skeleton Components
 import { 
@@ -201,10 +200,6 @@ const HomePage: React.FC = () => {
           <ContactUsSection />
         )}
 
-        {/* Map Section - debe ir de último en el Home */}
-        <MapSection 
-          subtitle="Distribuidor líder de productos nutraceuticos y farmacéuticos en Venezuela. Suministramos productos certificados a farmacias con la más alta calidad y confiabilida."
-        />
       </main>
 
       {/* Shopping Cart Modal */}

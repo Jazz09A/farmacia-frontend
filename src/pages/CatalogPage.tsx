@@ -420,11 +420,6 @@ const CatalogPage: React.FC = () => {
           </div>
         </div>
 
-        <section>
-          <MapSection
-            subtitle="Distribuidor líder de productos nutraceuticos y farmacéuticos en Venezuela. Suministramos productos certificados a farmacias con la más alta calidad y confiabilida."
-          />
-        </section>
 
 
       </div>

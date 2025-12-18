@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Users, 
-  MapPin, 
   Clock, 
   CheckCircle, 
   ArrowRight,
@@ -21,16 +20,12 @@ import {
   Handshake
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import MapSection from '../components/Map/MapSection';
 const ProveedorDrozainkaPage: React.FC = () => {
   const [formData, setFormData] = useState({
     companyName: '',
     contactPerson: '',
     email: '',
     phone: '',
-    address: '',
-    city: '',
-    state: '',
     supplierType: '',
     productCategory: '',
     yearsInBusiness: '',
@@ -640,11 +635,6 @@ const ProveedorDrozainkaPage: React.FC = () => {
             </div>
           </motion.div>
         </div>
-      </section>
-      <section>
-        <MapSection
-          subtitle="Distribuidor líder de productos nutraceuticos y farmacéuticos en Venezuela. Suministramos productos certificados a farmacias con la más alta calidad y confiabilida."
-        />
       </section>
     </div>
   );
