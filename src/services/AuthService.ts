@@ -480,10 +480,13 @@ class AuthService {
       throw new Error('No authentication token - session terminated');
     }
 
+    // 🔥 FIX: Asegurar que el token esté limpio (sin espacios) antes de usarlo
+    const cleanToken = token.trim();
+
     const customHeaders = (options.headers || {}) as Record<string, string>;
     const headers: HeadersInit = {
       ...customHeaders,
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${cleanToken}`,
     };
 
     if (!(options.body instanceof FormData) && !customHeaders['Content-Type']) {
@@ -503,7 +506,9 @@ class AuthService {
   }
 
   private getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    const token = localStorage.getItem(this.tokenKey);
+    // 🔥 FIX: Limpiar el token al obtenerlo por si acaso tiene espacios
+    return token ? token.trim() : null;
   }
 
   private removeToken(): void {
@@ -516,7 +521,9 @@ class AuthService {
   }
 
   private getRefreshToken(): string | null {
-    return localStorage.getItem(this.refreshTokenKey);
+    const token = localStorage.getItem(this.refreshTokenKey);
+    // 🔥 FIX: Limpiar el refresh token al obtenerlo
+    return token ? token.trim() : null;
   }
 
   private removeRefreshToken(): void {
