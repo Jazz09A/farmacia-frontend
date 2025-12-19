@@ -130,8 +130,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
 
           {/* Price */}
-          <div className={`flex items-center ${isCompact ? 'justify-center' : 'justify-between'}`}>
-            <div className="flex flex-col">
+          <div className={`flex items-center ${isCompact ? 'justify-center flex-col gap-1' : 'justify-between'}`}>
+            <div className="flex flex-col items-center">
               {showOriginalPrice && originalPrice && (
                 <span className={`${isCompact ? 'text-xs' : 'text-sm'} text-gray-400 line-through`}>
                   {formatPriceFromBackend(originalPrice)}
@@ -141,17 +141,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 {formatPriceFromBackend(showOriginalPrice ? discountedPrice : product.price)}
               </span>
             </div>
-            {!isCompact && (
+            {(product.is_offer || hasProfitDiscount) && (
               <div className="flex items-center gap-1">
                 {product.is_offer && (
-                  <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] px-2 py-1 rounded-full font-bold shadow-md flex items-center whitespace-nowrap">
-                    <Flame className="h-2.5 w-2.5 mr-0.5" />
+                  <span className={`bg-gradient-to-r from-red-500 to-orange-500 text-white ${isCompact ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-1'} rounded-full font-bold shadow-md flex items-center whitespace-nowrap`}>
+                    <Flame className={`${isCompact ? 'h-2 w-2 mr-0.5' : 'h-2.5 w-2.5 mr-0.5'}`} />
                     FLASH
                   </span>
                 )}
                 {hasProfitDiscount && (
-                  <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] px-2 py-1 rounded-full font-bold shadow-md flex items-center whitespace-nowrap">
-                    <Percent className="h-2.5 w-2.5 mr-0.5" />
+                  <span className={`bg-gradient-to-r from-red-500 to-orange-500 text-white ${isCompact ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-1'} rounded-full font-bold shadow-md flex items-center whitespace-nowrap`}>
+                    <Percent className={`${isCompact ? 'h-2 w-2 mr-0.5' : 'h-2.5 w-2.5 mr-0.5'}`} />
                     -{product.profit_discount.best_discount_percentage}%
                   </span>
                 )}
