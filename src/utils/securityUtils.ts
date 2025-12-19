@@ -33,6 +33,16 @@ export class SecurityManager {
     window.fetch = async (...args) => {
       const response = await originalFetch(...args);
       
+      // 🔥 CRÍTICO: Obtener la URL de la petición para verificar si es de autenticación
+      const requestUrl = typeof args[0] === 'string' ? args[0] : (args[0] as Request)?.url || '';
+      const isAuthEndpoint = this.isAuthenticationEndpoint(requestUrl);
+      
+      // 🔥 CRÍTICO: NO sanitizar respuestas de autenticación - la app necesita los tokens reales
+      if (isAuthEndpoint) {
+        console.log('🔓 [SECURITY] Respuesta de autenticación detectada, NO sanitizando:', requestUrl);
+        return response; // Devolver respuesta original sin sanitizar
+      }
+      
       // Solo interceptar respuestas JSON exitosas
       if (!response.ok) {
         // Para errores, devolver la respuesta original sin modificar
@@ -103,6 +113,34 @@ export class SecurityManager {
         }
       });
     };
+  }
+
+  // 🔥 Verificar si una URL es un endpoint de autenticación
+  private isAuthenticationEndpoint(url: string): boolean {
+    if (!url) return false;
+    
+    // Normalizar la URL (remover protocolo, dominio, query params, etc.)
+    const normalizedUrl = url.toLowerCase();
+    
+    const authPatterns = [
+      '/api/v1/auth/login',
+      '/api/v1/auth/refresh',
+      '/api/v1/auth/register',
+      '/api/v1/auth/verify-email',
+      '/api/v1/auth/reset-password',
+      '/api/v1/auth/forgot-password',
+      '/api/v1/auth/change-password',
+      'api/v1/auth/login',
+      'api/v1/auth/refresh',
+      'api/v1/auth/register',
+      'api/v1/auth/verify-email',
+      'api/v1/auth/reset-password',
+      'api/v1/auth/forgot-password',
+      'api/v1/auth/change-password'
+    ];
+    
+    // Verificar si la URL contiene alguno de los patrones de autenticación
+    return authPatterns.some(pattern => normalizedUrl.includes(pattern));
   }
 
   // 🔥 Sanitizar datos de respuesta para ocultar información sensible
