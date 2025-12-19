@@ -17,7 +17,8 @@ import {
   Laptop,
   Briefcase,
   Star,
-  Handshake
+  Handshake,
+  MapPin
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 const ProveedorDrozainkaPage: React.FC = () => {

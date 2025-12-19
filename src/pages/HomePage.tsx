@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { HeroSection } from '../components/Hero/HeroSection';
 import { WhyUsSection } from '../components/WhyUs';
 import { TestimonialsSection } from '../components/Testimonials';
-import { FlashOffersSection } from '../components/FlashOffers/FlashOffersSection';
 import { BrandsSection } from '../components/Brands/BrandsSection';
 import { CartModal } from '../components/Cart/CartModal';
 import FeaturedBlogPosts from '../components/Blog/FeaturedBlogPosts';
@@ -33,7 +32,6 @@ const HomePage: React.FC = () => {
     whyUs: boolean;
     stats: boolean;
     testimonials: boolean;
-    flashOffers: boolean;
     products: boolean;
     blog: boolean;
     brands: boolean;
@@ -44,7 +42,6 @@ const HomePage: React.FC = () => {
       whyUs: true,
       stats: true,
       testimonials: true,
-      flashOffers: true,
       products: true,
       blog: true,
       brands: true,
@@ -63,10 +60,9 @@ const HomePage: React.FC = () => {
       { section: 'brands', delay: baseDelay + increment * 1 },
       { section: 'stats', delay: baseDelay + increment * 1.5 },
       { section: 'testimonials', delay: baseDelay + increment * 2.5 },
-      { section: 'flashOffers', delay: baseDelay + increment * 3 },
-      { section: 'blog', delay: baseDelay + increment * 3.5 },
-      { section: 'products', delay: baseDelay + increment * 4 },
-      { section: 'contact', delay: baseDelay + increment * 4.5 }
+      { section: 'blog', delay: baseDelay + increment * 3 },
+      { section: 'products', delay: baseDelay + increment * 3.5 },
+      { section: 'contact', delay: baseDelay + increment * 4 }
     ];
 
     loadingSims.forEach(({ section, delay }) => {
@@ -131,20 +127,14 @@ const HomePage: React.FC = () => {
       )}
 
       <main className="flex-1">
-        {/* Flash Offers Section with Skeleton */}
-        {loadingStates.flashOffers ? (
+        {/* Contact Us Section with Skeleton */}
+        {loadingStates.contact ? (
           <SectionSkeleton 
-            showTitle={true} 
-            itemsCount={4} 
-            itemsPerRow={4} 
-            className="bg-gradient-to-br from-red-50 to-orange-100" 
+            showTitle={true}
+            className="bg-gray-50"
           />
         ) : (
-          <FlashOffersSection
-            maxItems={6}
-            refreshInterval={1000}
-            className="animate-fade-in"
-          />
+          <ContactUsSection />
         )}
 
         {/* Blog Section with Skeleton */}
@@ -164,16 +154,6 @@ const HomePage: React.FC = () => {
           </div>
         ) : (
           <FeaturedBlogPosts />
-        )}
-
-        {/* Contact Us Section with Skeleton */}
-        {loadingStates.contact ? (
-          <SectionSkeleton 
-            showTitle={true}
-            className="bg-gray-50"
-          />
-        ) : (
-          <ContactUsSection />
         )}
 
       </main>

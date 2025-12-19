@@ -22,13 +22,6 @@ const medicalCategories = [
   { id: 'PERDIDA DE PESO', name: 'Pérdida de Peso', icon: 'Scale', color: 'green', count: 0 }
 ];
 
-const medicalConditions = [
-  'Patología genérica**',
-  'Neurología',
-  'Cardiología'
-];
-
-
 const CatalogPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchParams.get('search') || '');
@@ -246,21 +239,6 @@ const CatalogPage: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                </div>
-
-                {/* Patologías */}
-                <div className="bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Patologías</h3>
-                  <select
-                    value={filters.patology}
-                    onChange={(e) => setFilters({...filters, patology: e.target.value})}
-                    className="w-full p-3 bg-white/50 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-medical-primary/50"
-                  >
-                    <option value="">Todas las patologías</option>
-                    {medicalConditions.map((condition) => (
-                      <option key={condition} value={condition}>{condition}</option>
-                    ))}
-                  </select>
                 </div>
 
                 {/* Rango de precios */}

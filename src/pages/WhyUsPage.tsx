@@ -443,7 +443,7 @@ const WhyUsPage: React.FC = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Nuestro <span className="text-medical-green-600">Proceso</span>
+              Porque elegir a <span className="text-medical-blue-600">Grupo Drozainka</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Un enfoque sistemático y probado que garantiza el éxito de tu farmacia.
