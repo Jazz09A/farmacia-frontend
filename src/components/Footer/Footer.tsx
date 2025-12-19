@@ -25,8 +25,8 @@ export const Footer: React.FC = () => {
   ];
 
   const customerService = [
-    'Términos Comerciales y Política de Devoluciones B2B.',
-    'Política de Privacidad.',
+    { label: 'Términos Comerciales y Política de Devoluciones B2B.', href: '/terminos-y-condiciones' },
+    { label: 'Política de Privacidad.', href: '/politica-de-privacidad' },
   ];
 
 
@@ -115,12 +115,12 @@ export const Footer: React.FC = () => {
             <ul className="space-y-3">
               {customerService.map((service, index) => (
                 <motion.li key={index}>
-                  <a
-                    href="#"
+                  <Link
+                    to={service.href}
                     className="text-blue-100 hover:text-white transition-colors hover:underline"
                   >
-                    {service}
-                  </a>
+                    {service.label}
+                  </Link>
                 </motion.li>
               ))}
             </ul>

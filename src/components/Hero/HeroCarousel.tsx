@@ -109,7 +109,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
                 alt={images[currentIndex].alt}
                 className="w-full h-full object-cover object-center"
                 loading="eager"
-                fetchpriority={currentIndex === 0 ? "high" : "auto"}
+                fetchPriority={currentIndex === 0 ? "high" : "auto"}
                 decoding="async"
               />
             </picture>

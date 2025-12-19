@@ -37,6 +37,10 @@ const CreditOrdersPage = lazy(() => import('./pages/CreditOrdersPage'));
 const BlogPage = lazy(() => import('./pages/BlogPage'));
 const BlogPostDetailPage = lazy(() => import('./pages/BlogPostDetailPage'));
 
+// Legal Pages with Lazy Loading
+const TermsAndConditionsPage = lazy(() => import('./pages/TermsAndConditionsPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
+
 // Admin Panel Imports with Lazy Loading
 const AdminLayout = lazy(() => import('./pages/Admin/AdminLayout'));
 const AdminDashboardPage = lazy(() => import('./pages/Admin/AdminDashboardPage'));
@@ -119,6 +123,8 @@ const AppLayout = () => {
               <Route path="/credit/orders" element={<ProtectedRoute><CreditOrdersPage /></ProtectedRoute>} />
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogPostDetailPage />} />
+              <Route path="/terminos-y-condiciones" element={<TermsAndConditionsPage />} />
+              <Route path="/politica-de-privacidad" element={<PrivacyPolicyPage />} />
               <Route path="/verify-account" element={<VerificationRequiredPage />} />
               <Route path="/verify-email/:token" element={<EmailVerificationPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
