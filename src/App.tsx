@@ -71,7 +71,7 @@ const AppLayout = () => {
   const { totalQuantity } = useQuoteCart();
   // Debug: verificar que totalQuantity se actualice
   useEffect(() => {
-    console.log('Cart totalQuantity:', totalQuantity);
+    // console.log('Cart totalQuantity:', totalQuantity);
   }, [totalQuantity]);
   const location = useLocation();
   const isAuthRoute = location.pathname.startsWith('/auth');
