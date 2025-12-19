@@ -39,8 +39,13 @@ class AuthService {
   // Helper para mostrar token de forma segura en logs
   private safeTokenLog(token: string | null, label: string): string {
     if (!token) return 'null';
-    const preview = token.length > 20 
-      ? `${token.substring(0, 10)}...${token.substring(token.length - 10)}` 
+    // Si el token es muy corto (menos de 50 caracteres), mostrarlo completo para debug
+    if (token.length < 50) {
+      return `"${token}" (length: ${token.length})`;
+    }
+    // Para tokens largos, mostrar primeros y últimos 30 caracteres
+    const preview = token.length > 60 
+      ? `${token.substring(0, 30)}...${token.substring(token.length - 30)}` 
       : token;
     return `${preview} (length: ${token.length})`;
   }
@@ -96,7 +101,27 @@ class AuthService {
         body: JSON.stringify(data),
       });
       const result = await response.json();
+      
+      // 🔍 DEBUG: Mostrar respuesta completa del servidor
+      console.log('📥 [LOGIN] Respuesta completa del servidor:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        hasAccessToken: !!result.access_token,
+        hasRefreshToken: !!result.refresh_token,
+        hasExpiresIn: !!result.expires_in,
+        responseKeys: Object.keys(result),
+        accessTokenType: typeof result.access_token,
+        accessTokenValue: result.access_token,
+        accessTokenLength: result.access_token?.length || 0,
+        fullResponse: JSON.stringify(result, null, 2)
+      });
+      
       if (!response.ok) {
+        console.error('❌ [LOGIN] Error en respuesta del servidor:', {
+          status: response.status,
+          result: result
+        });
         // Devolver mensaje del backend (detail o message) sin lanzar excepción
         return {
           success: false,
@@ -106,11 +131,18 @@ class AuthService {
       }
       if (result.access_token) {
         console.log('🔑 [LOGIN] Token recibido del servidor:', this.safeTokenLog(result.access_token, 'access_token'));
-        console.log('🔑 [LOGIN] Token tiene espacios al inicio/fin?', {
+        console.log('🔑 [LOGIN] Análisis detallado del token:', {
+          token: result.access_token,
+          tokenType: typeof result.access_token,
+          isString: typeof result.access_token === 'string',
+          isEmpty: !result.access_token || result.access_token.length === 0,
+          isTooShort: result.access_token.length < 50,
           startsWithSpace: result.access_token.startsWith(' ') || result.access_token.startsWith('\t'),
           endsWithSpace: result.access_token.endsWith(' ') || result.access_token.endsWith('\t'),
           originalLength: result.access_token.length,
-          trimmedLength: result.access_token.trim().length
+          trimmedLength: result.access_token.trim().length,
+          first50Chars: result.access_token.substring(0, 50),
+          last50Chars: result.access_token.length > 50 ? result.access_token.substring(result.access_token.length - 50) : 'N/A'
         });
         
         this.setToken(result.access_token);
@@ -118,7 +150,15 @@ class AuthService {
         // Store refresh_token if provided
         if (result.refresh_token) {
           console.log('🔄 [LOGIN] Refresh token recibido del servidor:', this.safeTokenLog(result.refresh_token, 'refresh_token'));
+          console.log('🔄 [LOGIN] Análisis del refresh token:', {
+            token: result.refresh_token,
+            tokenType: typeof result.refresh_token,
+            length: result.refresh_token.length,
+            isTooShort: result.refresh_token.length < 50
+          });
           this.setRefreshToken(result.refresh_token);
+        } else {
+          console.warn('⚠️ [LOGIN] No se recibió refresh_token del servidor');
         }
         
         // Store token expiry time
@@ -405,8 +445,18 @@ class AuthService {
         url: fullUrl,
         refreshTokenPreview: this.safeTokenLog(refreshToken, 'refresh_token'),
         refreshTokenLength: refreshToken.length,
-        hasSpaces: refreshToken !== refreshToken.trim()
+        hasSpaces: refreshToken !== refreshToken.trim(),
+        isTooShort: refreshToken.length < 50,
+        warning: refreshToken.length < 50 ? '⚠️ REFRESH TOKEN SOSPECHOSAMENTE CORTO' : 'OK',
+        payload: JSON.stringify({ refresh_token: refreshToken })
       });
+      
+      if (refreshToken.length < 50) {
+        console.error('❌ [PERFORM_REFRESH] ERROR: Refresh token demasiado corto!', {
+          token: refreshToken,
+          length: refreshToken.length
+        });
+      }
       
       const response = await fetch(fullUrl, {
         method: 'POST',
@@ -419,7 +469,8 @@ class AuthService {
       console.log('📥 [PERFORM_REFRESH] Respuesta recibida:', {
         status: response.status,
         statusText: response.statusText,
-        ok: response.ok
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
       });
 
       const result = await response.json();
@@ -428,8 +479,18 @@ class AuthService {
         hasAccessToken: !!result.access_token,
         hasRefreshToken: !!result.refresh_token,
         hasExpiresIn: !!result.expires_in,
-        accessTokenPreview: result.access_token ? this.safeTokenLog(result.access_token, 'new_access_token') : 'none'
+        accessTokenPreview: result.access_token ? this.safeTokenLog(result.access_token, 'new_access_token') : 'none',
+        accessTokenLength: result.access_token?.length || 0,
+        refreshTokenLength: result.refresh_token?.length || 0,
+        fullResponse: JSON.stringify(result, null, 2)
       });
+      
+      if (result.access_token && result.access_token.length < 50) {
+        console.error('❌ [PERFORM_REFRESH] ERROR: Nuevo access token demasiado corto!', {
+          token: result.access_token,
+          length: result.access_token.length
+        });
+      }
       
       if (!response.ok) {
         // Refresh token expired or invalid - force logout
@@ -526,20 +587,33 @@ class AuthService {
     const token = this.getToken();
     
     if (!token) {
+      console.error('❌ [MAKE_REQUEST] No hay token disponible');
       throw new Error('No authentication token - session terminated');
     }
 
     // 🔥 FIX: Asegurar que el token esté limpio (sin espacios) antes de usarlo
     const cleanToken = token.trim();
     
+    if (cleanToken.length < 50) {
+      console.error('❌ [MAKE_REQUEST] ERROR: Token demasiado corto para enviar!', {
+        token: cleanToken,
+        length: cleanToken.length,
+        url,
+        method: options.method || 'GET'
+      });
+    }
+    
     const authHeader = `Bearer ${cleanToken}`;
     console.log('📤 [MAKE_REQUEST] Enviando petición autenticada:', {
       url,
+      fullUrl: url.startsWith('http') ? url : `${this.url}${url}`,
       method: options.method || 'GET',
       tokenPreview: this.safeTokenLog(cleanToken, 'token'),
-      authHeaderPreview: `${authHeader.substring(0, 30)}... (length: ${authHeader.length})`,
+      authHeaderPreview: authHeader.length > 50 ? `${authHeader.substring(0, 30)}...${authHeader.substring(authHeader.length - 20)}` : authHeader,
+      authHeaderLength: authHeader.length,
       hasSpacesInToken: cleanToken !== cleanToken.trim(),
-      tokenLength: cleanToken.length
+      tokenLength: cleanToken.length,
+      isTokenValid: cleanToken.length >= 50
     });
 
     const customHeaders = (options.headers || {}) as Record<string, string>;
@@ -552,11 +626,28 @@ class AuthService {
       headers['Content-Type' as keyof HeadersInit] = 'application/json';
     }
 
-    const isAbsoluteUrl = url.startsWith('http://') || url.startsWith('https://');
-    const fullUrl = isAbsoluteUrl ? url : `${this.url}${url}`;
+      const isAbsoluteUrl = url.startsWith('http://') || url.startsWith('https://');
+      const fullUrl = isAbsoluteUrl ? url : `${this.url}${url}`;
     
-    const { headers: _, ...restOptions } = options;
-    return fetch(fullUrl, { ...restOptions, headers });
+      console.log('📤 [MAKE_REQUEST] Detalles de la petición:', {
+        fullUrl,
+        method: options.method || 'GET',
+        headers: Object.keys(headers),
+        authorizationHeader: headers['Authorization'] ? `${headers['Authorization'].substring(0, 30)}...` : 'missing'
+      });
+    
+      const { headers: _, ...restOptions } = options;
+      const response = await fetch(fullUrl, { ...restOptions, headers });
+      
+      console.log('📥 [MAKE_REQUEST] Respuesta recibida:', {
+        url: fullUrl,
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
+      return response;
   }
 
   // Métodos privados para manejo de localStorage
@@ -567,10 +658,30 @@ class AuthService {
       original: this.safeTokenLog(token, 'original'),
       cleaned: this.safeTokenLog(cleanToken, 'cleaned'),
       hadSpaces: token.length !== cleanToken.length,
-      spaceDiff: token.length - cleanToken.length
+      spaceDiff: token.length - cleanToken.length,
+      originalLength: token.length,
+      cleanedLength: cleanToken.length,
+      isTooShort: cleanToken.length < 50,
+      warning: cleanToken.length < 50 ? '⚠️ TOKEN SOSPECHOSAMENTE CORTO' : 'OK'
     });
+    
+    if (cleanToken.length < 50) {
+      console.error('❌ [SET_TOKEN] ERROR: Token demasiado corto para ser válido!', {
+        token: cleanToken,
+        length: cleanToken.length,
+        expectedMinLength: 50
+      });
+    }
+    
     localStorage.setItem(this.tokenKey, cleanToken);
-    console.log('💾 [SET_TOKEN] Token guardado exitosamente en localStorage');
+    
+    // Verificar que se guardó correctamente
+    const savedToken = localStorage.getItem(this.tokenKey);
+    console.log('💾 [SET_TOKEN] Token guardado. Verificación:', {
+      saved: savedToken ? this.safeTokenLog(savedToken, 'saved') : 'null',
+      matches: savedToken === cleanToken,
+      savedLength: savedToken?.length || 0
+    });
   }
 
   private getToken(): string | null {
