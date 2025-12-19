@@ -33,6 +33,21 @@ export class SecurityManager {
     window.fetch = async (...args) => {
       const response = await originalFetch(...args);
       
+      // Solo interceptar respuestas JSON exitosas
+      if (!response.ok) {
+        // Para errores, devolver la respuesta original sin modificar
+        return response;
+      }
+
+      // Verificar si es una respuesta JSON
+      const contentType = response.headers.get('content-type');
+      const isJson = contentType && contentType.includes('application/json');
+      
+      if (!isJson) {
+        // Si no es JSON, devolver la respuesta original
+        return response;
+      }
+      
       // Crear un proxy para la respuesta que ofusca datos sensibles
       return new Proxy(response, {
         get: (target, prop) => {
@@ -40,12 +55,21 @@ export class SecurityManager {
           if (prop === 'json') {
             return async () => {
               try {
-                const data = await target.json();
-                // Sanitizar datos sensibles antes de exponerlos
-                return this.sanitizeResponseData(data);
+                // Clonar la respuesta para poder leerla múltiples veces
+                const clonedResponse = response.clone();
+                const data = await clonedResponse.json();
+                // Sanitizar datos sensibles antes de exponerlos, manteniendo la estructura
+                const sanitized = this.sanitizeResponseData(data);
+                // Asegurarse de que siempre devolvemos algo válido
+                return sanitized !== null && sanitized !== undefined ? sanitized : data;
               } catch (error) {
-                // En caso de error, devolver mensaje genérico
-                return { error: 'Error procesando la respuesta' };
+                // En caso de error, intentar leer la respuesta original
+                try {
+                  return await response.json();
+                } catch {
+                  // Si falla, lanzar el error original
+                  throw error;
+                }
               }
             };
           }
@@ -57,12 +81,18 @@ export class SecurityManager {
                 // Intentar parsear y sanitizar si es JSON
                 try {
                   const data = JSON.parse(text);
-                  return JSON.stringify(this.sanitizeResponseData(data));
+                  const sanitized = this.sanitizeResponseData(data);
+                  return JSON.stringify(sanitized !== null && sanitized !== undefined ? sanitized : data);
                 } catch {
                   return text;
                 }
               } catch (error) {
-                return 'Error procesando la respuesta';
+                // Si hay error, intentar devolver el texto original
+                try {
+                  return await response.text();
+                } catch {
+                  throw error;
+                }
               }
             };
           }
@@ -76,28 +106,39 @@ export class SecurityManager {
   }
 
   // 🔥 Sanitizar datos de respuesta para ocultar información sensible
+  // IMPORTANTE: Esta función preserva la estructura de datos, solo sanitiza valores
   private sanitizeResponseData(data: any): any {
-    if (!data || typeof data === 'function') {
+    // Manejar valores primitivos y null
+    if (data === null || data === undefined) {
       return data;
     }
 
-    // Si es un array, sanitizar cada elemento
+    if (typeof data === 'function') {
+      return data;
+    }
+
+    // Si es un array, sanitizar cada elemento pero mantener el array
     if (Array.isArray(data)) {
       return data.map(item => this.sanitizeResponseData(item));
     }
 
-    // Si no es un objeto, devolver tal cual (strings, numbers, etc.)
+    // Si no es un objeto, devolver tal cual (strings, numbers, booleans, etc.)
     if (typeof data !== 'object') {
       return data;
     }
 
-    // Crear copia del objeto
+    // Manejar objetos especiales (Date, etc.)
+    if (data instanceof Date || data instanceof RegExp) {
+      return data;
+    }
+
+    // Crear copia del objeto preservando todas las propiedades
     const sanitized: any = {};
 
     for (const [key, value] of Object.entries(data)) {
       const lowerKey = key.toLowerCase();
       
-      // Lista completa de campos sensibles a ocultar
+      // Lista completa de campos sensibles a ocultar (solo valores, no propiedades)
       const sensitiveFields = [
         'password', 'passwd', 'pwd',
         'token', 'access_token', 'refresh_token', 'auth_token', 'bearer',
@@ -114,31 +155,39 @@ export class SecurityManager {
         'session', 'session_id', 'session_token'
       ];
       
-      // Verificar si el campo es sensible
+      // Verificar si el campo es sensible (solo por el nombre de la clave)
       const isSensitive = sensitiveFields.some(field => lowerKey.includes(field));
       
-      if (isSensitive) {
-        // Ocultar completamente campos sensibles
+      if (isSensitive && value !== null && value !== undefined) {
+        // Ocultar completamente valores sensibles, pero mantener la propiedad
         sanitized[key] = '***';
         continue;
       }
 
       // Limitar longitud de mensajes de error detallados que puedan exponer información
-      if (lowerKey === 'detail' || lowerKey === 'message' || lowerKey === 'error' || lowerKey === 'traceback') {
-        if (typeof value === 'string' && value.length > 150) {
+      if ((lowerKey === 'detail' || lowerKey === 'message' || lowerKey === 'error' || lowerKey === 'traceback') && typeof value === 'string') {
+        if (value.length > 150) {
           sanitized[key] = value.substring(0, 150) + '...';
           continue;
         }
       }
 
-      // Sanitizar objetos anidados
-      if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
-        sanitized[key] = this.sanitizeResponseData(value);
-      } else if (Array.isArray(value)) {
-        sanitized[key] = value.map(item => 
-          typeof item === 'object' && item !== null ? this.sanitizeResponseData(item) : item
-        );
+      // Sanitizar objetos anidados recursivamente
+      if (value !== null && value !== undefined) {
+        if (typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date) && !(value instanceof RegExp)) {
+          sanitized[key] = this.sanitizeResponseData(value);
+        } else if (Array.isArray(value)) {
+          sanitized[key] = value.map(item => 
+            item !== null && item !== undefined && typeof item === 'object' 
+              ? this.sanitizeResponseData(item) 
+              : item
+          );
+        } else {
+          // Valores primitivos se copian tal cual
+          sanitized[key] = value;
+        }
       } else {
+        // Preservar null y undefined
         sanitized[key] = value;
       }
     }
