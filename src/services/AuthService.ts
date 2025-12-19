@@ -36,6 +36,15 @@ class AuthService {
   }> = [];
   private readonly tokenRefreshThreshold = 120; // Refresh 2 minutes before expiry (in seconds)
 
+  // Helper para mostrar token de forma segura en logs
+  private safeTokenLog(token: string | null, label: string): string {
+    if (!token) return 'null';
+    const preview = token.length > 20 
+      ? `${token.substring(0, 10)}...${token.substring(token.length - 10)}` 
+      : token;
+    return `${preview} (length: ${token.length})`;
+  }
+
   // Verificación de email
   async checkEmailAvailability(email: string): Promise<{ available: boolean; message: string }> {
     try {
@@ -96,10 +105,19 @@ class AuthService {
         };
       }
       if (result.access_token) {
+        console.log('🔑 [LOGIN] Token recibido del servidor:', this.safeTokenLog(result.access_token, 'access_token'));
+        console.log('🔑 [LOGIN] Token tiene espacios al inicio/fin?', {
+          startsWithSpace: result.access_token.startsWith(' ') || result.access_token.startsWith('\t'),
+          endsWithSpace: result.access_token.endsWith(' ') || result.access_token.endsWith('\t'),
+          originalLength: result.access_token.length,
+          trimmedLength: result.access_token.trim().length
+        });
+        
         this.setToken(result.access_token);
         
         // Store refresh_token if provided
         if (result.refresh_token) {
+          console.log('🔄 [LOGIN] Refresh token recibido del servidor:', this.safeTokenLog(result.refresh_token, 'refresh_token'));
           this.setRefreshToken(result.refresh_token);
         }
         
@@ -341,13 +359,17 @@ class AuthService {
 
   // Refrescar token
   async refreshToken(): Promise<AuthResponse> {
+    console.log('🔄 [REFRESH_TOKEN] Iniciando proceso de refresh token');
+    
     // If already refreshing, return the existing promise
     if (this.isRefreshing && this.refreshPromise) {
+      console.log('🔄 [REFRESH_TOKEN] Ya hay un refresh en progreso, reutilizando promesa');
       return this.refreshPromise;
     }
 
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
+      console.error('❌ [REFRESH_TOKEN] No hay refresh token disponible');
       this.logout();
       return {
         success: false,
@@ -356,18 +378,22 @@ class AuthService {
       };
     }
 
+    console.log('🔄 [REFRESH_TOKEN] Refresh token obtenido, iniciando refresh:', this.safeTokenLog(refreshToken, 'refresh_token'));
+
     // Set refreshing flag and create promise
     this.isRefreshing = true;
     this.refreshPromise = this.performRefresh(refreshToken);
 
     try {
       const result = await this.refreshPromise;
+      console.log('✅ [REFRESH_TOKEN] Refresh completado exitosamente');
       return result;
     } finally {
       // Reset refreshing state after a short delay to allow queued requests to complete
       setTimeout(() => {
         this.isRefreshing = false;
         this.refreshPromise = null;
+        console.log('🔄 [REFRESH_TOKEN] Estado de refresh reseteado');
       }, 100);
     }
   }
@@ -375,6 +401,13 @@ class AuthService {
   private async performRefresh(refreshToken: string): Promise<AuthResponse> {
     try {
       const fullUrl = `${this.url}${this.baseUrl}/refresh`;
+      console.log('📤 [PERFORM_REFRESH] Enviando petición de refresh:', {
+        url: fullUrl,
+        refreshTokenPreview: this.safeTokenLog(refreshToken, 'refresh_token'),
+        refreshTokenLength: refreshToken.length,
+        hasSpaces: refreshToken !== refreshToken.trim()
+      });
+      
       const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
@@ -383,7 +416,20 @@ class AuthService {
         body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
+      console.log('📥 [PERFORM_REFRESH] Respuesta recibida:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       const result = await response.json();
+      
+      console.log('📥 [PERFORM_REFRESH] Datos de respuesta:', {
+        hasAccessToken: !!result.access_token,
+        hasRefreshToken: !!result.refresh_token,
+        hasExpiresIn: !!result.expires_in,
+        accessTokenPreview: result.access_token ? this.safeTokenLog(result.access_token, 'new_access_token') : 'none'
+      });
       
       if (!response.ok) {
         // Refresh token expired or invalid - force logout
@@ -406,10 +452,12 @@ class AuthService {
 
       // Token rotation: update both access_token and refresh_token
       if (result.access_token) {
+        console.log('🔄 [PERFORM_REFRESH] Actualizando access token con nuevo token recibido');
         this.setToken(result.access_token);
       }
       
       if (result.refresh_token) {
+        console.log('🔄 [PERFORM_REFRESH] Actualizando refresh token con nuevo token recibido');
         this.setRefreshToken(result.refresh_token);
       }
       
@@ -419,6 +467,7 @@ class AuthService {
       }
 
       // Retry all pending requests with new token
+      console.log('🔄 [PERFORM_REFRESH] Reintentando', this.pendingRequests.length, 'peticiones pendientes con nuevo token');
       this.retryPendingRequests();
 
       return {
@@ -482,11 +531,21 @@ class AuthService {
 
     // 🔥 FIX: Asegurar que el token esté limpio (sin espacios) antes de usarlo
     const cleanToken = token.trim();
+    
+    const authHeader = `Bearer ${cleanToken}`;
+    console.log('📤 [MAKE_REQUEST] Enviando petición autenticada:', {
+      url,
+      method: options.method || 'GET',
+      tokenPreview: this.safeTokenLog(cleanToken, 'token'),
+      authHeaderPreview: `${authHeader.substring(0, 30)}... (length: ${authHeader.length})`,
+      hasSpacesInToken: cleanToken !== cleanToken.trim(),
+      tokenLength: cleanToken.length
+    });
 
     const customHeaders = (options.headers || {}) as Record<string, string>;
     const headers: HeadersInit = {
       ...customHeaders,
-      'Authorization': `Bearer ${cleanToken}`,
+      'Authorization': authHeader,
     };
 
     if (!(options.body instanceof FormData) && !customHeaders['Content-Type']) {
@@ -502,13 +561,36 @@ class AuthService {
 
   // Métodos privados para manejo de localStorage
   public setToken(token: string): void {
-    localStorage.setItem(this.tokenKey, token);
+    // 🔥 FIX: Limpiar el token (eliminar espacios) antes de guardarlo
+    const cleanToken = token.trim();
+    console.log('💾 [SET_TOKEN] Guardando token en localStorage:', {
+      original: this.safeTokenLog(token, 'original'),
+      cleaned: this.safeTokenLog(cleanToken, 'cleaned'),
+      hadSpaces: token.length !== cleanToken.length,
+      spaceDiff: token.length - cleanToken.length
+    });
+    localStorage.setItem(this.tokenKey, cleanToken);
+    console.log('💾 [SET_TOKEN] Token guardado exitosamente en localStorage');
   }
 
   private getToken(): string | null {
     const token = localStorage.getItem(this.tokenKey);
     // 🔥 FIX: Limpiar el token al obtenerlo por si acaso tiene espacios
-    return token ? token.trim() : null;
+    if (token) {
+      const cleaned = token.trim();
+      if (token.length !== cleaned.length) {
+        console.warn('⚠️ [GET_TOKEN] Token tenía espacios, limpiado:', {
+          original: this.safeTokenLog(token, 'original'),
+          cleaned: this.safeTokenLog(cleaned, 'cleaned'),
+          spaceDiff: token.length - cleaned.length
+        });
+      } else {
+        console.log('📖 [GET_TOKEN] Token obtenido de localStorage:', this.safeTokenLog(cleaned, 'token'));
+      }
+      return cleaned;
+    }
+    console.log('📖 [GET_TOKEN] No hay token en localStorage');
+    return null;
   }
 
   private removeToken(): void {
@@ -517,13 +599,36 @@ class AuthService {
 
   // Refresh token management methods
   private setRefreshToken(refreshToken: string): void {
-    localStorage.setItem(this.refreshTokenKey, refreshToken);
+    // 🔥 FIX: Limpiar el refresh token antes de guardarlo
+    const cleanToken = refreshToken.trim();
+    console.log('💾 [SET_REFRESH_TOKEN] Guardando refresh token en localStorage:', {
+      original: this.safeTokenLog(refreshToken, 'original'),
+      cleaned: this.safeTokenLog(cleanToken, 'cleaned'),
+      hadSpaces: refreshToken.length !== cleanToken.length,
+      spaceDiff: refreshToken.length - cleanToken.length
+    });
+    localStorage.setItem(this.refreshTokenKey, cleanToken);
+    console.log('💾 [SET_REFRESH_TOKEN] Refresh token guardado exitosamente');
   }
 
   private getRefreshToken(): string | null {
     const token = localStorage.getItem(this.refreshTokenKey);
     // 🔥 FIX: Limpiar el refresh token al obtenerlo
-    return token ? token.trim() : null;
+    if (token) {
+      const cleaned = token.trim();
+      if (token.length !== cleaned.length) {
+        console.warn('⚠️ [GET_REFRESH_TOKEN] Refresh token tenía espacios, limpiado:', {
+          original: this.safeTokenLog(token, 'original'),
+          cleaned: this.safeTokenLog(cleaned, 'cleaned'),
+          spaceDiff: token.length - cleaned.length
+        });
+      } else {
+        console.log('📖 [GET_REFRESH_TOKEN] Refresh token obtenido de localStorage:', this.safeTokenLog(cleaned, 'refresh_token'));
+      }
+      return cleaned;
+    }
+    console.log('📖 [GET_REFRESH_TOKEN] No hay refresh token en localStorage');
+    return null;
   }
 
   private removeRefreshToken(): void {
