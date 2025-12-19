@@ -29,7 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const { isNavbarVisible } = useNavbar();
-  const { currency, toggleCurrency, exchangeRates } = useGlobalCurrency();
+  // const { currency, toggleCurrency, exchangeRates } = useGlobalCurrency();
 
   // Don't render Navbar on admin routes
   if (location.pathname.startsWith('/admin')) {
@@ -96,13 +96,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, [isUserMenuOpen]);
 
   const menuItems = [
-    { name: 'Inicio', href: '/', icon: Stethoscope },
-    { name: '¿Por qué nosotros?', href: '/why-us', icon: HelpCircle },
-    { name: 'Catálogo', href: '/catalog', icon: ShoppingCart },
-    { name: 'Convertirse en cliente Drozainka', href: '/cliente-drozainka', icon: UserIcon },
-    { name: '¿Quieres ser proveedor Drozainka?', href: '/proveedor-drozainka', icon: Briefcase },
-    { name: 'Blog', href: '/blog', icon: BookText },
-    { name: 'Trabaja con Nosotros', href: '/trabaja-con-nosotros', icon: Briefcase },
+    { name: 'INICIO', href: '/', icon: Stethoscope },
+    { name: '¿POR QUÉ NOSOTROS?', href: '/why-us', icon: HelpCircle },
+    { name: 'CATÁLOGO', href: '/catalog', icon: ShoppingCart },
+    { name: 'CONVERTIRSE EN CLIENTE DROZAINKA', href: '/cliente-drozainka', icon: UserIcon },
+    { name: '¿QUIERES SER PROVEEDOR DROZAINKA?', href: '/proveedor-drozainka', icon: Briefcase },
+    { name: 'BLOG', href: '/blog', icon: BookText },
+    { name: 'TRABAJA CON NOSOTROS', href: '/trabaja-con-nosotros', icon: Briefcase },
   ];
 
   const getNavbarClasses = () => {

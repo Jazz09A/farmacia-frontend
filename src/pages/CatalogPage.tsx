@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Filter, Grid, List, Heart, Pill, Stethoscope, Shield, Sparkles, X } from 'lucide-react';
+import { Search, Filter, Grid, List, Heart, Pill, Stethoscope, Shield, Sparkles, X, Brain, Bone, User, Flower2, Scale } from 'lucide-react';
 import { SearchFilters } from '../types';
 import { ProductCard } from '../components/Products/ProductCard';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
@@ -10,10 +10,16 @@ import MapSection from '../components/Map/MapSection';
 import { useProductsQuery } from '../hooks/queries/useProductsQueries';
 import { usePrefetchNextPage } from '../hooks/useImagePrefetch';
 
-// Categorías temporales hasta que se obtengan de la API
+// Especialidades Farmacéuticas
 const medicalCategories = [
-  { id: 'SISTEMA NERVIOSO', name: 'Sistema Nervioso', icon: 'Stethoscope', color: 'blue', count: 0 },
-  { id: 'Sin Categoría**', name: 'Sin Categoría', icon: 'Pill', color: 'gray', count: 0 }
+  { id: 'SISTEMA NERVIOSO', name: 'Sistema Nervioso', icon: 'Brain', color: 'purple', count: 0 },
+  { id: 'SALUD CARDIOVASCULAR', name: 'Salud Cardiovascular', icon: 'Heart', color: 'red', count: 0 },
+  { id: 'SISTEMA INMUNOLOGICO', name: 'Sistema Inmunológico', icon: 'Shield', color: 'blue', count: 0 },
+  { id: 'SISTEMA OSTEOARTICULAR', name: 'Sistema Osteoarticular', icon: 'Bone', color: 'orange', count: 0 },
+  { id: 'BIENESTAR GENERAL', name: 'Bienestar General', icon: 'Sparkles', color: 'yellow', count: 0 },
+  { id: 'SALUD MASCULINA', name: 'Salud Masculina', icon: 'User', color: 'indigo', count: 0 },
+  { id: 'SALUD FEMENINA', name: 'Salud Femenina', icon: 'Flower2', color: 'pink', count: 0 },
+  { id: 'PERDIDA DE PESO', name: 'Pérdida de Peso', icon: 'Scale', color: 'green', count: 0 }
 ];
 
 const medicalConditions = [
@@ -111,9 +117,30 @@ const CatalogPage: React.FC = () => {
       'Heart': <Heart className="w-5 h-5" />,
       'Sparkles': <Sparkles className="w-5 h-5" />,
       'Shield': <Shield className="w-5 h-5" />,
-      'Stethoscope': <Stethoscope className="w-5 h-5" />
+      'Stethoscope': <Stethoscope className="w-5 h-5" />,
+      'Brain': <Brain className="w-5 h-5" />,
+      'Bone': <Bone className="w-5 h-5" />,
+      'User': <User className="w-5 h-5" />,
+      'Flower2': <Flower2 className="w-5 h-5" />,
+      'Scale': <Scale className="w-5 h-5" />
     };
     return icons[iconName] || <Pill className="w-5 h-5" />;
+  };
+
+  // Mapeo de colores para clases de Tailwind
+  const getCategoryBgColor = (color: string) => {
+    const colorMap: { [key: string]: string } = {
+      'purple': 'bg-purple-100',
+      'red': 'bg-red-100',
+      'blue': 'bg-blue-100',
+      'orange': 'bg-orange-100',
+      'yellow': 'bg-yellow-100',
+      'indigo': 'bg-indigo-100',
+      'pink': 'bg-pink-100',
+      'green': 'bg-green-100',
+      'gray': 'bg-gray-100'
+    };
+    return colorMap[color] || 'bg-gray-100';
   };
 
   // Los productos ya vienen filtrados del servidor, no necesitamos filtrar localmente
@@ -191,9 +218,9 @@ const CatalogPage: React.FC = () => {
               </button>
 
               <div className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-                {/* Categorías médicas */}
+                {/* Especialidades Farmacéuticas */}
                 <div className="bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Categorías Médicas</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Especialidades Farmacéuticas</h3>
                   <div className="space-y-3">
                     <button
                       onClick={() => setFilters({...filters, category: ''})}
@@ -206,29 +233,17 @@ const CatalogPage: React.FC = () => {
                       Todas las categorías
                     </button>
                     {medicalCategories.map((category) => (
-                      <button
+                      <div
                         key={category.id}
-                        onClick={() => setFilters({...filters, category: category.id})}
-                        className={`w-full text-left p-3 rounded-xl transition-all duration-300 flex items-center gap-3 ${
-                          filters.category === category.id
-                            ? 'bg-gradient-to-r from-medical-primary to-medical-primary-dark text-white'
-                            : 'hover:bg-gray-50'
-                        }`}
+                        className="w-full text-left p-3 rounded-xl flex items-center gap-3 bg-gray-50"
                       >
-                        <span className={`p-2 rounded-lg ${
-                          filters.category === category.id ? 'bg-white/20' : `bg-${category.color}-100`
-                        }`}>
+                        <span className={`p-2 rounded-lg ${getCategoryBgColor(category.color)}`}>
                           {getCategoryIcon(category.icon)}
                         </span>
                         <div className="flex-1">
-                          <div className="font-medium">{category.name}</div>
-                          <div className={`text-sm ${
-                            filters.category === category.id ? 'text-white/80' : 'text-gray-500'
-                          }`}>
-                            {category.count} productos
-                          </div>
+                          <div className="font-medium text-gray-900">{category.name}</div>
                         </div>
-                      </button>
+                      </div>
                     ))}
                   </div>
                 </div>

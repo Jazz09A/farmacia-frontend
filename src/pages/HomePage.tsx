@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 // Components
 import { HeroSection } from '../components/Hero/HeroSection';
 import { WhyUsSection } from '../components/WhyUs';
-import { CategoriesSection } from '../components/Categories';
 import { TestimonialsSection } from '../components/Testimonials';
 import { FlashOffersSection } from '../components/FlashOffers/FlashOffersSection';
 import { BrandsSection } from '../components/Brands/BrandsSection';
@@ -32,7 +31,6 @@ const HomePage: React.FC = () => {
   const [loadingStates, setLoadingStates] = useState<{
     hero: boolean;
     whyUs: boolean;
-    categories: boolean;
     stats: boolean;
     testimonials: boolean;
     flashOffers: boolean;
@@ -44,7 +42,6 @@ const HomePage: React.FC = () => {
     cachedLoadingState || {
       hero: true,
       whyUs: true,
-      categories: true,
       stats: true,
       testimonials: true,
       flashOffers: true,
@@ -64,8 +61,7 @@ const HomePage: React.FC = () => {
       { section: 'hero', delay: baseDelay },
       { section: 'whyUs', delay: baseDelay + increment },
       { section: 'brands', delay: baseDelay + increment * 1 },
-      { section: 'categories', delay: baseDelay + increment * 1.5 },
-      { section: 'stats', delay: baseDelay + increment * 2 },
+      { section: 'stats', delay: baseDelay + increment * 1.5 },
       { section: 'testimonials', delay: baseDelay + increment * 2.5 },
       { section: 'flashOffers', delay: baseDelay + increment * 3 },
       { section: 'blog', delay: baseDelay + increment * 3.5 },
@@ -120,18 +116,6 @@ const HomePage: React.FC = () => {
         />
       ) : (
         <BrandsSection />
-      )}
-
-      {/* Categories Section with Skeleton */}
-      {loadingStates.categories ? (
-        <SectionSkeleton 
-          showTitle={true} 
-          itemsCount={12} 
-          itemsPerRow={4} 
-          className="bg-white" 
-        />
-      ) : (
-        <CategoriesSection />
       )}
 
       {/* Testimonials Section with Skeleton */}

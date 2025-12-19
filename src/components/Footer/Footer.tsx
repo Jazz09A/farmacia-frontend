@@ -17,7 +17,7 @@ export const Footer: React.FC = () => {
   ];
 
   const quickLinks = [
-    { label: 'Por que nosotros', href: '/why-us' },
+    { label: '¿Por qué nosotros?', href: '/why-us' },
     { label: 'Catálogo', href: '/catalog' },
     { label: 'Convertirse en cliente', href: '/cliente-drozainka' },
     { label: 'Quieres ser proveedor', href: '/proveedor-drozainka' },
