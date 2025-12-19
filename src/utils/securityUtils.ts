@@ -39,7 +39,6 @@ export class SecurityManager {
       
       // 🔥 CRÍTICO: NO sanitizar respuestas de autenticación - la app necesita los tokens reales
       if (isAuthEndpoint) {
-        console.log('🔓 [SECURITY] Respuesta de autenticación detectada, NO sanitizando:', requestUrl);
         return response; // Devolver respuesta original sin sanitizar
       }
       

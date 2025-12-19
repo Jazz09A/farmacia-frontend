@@ -36,19 +36,6 @@ class AuthService {
   }> = [];
   private readonly tokenRefreshThreshold = 120; // Refresh 2 minutes before expiry (in seconds)
 
-  // Helper para mostrar token de forma segura en logs
-  private safeTokenLog(token: string | null, label: string): string {
-    if (!token) return 'null';
-    // Si el token es muy corto (menos de 50 caracteres), mostrarlo completo para debug
-    if (token.length < 50) {
-      return `"${token}" (length: ${token.length})`;
-    }
-    // Para tokens largos, mostrar primeros y últimos 30 caracteres
-    const preview = token.length > 60 
-      ? `${token.substring(0, 30)}...${token.substring(token.length - 30)}` 
-      : token;
-    return `${preview} (length: ${token.length})`;
-  }
 
   // Verificación de email
   async checkEmailAvailability(email: string): Promise<{ available: boolean; message: string }> {
@@ -95,65 +82,13 @@ class AuthService {
   // Login
   async login(data: LoginData): Promise<AuthResponse> {
     try {
-      const loginUrl = `${this.url}${this.baseUrl}/login`;
-      const requestBody = JSON.stringify(data);
-      
-      // 🔍 DEBUG: Mostrar qué se está enviando
-      console.log('🔵 [LOGIN] Enviando petición:', {
-        url: loginUrl,
+      const response = await fetch(`${this.url}${this.baseUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: requestBody,
-        data: data
+        body: JSON.stringify(data),
       });
-      
-      const response = await fetch(loginUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: requestBody,
-      });
-      
-      // 🔍 DEBUG: Mostrar respuesta HTTP antes de parsear JSON
-      console.log('🔵 [LOGIN] Respuesta HTTP recibida:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries()),
-        contentType: response.headers.get('content-type')
-      });
-      
       const result = await response.json();
-      
-      // 🔍 DEBUG CRÍTICO: Mostrar respuesta RAW del servidor SIN SANITIZACIÓN
-      console.log('🔴 [LOGIN] RESPUESTA RAW DEL SERVIDOR (SIN SANITIZACIÓN):', result);
-      console.log('🔴 [LOGIN] Tipo de result:', typeof result);
-      console.log('🔴 [LOGIN] result.access_token RAW:', result.access_token);
-      console.log('🔴 [LOGIN] result.access_token tipo:', typeof result.access_token);
-      console.log('🔴 [LOGIN] result.access_token length:', result.access_token?.length);
-      console.log('🔴 [LOGIN] result completo stringificado:', JSON.stringify(result));
-      console.log('🔴 [LOGIN] Keys del objeto result:', Object.keys(result));
-      console.log('🔴 [LOGIN] Valores de todas las keys:', Object.keys(result).map(key => ({ key, value: result[key], type: typeof result[key], length: result[key]?.length })));
-      
-      // 🔍 DEBUG: Mostrar respuesta completa del servidor
-      console.log('📥 [LOGIN] Respuesta completa del servidor:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        hasAccessToken: !!result.access_token,
-        hasRefreshToken: !!result.refresh_token,
-        hasExpiresIn: !!result.expires_in,
-        responseKeys: Object.keys(result),
-        accessTokenType: typeof result.access_token,
-        accessTokenValue: result.access_token,
-        accessTokenLength: result.access_token?.length || 0,
-        fullResponse: JSON.stringify(result, null, 2)
-      });
-      
       if (!response.ok) {
-        console.error('❌ [LOGIN] Error en respuesta del servidor:', {
-          status: response.status,
-          result: result
-        });
         // Devolver mensaje del backend (detail o message) sin lanzar excepción
         return {
           success: false,
@@ -162,35 +97,11 @@ class AuthService {
         };
       }
       if (result.access_token) {
-        console.log('🔑 [LOGIN] Token recibido del servidor:', this.safeTokenLog(result.access_token, 'access_token'));
-        console.log('🔑 [LOGIN] Análisis detallado del token:', {
-          token: result.access_token,
-          tokenType: typeof result.access_token,
-          isString: typeof result.access_token === 'string',
-          isEmpty: !result.access_token || result.access_token.length === 0,
-          isTooShort: result.access_token.length < 50,
-          startsWithSpace: result.access_token.startsWith(' ') || result.access_token.startsWith('\t'),
-          endsWithSpace: result.access_token.endsWith(' ') || result.access_token.endsWith('\t'),
-          originalLength: result.access_token.length,
-          trimmedLength: result.access_token.trim().length,
-          first50Chars: result.access_token.substring(0, 50),
-          last50Chars: result.access_token.length > 50 ? result.access_token.substring(result.access_token.length - 50) : 'N/A'
-        });
-        
         this.setToken(result.access_token);
         
         // Store refresh_token if provided
         if (result.refresh_token) {
-          console.log('🔄 [LOGIN] Refresh token recibido del servidor:', this.safeTokenLog(result.refresh_token, 'refresh_token'));
-          console.log('🔄 [LOGIN] Análisis del refresh token:', {
-            token: result.refresh_token,
-            tokenType: typeof result.refresh_token,
-            length: result.refresh_token.length,
-            isTooShort: result.refresh_token.length < 50
-          });
           this.setRefreshToken(result.refresh_token);
-        } else {
-          console.warn('⚠️ [LOGIN] No se recibió refresh_token del servidor');
         }
         
         // Store token expiry time
@@ -431,17 +342,13 @@ class AuthService {
 
   // Refrescar token
   async refreshToken(): Promise<AuthResponse> {
-    console.log('🔄 [REFRESH_TOKEN] Iniciando proceso de refresh token');
-    
     // If already refreshing, return the existing promise
     if (this.isRefreshing && this.refreshPromise) {
-      console.log('🔄 [REFRESH_TOKEN] Ya hay un refresh en progreso, reutilizando promesa');
       return this.refreshPromise;
     }
 
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
-      console.error('❌ [REFRESH_TOKEN] No hay refresh token disponible');
       this.logout();
       return {
         success: false,
@@ -450,22 +357,18 @@ class AuthService {
       };
     }
 
-    console.log('🔄 [REFRESH_TOKEN] Refresh token obtenido, iniciando refresh:', this.safeTokenLog(refreshToken, 'refresh_token'));
-
     // Set refreshing flag and create promise
     this.isRefreshing = true;
     this.refreshPromise = this.performRefresh(refreshToken);
 
     try {
       const result = await this.refreshPromise;
-      console.log('✅ [REFRESH_TOKEN] Refresh completado exitosamente');
       return result;
     } finally {
       // Reset refreshing state after a short delay to allow queued requests to complete
       setTimeout(() => {
         this.isRefreshing = false;
         this.refreshPromise = null;
-        console.log('🔄 [REFRESH_TOKEN] Estado de refresh reseteado');
       }, 100);
     }
   }
@@ -473,23 +376,6 @@ class AuthService {
   private async performRefresh(refreshToken: string): Promise<AuthResponse> {
     try {
       const fullUrl = `${this.url}${this.baseUrl}/refresh`;
-      console.log('📤 [PERFORM_REFRESH] Enviando petición de refresh:', {
-        url: fullUrl,
-        refreshTokenPreview: this.safeTokenLog(refreshToken, 'refresh_token'),
-        refreshTokenLength: refreshToken.length,
-        hasSpaces: refreshToken !== refreshToken.trim(),
-        isTooShort: refreshToken.length < 50,
-        warning: refreshToken.length < 50 ? '⚠️ REFRESH TOKEN SOSPECHOSAMENTE CORTO' : 'OK',
-        payload: JSON.stringify({ refresh_token: refreshToken })
-      });
-      
-      if (refreshToken.length < 50) {
-        console.error('❌ [PERFORM_REFRESH] ERROR: Refresh token demasiado corto!', {
-          token: refreshToken,
-          length: refreshToken.length
-        });
-      }
-      
       const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
@@ -498,41 +384,7 @@ class AuthService {
         body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
-      console.log('📥 [PERFORM_REFRESH] Respuesta recibida:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-
       const result = await response.json();
-      
-      // 🔍 DEBUG CRÍTICO: Mostrar respuesta RAW del servidor SIN SANITIZACIÓN
-      console.log('🔴 [PERFORM_REFRESH] RESPUESTA RAW DEL SERVIDOR (SIN SANITIZACIÓN):', result);
-      console.log('🔴 [PERFORM_REFRESH] Tipo de result:', typeof result);
-      console.log('🔴 [PERFORM_REFRESH] result.access_token RAW:', result.access_token);
-      console.log('🔴 [PERFORM_REFRESH] result.access_token tipo:', typeof result.access_token);
-      console.log('🔴 [PERFORM_REFRESH] result.access_token length:', result.access_token?.length);
-      console.log('🔴 [PERFORM_REFRESH] result completo stringificado:', JSON.stringify(result));
-      console.log('🔴 [PERFORM_REFRESH] Keys del objeto result:', Object.keys(result));
-      console.log('🔴 [PERFORM_REFRESH] Valores de todas las keys:', Object.keys(result).map(key => ({ key, value: result[key], type: typeof result[key], length: result[key]?.length })));
-      
-      console.log('📥 [PERFORM_REFRESH] Datos de respuesta:', {
-        hasAccessToken: !!result.access_token,
-        hasRefreshToken: !!result.refresh_token,
-        hasExpiresIn: !!result.expires_in,
-        accessTokenPreview: result.access_token ? this.safeTokenLog(result.access_token, 'new_access_token') : 'none',
-        accessTokenLength: result.access_token?.length || 0,
-        refreshTokenLength: result.refresh_token?.length || 0,
-        fullResponse: JSON.stringify(result, null, 2)
-      });
-      
-      if (result.access_token && result.access_token.length < 50) {
-        console.error('❌ [PERFORM_REFRESH] ERROR: Nuevo access token demasiado corto!', {
-          token: result.access_token,
-          length: result.access_token.length
-        });
-      }
       
       if (!response.ok) {
         // Refresh token expired or invalid - force logout
@@ -555,12 +407,10 @@ class AuthService {
 
       // Token rotation: update both access_token and refresh_token
       if (result.access_token) {
-        console.log('🔄 [PERFORM_REFRESH] Actualizando access token con nuevo token recibido');
         this.setToken(result.access_token);
       }
       
       if (result.refresh_token) {
-        console.log('🔄 [PERFORM_REFRESH] Actualizando refresh token con nuevo token recibido');
         this.setRefreshToken(result.refresh_token);
       }
       
@@ -570,7 +420,6 @@ class AuthService {
       }
 
       // Retry all pending requests with new token
-      console.log('🔄 [PERFORM_REFRESH] Reintentando', this.pendingRequests.length, 'peticiones pendientes con nuevo token');
       this.retryPendingRequests();
 
       return {
@@ -629,121 +478,40 @@ class AuthService {
     const token = this.getToken();
     
     if (!token) {
-      console.error('❌ [MAKE_REQUEST] No hay token disponible');
       throw new Error('No authentication token - session terminated');
     }
 
     // 🔥 FIX: Asegurar que el token esté limpio (sin espacios) antes de usarlo
     const cleanToken = token.trim();
-    
-    if (cleanToken.length < 50) {
-      console.error('❌ [MAKE_REQUEST] ERROR: Token demasiado corto para enviar!', {
-        token: cleanToken,
-        length: cleanToken.length,
-        url,
-        method: options.method || 'GET'
-      });
-    }
-    
-    const authHeader = `Bearer ${cleanToken}`;
-    console.log('📤 [MAKE_REQUEST] Enviando petición autenticada:', {
-      url,
-      fullUrl: url.startsWith('http') ? url : `${this.url}${url}`,
-      method: options.method || 'GET',
-      tokenPreview: this.safeTokenLog(cleanToken, 'token'),
-      authHeaderPreview: authHeader.length > 50 ? `${authHeader.substring(0, 30)}...${authHeader.substring(authHeader.length - 20)}` : authHeader,
-      authHeaderLength: authHeader.length,
-      hasSpacesInToken: cleanToken !== cleanToken.trim(),
-      tokenLength: cleanToken.length,
-      isTokenValid: cleanToken.length >= 50
-    });
 
     const customHeaders = (options.headers || {}) as Record<string, string>;
     const headers: HeadersInit = {
       ...customHeaders,
-      'Authorization': authHeader,
+      'Authorization': `Bearer ${cleanToken}`,
     };
 
     if (!(options.body instanceof FormData) && !customHeaders['Content-Type']) {
       headers['Content-Type' as keyof HeadersInit] = 'application/json';
     }
 
-      const isAbsoluteUrl = url.startsWith('http://') || url.startsWith('https://');
-      const fullUrl = isAbsoluteUrl ? url : `${this.url}${url}`;
+    const isAbsoluteUrl = url.startsWith('http://') || url.startsWith('https://');
+    const fullUrl = isAbsoluteUrl ? url : `${this.url}${url}`;
     
-      console.log('📤 [MAKE_REQUEST] Detalles de la petición:', {
-        fullUrl,
-        method: options.method || 'GET',
-        headers: Object.keys(headers),
-        authorizationHeader: headers['Authorization'] ? `${headers['Authorization'].substring(0, 30)}...` : 'missing'
-      });
-    
-      const { headers: _, ...restOptions } = options;
-      const response = await fetch(fullUrl, { ...restOptions, headers });
-      
-      console.log('📥 [MAKE_REQUEST] Respuesta recibida:', {
-        url: fullUrl,
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-      
-      return response;
+    const { headers: _, ...restOptions } = options;
+    return fetch(fullUrl, { ...restOptions, headers });
   }
 
   // Métodos privados para manejo de localStorage
   public setToken(token: string): void {
     // 🔥 FIX: Limpiar el token (eliminar espacios) antes de guardarlo
     const cleanToken = token.trim();
-    console.log('💾 [SET_TOKEN] Guardando token en localStorage:', {
-      original: this.safeTokenLog(token, 'original'),
-      cleaned: this.safeTokenLog(cleanToken, 'cleaned'),
-      hadSpaces: token.length !== cleanToken.length,
-      spaceDiff: token.length - cleanToken.length,
-      originalLength: token.length,
-      cleanedLength: cleanToken.length,
-      isTooShort: cleanToken.length < 50,
-      warning: cleanToken.length < 50 ? '⚠️ TOKEN SOSPECHOSAMENTE CORTO' : 'OK'
-    });
-    
-    if (cleanToken.length < 50) {
-      console.error('❌ [SET_TOKEN] ERROR: Token demasiado corto para ser válido!', {
-        token: cleanToken,
-        length: cleanToken.length,
-        expectedMinLength: 50
-      });
-    }
-    
     localStorage.setItem(this.tokenKey, cleanToken);
-    
-    // Verificar que se guardó correctamente
-    const savedToken = localStorage.getItem(this.tokenKey);
-    console.log('💾 [SET_TOKEN] Token guardado. Verificación:', {
-      saved: savedToken ? this.safeTokenLog(savedToken, 'saved') : 'null',
-      matches: savedToken === cleanToken,
-      savedLength: savedToken?.length || 0
-    });
   }
 
   private getToken(): string | null {
     const token = localStorage.getItem(this.tokenKey);
     // 🔥 FIX: Limpiar el token al obtenerlo por si acaso tiene espacios
-    if (token) {
-      const cleaned = token.trim();
-      if (token.length !== cleaned.length) {
-        console.warn('⚠️ [GET_TOKEN] Token tenía espacios, limpiado:', {
-          original: this.safeTokenLog(token, 'original'),
-          cleaned: this.safeTokenLog(cleaned, 'cleaned'),
-          spaceDiff: token.length - cleaned.length
-        });
-      } else {
-        console.log('📖 [GET_TOKEN] Token obtenido de localStorage:', this.safeTokenLog(cleaned, 'token'));
-      }
-      return cleaned;
-    }
-    console.log('📖 [GET_TOKEN] No hay token en localStorage');
-    return null;
+    return token ? token.trim() : null;
   }
 
   private removeToken(): void {
@@ -754,34 +522,13 @@ class AuthService {
   private setRefreshToken(refreshToken: string): void {
     // 🔥 FIX: Limpiar el refresh token antes de guardarlo
     const cleanToken = refreshToken.trim();
-    console.log('💾 [SET_REFRESH_TOKEN] Guardando refresh token en localStorage:', {
-      original: this.safeTokenLog(refreshToken, 'original'),
-      cleaned: this.safeTokenLog(cleanToken, 'cleaned'),
-      hadSpaces: refreshToken.length !== cleanToken.length,
-      spaceDiff: refreshToken.length - cleanToken.length
-    });
     localStorage.setItem(this.refreshTokenKey, cleanToken);
-    console.log('💾 [SET_REFRESH_TOKEN] Refresh token guardado exitosamente');
   }
 
   private getRefreshToken(): string | null {
     const token = localStorage.getItem(this.refreshTokenKey);
     // 🔥 FIX: Limpiar el refresh token al obtenerlo
-    if (token) {
-      const cleaned = token.trim();
-      if (token.length !== cleaned.length) {
-        console.warn('⚠️ [GET_REFRESH_TOKEN] Refresh token tenía espacios, limpiado:', {
-          original: this.safeTokenLog(token, 'original'),
-          cleaned: this.safeTokenLog(cleaned, 'cleaned'),
-          spaceDiff: token.length - cleaned.length
-        });
-      } else {
-        console.log('📖 [GET_REFRESH_TOKEN] Refresh token obtenido de localStorage:', this.safeTokenLog(cleaned, 'refresh_token'));
-      }
-      return cleaned;
-    }
-    console.log('📖 [GET_REFRESH_TOKEN] No hay refresh token en localStorage');
-    return null;
+    return token ? token.trim() : null;
   }
 
   private removeRefreshToken(): void {
