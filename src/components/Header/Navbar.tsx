@@ -169,8 +169,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   transition={getMobileOptimizedTransition({ delay: 0.1 })}
                 >
                   {isScrolled 
-                    ? '🚚 Distribución NACIONAL | 📞 0800-DROZAINKA'
-                    : "🚚 Distribución a Toda Venezuela | 📞 Atención comercial: 0424-1806018"
+                    ? '🚚 DISTRIBUCIÓN A NIVEL NACIONAL | 📞 0800-DROZAINKA'
+                    : "🚚 DISTRIBUCIÓN A TODA VENEZUELA | 📞 ATENCIÓN COMERCIAL: 0424-1806018"
                   }
                 </motion.p>
               </div>
