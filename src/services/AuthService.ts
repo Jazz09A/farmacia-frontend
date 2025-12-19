@@ -95,12 +95,44 @@ class AuthService {
   // Login
   async login(data: LoginData): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${this.url}${this.baseUrl}/login`, {
+      const loginUrl = `${this.url}${this.baseUrl}/login`;
+      const requestBody = JSON.stringify(data);
+      
+      // 🔍 DEBUG: Mostrar qué se está enviando
+      console.log('🔵 [LOGIN] Enviando petición:', {
+        url: loginUrl,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: requestBody,
+        data: data
       });
+      
+      const response = await fetch(loginUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: requestBody,
+      });
+      
+      // 🔍 DEBUG: Mostrar respuesta HTTP antes de parsear JSON
+      console.log('🔵 [LOGIN] Respuesta HTTP recibida:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries()),
+        contentType: response.headers.get('content-type')
+      });
+      
       const result = await response.json();
+      
+      // 🔍 DEBUG CRÍTICO: Mostrar respuesta RAW del servidor SIN SANITIZACIÓN
+      console.log('🔴 [LOGIN] RESPUESTA RAW DEL SERVIDOR (SIN SANITIZACIÓN):', result);
+      console.log('🔴 [LOGIN] Tipo de result:', typeof result);
+      console.log('🔴 [LOGIN] result.access_token RAW:', result.access_token);
+      console.log('🔴 [LOGIN] result.access_token tipo:', typeof result.access_token);
+      console.log('🔴 [LOGIN] result.access_token length:', result.access_token?.length);
+      console.log('🔴 [LOGIN] result completo stringificado:', JSON.stringify(result));
+      console.log('🔴 [LOGIN] Keys del objeto result:', Object.keys(result));
+      console.log('🔴 [LOGIN] Valores de todas las keys:', Object.keys(result).map(key => ({ key, value: result[key], type: typeof result[key], length: result[key]?.length })));
       
       // 🔍 DEBUG: Mostrar respuesta completa del servidor
       console.log('📥 [LOGIN] Respuesta completa del servidor:', {
@@ -474,6 +506,16 @@ class AuthService {
       });
 
       const result = await response.json();
+      
+      // 🔍 DEBUG CRÍTICO: Mostrar respuesta RAW del servidor SIN SANITIZACIÓN
+      console.log('🔴 [PERFORM_REFRESH] RESPUESTA RAW DEL SERVIDOR (SIN SANITIZACIÓN):', result);
+      console.log('🔴 [PERFORM_REFRESH] Tipo de result:', typeof result);
+      console.log('🔴 [PERFORM_REFRESH] result.access_token RAW:', result.access_token);
+      console.log('🔴 [PERFORM_REFRESH] result.access_token tipo:', typeof result.access_token);
+      console.log('🔴 [PERFORM_REFRESH] result.access_token length:', result.access_token?.length);
+      console.log('🔴 [PERFORM_REFRESH] result completo stringificado:', JSON.stringify(result));
+      console.log('🔴 [PERFORM_REFRESH] Keys del objeto result:', Object.keys(result));
+      console.log('🔴 [PERFORM_REFRESH] Valores de todas las keys:', Object.keys(result).map(key => ({ key, value: result[key], type: typeof result[key], length: result[key]?.length })));
       
       console.log('📥 [PERFORM_REFRESH] Datos de respuesta:', {
         hasAccessToken: !!result.access_token,
