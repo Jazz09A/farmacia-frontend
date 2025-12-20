@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductPlaceholder from './ProductPlaceholder';
 import ImageSkeleton from './ImageSkeleton';
+import { authenticatedImageCache } from '../../utils/authenticatedImageCache';
 
 interface AuthenticatedImageProps {
   src: string;
@@ -10,13 +11,14 @@ interface AuthenticatedImageProps {
   width?: number;
   height?: number;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  priority?: boolean;
   onLoad?: () => void;
   onError?: () => void;
 }
 
 /**
  * Componente para cargar imágenes que requieren autenticación
- * Convierte la URL a blob URL usando fetch con token
+ * Usa un sistema de caché compartido para evitar múltiples fetches
  */
 export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
   src,
@@ -25,6 +27,7 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
   width,
   height,
   size = 'md',
+  priority = false,
   onLoad,
   onError
 }) => {
@@ -47,39 +50,14 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
       return;
     }
 
-    // Cargar imagen con autenticación
+    // Cargar imagen usando el caché
     const loadAuthenticatedImage = async () => {
       try {
         setIsLoading(true);
         setHasError(false);
 
-        // Obtener token del almacenamiento (intentar ambos nombres posibles)
-        const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
-        
-        if (!token) {
-          throw new Error('No hay token de autenticación');
-        }
-
-        // Construir URL completa si es relativa
-        const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
-        const imageUrl = src.startsWith('http') ? src : `${baseUrl}${src}`;
-
-        // Hacer fetch de la imagen con el token
-        const response = await fetch(imageUrl, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`Error al cargar imagen: ${response.status}`);
-        }
-
-        // Convertir respuesta a blob
-        const blob = await response.blob();
-        
-        // Crear URL local del blob
-        const url = URL.createObjectURL(blob);
+        // Usar el caché compartido
+        const url = await authenticatedImageCache.getImage(src, priority);
         
         if (mountedRef.current) {
           setBlobUrl(url);
@@ -98,14 +76,14 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
 
     loadAuthenticatedImage();
 
-    // Cleanup: revocar URL cuando el componente se desmonte
+    // Cleanup: liberar referencia cuando el componente se desmonte
     return () => {
       mountedRef.current = false;
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
+      if (src.includes('/api/v1/images/')) {
+        authenticatedImageCache.releaseImage(src);
       }
     };
-  }, [src, onLoad, onError]);
+  }, [src, priority, onLoad, onError]);
 
   // Determinar objectFit basado en className o usar 'contain' por defecto
   const objectFit = className.includes('object-cover') ? 'cover' : 
@@ -144,7 +122,7 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
             className={className}
             width={width}
             height={height}
-            loading="lazy"
+            loading={priority ? "eager" : "lazy"}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}

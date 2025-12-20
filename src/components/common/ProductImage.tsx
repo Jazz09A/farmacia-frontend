@@ -81,6 +81,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
         width={dimensions.width}
         height={dimensions.height}
         size={size}
+        priority={priority}
         onError={() => {
           // Fallback a placeholder si falla
         }}

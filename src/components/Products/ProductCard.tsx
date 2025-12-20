@@ -9,11 +9,13 @@ import ProductImage from '../common/ProductImage';
 interface ProductCardProps {
   product: Product;
   className?: string;
+  priority?: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
-  className = ''
+  className = '',
+  priority = false
 }) => {
   const { formatPriceFromBackend } = useGlobalCurrency();
   const isCompact = className.includes('text-sm');
@@ -55,6 +57,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               alt={product.name}
               className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
               size={isCompact ? "md" : "lg"}
+              priority={priority}
             />
           </div>
           

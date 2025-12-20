@@ -9,6 +9,7 @@ import { ProductCardSkeleton } from '../components/Skeleton/ProductCardSkeleton'
 import MapSection from '../components/Map/MapSection';
 import { useProductsQuery } from '../hooks/queries/useProductsQueries';
 import { usePrefetchNextPage } from '../hooks/useImagePrefetch';
+import { authenticatedImageCache } from '../utils/authenticatedImageCache';
 
 // Especialidades Farmacéuticas
 const medicalCategories = [
@@ -100,8 +101,44 @@ const CatalogPage: React.FC = () => {
     setCurrentPage(page);
   };
 
-  // Prefetch de imágenes de la página actual
+  // Prefetch de imágenes de la página actual (más agresivo)
   usePrefetchNextPage(products, !isLoading && products.length > 0);
+  
+  // Precargar imágenes visibles inmediatamente
+  useEffect(() => {
+    if (!isLoading && products.length > 0) {
+      // Precargar las primeras 12 imágenes (las que están visibles)
+      const visibleProducts = products.slice(0, 12);
+      const imageUrls = visibleProducts
+        .map(product => {
+          if (product.images && product.images.length >= 2) {
+            return product.images[1];
+          }
+          return product.image || (product.images && product.images[0]);
+        })
+        .filter((url): url is string => !!url && url.includes('/api/v1/images/'));
+      
+      // Precargar en paralelo con prioridad alta
+      if (imageUrls.length > 0 && typeof window !== 'undefined') {
+        // Usar requestIdleCallback para no bloquear, pero con timeout corto
+        const prefetchImages = () => {
+          imageUrls.forEach(url => {
+            const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
+            const imageUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+            authenticatedImageCache.getImage(imageUrl, true).catch(() => {
+              // Silenciar errores de prefetch
+            });
+          });
+        };
+        
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(prefetchImages, { timeout: 500 });
+        } else {
+          setTimeout(prefetchImages, 100);
+        }
+      }
+    }
+  }, [products, isLoading]);
 
   // Icono dinámico para categorías
   const getCategoryIcon = (iconName: string) => {
@@ -362,8 +399,12 @@ const CatalogPage: React.FC = () => {
                     ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
                     : 'grid-cols-1'
                 }`}>
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                  {filteredProducts.map((product, index) => (
+                    <ProductCard 
+                      key={product.id} 
+                      product={product} 
+                      priority={index < 12} // Prioridad para las primeras 12 imágenes
+                    />
                   ))}
                 </div>
               ) : (
