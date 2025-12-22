@@ -125,32 +125,32 @@ const WhyUsPage: React.FC = () => {
   // Team members data
   const teamMembers = [
     {
-      name: 'Dr. Roberto Drozainka',
-      role: 'CEO & Fundador',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        name: 'Henry Rojo',
+      role: 'Gerente Comercial',
+      image: '/equipo/HenryRojo.webp',
       experience: '20+ años',
-      specialty: 'Distribución Farmacéutica'
+      specialty: 'Comercialización Farmacéutica'
     },
     {
-      name: 'Dra. Carmen Herrera',
-      role: 'Directora Médica',
-      image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+      name: 'Nellyskar Navas',
+      role: 'Gerente de Administración',
+      image: '/equipo/Nellyskar.webp',
       experience: '15+ años',
-      specialty: 'Farmacología Clínica'
+      specialty: 'Administración Farmacéutica'
     },
     {
-      name: 'Ing. Miguel Torres',
-      role: 'Director de Operaciones',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-      experience: '12+ años',
+      name: 'Irvannys Bravo',
+      role: 'Gerente Comercial',
+      image: '/equipo/Irvannys.webp',
+      experience: '10+ años',
       specialty: 'Logística Farmacéutica'
     },
     {
-      name: 'Lic. Patricia Vega',
-      role: 'Directora Comercial',
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-      experience: '10+ años',
-      specialty: 'Desarrollo de Negocios'
+      name: 'Walter Ramos',
+      role: 'Gerente de Ventas y Mercadeo',
+      image: '/equipo/WalterRamos.webp',
+      experience: '8+ años',
+      specialty: 'Ventas y Mercadeo Farmacéutico'
     }
   ];
 
