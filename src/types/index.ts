@@ -591,6 +591,7 @@ export interface ArticleImageResponse {
 export interface ArticleDetail {
   co_art: string;
   art_des: string;
+  description: string | null;
   modelo: string | null;
   ref: string | null;
   category_code: string | null;

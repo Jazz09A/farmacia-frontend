@@ -13,7 +13,6 @@ const WhyUsPage: React.FC = () => {
   const facilityImages = [
     {
       src: '/images-local/establecimiento_Drozainka.webp',
-      title: 'Nuestras Instalaciones',
       description: 'Instalaciones modernas y equipadas para la distribución farmacéutica'
     }
   ];
@@ -192,13 +191,13 @@ const WhyUsPage: React.FC = () => {
                   >
                     <img
                       src={facilityImages[currentImageIndex].src}
-                      alt={facilityImages[currentImageIndex].title}
+                      alt={facilityImages[currentImageIndex].description}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                     <div className="absolute bottom-8 left-8 text-white">
                       <h3 className="text-2xl lg:text-3xl font-bold mb-2">
-                        {facilityImages[currentImageIndex].title}
+                        {facilityImages[currentImageIndex].description}
                       </h3>
                       <p className="text-white/90 text-lg">
                         {facilityImages[currentImageIndex].description}

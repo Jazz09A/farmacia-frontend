@@ -273,7 +273,7 @@ class ProductService {
       patology: '',
       price: finalPrice,
       currency: currency, // Moneda del precio
-      description: article.art_des,
+      description: article.description || article.art_des,
       ingredients: [],
       image: images[0],
       images: images,

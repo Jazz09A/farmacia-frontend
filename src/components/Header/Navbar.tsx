@@ -99,8 +99,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { name: 'INICIO', href: '/', icon: Stethoscope },
     { name: '¿POR QUÉ NOSOTROS?', href: '/why-us', icon: HelpCircle },
     { name: 'CATÁLOGO', href: '/catalog', icon: ShoppingCart },
-    { name: 'CONVERTIRSE EN CLIENTE DROZAINKA', href: '/cliente-drozainka', icon: UserIcon },
-    { name: '¿QUIERES SER PROVEEDOR DROZAINKA?', href: '/proveedor-drozainka', icon: Briefcase },
+    { name: '¿QUIERES SER PROVEEDOR?', href: '/proveedor-drozainka', icon: Briefcase },
     { name: 'BLOG', href: '/blog', icon: BookText },
     { name: 'TRABAJA CON NOSOTROS', href: '/trabaja-con-nosotros', icon: Briefcase },
   ];
