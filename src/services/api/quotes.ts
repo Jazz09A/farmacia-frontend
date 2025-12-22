@@ -155,7 +155,7 @@ class QuoteService {
     }
 
     const queryString = queryParams.toString();
-    const url = `${this.baseUrl}/verificar${queryString ? `?${queryString}` : ''}`;
+    const url = `${this.baseUrl}verificar${queryString ? `?${queryString}` : ''}`;
 
     const response = await authService.authenticatedFetch(url, {
       method: 'POST',
