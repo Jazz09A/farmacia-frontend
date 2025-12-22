@@ -29,11 +29,8 @@ const QueremosConocertePage: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const availablePositions = [
-    'Farmacéutico',
-    'Asistente de Farmacia',
-    'Vendedor',
     'Representante de Ventas',
-    'Analista de Inventario',
+    'Analista de Almacen',
     'Auxiliar Administrativo',
     'Contador',
     'Recursos Humanos',
@@ -108,7 +105,7 @@ const QueremosConocertePage: React.FC = () => {
             </h1>
             
             <p className="text-lg text-gray-600 mb-8">
-              Gracias por tu interés en trabajar con Drozainka. 
+              Gracias por tu interés en trabajar con Drozainka C.A.
               Hemos recibido tu CV y postulación. Nos pondremos en contacto contigo pronto.
             </p>
             

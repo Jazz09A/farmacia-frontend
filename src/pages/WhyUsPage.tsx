@@ -1,36 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Play, 
-  Pause, 
-  ChevronLeft, 
-  ChevronRight, 
-  Shield, 
-  Clock, 
-  Truck, 
-  Award, 
-  Users, 
-  Heart,
-  Star,
-  CheckCircle,
-  ArrowRight,
-  MapPin,
-  Phone,
-  Mail,
-  Globe,
-  Zap,
-  Target,
-  TrendingUp,
-  Building2,
-  Leaf,
-  HandHeart,
-  Quote,
-  Camera,
-  Video,
-  Download,
-  ExternalLink
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Play, ChevronLeft, ChevronRight, Clock, Award, Star, Zap, Target, TrendingUp, Quote } from 'lucide-react';
 import { ContactForm } from '../components/ContactUs/ContactForm';
 
 const WhyUsPage: React.FC = () => {
@@ -132,11 +102,11 @@ const WhyUsPage: React.FC = () => {
       specialty: 'Comercialización Farmacéutica'
     },
     {
-      name: 'Nellyskar Navas',
-      role: 'Gerente de Administración',
-      image: '/equipo/Nellyskar.webp',
+      name: 'Jesus Rojo',
+      role: 'Almacen y logistica',
+      image: '/equipo/Jesus Rojo.webp',
       experience: '15+ años',
-      specialty: 'Administración Farmacéutica'
+      specialty: 'Almacen y logisticas'
     },
     {
       name: 'Irvannys Bravo',
@@ -151,34 +121,6 @@ const WhyUsPage: React.FC = () => {
       image: '/equipo/WalterRamos.webp',
       experience: '8+ años',
       specialty: 'Ventas y Mercadeo Farmacéutico'
-    }
-  ];
-
-  // Certifications data
-  const certifications = [
-    {
-      name: 'ISO 9001:2015',
-      description: 'Sistema de Gestión de Calidad',
-      image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      year: '2020'
-    },
-    {
-      name: 'Buenas Prácticas de Almacenamiento',
-      description: 'Certificación BPA',
-      image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      year: '2021'
-    },
-    {
-      name: 'Registro Sanitario',
-      description: 'Autorización INVIMA',
-      image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      year: '2019'
-    },
-    {
-      name: 'Certificación Ambiental',
-      description: 'ISO 14001:2015',
-      image: 'https://images.unsplash.com/photo-1569163139394-de4466c0e3b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      year: '2022'
     }
   ];
 
@@ -217,131 +159,6 @@ const WhyUsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Video */}
-        <div className="absolute inset-0 z-0">
-          <div className="relative w-full h-full bg-gradient-to-br from-medical-blue-600 to-medical-blue-800">
-            <div className="absolute inset-0 bg-black/30"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
-          </div>
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 medical-container text-center text-white">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-          >
-            <motion.div
-              className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-full text-sm font-semibold mb-8"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <Shield className="w-5 h-5" />
-              <span>¿Por qué elegirnos?</span>
-            </motion.div>
-
-            <motion.h1
-              className="text-4xl md:text-5xl font-bold leading-tight mb-8"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
-              Tu socio estratégico en{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300">
-                distribución farmacéutica
-              </span>
-            </motion.h1>
-
-            <motion.p
-              className="text-xl lg:text-2xl text-white/90 leading-relaxed max-w-4xl mx-auto mb-12"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-            >
-              Con más de 15 años de experiencia, somos el distribuidor farmacéutico 
-              más confiable de Venezuela, comprometidos con la excelencia y la 
-              innovación en cada entrega.
-            </motion.p>
-
-            {/* Video Play Button */}
-            <motion.div
-              className="flex justify-center mb-12"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
-            >
-              <motion.button
-                className="group relative w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsVideoPlaying(!isVideoPlaying)}
-              >
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                  {isVideoPlaying ? (
-                    <Pause className="w-6 h-6 text-medical-blue-600 ml-0.5" />
-                  ) : (
-                    <Play className="w-6 h-6 text-medical-blue-600 ml-1" />
-                  )}
-                </div>
-              </motion.button>
-            </motion.div>
-
-            {/* Stats */}
-            <motion.div
-              className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.9 }}
-            >
-              {[
-                { number: '1200+', label: 'Farmacias Satisfechas' },
-                { number: '15+', label: 'Años de Experiencia' },
-                { number: '24/7', label: 'Servicio Disponible' },
-                { number: '99.8%', label: 'Tiempo de Entrega' }
-              ].map((stat, index) => (
-                <motion.div
-                  key={index}
-                  className="text-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1.1 + index * 0.1 }}
-                >
-                  <motion.div
-                    className="text-3xl lg:text-4xl font-bold text-white mb-2"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 15, delay: 1.3 + index * 0.1 }}
-                  >
-                    {stat.number}
-                  </motion.div>
-                  <p className="text-white/80 font-medium">{stat.label}</p>
-                </motion.div>
-              ))}
-            </motion.div>
-          </motion.div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <motion.div
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.5 }}
-        >
-          <motion.div
-            className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center"
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <div className="w-1 h-3 bg-white/70 rounded-full mt-2"></div>
-          </motion.div>
-        </motion.div>
-      </section>
-
       {/* Facilities Carousel Section */}
       <section className="py-24 bg-white">
         <div className="medical-container">
