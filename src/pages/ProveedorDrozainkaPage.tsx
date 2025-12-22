@@ -21,12 +21,17 @@ import {
   MapPin
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { emailService } from '../services/EmailService';
+
 const ProveedorDrozainkaPage: React.FC = () => {
   const [formData, setFormData] = useState({
     companyName: '',
     contactPerson: '',
     email: '',
     phone: '',
+    address: '',
+    city: '',
+    state: '',
     supplierType: '',
     productCategory: '',
     yearsInBusiness: '',
@@ -51,11 +56,33 @@ const ProveedorDrozainkaPage: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simular envío del formulario
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsSubmitting(false);
-    setIsSubmitted(true);
+    try {
+      // Dividir contactPerson en nombre y apellido si es posible
+      const contactParts = formData.contactPerson.trim().split(' ');
+      const name = contactParts[0] || '';
+      const apellido = contactParts.slice(1).join(' ') || '';
+
+      // Enviar formulario con EmailJS
+      await emailService.sendContactForm({
+        title: 'Solicitud de Proveedor',
+        name: name,
+        apellido: apellido,
+        farmacia_nombre: formData.companyName,
+        user_email: formData.email,
+        phone: formData.phone,
+        estado: formData.state,
+        direccion: formData.address,
+        email: formData.email,
+        mensaje: formData.specialRequirements || '',
+      });
+      
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error('Error al enviar formulario:', error);
+      alert('Error al enviar el formulario. Por favor, intenta nuevamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const supplierTypes = [
