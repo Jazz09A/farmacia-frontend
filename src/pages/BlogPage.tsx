@@ -3,7 +3,8 @@ import BlogPostCard from '../components/Blog/BlogPostCard';
 import { usePublicPostsQuery, usePublicCategoriesQuery } from '../hooks/queries/useBlogQueries';
 import { Search, Calendar, Tag, TrendingUp, Loader2 } from 'lucide-react';
 import { BlogPostSkeleton, SkeletonBase } from '../components/Skeleton';
-
+import { BlogCategory } from '../types';
+import { BlogPostListItem } from '../types';
 const BlogPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
