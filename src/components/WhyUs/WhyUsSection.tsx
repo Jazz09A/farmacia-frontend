@@ -92,10 +92,20 @@ export const WhyUsSection: React.FC = () => {
           >
             <div className="relative rounded-2xl overflow-hidden shadow-2xl w-full max-w-md mx-auto">
               {/* Video Placeholder */}
-              <div className="relative w-full h-72 lg:h-80 bg-gradient-to-br from-medical-blue-600 to-medical-blue-800 flex items-center justify-center">
+              <div className="relative w-full h-72 lg:h-80 flex items-center justify-center">
+                {/* Background Image */}
+                <img 
+                  src="/equipo/HenryRojo.webp" 
+                  alt="Henry Rojo - Grupo Drozainka"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                
+                {/* Overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-medical-blue-900/40 to-medical-blue-800/60" />
+                
                 {/* Play Button Overlay */}
                 <motion.div
-                  className="absolute inset-0 bg-black/20 flex items-center justify-center cursor-pointer group"
+                  className="absolute inset-0 flex items-center justify-center cursor-pointer group"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -110,14 +120,9 @@ export const WhyUsSection: React.FC = () => {
                   </div>
                 </motion.div>
                 
-                {/* Video Thumbnail/Preview */}
-                <div className="absolute inset-0 bg-gradient-to-br from-medical-blue-600/80 to-medical-blue-800/80 flex items-center justify-center">
-                  <div className="text-center text-white px-4">
-                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
+                {/* Video Thumbnail/Preview Text */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                  <div className="text-white">
                     <h3 className="text-lg font-semibold mb-1">Conoce Nuestra Historia</h3>
                     <p className="text-white/80 text-sm">Video corporativo - 2:30 min</p>
                   </div>

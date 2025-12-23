@@ -135,8 +135,8 @@ const QueremosConocertePage: React.FC = () => {
             alt="Establecimiento de Grupo Drozainka"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-medical-blue-600/20 to-medical-blue-800/20"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-medical-blue-900/70 via-medical-blue-800/55 to-medical-blue-700/45"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent"></div>
         </div>
 
         {/* Hero Content */}
@@ -157,7 +157,7 @@ const QueremosConocertePage: React.FC = () => {
             </motion.div>
 
             <motion.h1
-              className="text-4xl md:text-5xl font-bold leading-tight mb-8"
+              className="text-4xl md:text-5xl font-bold leading-tight mb-8 drop-shadow-[0_6px_18px_rgba(0,0,0,0.65)]"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
@@ -169,7 +169,7 @@ const QueremosConocertePage: React.FC = () => {
             </motion.h1>
 
             <motion.p
-              className="text-xl lg:text-2xl text-white/90 leading-relaxed max-w-4xl mx-auto mb-12"
+              className="text-xl lg:text-2xl text-white/95 leading-relaxed max-w-4xl mx-auto mb-12 drop-shadow-[0_4px_14px_rgba(0,0,0,0.55)]"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}

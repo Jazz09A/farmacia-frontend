@@ -192,14 +192,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* Desktop Navigation Menu */}
-            <div className="hidden lg:flex items-center space-x-1 flex-1 justify-center px-8">
+            <div className="hidden lg:flex items-center space-x-2 flex-1 justify-center px-4">
               {menuItems.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link key={item.name} to={item.href}>
                     <motion.div
-                      className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${getNavItemClasses(isActive)}`}
-                      whileHover={{ y: -2, scale: 1.05 }}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all duration-300 ${getNavItemClasses(isActive)}`}
+                      whileHover={{ y: -2, scale: 1.03 }}
                     >
                       {item.name}
                     </motion.div>
