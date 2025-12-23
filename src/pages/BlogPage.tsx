@@ -1,15 +1,17 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import BlogPostCard from '../components/Blog/BlogPostCard';
 import { usePublicPostsQuery, usePublicCategoriesQuery } from '../hooks/queries/useBlogQueries';
-import { Search, Calendar, Tag, TrendingUp } from 'lucide-react';
+import { Search, Calendar, Tag, TrendingUp, Loader2 } from 'lucide-react';
 import { BlogPostSkeleton, SkeletonBase } from '../components/Skeleton';
 
 const BlogPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isPageChanging, setIsPageChanging] = useState(false);
   
   const postsPerPage = 6;
+  const postsContainerRef = useRef<HTMLDivElement>(null);
 
   // Load categories
   const { data: categories = [], isLoading: isLoadingCategories } = usePublicCategoriesQuery();
@@ -49,9 +51,32 @@ const BlogPage: React.FC = () => {
     .slice(0, 4);
 
   const handlePageChange = useCallback((page: number) => {
+    if (page === currentPage) return;
+    
+    setIsPageChanging(true);
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+    
+    // Scroll suave hacia el contenedor de posts
+    if (postsContainerRef.current) {
+      const offsetTop = postsContainerRef.current.offsetTop - 120;
+      window.scrollTo({
+        top: offsetTop,
+        behavior: 'smooth'
+      });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentPage]);
+
+  // Desactivar estado de loading cuando terminan de cargar los posts
+  useEffect(() => {
+    if (!isLoadingPosts && isPageChanging) {
+      const timer = setTimeout(() => {
+        setIsPageChanging(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingPosts, isPageChanging]);
 
   const handleCategoryChange = useCallback((category: string) => {
     setSelectedCategory(category);
@@ -177,33 +202,48 @@ const BlogPage: React.FC = () => {
             )}
 
             {/* Blog Posts Grid */}
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                {[...Array(6)].map((_, index) => (
-                  <BlogPostSkeleton key={index} />
-                ))}
-              </div>
-            ) : posts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                {posts.map(post => (
-                  <BlogPostCard key={post.id} post={post} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
-                  <Search className="w-16 h-16 mx-auto" />
+            <div ref={postsContainerRef} className="relative">
+              {/* Overlay de loading al cambiar de página */}
+              {isPageChanging && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-center rounded-2xl transition-opacity duration-300">
+                  <div className="flex flex-col items-center gap-3 w-40">
+                    <div className="skeleton rounded-full h-14 w-14" />
+                    <div className="skeleton h-3 w-24 rounded-full" />
+                    <div className="skeleton h-3 w-16 rounded-full" />
+                  </div>
                 </div>
-                <h3 className="text-xl font-medium text-gray-900 mb-2">
-                  No se encontraron artículos
-                </h3>
-                <p className="text-gray-600">
-                  {searchTerm || selectedCategory !== 'all'
-                    ? 'Intenta ajustar tus filtros para encontrar lo que buscas.'
-                    : 'Aún no hay artículos publicados en el blog.'}
-                </p>
-              </div>
-            )}
+              )}
+
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                  {[...Array(6)].map((_, index) => (
+                    <BlogPostSkeleton key={index} />
+                  ))}
+                </div>
+              ) : posts.length > 0 ? (
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 transition-opacity duration-300 ${
+                  isPageChanging ? 'opacity-50' : 'opacity-100'
+                }`}>
+                  {posts.map(post => (
+                    <BlogPostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 mb-4">
+                    <Search className="w-16 h-16 mx-auto" />
+                  </div>
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">
+                    No se encontraron artículos
+                  </h3>
+                  <p className="text-gray-600">
+                    {searchTerm || selectedCategory !== 'all'
+                      ? 'Intenta ajustar tus filtros para encontrar lo que buscas.'
+                      : 'Aún no hay artículos publicados en el blog.'}
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Pagination */}
             {totalPages > 1 && (

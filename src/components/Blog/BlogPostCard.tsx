@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BlogPost, BlogPostListItem } from '../../types';
 import { Calendar, User } from 'lucide-react';
@@ -8,7 +8,17 @@ interface BlogPostCardProps {
   post: BlogPost | BlogPostListItem;
 }
 
+/**
+ * Componente de tarjeta de blog con optimizaciones de carga de imagen:
+ * - Shimmer placeholder mientras carga
+ * - Lazy loading nativo
+ * - Transición suave al cargar
+ * - Fallback a imagen por defecto si falla
+ */
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
   // Helper functions to extract data from both old and new structures
   const getAuthorName = (): string => {
     if (typeof post.author === 'string') {
@@ -67,6 +77,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   // Handle image error - prevent infinite loop
   const handleImageError = React.useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
+    setHasError(true);
     // Only set default if it's not already the default image
     if (img.src !== window.location.origin + '/images/blog/default.jpg' && !isDefaultImage) {
       img.src = '/images/blog/default.jpg';
@@ -75,15 +86,35 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
     }
   }, [isDefaultImage]);
 
+  const handleImageLoad = () => {
+    setIsLoaded(true);
+  };
+
   return (
     <Link to={`/blog/${post.slug}`} className="block group bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
       <div className="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
+        {/* Shimmer placeholder - visible mientras carga */}
+        {!isLoaded && !hasError && (
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200">
+            <div 
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+              style={{
+                animation: 'shimmer 1.5s infinite',
+                transform: 'translateX(-100%)'
+              }}
+            />
+          </div>
+        )}
+        
         <img 
           src={imageUrl} 
           alt={post.title} 
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+          className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-300 ${
+            isLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
           loading="lazy" 
           decoding="async"
+          onLoad={handleImageLoad}
           onError={handleImageError}
         />
       </div>
@@ -108,4 +139,4 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   );
 };
 
-export default BlogPostCard; 
+export default BlogPostCard;

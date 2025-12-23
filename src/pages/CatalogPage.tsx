@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Filter, Grid, List, Heart, Pill, Stethoscope, Shield, Sparkles, X, Brain, Bone, User, Flower2, Scale } from 'lucide-react';
+import { Search, Filter, Grid, List, Heart, Pill, Stethoscope, Shield, Sparkles, X, Brain, Bone, User, Flower2, Scale, Loader2 } from 'lucide-react';
 import { SearchFilters } from '../types';
 import { ProductCard } from '../components/Products/ProductCard';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
@@ -10,6 +10,7 @@ import MapSection from '../components/Map/MapSection';
 import { useProductsQuery } from '../hooks/queries/useProductsQueries';
 import { usePrefetchNextPage } from '../hooks/useImagePrefetch';
 import { authenticatedImageCache } from '../utils/authenticatedImageCache';
+import { usePrefetchOnHover } from '../hooks/usePrefetchOnHover';
 
 // Especialidades Farmacéuticas
 const medicalCategories = [
@@ -31,7 +32,11 @@ const CatalogPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [productsPerPage] = useState(20);
+  const [isPageChanging, setIsPageChanging] = useState(false);
   const { currency, formatPriceFromBackend, getDisplayPrice } = useGlobalCurrency();
+  
+  // Ref para scroll al cambiar de página
+  const productsContainerRef = useRef<HTMLDivElement>(null);
   
   const [filters, setFilters] = useState<SearchFilters>({
     category: '',
@@ -96,10 +101,72 @@ const CatalogPage: React.FC = () => {
     setCurrentPage(1);
   }, [filters, debouncedSearchTerm]);
 
-  // Manejar cambio de página
-  const handlePageChange = (page: number) => {
+  // Manejar cambio de página con scroll y loading
+  const handlePageChange = useCallback((page: number) => {
+    if (page === currentPage) return;
+    
+    // Activar estado de carga
+    setIsPageChanging(true);
     setCurrentPage(page);
-  };
+    
+    // Scroll suave hacia el contenedor de productos
+    if (productsContainerRef.current) {
+      const offsetTop = productsContainerRef.current.offsetTop - 120; // Offset para el navbar
+      window.scrollTo({
+        top: offsetTop,
+        behavior: 'smooth'
+      });
+    } else {
+      // Fallback: scroll al top
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  }, [currentPage]);
+
+  // Desactivar estado de carga cuando terminan de cargar los productos
+  useEffect(() => {
+    if (!isFetching && isPageChanging) {
+      // Pequeño delay para que la transición sea más suave
+      const timer = setTimeout(() => {
+        setIsPageChanging(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isFetching, isPageChanging]);
+
+  // Preconnect al backend para reducir latencia en requests de imágenes
+  useEffect(() => {
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    if (apiUrl && typeof window !== 'undefined') {
+      // Preconnect para establecer conexión temprana
+      const preconnectLink = document.createElement('link');
+      preconnectLink.rel = 'preconnect';
+      preconnectLink.href = apiUrl;
+      preconnectLink.crossOrigin = 'use-credentials';
+      document.head.appendChild(preconnectLink);
+
+      // DNS-prefetch como fallback
+      const dnsPrefetchLink = document.createElement('link');
+      dnsPrefetchLink.rel = 'dns-prefetch';
+      dnsPrefetchLink.href = apiUrl;
+      document.head.appendChild(dnsPrefetchLink);
+
+      return () => {
+        document.head.removeChild(preconnectLink);
+        document.head.removeChild(dnsPrefetchLink);
+      };
+    }
+  }, []);
+
+  // Hook para prefetch on hover
+  const { prefetch: prefetchImage, clearPrefetched } = usePrefetchOnHover();
+
+  // Limpiar prefetch al cambiar de página
+  useEffect(() => {
+    clearPrefetched();
+  }, [currentPage, clearPrefetched]);
 
   // Prefetch de imágenes de la página actual (más agresivo)
   usePrefetchNextPage(products, !isLoading && products.length > 0);
@@ -383,31 +450,53 @@ const CatalogPage: React.FC = () => {
               </div>
 
               {/* Grid de productos */}
-              {isLoading ? (
-                <div className={`grid gap-6 ${
-                  viewMode === 'grid' 
-                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                    : 'grid-cols-1'
-                }`}>
-                  {[...Array(12)].map((_, index) => (
-                    <ProductCardSkeleton key={index} />
-                  ))}
-                </div>
-              ) : filteredProducts.length > 0 ? (
-                <div className={`grid gap-6 ${
-                  viewMode === 'grid' 
-                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                    : 'grid-cols-1'
-                }`}>
-                  {filteredProducts.map((product, index) => (
-                    <ProductCard 
-                      key={product.id} 
-                      product={product} 
-                      priority={index < 12} // Prioridad para las primeras 12 imágenes
-                    />
-                  ))}
-                </div>
-              ) : (
+              <div ref={productsContainerRef} className="relative">
+                {/* Overlay de loading al cambiar de página */}
+                {isPageChanging && (
+                  <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-center rounded-2xl transition-opacity duration-300">
+                    <div className="flex flex-col items-center gap-3 w-40">
+                      <div className="skeleton rounded-full h-14 w-14" />
+                      <div className="skeleton h-3 w-24 rounded-full" />
+                      <div className="skeleton h-3 w-16 rounded-full" />
+                    </div>
+                  </div>
+                )}
+
+                {isLoading ? (
+                  <div className={`grid gap-6 ${
+                    viewMode === 'grid' 
+                      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                      : 'grid-cols-1'
+                  }`}>
+                    {[...Array(12)].map((_, index) => (
+                      <ProductCardSkeleton key={index} />
+                    ))}
+                  </div>
+                ) : filteredProducts.length > 0 ? (
+                  <div className={`grid gap-6 transition-opacity duration-300 ${
+                    viewMode === 'grid' 
+                      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                      : 'grid-cols-1'
+                  } ${isPageChanging ? 'opacity-50' : 'opacity-100'}`}>
+                    {filteredProducts.map((product, index) => (
+                      <div 
+                        key={product.id}
+                        onMouseEnter={() => {
+                          // Prefetch imagen al hacer hover para carga más rápida
+                          const imageUrl = product.images && product.images.length >= 2 
+                            ? product.images[1] 
+                            : product.image || (product.images && product.images[0]);
+                          prefetchImage(imageUrl);
+                        }}
+                      >
+                        <ProductCard 
+                          product={product} 
+                          priority={index < 12} // Prioridad para las primeras 12 imágenes
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
                 <div className="text-center py-16 bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl">
                   <div className="max-w-md mx-auto">
                     <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -440,6 +529,7 @@ const CatalogPage: React.FC = () => {
                   </div>
                 </div>
               )}
+              </div>
 
               {/* Paginación */}
               {totalPages > 1 && (

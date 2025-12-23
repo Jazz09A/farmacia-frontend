@@ -217,39 +217,29 @@ const ProductDetailPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  <span className="text-2xl lg:text-3xl font-bold text-medical-primary">
-                    {formatPrice(getDisplayPrice(product.price, currency), currency)}
-                  </span>
-                  {product.profit_discount && (product.profit_discount.is_active === true || product.profit_discount.is_active === 'true') && (
-                    <div className="space-y-2 mt-2 pt-2 border-t border-red-200">
-                      <div className="flex items-center gap-2 text-red-700 font-semibold text-sm">
-                        <Percent className="w-4 h-4" />
-                        <span>Descuento disponible</span>
-                      </div>
-                      <div className="text-xs text-red-600 space-y-1">
-                        <p>
-                          <strong>Hasta {product.profit_discount.best_discount_percentage}%</strong> de descuento según cantidad
-                        </p>
-                        <p>
-                          Cantidad mínima: <strong>{product.profit_discount.min_quantity_for_discount} unidades</strong>
-                        </p>
-                        {product.profit_discount.ranges && product.profit_discount.ranges.length > 0 && (
-                          <div className="mt-2 space-y-1">
-                            <p className="font-medium text-red-700">Escalas de descuento:</p>
-                            <ul className="list-disc list-inside space-y-0.5">
-                              {product.profit_discount.ranges.map((range, idx) => (
-                                <li key={idx} className="text-red-600">
-                                  {range.max_quantity} unidades: <strong>{range.discount_percentage}%</strong>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        <p className="text-red-500 italic mt-1">
-                          Válido hasta: {new Date(product.profit_discount.fecha_fin).toLocaleDateString('es-VE', { day: 'numeric', month: 'long', year: 'numeric' })}
-                        </p>
-                      </div>
-                    </div>
+                  {product.profit_discount && (product.profit_discount.is_active === true || product.profit_discount.is_active === 'true') ? (
+                    (() => {
+                      const discountPercent = parseFloat(product.profit_discount.best_discount_percentage || '0');
+                      const originalPriceNum = parseFloat(product.price);
+                      const discountedPriceNum = isNaN(originalPriceNum) ? 0 : originalPriceNum * (1 - discountPercent / 100);
+                      return (
+                        <div className="flex flex-wrap items-baseline gap-3">
+                          <span className="text-2xl lg:text-3xl font-bold text-red-600">
+                            {formatPrice(getDisplayPrice(discountedPriceNum.toFixed(2), currency), currency)}
+                          </span>
+                          <span className="text-base lg:text-lg font-medium text-medical-gray-500 line-through">
+                            {formatPrice(getDisplayPrice(product.price, currency), currency)}
+                          </span>
+                          <span className="text-sm lg:text-base font-bold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full">
+                            -{discountPercent}%
+                          </span>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <span className="text-2xl lg:text-3xl font-bold text-medical-primary">
+                      {formatPrice(getDisplayPrice(product.price, currency), currency)}
+                    </span>
                   )}
                 </div>
               )}
