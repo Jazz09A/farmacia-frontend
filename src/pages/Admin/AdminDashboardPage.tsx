@@ -271,7 +271,7 @@ const AdminDashboardPage: React.FC = () => {
               <RefreshCw className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500 animate-spin" />
             )}
           </div>
-          <p className="mt-1 text-sm lg:text-base text-gray-600">Resumen del rendimiento de GRUPO DROZAINKA.</p>
+          <p className="mt-1 text-sm lg:text-base text-gray-600">Resumen del rendimiento de GRUPO DROZAINKA C.A.</p>
           
           {/* Error Message */}
           {error && (

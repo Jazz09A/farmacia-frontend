@@ -50,7 +50,7 @@ const ClienteDrozainkaPage: React.FC = () => {
         <div className="absolute inset-0 z-0">
           <img
             src="/images-local/establecimiento_Drozainka.webp"
-            alt="Establecimiento de Grupo Drozainka"
+            alt="Establecimiento de Grupo Drozainka C.A"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-medical-blue-600/20 to-medical-blue-800/20"></div>
@@ -129,7 +129,7 @@ const ClienteDrozainkaPage: React.FC = () => {
           >
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               ¿Por qué elegir{' '}
-              <span className="text-medical-blue-600">Grupo Drozainka</span>?
+              <span className="text-medical-blue-600">Grupo Drozainka C.A</span>?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Descubre los valores que nos hacen el socio ideal para tu farmacia

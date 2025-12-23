@@ -24,7 +24,7 @@ export const config = {
 
   // App Metadata
   app: {
-    name: 'Grupo Drozainka',
+    name: 'Grupo Drozainka C.A',
     version: '1.0.0',
     description: 'Professional Medical Care Platform',
   },
@@ -130,19 +130,19 @@ export const isFeatureEnabled = (feature: keyof typeof config.features): boolean
 // Debug logger - solo se ejecuta en desarrollo
 export const debugLog = (message: string, ...args: any[]) => {
   if (config.debug) {
-    console.log(`[Grupo Drozainka Debug] ${message}`, ...args);
+    console.log(`[Grupo Drozainka C.A Debug] ${message}`, ...args);
   }
 };
 
 export const debugWarn = (message: string, ...args: any[]) => {
   if (config.debug) {
-    console.warn(`[Grupo Drozainka Warning] ${message}`, ...args);
+    console.warn(`[Grupo Drozainka C.A Warning] ${message}`, ...args);
   }
 };
 
 export const debugError = (message: string, ...args: any[]) => {
   if (config.debug) {
-    console.error(`[Grupo Drozainka Error] ${message}`, ...args);
+    console.error(`[Grupo Drozainka C.A Error] ${message}`, ...args);
   }
 };
 

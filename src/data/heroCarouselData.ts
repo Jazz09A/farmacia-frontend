@@ -6,7 +6,7 @@ export const heroCarouselImages: CarouselImage[] = [
     src: '/Pc1.png', 
     srcMobile: '/1Mobile.webp', 
     srcDesktop: '/1.webp', 
-    alt: 'Banner promocional 1 - Grupo Drozainka - Distribuidor farmacéutico confiable',
+    alt: 'Banner promocional 1 - Grupo Drozainka C.A - Distribuidor farmacéutico confiable',
   },
   {
     id: 'banner-2',

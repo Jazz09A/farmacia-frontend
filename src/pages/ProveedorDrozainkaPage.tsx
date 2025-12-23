@@ -653,7 +653,7 @@ const ProveedorDrozainkaPage: React.FC = () => {
                     ) : (
                       <div className="flex items-center justify-center space-x-2">
                         <Handshake className="w-5 h-5" />
-                        <span>Enviar Solicitud de Proveedor</span>
+                        <span>Enviar Solicitud</span>
                         <ArrowRight className="w-5 h-5" />
                       </div>
                     )}

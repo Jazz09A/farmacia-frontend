@@ -41,12 +41,12 @@ const AdminSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
             <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 flex items-center justify-center flex-shrink-0">
               <img 
                 src={logo} 
-                alt="Logo Grupo Drozainka" 
+                alt="Logo Grupo Drozainka C.A" 
                 className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 object-contain"
               />
             </div>
             <div className="min-w-0">
-              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-800 truncate">GRUPO DROZAINKA</h2>
+              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-800 truncate">GRUPO DROZAINKA C.A</h2>
               <p className="text-xs lg:text-sm text-gray-600 truncate">Panel de Control</p>
             </div>
           </div>

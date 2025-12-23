@@ -182,10 +182,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex justify-between items-center h-14 lg:h-18">
             <div className="flex items-center flex-shrink-0">
               <Link to="/" className="-m-1.5 p-1.5">
-                <span className="sr-only">Grupo Drozainka</span>
+                <span className="sr-only">Grupo Drozainka C.A</span>
                 <img
                   src={logoSrc}
-                  alt="Grupo Drozainka Logo"
+                  alt="Grupo Drozainka C.A Logo"
                   className="h-12 lg:h-18 w-auto object-contain"
                 />
               </Link>
@@ -479,9 +479,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {/* Header fijo - Compacto para móviles */}
                 <div className="flex justify-between items-center p-4 sm:p-6 border-b border-medical-gray-200 flex-shrink-0">
                   <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-                    <div className="rounded-xl overflow-hidden flex-shrink-0"><img src={logoSrc} alt="Grupo Drozainka Logo" className="h-7 sm:h-8 w-auto object-contain" /></div>
+                    <div className="rounded-xl overflow-hidden flex-shrink-0"><img src={logoSrc} alt="Grupo Drozainka C.A Logo" className="h-7 sm:h-8 w-auto object-contain" /></div>
                     <div className="min-w-0">
-                      <div className="text-base sm:text-lg font-serif font-bold text-medical-gray-900 truncate">Grupo Drozainka</div>
+                      <div className="text-base sm:text-lg font-serif font-bold text-medical-gray-900 truncate">Grupo Drozainka C.A</div>
                       <div className="text-xs sm:text-sm text-medical-gray-600 truncate">Professional Care</div>
                     </div>
                   </div>

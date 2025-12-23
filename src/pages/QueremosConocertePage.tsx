@@ -10,7 +10,8 @@ import {
   FileText,
   AlertCircle,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  Handshake
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -132,7 +133,7 @@ const QueremosConocertePage: React.FC = () => {
         <div className="absolute inset-0 z-0">
           <img
             src="/images-local/establecimiento_Drozainka.webp"
-            alt="Establecimiento de Grupo Drozainka"
+            alt="Establecimiento de Grupo Drozainka C.A"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-medical-blue-900/70 via-medical-blue-800/55 to-medical-blue-700/45"></div>
@@ -174,7 +175,7 @@ const QueremosConocertePage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
             >
-              ¿Deseas trabajar con nosotros? Completa el formulario, sube tu CV y postúlate para el cargo de tu interés. 
+              ¿Deseas trabajar con nosotros? 
               Estamos buscando talento para formar parte de nuestro equipo.
             </motion.p>
 
@@ -184,15 +185,6 @@ const QueremosConocertePage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.7 }}
             >
-              <motion.button
-                onClick={() => document.getElementById('form-section')?.scrollIntoView({ behavior: 'smooth' })}
-                className="inline-flex items-center text-white/90 hover:text-white font-semibold text-lg group"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Completa el formulario
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-              </motion.button>
             </motion.div>
           </motion.div>
         </div>
@@ -351,7 +343,11 @@ const QueremosConocertePage: React.FC = () => {
                         <span>Enviando...</span>
                       </div>
                     ) : (
-                      'Enviar Postulación'
+                      <div className="flex items-center justify-center space-x-2">
+                        <Handshake className="w-5 h-5" />
+                        <span>Enviar Solicitud</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </div>
                     )}
                   </motion.button>
                 </div>
@@ -407,7 +403,7 @@ const QueremosConocertePage: React.FC = () => {
       </section>
 
       {/* Contact Info Section */}
-      <section className="py-16 bg-medical-blue-600 text-white">
+      {/* <section className="py-16 bg-medical-blue-600 text-white">
         <div className="medical-container">
           <motion.div
             className="text-center"
@@ -440,7 +436,7 @@ const QueremosConocertePage: React.FC = () => {
             </div>
           </motion.div>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };

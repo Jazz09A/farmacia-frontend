@@ -105,7 +105,7 @@ const PrivacyPolicyPage: React.FC = () => {
                 1. Identidad del responsable
               </h2>
               <p className="text-gray-700 leading-relaxed text-lg">
-                <strong>Grupo Drozainka, CA</strong>, RIF J-50570318-8, con domicilio fiscal en [DIRECCIÓN COMPLETA DE LA SEDE PRINCIPAL], es el responsable del tratamiento de los datos personales de sus clientes B2B y sus contactos autorizados.
+                <strong>Grupo Drozainka C.A</strong>, RIF J-50570318-8, con domicilio fiscal en [DIRECCIÓN COMPLETA DE LA SEDE PRINCIPAL], es el responsable del tratamiento de los datos personales de sus clientes B2B y sus contactos autorizados.
               </p>
             </div>
           </motion.div>

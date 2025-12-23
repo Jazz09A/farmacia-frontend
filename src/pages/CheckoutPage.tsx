@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ArrowLeft, User, MapPin, CreditCard, ShieldCheck, UploadCloud, CheckCircle } from 'lucide-react';
+import { ChevronRight, ArrowLeft, User, MapPin, CreditCard, ShieldCheck, UploadCloud, CheckCircle, Handshake, ArrowRight } from 'lucide-react';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -66,7 +66,7 @@ const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   
   // Credit system hooks
-  const { creditInfo } = useCredit();
+  const { creditInfo: creditInfo } = useCredit();
   const { canCreateCreditOrder } = useCreditValidation();
   const [showCreditForm, setShowCreditForm] = useState(false);
   const [creditOrderResult, setCreditOrderResult] = useState<any>(null);
@@ -988,8 +988,9 @@ const CheckoutPage: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <ShieldCheck className="w-5 h-5" />
-                    <span>Confirmar Pedido</span>
+                    <Handshake className="w-5 h-5" />
+                    <span>Enviar solicitud</span>
+                    <ArrowRight className="w-5 h-5" />
                   </>
                 )}
               </button>

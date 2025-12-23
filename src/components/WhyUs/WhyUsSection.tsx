@@ -96,7 +96,7 @@ export const WhyUsSection: React.FC = () => {
                 {/* Background Image */}
                 <img 
                   src="/equipo/HenryRojo.webp" 
-                  alt="Henry Rojo - Grupo Drozainka"
+                  alt="Henry Rojo - Grupo Drozainka C.A"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
                 

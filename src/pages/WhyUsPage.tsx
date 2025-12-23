@@ -24,7 +24,7 @@ const WhyUsPage: React.FC = () => {
       name: 'Dr. María González',
       role: 'Farmacéutica Propietaria',
       location: 'Caracas, Venezuela',
-      quote: 'Grupo Drozainka ha transformado la forma en que gestiono mi inventario. Su servicio 24/7 es invaluable y la calidad de sus productos es insuperable.',
+      quote: 'Grupo Drozainka C.A ha transformado la forma en que gestiono mi inventario. Su servicio 24/7 es invaluable y la calidad de sus productos es insuperable.',
       image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
       rating: 5,
       video: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'
@@ -199,9 +199,9 @@ const WhyUsPage: React.FC = () => {
                       <h3 className="text-2xl lg:text-3xl font-bold mb-2">
                         {facilityImages[currentImageIndex].description}
                       </h3>
-                      <p className="text-white/90 text-lg">
-                        {facilityImages[currentImageIndex].description}
-                      </p>
+                      {/* <p className="text-white/90 text-lg">
+                        {facilityImages[currentImageIndex].title}
+                      </p> */}
                     </div>
                   </motion.div>
                 </AnimatePresence>
@@ -259,7 +259,7 @@ const WhyUsPage: React.FC = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Porque elegir a <span className="text-medical-blue-600">Grupo Drozainka</span>
+              Porque elegir a <span className="text-medical-blue-600">Grupo Drozainka C.A</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Un enfoque sistemático y probado que garantiza el éxito de tu farmacia.

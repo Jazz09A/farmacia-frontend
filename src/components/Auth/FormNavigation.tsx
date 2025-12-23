@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ChevronLeft, ChevronRight, Building } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Handshake, ArrowRight } from 'lucide-react';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
 interface FormNavigationProps {
@@ -52,12 +52,13 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
           {isLoading ? (
             <>
               <LoadingSpinner variant="button" size="sm" />
-              <span>Creando...</span>
+              <span>Enviando...</span>
             </>
           ) : (
             <>
-              <Building className="w-4 h-4" />
-              <span>Crear Cuenta</span>
+              <Handshake className="w-4 h-4" />
+              <span>Enviar Solicitud</span>
+              <ArrowRight className="w-4 h-4" />
             </>
           )}
         </button>

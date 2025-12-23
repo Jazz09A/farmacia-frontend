@@ -12,6 +12,8 @@ import {
   Sparkles,
   XCircle,
   RefreshCw,
+  Handshake,
+  ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
@@ -1212,10 +1214,11 @@ const CheckoutQuotePage: React.FC = () => {
                   Corrige los errores primero
                 </>
               ) : (
-                <>
-                  <Sparkles className="h-5 w-5" />
-                  Crear cotización
-                </>
+                <div className="flex items-center justify-center space-x-2">
+                  <Handshake className="h-5 w-5" />
+                  <span>Enviar solicitud</span>
+                  <ArrowRight className="h-5 w-5" />
+                </div>
               )}
             </button>
 

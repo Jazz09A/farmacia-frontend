@@ -11,7 +11,7 @@ export const TestimonialsSection: React.FC = () => {
       role: 'Farmacéutica - Farmacia San Rafael',
       location: 'Caracas, Venezuela',
       rating: 5,
-      quote: 'Grupo Drozainka ha sido nuestro socio estratégico por más de 8 años. Su confiabilidad en el suministro y la calidad de sus productos nos ha permitido brindar un servicio excepcional a nuestros pacientes.',
+      quote: 'Grupo Drozainka C.A ha sido nuestro socio estratégico por más de 8 años. Su confiabilidad en el suministro y la calidad de sus productos nos ha permitido brindar un servicio excepcional a nuestros pacientes.',
       image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80'
     },
     {

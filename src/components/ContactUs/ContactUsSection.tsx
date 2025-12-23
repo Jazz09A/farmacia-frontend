@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, User, Phone, MessageSquare, Building, Home, MapPin, AlertCircle } from 'lucide-react';
+import { Mail, User, Phone, MessageSquare, Building, Home, MapPin, AlertCircle, Handshake, ArrowRight } from 'lucide-react';
 import { emailService } from '../../services/EmailService';
 
 export const ContactUsSection: React.FC = () => {
@@ -222,7 +222,18 @@ export const ContactUsSection: React.FC = () => {
                     whileHover={{ scale: isSubmitting ? 1 : 1.05 }} 
                     whileTap={{ scale: isSubmitting ? 1 : 0.95 }}
                   >
-                    {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
+                    {isSubmitting ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Enviando...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center space-x-2">
+                        <Handshake className="w-5 h-5" />
+                        <span>Enviar Solicitud</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </div>
+                    )}
                   </motion.button>
                 </div>
               </form>

@@ -12,7 +12,7 @@ import {
 export const Footer: React.FC = () => {
   const socialLinks = [
     { icon: Facebook, href: '#', label: 'Facebook' },
-    { icon: Linkedin, href: '', label: 'LinkedIn' },
+    { icon: Linkedin, href: 'https://pe.linkedin.com/company/grupo-drozainka-ca', label: 'LinkedIn' },
     { icon: Instagram, href: 'https://www.instagram.com/drozainka/', label: 'Instagram' }
   ];
 
@@ -46,7 +46,7 @@ export const Footer: React.FC = () => {
           >
             <div>
               <h3 className="text-2xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-green-200">
-                Grupo Drozainka
+                Grupo Drozainka C.A
               </h3>
               <p className="text-blue-100 leading-relaxed">
                 Distribuidor líder de productos nutraceuticos y farmacéuticos en Venezuela.
@@ -161,7 +161,7 @@ export const Footer: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-blue-200 text-sm">
-              © 2025 Grupo Drozainka. Todos los derechos reservados.
+              © 2025 Grupo Drozainka C.A. Todos los derechos reservados.
             </p>
             <div className="flex items-center space-x-6 text-sm text-blue-200">
               <span>Distribución de medicamentos certificados</span>

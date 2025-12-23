@@ -105,7 +105,7 @@ const TermsAndConditionsPage: React.FC = () => {
                 SECCIÓN 1: ACEPTACIÓN Y ALCANCE
               </h2>
               <p className="text-gray-700 leading-relaxed text-lg">
-                Los presentes Términos y Condiciones regulan exclusivamente la relación comercial B2B (Business-to-Business) entre <strong>Grupo Drozainka, CA</strong> (en adelante, "el Proveedor") y sus clientes empresariales o institucionales (en adelante, "el Cliente") en todo el territorio nacional de Venezuela. La emisión de una orden de compra confirmada o la aceptación de una factura por parte del Cliente implica la aceptación total e irrevocable de estos términos.
+                Los presentes Términos y Condiciones regulan exclusivamente la relación comercial B2B (Business-to-Business) entre <strong>Grupo Drozainka C.A</strong> (en adelante, "el Proveedor") y sus clientes empresariales o institucionales (en adelante, "el Cliente") en todo el territorio nacional de Venezuela. La emisión de una orden de compra confirmada o la aceptación de una factura por parte del Cliente implica la aceptación total e irrevocable de estos términos.
               </p>
             </div>
           </motion.div>
@@ -128,7 +128,7 @@ const TermsAndConditionsPage: React.FC = () => {
                     Naturaleza de la Plataforma Web
                   </h3>
                   <p className="text-gray-700 leading-relaxed">
-                    La página web y el carrito de compras de Grupo Drozainka, CA tienen una función <strong>INFORMATIVA Y DE COTIZACIÓN</strong>. El proceso de compra online no constituye un sistema de compra directa (checkout) con confirmación y pago automático.
+                    La página web y el carrito de compras de Grupo Drozainka C.A tienen una función <strong>INFORMATIVA Y DE COTIZACIÓN</strong>. El proceso de compra online no constituye un sistema de compra directa (checkout) con confirmación y pago automático.
                   </p>
                 </div>
 
@@ -148,7 +148,7 @@ const TermsAndConditionsPage: React.FC = () => {
                     Confirmación Obligatoria por Nuestro Equipo
                   </h3>
                   <p className="text-gray-700 leading-relaxed mb-4">
-                    <strong>NINGÚN PEDIDO SE CONSIDERA ACEPTADO, CONFIRMADO NI OBLIGATORIO PARA GRUPO DROZAINKA</strong> hasta que un representante de ventas de nuestra oficina se comunique formalmente con el Cliente (vía teléfono o correo electrónico oficial) para:
+                    <strong>NINGÚN PEDIDO SE CONSIDERA ACEPTADO, CONFIRMADO NI OBLIGATORIO PARA GRUPO DROZAINKA C.A</strong> hasta que un representante de ventas de nuestra oficina se comunique formalmente con el Cliente (vía teléfono o correo electrónico oficial) para:
                   </p>
                   <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
                     <li>Verificar ítems, cantidades y precios unitarios.</li>
@@ -199,7 +199,7 @@ const TermsAndConditionsPage: React.FC = () => {
                     Formalización del Pedido
                   </h3>
                   <p className="text-gray-700 leading-relaxed">
-                    Los pedidos son vinculantes únicamente tras la <strong>confirmación escrita (Orden de Compra o Factura Proforma)</strong> emitida por Grupo Drozainka, CA como resultado exitoso del proceso descrito en la Sección 2.
+                    Los pedidos son vinculantes únicamente tras la <strong>confirmación escrita (Orden de Compra o Factura Proforma)</strong> emitida por Grupo Drozainka C.A como resultado exitoso del proceso descrito en la Sección 2.
                   </p>
                 </div>
 
@@ -209,7 +209,7 @@ const TermsAndConditionsPage: React.FC = () => {
                     Precios Vinculantes
                   </h3>
                   <p className="text-gray-700 leading-relaxed">
-                    Los precios aplicables serán exclusivamente los especificados en la <strong>cotización o factura proforma confirmada</strong> enviada por el Proveedor. Grupo Drozainka, CA se reserva el derecho de modificar sus precios, notificando al Cliente con al menos <strong>5 (cinco) días hábiles</strong> de antelación para pedidos futuros.
+                    Los precios aplicables serán exclusivamente los especificados en la <strong>cotización o factura proforma confirmada</strong> enviada por el Proveedor. Grupo Drozainka C.A se reserva el derecho de modificar sus precios, notificando al Cliente con al menos <strong>5 (cinco) días hábiles</strong> de antelación para pedidos futuros.
                   </p>
                 </div>
 
@@ -219,7 +219,7 @@ const TermsAndConditionsPage: React.FC = () => {
                     Condiciones de Pago
                   </h3>
                   <p className="text-gray-700 leading-relaxed">
-                    Las condiciones (crédito, contado) se establecen por escrito en la cotización confirmada, según el perfil crediticio aprobado del Cliente. El incumplimiento en los plazos de pago faculta a Grupo Drozainka, CA a: (a) suspender todo despacho futuro pendiente, (b) exigir el pago al contado para futuras transacciones o (c) inactivar al mismo de forma definitiva.
+                    Las condiciones (crédito, contado) se establecen por escrito en la cotización confirmada, según el perfil crediticio aprobado del Cliente. El incumplimiento en los plazos de pago faculta a Grupo Drozainka C.A a: (a) suspender todo despacho futuro pendiente, (b) exigir el pago al contado para futuras transacciones o (c) inactivar al mismo de forma definitiva.
                   </p>
                 </div>
               </div>
@@ -257,13 +257,13 @@ const TermsAndConditionsPage: React.FC = () => {
                     <div className="bg-white rounded-lg p-4 border border-gray-200">
                       <h4 className="font-semibold text-gray-900 mb-2">Flota Propia:</h4>
                       <p className="text-gray-700 leading-relaxed">
-                        Despacho directo con vehículos de Grupo Drozainka, CA. <strong>Disponible todos los días de la semana, incluyendo sábados y domingos</strong> si la operación lo requiere.
+                        Despacho directo con vehículos de Grupo Drozainka C.A. <strong>Disponible todos los días de la semana, incluyendo sábados y domingos</strong> si la operación lo requiere.
                       </p>
                     </div>
                     <div className="bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-500">
                       <h4 className="font-semibold text-gray-900 mb-2">Transportistas Aliados (Zoom, Tealca, Zeus u otro):</h4>
                       <p className="text-gray-700 leading-relaxed">
-                        Despacho sujeto a las políticas, rutas y horarios del transportista contratado. <strong>NOTA CRÍTICA:</strong> Estos operadores de logística externos realizan entregas generalmente solo de <strong>lunes a viernes y/o sábado dentro de horario comercial</strong>. Los retrasos o inconvenientes atribuibles al transportista serán gestionados por nosotros ante el mismo, pero <strong>no constituyen responsabilidad directa de Grupo Drozainka, CA</strong>.
+                        Despacho sujeto a las políticas, rutas y horarios del transportista contratado. <strong>NOTA CRÍTICA:</strong> Estos operadores de logística externos realizan entregas generalmente solo de <strong>lunes a viernes y/o sábado dentro de horario comercial</strong>. Los retrasos o inconvenientes atribuibles al transportista serán gestionados por nosotros ante el mismo, pero <strong>no constituyen responsabilidad directa de Grupo Drozainka C.A</strong>.
                       </p>
                     </div>
                   </div>
@@ -423,7 +423,7 @@ const TermsAndConditionsPage: React.FC = () => {
                     Fuerza Mayor
                   </h3>
                   <p className="text-gray-700 leading-relaxed">
-                    Grupo Drozainka, CA no será responsable por retrasos o incumplimientos causados por eventos de fuerza mayor (huelgas, cortes de luz, inestabilidad social, restricciones gubernamentales, etc.).
+                    Grupo Drozainka C.A no será responsable por retrasos o incumplimientos causados por eventos de fuerza mayor (huelgas, cortes de luz, inestabilidad social, restricciones gubernamentales, etc.).
                   </p>
                 </div>
 
@@ -443,7 +443,7 @@ const TermsAndConditionsPage: React.FC = () => {
                     Modificaciones
                   </h3>
                   <p className="text-gray-700 leading-relaxed">
-                    Grupo Drozainka, CA se reserva el derecho de modificar estos Términos y Condiciones. Los cambios serán notificados a los clientes activos y publicados en esta sección de nuestra página web.
+                    Grupo Drozainka C.A se reserva el derecho de modificar estos Términos y Condiciones. Los cambios serán notificados a los clientes activos y publicados en esta sección de nuestra página web.
                   </p>
                 </div>
               </div>

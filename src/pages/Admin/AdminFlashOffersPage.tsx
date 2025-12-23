@@ -1455,7 +1455,7 @@ const AdminFlashOffersPage: React.FC = () => {
               <RefreshCw className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500 animate-spin" />
             )}
           </div>
-          <p className="mt-1 text-sm lg:text-base text-gray-600">Gestiona las ofertas flash de GRUPO DROZAINKA</p>
+          <p className="mt-1 text-sm lg:text-base text-gray-600">Gestiona las ofertas flash de GRUPO DROZAINKA C.A</p>
           
           {/* Stats */}
           <div className="flex items-center gap-4 lg:gap-6 mt-3 lg:mt-4">
