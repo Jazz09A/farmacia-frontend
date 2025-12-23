@@ -12,8 +12,8 @@ import {
 export const Footer: React.FC = () => {
   const socialLinks = [
     { icon: Facebook, href: '#', label: 'Facebook' },
-    { icon: Linkedin, href: '#', label: 'LinkedIn' },
-    { icon: Instagram, href: '#', label: 'Instagram' }
+    { icon: Linkedin, href: '', label: 'LinkedIn' },
+    { icon: Instagram, href: 'https://www.instagram.com/drozainka/', label: 'Instagram' }
   ];
 
   const quickLinks = [

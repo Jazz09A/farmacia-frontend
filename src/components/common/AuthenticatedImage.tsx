@@ -19,12 +19,6 @@ interface AuthenticatedImageProps {
 /**
  * Componente para cargar imágenes que requieren autenticación
  * Usa un sistema de caché compartido para evitar múltiples fetches
- * 
- * Optimizaciones:
- * - Lazy loading con IntersectionObserver (solo carga cuando está en viewport)
- * - Caché compartido para evitar requests duplicados
- * - Animaciones suaves de transición
- * - Skeleton placeholder mientras carga
  */
 export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
   src,
@@ -40,38 +34,9 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isInView, setIsInView] = useState(priority); // Si es priority, cargar inmediatamente
   const mountedRef = useRef(true);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // IntersectionObserver para lazy loading real
-  useEffect(() => {
-    if (priority || !containerRef.current) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          observer.disconnect();
-        }
-      },
-      { 
-        rootMargin: '100px', // Precargar 100px antes de entrar en viewport
-        threshold: 0.01 
-      }
-    );
-
-    observer.observe(containerRef.current);
-
-    return () => observer.disconnect();
-  }, [priority]);
 
   useEffect(() => {
-    // No cargar si no está en viewport (y no es priority)
-    if (!isInView) return;
-    
-    mountedRef.current = true;
-
     if (!src) {
       setHasError(true);
       setIsLoading(false);
@@ -118,17 +83,21 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
         authenticatedImageCache.releaseImage(src);
       }
     };
-  }, [src, priority, isInView, onLoad, onError]);
+  }, [src, priority, onLoad, onError]);
 
   // Determinar objectFit basado en className o usar 'contain' por defecto
   const objectFit = className.includes('object-cover') ? 'cover' : 
-                   className.includes('object-contain') ? 'contain' : 'contain';
+                    className.includes('object-contain') ? 'contain' : 'contain';
+
+  // Extraer clases de tamaño para el skeleton
+  const skeletonClassName = className.includes('w-full') ? 'w-full' : 
+                           className.includes('h-full') ? 'h-full' : '';
 
   return (
-    <div ref={containerRef} className="relative w-full h-full">
+    <div className="relative w-full h-full">
       <AnimatePresence mode="wait">
-        {/* Skeleton/Placeholder mientras no está en viewport o cargando */}
-        {(!isInView || isLoading) && (
+        {/* Skeleton mientras carga */}
+        {isLoading && (
           <motion.div
             key="skeleton"
             initial={{ opacity: 1 }}
@@ -145,7 +114,7 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
         )}
 
         {/* Imagen cargada */}
-        {isInView && !isLoading && blobUrl && !hasError && (
+        {!isLoading && blobUrl && !hasError && (
           <motion.img
             key="image"
             src={blobUrl}
@@ -153,6 +122,7 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
             className={className}
             width={width}
             height={height}
+            loading={priority ? "eager" : "lazy"}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
@@ -193,3 +163,4 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
 };
 
 export default AuthenticatedImage;
+
