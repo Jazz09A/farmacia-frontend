@@ -1,69 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Star, CheckCircle, AlertTriangle, ChevronRight, ShoppingCart, Plus, Minus, Heart, Truck, Clock } from 'lucide-react';
+import { Star, CheckCircle, AlertTriangle, ChevronRight, ShoppingCart, Plus, Minus, Truck, Clock, Flame, Percent } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { Product } from '../types';
 import { useCurrency } from '../hooks/useCurrency';
-import { useCart } from '../contexts/CartContext';
-import { getProductById } from '../data/products';
+import { useProductQuery, useProductRecommendations } from '../hooks/queries/useProductsQueries';
 import { ProductDetailSkeleton } from '../components/Skeleton';
+import ProductImage from '../components/common/ProductImage';
+import { useQuoteCart } from '../hooks/useQuoteCart';
+import { RecommendedProductsSection } from '../components/Products/RecommendedProductsSection';
+import ImageZoom from '../components/Products/ImageZoom';
 
-// Placeholder for a component of product carousel
-const ProductsCarousel: React.FC<{ products: Product[], title: string }> = ({ products, title }) => (
-  <div className="py-12">
-    <h2 className="text-2xl font-bold text-medical-gray-800 mb-6">{title}</h2>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {products.map(product => (
-        <div key={product.id} className="group relative bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-4 hover:shadow-xl transition-all duration-300">
-          <Link to={`/product/${product.id}`}>
-            <img src={product.image} alt={product.name} className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform" />
-            <h3 className="font-semibold text-gray-800 line-clamp-2">{product.name}</h3>
-            <p className="text-sm text-medical-primary">{product.brand}</p>
-          </Link>
-        </div>
-      ))}
-    </div>
-  </div>
-);
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: productData, isLoading: isLoadingProduct, status: statusProduct } = useProductQuery(id || '', !!id);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   const [activeImage, setActiveImage] = useState('');
 
-  const { formatPrice, getPriceInCurrency, currency } = useCurrency();
-  const { addToCart } = useCart();
+  const { formatPrice, getDisplayPrice, currency } = useCurrency();
+  const { items, addItem } = useQuoteCart();
   const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      setLoading(true);
-      try {
-        if (id) {
-          const fetchedProduct = await getProductById(id);
-          if (fetchedProduct) {
-            setProduct(fetchedProduct);
-            setActiveImage(fetchedProduct.images?.[0] || fetchedProduct.image);
-          } else {
-            setProduct(null);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching product:', error);
-        setProduct(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProduct();
-  }, [id]);
+    if (productData) {
+      setProduct(productData);
+      setActiveImage(productData.images && productData.images.length > 1 ? productData.images[1] : productData.image);
+    }
+  }, [productData, statusProduct, id]);
+
+  const cartQuantity = useMemo(() => {
+    if (!product) return 0;
+    const found = items.find(item => item.co_art === product.id);
+    return found?.cantidad ?? 0;
+  }, [items, product]);
+
+  const { 
+    data: recommendationsData, 
+    isLoading: isLoadingRecommendations 
+  } = useProductRecommendations(id || '', !!id && !!product);
 
   // Show skeleton while loading
-  if (loading) {
+  if (isLoadingProduct) {
     return <ProductDetailSkeleton />;
   }
 
@@ -85,7 +66,7 @@ const ProductDetailPage: React.FC = () => {
     if (product) {
       setAddingToCart(true);
       try {
-        await addToCart(product.id, quantity);
+        addItem(product.id, quantity);
         // Maybe show a success notification
       } catch (error) {
         console.error("Failed to add item to cart", error);
@@ -96,87 +77,175 @@ const ProductDetailPage: React.FC = () => {
     }
   };
 
-  const relatedProducts: Product[] = []; 
-  const recommendedProducts: Product[] = []; 
   const productReviews: any[] = [];
+  
+  // Extraer datos de recomendaciones
+  const relatedArticles = recommendationsData?.related_articles || [];
+  const frequentlyBoughtTogether = recommendationsData?.frequently_bought_together || [];
 
   return (
     <div className="min-h-screen bg-medical-gray-50 pt-24 lg:pt-32">
       <div className="medical-container mb-12">
-        <nav className="text-sm text-medical-gray-600 mb-8 flex items-center space-x-2">
-          <Link to="/" className="hover:text-medical-primary">Inicio</Link>
-          <ChevronRight className="w-4 h-4" />
-          <Link to="/catalog" className="hover:text-medical-primary">Catálogo</Link>
-          <ChevronRight className="w-4 h-4" />
-          <span className="font-medium text-medical-gray-800">{product.name}</span>
-        </nav>
+        <div className="flex items-center justify-between mb-4">
+          <nav className="text-sm text-medical-gray-600 flex items-center space-x-2">
+            <Link to="/" className="hover:text-medical-primary">Inicio</Link>
+            <ChevronRight className="w-4 h-4" />
+            <Link to="/catalog" className="hover:text-medical-primary">Catálogo</Link>
+            <ChevronRight className="w-4 h-4" />
+            <span className="font-medium text-medical-gray-800">{product.name}</span>
+          </nav>
+          <div className="flex items-center gap-2">
+            {product.is_offer && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1.5 rounded-full font-bold flex items-center shadow-lg text-sm"
+              >
+                <Flame className="h-4 w-4 mr-1.5" />
+                OFERTA FLASH
+              </motion.div>
+            )}
+            {product.profit_discount && (product.profit_discount.is_active === true || product.profit_discount.is_active === 'true') && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1.5 rounded-full font-bold flex items-center shadow-lg text-sm"
+              >
+                <Percent className="h-4 w-4 mr-1.5" />
+                DESCUENTO
+              </motion.div>
+            )}
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Gallery */}
           <div className="space-y-4">
             <motion.div 
-              className="bg-white rounded-2xl shadow-soft p-4"
+              className="bg-white rounded-2xl shadow-soft p-4 overflow-hidden"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <img src={activeImage} alt={product.name} className="w-full h-80 sm:h-96 object-contain rounded-xl" />
+              <ImageZoom
+                src={activeImage}
+                alt={product.name}
+                className="w-full h-80 sm:h-96"
+              />
+              <p className="text-xs text-gray-500 text-center mt-2">
+                Pasa el cursor sobre la imagen para ampliar
+              </p>
             </motion.div>
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 sm:gap-4">
-              {product.images?.map((img, index) => (
-                <div 
-                  key={index}
-                  onClick={() => setActiveImage(img)}
-                  className={`cursor-pointer rounded-xl p-1 sm:p-2 border-2 transition-all ${activeImage === img ? 'border-medical-primary' : 'border-transparent hover:border-medical-gray-200'}`}
-                >
-                  <img src={img} alt={`${product.name} view ${index + 1}`} className="w-full h-16 sm:h-20 object-cover rounded-md" />
-                </div>
-              ))}
+            
+            {/* Galería de miniaturas */}
+            <div className="bg-white rounded-xl shadow-soft p-3">
+              <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-2">
+                {product.images?.filter((_, index) => index > 0).map((img, index) => (
+                  <motion.div 
+                    key={index + 1}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setActiveImage(img)}
+                    className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                      activeImage === img 
+                        ? 'border-medical-primary shadow-md ring-2 ring-medical-primary ring-opacity-50' 
+                        : 'border-gray-200 hover:border-medical-primary hover:shadow-sm'
+                    }`}
+                  >
+                    <ProductImage
+                      src={img}
+                      alt={`${product.name} vista ${index + 2}`}
+                      className="w-full h-16 sm:h-20 object-cover"
+                      size="sm"
+                    />
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Product Info & Actions */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <h1 className="text-3xl lg:text-4xl font-bold text-medical-gray-900">{product.name}</h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {product.brand && (
+                <>
               <span className="text-lg font-medium text-medical-primary">{product.brand}</span>
               <span className="text-medical-gray-400 hidden sm:inline">|</span>
+                </>
+              )}
+              {product.category && (
+                <>
+                  <span className="text-lg font-medium text-medical-gray-600">{product.category}</span>
+                  {(product.brand || product.rating !== '0') && <span className="text-medical-gray-400 hidden sm:inline">|</span>}
+                </>
+              )}
+              {product.rating !== '0' && (
               <div className="flex items-center gap-2">
                 <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => <Star key={i} className={`w-5 h-5 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />)}
+                    {[...Array(5)].map((_, i) => <Star key={i} className={`w-5 h-5 ${i < Math.floor(parseFloat(product.rating)) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />)}
                 </div>
                 <span className="text-medical-gray-600">{product.rating} ({product.review_count} reviews)</span>
               </div>
+              )}
             </div>
 
             {/* Price */}
-            <div className="bg-medical-blue-50/50 rounded-2xl p-4 sm:p-6">
+            <div className={`rounded-xl p-2.5 sm:p-3 ${product.is_offer ? 'bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200' : (product.profit_discount && (product.profit_discount.is_active === true || product.profit_discount.is_active === 'true')) ? 'bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200' : 'bg-medical-blue-50/50'}`}>
               {product.is_offer && product.original_price ? (
-                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
-                  <span className="text-3xl lg:text-4xl font-bold text-medical-accent">
-                    {formatPrice(getPriceInCurrency(product.price_ves, product.price_ref))}
-                  </span>
-                  <span className="text-lg lg:text-xl font-medium text-medical-gray-500 line-through">
-                    {formatPrice(currency === 'VES' ? product.original_price : (product.original_price / 36.5))}
-                  </span>
-                  <span className="text-base lg:text-lg font-bold text-red-500 bg-red-100 px-3 py-1 rounded-full">
-                    - {Math.round(((product.original_price - product.price_ves) / product.original_price) * 100)}%
-                  </span>
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
+                    <span className="text-2xl lg:text-3xl font-bold text-red-600">
+                      {formatPrice(getDisplayPrice(product.price, currency), currency)}
+                    </span>
+                    <span className="text-base lg:text-lg font-medium text-medical-gray-500 line-through">
+                      {formatPrice(getDisplayPrice(product.original_price, currency), currency)}
+                    </span>
+                    <span className="text-sm lg:text-base font-bold text-white bg-gradient-to-r from-red-500 to-orange-500 px-2.5 py-0.5 rounded-full shadow-md">
+                      - {Math.round(((parseFloat(product.original_price) - parseFloat(product.price)) / parseFloat(product.original_price)) * 100)}%
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-green-600 font-semibold text-xs">
+                    <span>💰 Ahorra {formatPrice(getDisplayPrice((parseFloat(product.original_price) - parseFloat(product.price)).toString(), currency), currency)}</span>
+                  </div>
+                  {product.offer_end_time && (
+                    <div className="flex items-center gap-1.5 text-xs text-red-600 font-medium">
+                      <Clock className="w-3 h-3" />
+                      <span>Oferta válida hasta: {new Date(product.offer_end_time).toLocaleDateString('es-VE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <span className="text-3xl lg:text-4xl font-bold text-medical-primary">
-                  {formatPrice(getPriceInCurrency(product.price_ves, product.price_ref))}
-                </span>
+                <div className="space-y-1.5">
+                  {product.profit_discount && (product.profit_discount.is_active === true || product.profit_discount.is_active === 'true') ? (
+                    (() => {
+                      const discountPercent = parseFloat(product.profit_discount.best_discount_percentage || '0');
+                      const originalPriceNum = parseFloat(product.price);
+                      const discountedPriceNum = isNaN(originalPriceNum) ? 0 : originalPriceNum * (1 - discountPercent / 100);
+                      return (
+                        <div className="flex flex-wrap items-baseline gap-3">
+                          <span className="text-2xl lg:text-3xl font-bold text-red-600">
+                            {formatPrice(getDisplayPrice(discountedPriceNum.toFixed(2), currency), currency)}
+                          </span>
+                          <span className="text-base lg:text-lg font-medium text-medical-gray-500 line-through">
+                            {formatPrice(getDisplayPrice(product.price, currency), currency)}
+                          </span>
+                          <span className="text-sm lg:text-base font-bold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full">
+                            -{discountPercent}%
+                          </span>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <span className="text-2xl lg:text-3xl font-bold text-medical-primary">
+                      {formatPrice(getDisplayPrice(product.price, currency), currency)}
+                    </span>
+                  )}
+                </div>
               )}
-              {currency === 'VES' ? (
-                <p className="text-base lg:text-lg text-medical-gray-600 mt-2">
-                  Aprox. {formatPrice(product.price_ref, 'USD')}
-                </p>
-              ) : (
-                <p className="text-base lg:text-lg text-medical-gray-600 mt-2">
-                  Aprox. {formatPrice(product.price_ves, 'VES')}
-                </p>
-              )}
+              <p className="text-xs lg:text-sm text-medical-gray-600 mt-1.5">
+                Aprox. {currency === 'VES' ? formatPrice(parseFloat(product.price), 'USD') : formatPrice(getDisplayPrice(product.price, 'VES'), 'VES')}
+              </p>
             </div>
             
             {/* Stock & Prescription */}
@@ -225,13 +294,13 @@ const ProductDetailPage: React.FC = () => {
                   )}
                   <span>{addingToCart ? 'Agregando...' : 'Agregar al Carrito'}</span>
                 </motion.button>
-                <motion.button 
+                {/* <motion.button 
                   className="rounded-2xl border border-medical-gray-300 p-3 text-medical-gray-600 transition-all hover:border-red-500 hover:bg-red-50 hover:text-red-500"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <Heart className="w-6 h-6" />
-                </motion.button>
+                </motion.button> */}
               </div>
             </div>
 
@@ -239,7 +308,7 @@ const ProductDetailPage: React.FC = () => {
             <div className="space-y-3 pt-4">
                 <div className="flex items-center text-medical-gray-700">
                     <Truck className="w-5 h-5 mr-3 text-medical-primary"/>
-                    <span>Envío gratuito en pedidos sobre <span className="font-bold">{formatPrice(25, 'REF')}</span></span>
+                    <span>Envío gratuito en pedidos sobre <span className="font-bold">{formatPrice(25, 'USD')}</span></span>
                 </div>
                 <div className="flex items-center text-medical-gray-700">
                     <Clock className="w-5 h-5 mr-3 text-medical-primary"/>
@@ -253,7 +322,9 @@ const ProductDetailPage: React.FC = () => {
         <div className="mt-16">
           <div className="border-b border-medical-gray-200 overflow-x-auto">
             <nav className="-mb-px flex space-x-6 sm:space-x-8" aria-label="Tabs">
-              {['description', 'details', 'reviews'].map((tab) => (
+              {['description', 
+              // 'details', 'reviews'
+              ].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -300,8 +371,11 @@ const ProductDetailPage: React.FC = () => {
           </div>
         </div>
         
-        <ProductsCarousel products={relatedProducts} title="Productos Relacionados" />
-        <ProductsCarousel products={recommendedProducts} title="También te podría interesar" />
+        <RecommendedProductsSection
+          relatedArticles={relatedArticles}
+          frequentlyBoughtTogether={frequentlyBoughtTogether}
+          isLoading={isLoadingRecommendations}
+        />
       </div>
     </div>
   );

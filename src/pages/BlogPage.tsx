@@ -1,96 +1,100 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import BlogPostCard from '../components/Blog/BlogPostCard';
-import { mockBlogPosts } from '../data/blogMockData';
-import { Search, Calendar, Tag, TrendingUp } from 'lucide-react';
+import { usePublicPostsQuery, usePublicCategoriesQuery } from '../hooks/queries/useBlogQueries';
+import { Search, Calendar, Tag, TrendingUp, Loader2 } from 'lucide-react';
 import { BlogPostSkeleton, SkeletonBase } from '../components/Skeleton';
-import { useScrollContext } from '../contexts/ScrollContext';
-
+import { BlogCategory } from '../types';
+import { BlogPostListItem } from '../types';
 const BlogPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState('publishedAt');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isFiltering, setIsFiltering] = useState(false);
-  
-  const { scrollToTop } = useScrollContext();
+  const [isPageChanging, setIsPageChanging] = useState(false);
   
   const postsPerPage = 6;
+  const postsContainerRef = useRef<HTMLDivElement>(null);
 
-  // Initial loading simulation
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1200);
+  // Load categories
+  const { data: categories = [], isLoading: isLoadingCategories } = usePublicCategoriesQuery();
 
-    return () => clearTimeout(timer);
-  }, []);
+  // Get category slug for filtering
+  const categorySlug = useMemo(() => {
+    if (selectedCategory === 'all') return undefined;
+    return categories.find(cat => cat.name === selectedCategory || cat.slug === selectedCategory)?.slug;
+  }, [selectedCategory, categories]);
 
-  // Filter change loading simulation
-  useEffect(() => {
-    if (!isLoading) {
-      setIsFiltering(true);
-      const timer = setTimeout(() => {
-        setIsFiltering(false);
-      }, 400);
+  // Load posts
+  const { 
+    data: postsResponse, 
+    isLoading: isLoadingPosts, 
+    error: postsError 
+  } = usePublicPostsQuery({
+    page: currentPage,
+    limit: postsPerPage,
+    category_slug: categorySlug,
+    search: searchTerm || undefined,
+  });
 
-      return () => clearTimeout(timer);
-    }
-  }, [searchTerm, selectedCategory, sortBy, isLoading]);
+  const posts = postsResponse?.items || [];
+  const totalPages = postsResponse?.pages || 1;
+  const total = postsResponse?.total || 0;
+  const isLoading = isLoadingPosts || isLoadingCategories;
+  const error = postsError ? (postsError instanceof Error ? postsError.message : 'Error al cargar los artículos') : null;
 
-  // Filtramos para mostrar solo los artículos publicados
-  const publishedPosts = mockBlogPosts.filter(post => post.published);
-
-  // Obtener categorías únicas
-  const categories = Array.from(new Set(publishedPosts.map(post => post.category)));
-
-  // Filtrar y ordenar posts
-  const filteredAndSortedPosts = useMemo(() => {
-    let filtered = publishedPosts.filter(post => {
-      const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-
-    // Ordenar
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'publishedAt':
-          return new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime();
-        case 'title':
-          return a.title.localeCompare(b.title);
-        case 'readTime':
-          return a.readTime - b.readTime;
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
-  }, [publishedPosts, searchTerm, selectedCategory, sortBy]);
-
-  // Paginación
-  const totalPages = Math.ceil(filteredAndSortedPosts.length / postsPerPage);
-  const paginatedPosts = filteredAndSortedPosts.slice(
-    (currentPage - 1) * postsPerPage,
-    currentPage * postsPerPage
-  );
-
-  // Posts más populares/recientes para el sidebar
-  const featuredPosts = publishedPosts
-    .filter(post => post.category !== selectedCategory || selectedCategory === 'all')
+  // Featured posts (first 4 posts, excluding current category)
+  const featuredPosts = posts
+    .filter(post => {
+      const categoryName = typeof post.category === 'string' 
+        ? post.category 
+        : post.category?.name;
+      return selectedCategory === 'all' || categoryName !== selectedCategory;
+    })
     .slice(0, 4);
 
   const handlePageChange = useCallback((page: number) => {
+    if (page === currentPage) return;
+    
+    setIsPageChanging(true);
     setCurrentPage(page);
-    scrollToTop({ smooth: true });
-  }, [scrollToTop]);
+    
+    // Scroll suave hacia el contenedor de posts
+    if (postsContainerRef.current) {
+      const offsetTop = postsContainerRef.current.offsetTop - 120;
+      window.scrollTo({
+        top: offsetTop,
+        behavior: 'smooth'
+      });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentPage]);
+
+  // Desactivar estado de loading cuando terminan de cargar los posts
+  useEffect(() => {
+    if (!isLoadingPosts && isPageChanging) {
+      const timer = setTimeout(() => {
+        setIsPageChanging(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingPosts, isPageChanging]);
 
   const handleCategoryChange = useCallback((category: string) => {
     setSelectedCategory(category);
     setCurrentPage(1);
+  }, []);
+
+  // Helper to get category name
+  const getCategoryName = (category: string | BlogCategory): string => {
+    if (typeof category === 'string') return category;
+    return category.name;
+  };
+
+  // Helper to get image URL - memoized to prevent re-renders
+  const getPostImage = React.useCallback((post: BlogPostListItem): string => {
+    if (post.featured_image_url) return post.featured_image_url;
+    if (post.images && post.images.length > 0) return post.images[0];
+    return '/images/blog/default.jpg';
   }, []);
 
   return (
@@ -142,26 +146,10 @@ const BlogPage: React.FC = () => {
                   >
                     <option value="all">Todas las categorías</option>
                     {categories.map(category => (
-                      <option key={category} value={category}>
-                        {category}
+                      <option key={category.id} value={category.name}>
+                        {category.name}
                       </option>
                     ))}
-                  </select>
-                </div>
-
-                {/* Sort */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ordenar por
-                  </label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="publishedAt">Más recientes</option>
-                    <option value="title">Título (A-Z)</option>
-                    <option value="readTime">Tiempo de lectura</option>
                   </select>
                 </div>
               </div>
@@ -182,59 +170,81 @@ const BlogPage: React.FC = () => {
                 </button>
                 {categories.map(category => (
                   <button
-                    key={category}
-                    onClick={() => handleCategoryChange(category)}
+                    key={category.id}
+                    onClick={() => handleCategoryChange(category.name)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                      selectedCategory === category
+                      selectedCategory === category.name
                         ? 'bg-blue-600 text-white'
                         : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
                     }`}
                   >
-                    {category}
+                    {category.name}
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Results Summary */}
-            {searchTerm && (
+            {(searchTerm || selectedCategory !== 'all') && (
               <div className="mb-6">
                 <p className="text-gray-600">
-                  Se encontraron <span className="font-semibold">{filteredAndSortedPosts.length}</span> 
-                  {filteredAndSortedPosts.length === 1 ? ' resultado' : ' resultados'} 
-                  para "<span className="font-semibold">{searchTerm}</span>"
+                  Se encontraron <span className="font-semibold">{total}</span> 
+                  {total === 1 ? ' resultado' : ' resultados'}
+                  {searchTerm && ` para "${searchTerm}"`}
                 </p>
               </div>
             )}
 
-            {/* Blog Posts Grid */}
-            {isLoading || isFiltering ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                {[...Array(6)].map((_, index) => (
-                  <BlogPostSkeleton key={index} />
-                ))}
-              </div>
-            ) : paginatedPosts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                {paginatedPosts.map(post => (
-                  <BlogPostCard key={post.id} post={post} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
-                  <Search className="w-16 h-16 mx-auto" />
-                </div>
-                <h3 className="text-xl font-medium text-gray-900 mb-2">
-                  No se encontraron artículos
-                </h3>
-                <p className="text-gray-600">
-                  {searchTerm || selectedCategory !== 'all'
-                    ? 'Intenta ajustar tus filtros para encontrar lo que buscas.'
-                    : 'Aún no hay artículos publicados en el blog.'}
-                </p>
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-800">{error}</p>
               </div>
             )}
+
+            {/* Blog Posts Grid */}
+            <div ref={postsContainerRef} className="relative">
+              {/* Overlay de loading al cambiar de página */}
+              {isPageChanging && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-center rounded-2xl transition-opacity duration-300">
+                  <div className="flex flex-col items-center gap-3 w-40">
+                    <div className="skeleton rounded-full h-14 w-14" />
+                    <div className="skeleton h-3 w-24 rounded-full" />
+                    <div className="skeleton h-3 w-16 rounded-full" />
+                  </div>
+                </div>
+              )}
+
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                  {[...Array(6)].map((_, index) => (
+                    <BlogPostSkeleton key={index} />
+                  ))}
+                </div>
+              ) : posts.length > 0 ? (
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 transition-opacity duration-300 ${
+                  isPageChanging ? 'opacity-50' : 'opacity-100'
+                }`}>
+                  {posts.map(post => (
+                    <BlogPostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 mb-4">
+                    <Search className="w-16 h-16 mx-auto" />
+                  </div>
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">
+                    No se encontraron artículos
+                  </h3>
+                  <p className="text-gray-600">
+                    {searchTerm || selectedCategory !== 'all'
+                      ? 'Intenta ajustar tus filtros para encontrar lo que buscas.'
+                      : 'Aún no hay artículos publicados en el blog.'}
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
@@ -302,19 +312,33 @@ const BlogPage: React.FC = () => {
                           href={`/blog/${post.slug}`}
                           className="flex items-start space-x-3 hover:bg-gray-50 p-2 rounded-lg transition-colors"
                         >
-                          <img
-                            src={post.image}
-                            alt={post.title}
-                            className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-                          />
+                          <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                            <img
+                              src={getPostImage(post)}
+                              alt={post.title}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              onError={(e) => {
+                                const img = e.currentTarget;
+                                // Only set default if it's not already the default image
+                                if (!img.src.includes('/images/blog/default.jpg')) {
+                                  img.src = '/images/blog/default.jpg';
+                                  // Prevent further error handling
+                                  img.onerror = null;
+                                }
+                              }}
+                            />
+                          </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 line-clamp-2">
                               {post.title}
                             </h4>
-                            <div className="flex items-center mt-1 text-xs text-gray-500">
-                              <Calendar className="w-3 h-3 mr-1" />
-                              {new Date(post.publishedAt!).toLocaleDateString('es-ES')}
-                            </div>
+                            {post.published_at && (
+                              <div className="flex items-center mt-1 text-xs text-gray-500">
+                                <Calendar className="w-3 h-3 mr-1" />
+                                {new Date(post.published_at).toLocaleDateString('es-ES')}
+                              </div>
+                            )}
                           </div>
                         </a>
                       </div>
@@ -331,14 +355,19 @@ const BlogPage: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   {categories.map(category => {
-                    const count = publishedPosts.filter(post => post.category === category).length;
+                    const count = posts.filter(post => {
+                      const categoryName = typeof post.category === 'string' 
+                        ? post.category 
+                        : post.category?.name;
+                      return categoryName === category.name;
+                    }).length;
                     return (
                       <button
-                        key={category}
-                        onClick={() => handleCategoryChange(category)}
+                        key={category.id}
+                        onClick={() => handleCategoryChange(category.name)}
                         className="w-full flex items-center justify-between p-2 text-left hover:bg-gray-50 rounded-lg transition-colors"
                       >
-                        <span className="text-sm text-gray-700">{category}</span>
+                        <span className="text-sm text-gray-700">{category.name}</span>
                         <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
                           {count}
                         </span>

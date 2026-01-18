@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { 
   Package, 
   Filter, 
@@ -12,20 +12,23 @@ import {
   XCircle,
   DollarSign,
   ShoppingCart,
+  Search,
+  X as XIcon,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Product } from '../../types';
-import ProductModal from '../../components/Admin/ProductModal';
-import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { ProductPlaceholder } from '../../components/common';
-import { getProducts } from '../../data/products';
+import { productService } from '../../services/ProductService';
 import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
 import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
 
+const ProductModal = lazy(() => import('../../components/Admin/ProductModal'));
+const ConfirmationModal = lazy(() => import('../../components/common/ConfirmationModal'));
+
 const AdminProductsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { getPriceInCurrency, formatPrice } = useAdminCurrency();
+  const { formatPriceFromBackend } = useAdminCurrency();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -37,20 +40,16 @@ const AdminProductsPage: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [listProducts, setListProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
 
 
   // Cargar productos
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        setLoading(true);
-        const products = await getProducts();
+        const products = await productService.getAllProducts();
         setListProducts(products);
       } catch (error) {
         console.error('Error loading products:', error);
-      } finally {
-        setLoading(false);
       }
     };
     
@@ -79,6 +78,7 @@ const AdminProductsPage: React.FC = () => {
     return listProducts.filter(product => {
       const matchesSearch = 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.id.toLowerCase().includes(searchTerm.toLowerCase()) || // Buscar por código
         product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -173,7 +173,7 @@ const AdminProductsPage: React.FC = () => {
     inStock: listProducts.filter(p => p.in_stock).length,
     lowStock: listProducts.filter(p => !p.in_stock).length,
     outOfStock: listProducts.filter(p => !p.in_stock).length,
-    totalRevenue: listProducts.reduce((sum, p) => sum + getPriceInCurrency(p.price_ves, p.price_ref), 0),
+    totalRevenue: listProducts.reduce((sum, p) => sum + (typeof p.price === 'string' ? parseFloat(p.price) : p.price), 0),
     totalSales: 0
   };
 
@@ -191,14 +191,14 @@ const AdminProductsPage: React.FC = () => {
           </p>
         </div>
         <div className="w-full sm:w-auto">
-          {/* Mobile Buttons */}
-          <div className="sm:hidden">
+          {/* Mobile Buttons - Comentado por ahora */}
+          {/* <div className="sm:hidden">
             <div className="grid grid-cols-3 gap-2 mb-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium"
               >
-                {/* <Filter className="w-4 h-4 mr-1" />
+                <Filter className="w-4 h-4 mr-1" />
                 <span className="truncate">Filtros</span>
               </button>
               <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
@@ -207,7 +207,7 @@ const AdminProductsPage: React.FC = () => {
               </button>
               <button className="flex items-center justify-center px-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium">
                 <Download className="w-4 h-4 mr-1" />
-                <span className="truncate">Exportar</span> */}
+                <span className="truncate">Exportar</span>
               </button>
             </div>
             <button 
@@ -217,9 +217,9 @@ const AdminProductsPage: React.FC = () => {
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Producto
             </button>
-          </div>
-          {/* Desktop Buttons */}
-          <div className="hidden sm:flex items-center space-x-3">
+          </div> */}
+          {/* Desktop Buttons - Comentado por ahora */}
+          {/* <div className="hidden sm:flex items-center space-x-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -242,8 +242,43 @@ const AdminProductsPage: React.FC = () => {
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Producto
           </button>
-          </div>
+          </div> */}
         </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 lg:p-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Reset to first page on search
+            }}
+            className="block w-full pl-10 pr-10 py-2.5 text-sm lg:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            placeholder="Buscar por nombre, código, marca o descripción..."
+          />
+          {searchTerm && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setCurrentPage(1);
+              }}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <XIcon className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+        {searchTerm && (
+          <div className="mt-2 text-xs lg:text-sm text-gray-600">
+            Mostrando {filteredProducts.length} de {listProducts.length} productos
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -312,7 +347,7 @@ const AdminProductsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
                 <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Ingresos Totales</p>
-                <p className="text-lg lg:text-2xl font-bold text-gray-900 truncate">{formatPrice(stats.totalRevenue)}</p>
+                <p className="text-lg lg:text-2xl font-bold text-gray-900 truncate">{formatPriceFromBackend(stats.totalRevenue)}</p>
               </div>
               <div className="p-2 lg:p-3 bg-purple-100 rounded-full flex-shrink-0">
                 <DollarSign className="w-4 h-4 lg:w-6 lg:h-6 text-purple-600" />
@@ -410,18 +445,25 @@ const AdminProductsPage: React.FC = () => {
                 onClick={() => handleViewProduct(product)}
               >
                 <div className="flex items-start space-x-3">
-                  <img 
-                    src={product.image} 
-                    alt={product.name} 
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border flex-shrink-0"
+                  {product.images && product.images.length > 1 ? (
+                    <img 
+                      src={product.images[1]} 
+                      alt={product.name} 
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border flex-shrink-0"
                     />
+                  ) : (
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border flex-shrink-0"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800 text-sm sm:text-base truncate">{product.name}</p>
                     <p className="text-xs sm:text-sm text-gray-500 truncate">{product.brand}</p>
                     <div className="mt-1 sm:mt-2">
                       <SmartPriceDisplay 
-                        priceVes={product.price_ves} 
-                        priceRef={product.price_ref} 
+                        amountUsd={parseFloat(product.price)} 
                         className="font-semibold text-sm sm:text-base text-gray-900"
                       />
                     </div>
@@ -500,9 +542,15 @@ const AdminProductsPage: React.FC = () => {
                     </div>
                     </td>
                   <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center space-x-3">
-                    {product.images?.[0] || product.image ? (
+                    {product.images && product.images.length > 1 ? (
                       <img
-                        src={product.images?.[0] || product.image} 
+                        src={product.images[1]} 
+                        alt={product.name}
+                        className="w-12 h-12 rounded-lg object-cover border" 
+                      />
+                    ) : product.image ? (
+                      <img
+                        src={product.image} 
                         alt={product.name}
                         className="w-12 h-12 rounded-lg object-cover border" 
                       />
@@ -517,8 +565,7 @@ const AdminProductsPage: React.FC = () => {
                   <td className="px-6 py-4">{product.category}</td>
                   <td className="px-6 py-4">
                     <SmartPriceDisplay 
-                      priceVes={product.price_ves} 
-                      priceRef={product.price_ref} 
+                      amountUsd={parseFloat(product.price)} 
                       className="font-semibold"
                     />
                   </td>
@@ -578,22 +625,26 @@ const AdminProductsPage: React.FC = () => {
         </div>
 
       {showProductModal && selectedProduct && (
-        <ProductModal 
-          product={selectedProduct}
-          onClose={() => setShowProductModal(false)}
-        />
+        <Suspense fallback={<div>Cargando...</div>}>
+          <ProductModal 
+            product={selectedProduct}
+            onClose={() => setShowProductModal(false)}
+          />
+        </Suspense>
       )}
 
       {productToDelete && (
-        <ConfirmationModal
-          isOpen={!!productToDelete}
-          title="Confirmar Eliminación"
-          message={`¿Estás seguro de que deseas eliminar el producto "${productToDelete.name}"? Esta acción no se puede deshacer.`}
-          onConfirm={handleConfirmDelete}
-          onClose={() => setProductToDelete(null)}
-          confirmText="Eliminar"
-          cancelText="Cancelar"
-        />
+        <Suspense fallback={<div>Cargando...</div>}>
+          <ConfirmationModal
+            isOpen={!!productToDelete}
+            title="Confirmar Eliminación"
+            message={`¿Estás seguro de que deseas eliminar el producto "${productToDelete.name}"? Esta acción no se puede deshacer.`}
+            onConfirm={handleConfirmDelete}
+            onClose={() => setProductToDelete(null)}
+            confirmText="Eliminar"
+            cancelText="Cancelar"
+          />
+        </Suspense>
       )}
     </div>
   );

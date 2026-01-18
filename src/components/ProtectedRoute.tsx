@@ -27,7 +27,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Mostrar loading mientras se verifica la autenticación
   if (loading) {
-    return fallback || <LoadingSpinner message="Verificando acceso..." submessage="Un momento por favor" />;
+    return fallback || <LoadingSpinner message="Cargando..." />;
   }
 
   // Si requiere autenticación pero no está autenticado, redirigir

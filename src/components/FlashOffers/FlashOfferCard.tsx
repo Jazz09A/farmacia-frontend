@@ -1,7 +1,8 @@
 // 🔥 Flash Offer Card Component
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Clock, Flame, ShoppingCart, Zap } from 'lucide-react';
+import { Clock, Flame, ShoppingCart, Zap, Eye } from 'lucide-react';
 import { FlashOfferWithProduct } from '../../types';
 import { useFlashOfferCountdown } from '../../hooks/useFlashOffers';
 import { flashOfferService } from '../../services/FlashOfferService';
@@ -23,21 +24,44 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
   showQuantity = true,
   className = '',
 }) => {
+  const navigate = useNavigate();
   const { currency } = useGlobalCurrency();
   const { addToCart } = useCart();
   const { formattedTime, isExpired } = useFlashOfferCountdown(offer.end_time);
 
-  // Calcular precios
-  const originalPrice = currency === 'VES' ? offer.product.price_ves : offer.product.price_ref;
+  // Calcular precios - asegurar que sean números
+  const parsePrice = (price: string | number | undefined): number => {
+    if (typeof price === 'number') return price;
+    if (typeof price === 'string') {
+      const parsed = parseFloat(price);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+    return 0;
+  };
+
+  // Obtener precio original según la moneda
+  let originalPriceValue: number;
+  if (currency === 'VES') {
+    originalPriceValue = parsePrice(offer.product.price_ves || offer.product.price);
+  } else {
+    // Para USD, usar price_ref, price, original_price o current_price
+    originalPriceValue = parsePrice(
+      offer.product.price_ref || 
+      offer.product.original_price || 
+      offer.product.price || 
+      offer.product.current_price
+    );
+  }
+
   const discountedPrice = flashOfferService.calculateDiscountedPrice(
-    originalPrice,
+    originalPriceValue,
     offer.discount_type,
     offer.discount_value
   );
-  const savings = flashOfferService.calculateSavings(originalPrice, discountedPrice);
+  const savings = flashOfferService.calculateSavings(originalPriceValue, discountedPrice);
   const discountPercentage = offer.discount_type === 'percentage' 
     ? offer.discount_value 
-    : Math.round((savings / originalPrice) * 100);
+    : (originalPriceValue > 0 ? Math.round((savings / originalPriceValue) * 100) : 0);
 
   const handleAddToCart = async () => {
     if (isExpired || !offer.product.in_stock) return;
@@ -50,11 +74,16 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
     }
   };
 
-  // Configuraciones por tamaño
+  const handleViewDetails = () => {
+    // Navegar a los detalles del producto
+    navigate(`/product/${offer.product.slug || offer.product.id}`);
+  };
+
+  // Configuraciones por tamaño - Responsive y simétrico
   const sizeConfig = {
     small: {
-      container: 'w-64',
-      image: 'h-32',
+      container: 'w-full h-full flex flex-col',
+      image: 'h-32 sm:h-36',
       title: 'text-sm font-medium',
       price: 'text-lg',
       originalPrice: 'text-xs',
@@ -62,22 +91,22 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
       button: 'text-sm px-3 py-2',
     },
     medium: {
-      container: 'w-80',
-      image: 'h-40',
-      title: 'text-base font-semibold',
-      price: 'text-xl',
-      originalPrice: 'text-sm',
-      badge: 'text-sm px-3 py-1.5',
-      button: 'text-base px-4 py-2',
+      container: 'w-full h-full flex flex-col',
+      image: 'h-40 sm:h-44 lg:h-48',
+      title: 'text-sm sm:text-base font-semibold',
+      price: 'text-lg sm:text-xl',
+      originalPrice: 'text-xs sm:text-sm',
+      badge: 'text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5',
+      button: 'text-sm sm:text-base px-3 sm:px-4 py-2',
     },
     large: {
-      container: 'w-96',
-      image: 'h-48',
-      title: 'text-lg font-bold',
-      price: 'text-2xl',
-      originalPrice: 'text-base',
-      badge: 'text-base px-4 py-2',
-      button: 'text-lg px-6 py-3',
+      container: 'w-full h-full flex flex-col',
+      image: 'h-48 sm:h-56',
+      title: 'text-base sm:text-lg font-bold',
+      price: 'text-xl sm:text-2xl',
+      originalPrice: 'text-sm sm:text-base',
+      badge: 'text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2',
+      button: 'text-base sm:text-lg px-4 sm:px-6 py-2 sm:py-3',
     },
   };
 
@@ -129,7 +158,7 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
       {/* Product Image */}
       <div className={`${config.image} bg-white p-4 flex items-center justify-center relative overflow-hidden`}>
         <img
-          src={offer.product.image}
+          src={offer.product.images && offer.product.images.length > 1 ? offer.product.images[1] : offer.product.image}
           alt={offer.product.name}
           className="max-w-full max-h-full object-contain"
           loading="lazy"
@@ -137,58 +166,59 @@ export const FlashOfferCard: React.FC<FlashOfferCardProps> = ({
         <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent" />
       </div>
 
-      {/* Content */}
-      <div className="p-4 space-y-3">
-        {/* Title */}
-        <h3 className={`${config.title} text-gray-800 line-clamp-2 hover:text-red-600 transition-colors`}>
-          {offer.product.name}
-        </h3>
+      {/* Content - Flex para mantener simetría */}
+      <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+        <div className="space-y-3">
+          {/* Title */}
+          <h3 className={`${config.title} text-gray-800 line-clamp-2 hover:text-red-600 transition-colors min-h-[2.5rem] sm:min-h-[3rem]`}>
+            {offer.product.name}
+          </h3>
 
-        {/* Brand */}
-        <p className="text-sm text-gray-600">{offer.product.brand}</p>
+          {/* Brand */}
+          {offer.product.brand && (
+            <p className="text-xs sm:text-sm text-gray-600 line-clamp-1">{offer.product.brand}</p>
+          )}
 
-        {/* Prices */}
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <span className={`${config.price} font-bold text-red-600`}>
-              {currency === 'VES' 
-                ? `Bs. ${discountedPrice.toLocaleString('es-VE')}` 
-                : `$ ${discountedPrice.toFixed(2)}`
+          {/* Prices */}
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2 flex-wrap">
+              <span className={`${config.price} font-bold text-red-600`}>
+                {currency === 'VES' 
+                  ? `Bs. ${discountedPrice.toLocaleString('es-VE')}` 
+                  : `$ ${discountedPrice.toFixed(2)}`
+                }
+              </span>
+              <span className={`${config.originalPrice} text-gray-500 line-through`}>
+                {currency === 'VES' 
+                  ? `Bs. ${originalPriceValue.toLocaleString('es-VE')}` 
+                  : `$ ${originalPriceValue.toFixed(2)}`
+                }
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-green-600 font-medium">
+              Ahorra {currency === 'VES' 
+                ? `Bs. ${savings.toLocaleString('es-VE')}` 
+                : `$ ${savings.toFixed(2)}`
               }
-            </span>
-            <span className={`${config.originalPrice} text-gray-500 line-through`}>
-              {currency === 'VES' 
-                ? `Bs. ${originalPrice.toLocaleString('es-VE')}` 
-                : `$ ${originalPrice.toFixed(2)}`
-              }
+            </p>
+          </div>
+
+          {/* Countdown Timer */}
+          <div className="bg-red-100 rounded-lg p-2 flex items-center justify-center space-x-2">
+            <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-red-600 flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-bold text-red-700 text-center">
+              Termina en: {formattedTime}
             </span>
           </div>
-          <p className="text-sm text-green-600 font-medium">
-            Ahorra {currency === 'VES' 
-              ? `Bs. ${savings.toLocaleString('es-VE')}` 
-              : `$ ${savings.toFixed(2)}`
-            }
-          </p>
         </div>
 
-        {/* Countdown Timer */}
-        <div className="bg-red-100 rounded-lg p-2 flex items-center justify-center space-x-2">
-          <Clock className="w-4 h-4 text-red-600" />
-          <span className="text-sm font-bold text-red-700">
-            Termina en: {formattedTime}
-          </span>
-        </div>
-
-        {/* Add to Cart Button */}
+        {/* View Details Button - Siempre al final */}
         <button
-          onClick={handleAddToCart}
-          disabled={!offer.product.in_stock || isExpired}
-          className={`w-full ${config.button} bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl`}
+          onClick={handleViewDetails}
+          className={`w-full ${config.button} bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl mt-auto`}
         >
-          <ShoppingCart className="w-5 h-5" />
-          <span>
-            {!offer.product.in_stock ? 'Sin Stock' : 'Añadir al Carrito'}
-          </span>
+          <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span>Ver Detalles</span>
         </button>
       </div>
     </motion.div>

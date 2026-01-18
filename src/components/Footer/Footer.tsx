@@ -1,37 +1,32 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Mail, 
   Phone, 
-  MapPin, 
   Facebook, 
-  Twitter, 
+  Linkedin, 
   Instagram
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   const socialLinks = [
     { icon: Facebook, href: '#', label: 'Facebook' },
-    { icon: Twitter, href: '#', label: 'Twitter' },
-    { icon: Instagram, href: '#', label: 'Instagram' }
+    { icon: Linkedin, href: 'https://pe.linkedin.com/company/grupo-drozainka-ca', label: 'LinkedIn' },
+    { icon: Instagram, href: 'https://www.instagram.com/drozainka/', label: 'Instagram' }
   ];
 
   const quickLinks = [
-    'Sobre Nosotros',
-    'Servicios de Distribución',
-    'Catálogo Farmacéutico',
-    'Asesoría Comercial',
-    'Promociones B2B',
-    'Blog Farmacéutico'
+    { label: '¿Por qué nosotros?', href: '/why-us' },
+    { label: 'Catálogo', href: '/catalog' },
+    { label: 'Convertirse en cliente', href: '/cliente-drozainka' },
+    { label: 'Quieres ser proveedor', href: '/proveedor-drozainka' },
+    { label: 'Blog', href: '/blog' }
   ];
 
   const customerService = [
-    'Centro de Ayuda Comercial',
-    'Política de Devoluciones B2B',
-    'Términos Comerciales',
-    'Política de Privacidad',
-    'Logística y Distribución',
-    'Garantía de Productos'
+    { label: 'Términos Comerciales y Política de Devoluciones B2B.', href: '/terminos-y-condiciones' },
+    { label: 'Política de Privacidad.', href: '/politica-de-privacidad' },
   ];
 
 
@@ -50,12 +45,12 @@ export const Footer: React.FC = () => {
             viewport={{ once: true }}
           >
             <div>
-              <h3 className="text-2xl font-bold font-serif mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-green-200">
-                Grupo Drozainka
+              <h3 className="text-2xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-green-200">
+                Grupo Drozainka C.A
               </h3>
               <p className="text-blue-100 leading-relaxed">
-                Distribuidor líder de productos farmacéuticos en Venezuela. 
-                Suministramos medicamentos certificados a farmacias con la más alta calidad y confiabilidad.
+                Distribuidor líder de productos nutraceuticos y farmacéuticos en Venezuela.
+                Suministramos productos certificados a farmacias con la más alta calidad y confiabilida.
               </p>
             </div>
 
@@ -63,15 +58,11 @@ export const Footer: React.FC = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3 text-blue-100">
                 <Phone className="h-5 w-5 text-blue-300" />
-                <span>+58 212 555-0123</span>
+                <a href="tel:+584241806018" className="hover:text-white transition-colors">+58 424 180 6018</a>
               </div>
               <div className="flex items-center space-x-3 text-blue-100">
                 <Mail className="h-5 w-5 text-blue-300" />
-                <span>info@grupodrozainka.com</span>
-              </div>
-              <div className="flex items-center space-x-3 text-blue-100">
-                <MapPin className="h-5 w-5 text-blue-300" />
-                <span>Caracas, Venezuela</span>
+                <a href="mailto:info@grupodrozainka.com" className="hover:text-white transition-colors">info@grupodrozainka.com</a>
               </div>
             </div>
 
@@ -85,6 +76,8 @@ export const Footer: React.FC = () => {
                   whileHover={{ scale: 1.1, y: -2 }}
                   whileTap={{ scale: 0.9 }}
                   aria-label={social.label}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <social.icon className="h-5 w-5" />
                 </motion.a>
@@ -103,12 +96,9 @@ export const Footer: React.FC = () => {
             <ul className="space-y-3">
               {quickLinks.map((link, index) => (
                 <motion.li key={index}>
-                  <a
-                    href="#"
-                    className="text-blue-100 hover:text-white transition-colors hover:underline"
-                  >
-                    {link}
-                  </a>
+                  <Link to={link.href} className="text-blue-100 hover:text-white transition-colors hover:underline">
+                    {link.label}
+                  </Link>
                 </motion.li>
               ))}
             </ul>
@@ -125,12 +115,12 @@ export const Footer: React.FC = () => {
             <ul className="space-y-3">
               {customerService.map((service, index) => (
                 <motion.li key={index}>
-                  <a
-                    href="#"
+                  <Link
+                    to={service.href}
                     className="text-blue-100 hover:text-white transition-colors hover:underline"
                   >
-                    {service}
-                  </a>
+                    {service.label}
+                  </Link>
                 </motion.li>
               ))}
             </ul>
@@ -145,7 +135,7 @@ export const Footer: React.FC = () => {
           >
             <h4 className="text-lg font-semibold mb-6">Newsletter</h4>
             <p className="text-blue-100 mb-4">
-              Recibe promociones comerciales y actualizaciones del sector farmacéutico
+              Recibe promociones comerciales y actualizaciones de nuestra empresa
             </p>
             <form className="space-y-3">
               <input
@@ -171,7 +161,7 @@ export const Footer: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-blue-200 text-sm">
-              © 2025 Grupo Drozainka. Todos los derechos reservados.
+              © 2025 Grupo Drozainka C.A. Todos los derechos reservados.
             </p>
             <div className="flex items-center space-x-6 text-sm text-blue-200">
               <span>Distribución de medicamentos certificados</span>

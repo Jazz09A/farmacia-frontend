@@ -2,7 +2,7 @@
 export const config = {
   // API Configuration
   api: {
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
     timeout: 30000,
     retryAttempts: 3,
   },
@@ -24,7 +24,7 @@ export const config = {
 
   // App Metadata
   app: {
-    name: 'Grupo Drozainka',
+    name: 'Grupo Drozainka C.A',
     version: '1.0.0',
     description: 'Professional Medical Care Platform',
   },
@@ -35,6 +35,7 @@ export const config = {
     refreshTokenKey: 'refresh_token',
     userDataKey: 'user_data',
     sessionTimeout: 60 * 60 * 1000, // 1 hour in milliseconds
+    tokenRefreshThreshold: 120, // Refresh token 2 minutes before expiry (in seconds)
   },
 
   // Pagination
@@ -117,7 +118,8 @@ export const isDebug = () => config.debug;
 // API utilities
 export const getApiUrl = (endpoint: string = '') => {
   const baseUrl = config.api.baseUrl;
-  return endpoint ? `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}` : baseUrl;
+  endpoint = endpoint ? `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}` : baseUrl;
+  return endpoint;
 };
 
 // Feature flag utilities
@@ -125,22 +127,22 @@ export const isFeatureEnabled = (feature: keyof typeof config.features): boolean
   return config.features[feature] as boolean;
 };
 
-// Debug logger
+// Debug logger - solo se ejecuta en desarrollo
 export const debugLog = (message: string, ...args: any[]) => {
   if (config.debug) {
-    console.log(`[Grupo Drozainka Debug] ${message}`, ...args);
+    console.log(`[Grupo Drozainka C.A Debug] ${message}`, ...args);
   }
 };
 
 export const debugWarn = (message: string, ...args: any[]) => {
   if (config.debug) {
-    console.warn(`[Grupo Drozainka Warning] ${message}`, ...args);
+    console.warn(`[Grupo Drozainka C.A Warning] ${message}`, ...args);
   }
 };
 
 export const debugError = (message: string, ...args: any[]) => {
   if (config.debug) {
-    console.error(`[Grupo Drozainka Error] ${message}`, ...args);
+    console.error(`[Grupo Drozainka C.A Error] ${message}`, ...args);
   }
 };
 

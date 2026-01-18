@@ -1,23 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
 import LoginForm from '../components/Auth/LoginForm';
 import JuridicoRegisterForm from '../components/Auth/JuridicoRegisterForm';
+import ForgotPasswordForm from '../components/Auth/ForgotPasswordForm';
 
 const AuthPage: React.FC = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const mode = searchParams.get('mode');
+  
+  const [isLogin, setIsLogin] = useState(mode !== 'register' && mode !== 'forgot-password');
   const [userType, setUserType] = useState<'juridico' | null>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(mode === 'forgot-password');
+
+  useEffect(() => {
+    setShowForgotPassword(mode === 'forgot-password');
+    setIsLogin(mode !== 'register' && mode !== 'forgot-password');
+  }, [mode]);
 
   const handleShowRegister = () => {
     setIsLogin(false);
     setUserType('juridico');
+    setSearchParams({ mode: 'register' });
   };
 
   const handleSwitchToLogin = () => {
     setIsLogin(true);
     setUserType(null);
+    setShowForgotPassword(false);
+    setSearchParams({ mode: 'login' });
+  };
+
+  const handleShowForgotPassword = () => {
+    setShowForgotPassword(true);
+    setIsLogin(false);
+    setSearchParams({ mode: 'forgot-password' });
+  };
+
+  const handleBackFromForgotPassword = () => {
+    setShowForgotPassword(false);
+    setIsLogin(true);
+    setSearchParams({ mode: 'login' });
   };
 
   const renderForm = () => {
+    if (showForgotPassword) {
+      return (
+        <ForgotPasswordForm
+          onBack={handleBackFromForgotPassword}
+        />
+      );
+    }
+    
     if (isLogin) {
       return (
         <LoginForm
@@ -37,7 +71,7 @@ const AuthPage: React.FC = () => {
         <div className={`flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 ${isLogin ? '' : 'custom-scrollbar'}`}>
             <AnimatePresence mode="wait">
               <motion.div
-                key={isLogin ? 'login' : 'register'}
+                key={showForgotPassword ? 'forgot-password' : isLogin ? 'login' : 'register'}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}

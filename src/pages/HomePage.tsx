@@ -3,11 +3,7 @@ import React, { useState, useEffect } from 'react';
 // Components
 import { HeroSection } from '../components/Hero/HeroSection';
 import { WhyUsSection } from '../components/WhyUs';
-import { CategoriesSection } from '../components/Categories';
-import { StatsSection } from '../components/Stats';
 import { TestimonialsSection } from '../components/Testimonials';
-import { FlashOffersSection } from '../components/FlashOffers/FlashOffersSection';
-import { ProductsSection } from '../components/Products/ProductsSection';
 import { BrandsSection } from '../components/Brands/BrandsSection';
 import { CartModal } from '../components/Cart/CartModal';
 import FeaturedBlogPosts from '../components/Blog/FeaturedBlogPosts';
@@ -21,71 +17,71 @@ import {
 } from '../components/Skeleton';
 
 // Hooks
-
-import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
-import { Cart, Product } from '../types';
-import { useCart } from '../contexts/CartContext';
+import { useHomeCache } from '../hooks/usePageCache';
 
 const HomePage: React.FC = () => {
-  const { currency, formatPrice: globalFormatPrice } = useGlobalCurrency();
-  const { addToCart } = useCart();
   const [cartModalOpen, setCartModalOpen] = useState(false);
-  // Loading states for different sections
-  const [loadingStates, setLoadingStates] = useState({
-    hero: true,
-    whyUs: true,
-    categories: true,
-    stats: true,
-    testimonials: true,
-    flashOffers: true,
-    products: true,
-    blog: true,
-    brands: true,
-    contact: true
-  });
+  
+  const { cachedData: cachedLoadingState, setCachedData: setCachedLoadingState } = useHomeCache(
+    'loading-states',
+    { version: '1.0' }
+  );
 
-  // Simulate realistic loading times for different sections
+  const [loadingStates, setLoadingStates] = useState<{
+    hero: boolean;
+    whyUs: boolean;
+    stats: boolean;
+    testimonials: boolean;
+    products: boolean;
+    blog: boolean;
+    brands: boolean;
+    contact: boolean;
+  }>(
+    cachedLoadingState || {
+      hero: true,
+      whyUs: true,
+      stats: true,
+      testimonials: true,
+      products: true,
+      blog: true,
+      brands: true,
+      contact: true
+    }
+  );
+
   useEffect(() => {
+    const hasCache = !!cachedLoadingState;
+    const baseDelay = hasCache ? 50 : 100;
+    const increment = hasCache ? 20 : 50;
+
     const loadingSims = [
-      { section: 'hero', delay: 800 },
-      { section: 'whyUs', delay: 1000 },
-      { section: 'brands', delay: 1200 },
-      { section: 'categories', delay: 1400 },
-      { section: 'stats', delay: 1600 },
-      { section: 'testimonials', delay: 1800 },
-      { section: 'flashOffers', delay: 2000 },
-      { section: 'blog', delay: 2300 },
-      { section: 'products', delay: 2600 },
-      { section: 'contact', delay: 2800 }
+      { section: 'hero', delay: baseDelay },
+      { section: 'whyUs', delay: baseDelay + increment },
+      { section: 'brands', delay: baseDelay + increment * 1 },
+      { section: 'stats', delay: baseDelay + increment * 1.5 },
+      { section: 'testimonials', delay: baseDelay + increment * 2.5 },
+      { section: 'blog', delay: baseDelay + increment * 3 },
+      { section: 'products', delay: baseDelay + increment * 3.5 },
+      { section: 'contact', delay: baseDelay + increment * 4 }
     ];
 
     loadingSims.forEach(({ section, delay }) => {
       setTimeout(() => {
-        setLoadingStates(prev => ({
-          ...prev,
-          [section]: false
-        }));
+        setLoadingStates((prev) => {
+          const newState = {
+            ...prev,
+            [section]: false
+          };
+          // Guardar en caché el estado final
+          if (Object.values(newState).every(val => !val)) {
+            setCachedLoadingState(newState, 10 * 60 * 1000); // 10 minutos
+          }
+          return newState;
+        });
       }, delay);
     });
   }, []);
 
-  // Handle add to cart
-  const handleAddToCart = async (product: Product, quantity: number = 1) => {
-    try {
-      await addToCart(product.id, quantity);
-      // Optionally show a success notification
-    } catch (error) {
-      console.error('Failed to add product to cart:', error);
-      // Optionally show an error notification
-    }
-  };
-
-  // Wrapper function to match component expectations
-  const formatPrice = (priceVES: number, priceREF: number) => {
-    return currency === 'VES' 
-      ? `Bs. ${priceVES.toLocaleString('es-VE')}` 
-      : `$ ${priceREF.toFixed(2)}`;
-  };
 
   return (
     <div className="flex-1 flex flex-col">
@@ -118,30 +114,6 @@ const HomePage: React.FC = () => {
         <BrandsSection />
       )}
 
-      {/* Categories Section with Skeleton */}
-      {loadingStates.categories ? (
-        <SectionSkeleton 
-          showTitle={true} 
-          itemsCount={12} 
-          itemsPerRow={4} 
-          className="bg-white" 
-        />
-      ) : (
-        <CategoriesSection />
-      )}
-
-      {/* Stats Section with Skeleton */}
-      {loadingStates.stats ? (
-        <SectionSkeleton 
-          showTitle={false} 
-          itemsCount={4} 
-          itemsPerRow={4} 
-          className="bg-gradient-to-br from-medical-blue-50 to-medical-green-50" 
-        />
-      ) : (
-        <StatsSection />
-      )}
-
       {/* Testimonials Section with Skeleton */}
       {loadingStates.testimonials ? (
         <SectionSkeleton 
@@ -155,36 +127,14 @@ const HomePage: React.FC = () => {
       )}
 
       <main className="flex-1">
-        {/* Flash Offers Section with Skeleton */}
-        {loadingStates.flashOffers ? (
+        {/* Contact Us Section with Skeleton */}
+        {loadingStates.contact ? (
           <SectionSkeleton 
-            showTitle={true} 
-            itemsCount={4} 
-            itemsPerRow={4} 
-            className="bg-gradient-to-br from-red-50 to-orange-100" 
+            showTitle={true}
+            className="bg-gray-50"
           />
         ) : (
-          <FlashOffersSection
-            maxItems={6}
-            refreshInterval={1000}
-            className="animate-fade-in"
-          />
-        )}
-
-        {/* Products Section with Skeleton */}
-        {loadingStates.products ? (
-          <SectionSkeleton 
-            showTitle={true} 
-            itemsCount={8} 
-            itemsPerRow={4} 
-            className="bg-gray-50" 
-          />
-        ) : (
-          <ProductsSection
-            currency={currency as 'VES' | 'USD' | 'REF'}
-            onAddToCart={handleAddToCart}
-            formatPrice={formatPrice}
-          />
+          <ContactUsSection />
         )}
 
         {/* Blog Section with Skeleton */}
@@ -206,24 +156,12 @@ const HomePage: React.FC = () => {
           <FeaturedBlogPosts />
         )}
 
-        {/* Contact Us Section with Skeleton */}
-        {loadingStates.contact ? (
-          <SectionSkeleton 
-            showTitle={true}
-            className="bg-gray-50"
-          />
-        ) : (
-          <ContactUsSection />
-        )}
       </main>
 
       {/* Shopping Cart Modal */}
       <CartModal
         isOpen={cartModalOpen}
         onClose={() => setCartModalOpen(false)}
-        currency={currency as 'VES' | 'REF'}
-        formatPrice={formatPrice}
-        totalPrice={0} // Cart state is now managed by CartContext, so this will be updated automatically
         onUpdateQuantity={() => {}}
         onRemoveItem={() => {}}
       />

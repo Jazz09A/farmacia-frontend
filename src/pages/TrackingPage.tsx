@@ -51,23 +51,18 @@ const TrackingPage: React.FC = () => {
   const [order, setOrder] = useState<TrackingOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { currency, formatPrice, getPriceInCurrency } = useGlobalCurrency();
+  const { currency, formatPriceFromBackend } = useGlobalCurrency();
 
   useEffect(() => {
+    if (!orderId) {
+      return;
+    }
     const loadOrder = async () => {
-      console.log('TrackingPage: orderId recibido:', orderId);
-      if (!orderId) {
-        console.log('TrackingPage: No hay orderId, retornando');
-        return;
-      }
-      
       setIsLoading(true);
       setError(null);
       
       try {
-        console.log('TrackingPage: Cargando orden con ID:', orderId);
         const orderData = await authService.getOrderDetails(orderId);
-        console.log('TrackingPage: Orden cargada:', orderData);
         setOrder(orderData);
       } catch (err: any) {
         console.error('TrackingPage: Error loading order:', err);
@@ -97,7 +92,7 @@ const TrackingPage: React.FC = () => {
       },
       processing: {
         label: 'En Preparación',
-        color: 'text-purple-700 bg-purple-100',
+        color: 'text-orange-700 bg-orange-100',
         icon: Package,
         description: 'Estamos preparando tu pedido'
       },
@@ -146,8 +141,8 @@ const TrackingPage: React.FC = () => {
         if (refAmount !== undefined) {
           return formatPrice(refAmount, 'USD');
         }
-        // Fallback: usar getPriceInCurrency si no hay refAmount
-        return formatPrice(getPriceInCurrency(vesAmount, refAmount || 0), currency);
+        // Fallback: usar formatPriceFromBackend
+        return formatPriceFromBackend(vesAmount);
       default:
         return formatPrice(vesAmount, order?.currency as Currency);
     }
@@ -163,7 +158,7 @@ const TrackingPage: React.FC = () => {
         if (item.total_price_ref !== undefined) {
           return formatPrice(item.total_price_ref, 'USD');
         }
-        return formatPrice(getPriceInCurrency(item.total_price, item.total_price_ref || 0), currency);
+        return formatPriceFromBackend(item.total_price);
       default:
         return formatPrice(item.total_price, order?.currency as Currency);
     }
@@ -202,12 +197,12 @@ const TrackingPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-medical-gray-50 pt-32 pb-16">
+      <div className="min-h-screen bg-medical-gray-50 pt-24 pb-12">
         <div className="medical-container">
-          <div className="bg-white rounded-2xl shadow-soft p-8">
-            <div className="animate-pulse space-y-6">
+          <div className="bg-white rounded-2xl shadow-soft p-6">
+            <div className="animate-pulse space-y-4">
               <div className="h-8 bg-medical-gray-200 rounded w-1/3"></div>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="h-4 bg-medical-gray-200 rounded w-1/2"></div>
                 <div className="h-4 bg-medical-gray-200 rounded w-2/3"></div>
                 <div className="h-32 bg-medical-gray-200 rounded"></div>
@@ -221,9 +216,9 @@ const TrackingPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-medical-gray-50 pt-32 pb-16">
+      <div className="min-h-screen bg-medical-gray-50 pt-24 pb-12">
         <div className="medical-container">
-          <div className="bg-white rounded-2xl shadow-soft p-8 text-center">
+          <div className="bg-white rounded-2xl shadow-soft p-6 text-center">
             <Package className="w-16 h-16 text-red-300 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-medical-gray-900 mb-2">
               Error al cargar el pedido
@@ -250,9 +245,9 @@ const TrackingPage: React.FC = () => {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-medical-gray-50 pt-32 pb-16">
+      <div className="min-h-screen bg-medical-gray-50 pt-24 pb-12">
         <div className="medical-container">
-          <div className="bg-white rounded-2xl shadow-soft p-8 text-center">
+          <div className="bg-white rounded-2xl shadow-soft p-6 text-center">
             <Package className="w-16 h-16 text-medical-gray-300 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-medical-gray-900 mb-2">
               Pedido no encontrado
@@ -273,15 +268,15 @@ const TrackingPage: React.FC = () => {
   const StatusIcon = statusInfo.icon;
 
   return (
-    <div className="min-h-screen bg-medical-gray-50 pt-32 pb-16">
+    <div className="min-h-screen bg-medical-gray-50 pt-24 pb-12">
       <div className="medical-container">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6"
         >
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-3 mb-3">
             <button
               onClick={() => navigate(-1)}
               className="p-2 rounded-full hover:bg-medical-gray-100 transition-colors"
@@ -297,17 +292,17 @@ const TrackingPage: React.FC = () => {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Columna principal */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6">
             {/* Progreso del Pedido - Pasos Visuales */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl shadow-soft p-8"
+              className="bg-white rounded-2xl shadow-soft p-6"
             >
-              <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-medical-gray-900">
+              <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-medical-gray-900">
                   Progreso del Pedido
                     </h2>
                 <div className="flex gap-2">
@@ -324,7 +319,7 @@ const TrackingPage: React.FC = () => {
               <div className="relative">
                 {/* Mensaje especial para estados cancelados o reembolsados */}
                 {(order.status === 'cancelled' || order.status === 'refunded') ? (
-                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-red-100 rounded-full">
                         <Package className="w-5 h-5 text-red-600" />
@@ -345,7 +340,7 @@ const TrackingPage: React.FC = () => {
                 ) : (
                   <>
                     {/* Indicador de Progreso General */}
-                    <div className="mb-6">
+                    <div className="mb-4">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium text-medical-gray-700">Progreso del pedido</span>
                         <span className="text-sm font-bold text-medical-blue-600">
@@ -364,7 +359,7 @@ const TrackingPage: React.FC = () => {
 
                 {/* Pasos del Progreso - Solo mostrar si no está cancelado o reembolsado */}
                 {!(order.status === 'cancelled' || order.status === 'refunded') && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
                     {[
                       { key: 'pending', label: 'Pendiente', icon: Clock, description: 'Pedido recibido' },
                       { key: 'confirmed', label: 'Confirmado', icon: CheckCircle, description: 'Pedido confirmado' },
@@ -443,7 +438,7 @@ const TrackingPage: React.FC = () => {
               </div>
 
               {/* Información adicional del estado actual */}
-              <div className="mt-6 p-4 bg-medical-blue-50 rounded-xl border border-medical-blue-200">
+              <div className="mt-4 p-3 bg-medical-blue-50 rounded-xl border border-medical-blue-200">
                   <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-full ${statusInfo.color}`}>
                     <StatusIcon className="w-5 h-5" />
@@ -461,7 +456,7 @@ const TrackingPage: React.FC = () => {
 
               {/* Fecha estimada de entrega */}
               {order.tracking_info?.estimated_delivery && (
-                <div className="mt-4 p-4 bg-green-50 rounded-xl border border-green-200">
+                <div className="mt-3 p-3 bg-green-50 rounded-xl border border-green-200">
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-green-600" />
                     <div>
@@ -483,14 +478,14 @@ const TrackingPage: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white rounded-2xl shadow-soft p-8"
+                className="bg-white rounded-2xl shadow-soft p-6"
               >
-                <h3 className="text-lg font-bold text-medical-gray-900 mb-6 flex items-center gap-2">
+                <h3 className="text-base font-bold text-medical-gray-900 mb-4 flex items-center gap-2">
                   <MapPin className="w-5 h-5" />
                   Historial de Seguimiento
                 </h3>
 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {order.tracking_info.updates.map((update: any, index: number) => (
                     <motion.div
                       key={index}
@@ -550,19 +545,32 @@ const TrackingPage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-soft p-8"
+              className="bg-white rounded-2xl shadow-soft p-6"
             >
-              <h3 className="text-lg font-bold text-medical-gray-900 mb-6 flex items-center gap-2">
+              <h3 className="text-base font-bold text-medical-gray-900 mb-4 flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5" />
                 Productos del Pedido
               </h3>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {order.items.map((item: any) => (
-                  <div key={item.id} className="flex items-center gap-4 p-4 bg-medical-gray-50 rounded-xl">
-                    <div className="w-16 h-16 bg-medical-gray-200 rounded-lg flex items-center justify-center">
-                      <Package className="w-8 h-8 text-medical-gray-500" />
-                    </div>
+                  <div key={item.id} className="flex items-center gap-4 p-3 bg-medical-gray-50 rounded-xl">
+                    {item.product_image ? (
+                      <img 
+                        src={item.product_image} 
+                        alt={item.product_name} 
+                        className="w-16 h-16 rounded-lg object-cover bg-medical-gray-100"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = 'https://via.placeholder.com/64x64.png?text=Sin+Imagen';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-medical-gray-200 rounded-lg flex items-center justify-center">
+                        <Package className="w-8 h-8 text-medical-gray-400" />
+                      </div>
+                    )}
                     <div className="flex-1">
                       <h4 className="font-semibold text-medical-gray-900">{item.product_name}</h4>
                       <p className="text-sm text-medical-gray-600">
@@ -584,8 +592,8 @@ const TrackingPage: React.FC = () => {
                 ))}
               </div>
 
-              <div className="mt-6 pt-6 border-t border-medical-gray-200">
-                <div className="space-y-3">
+              <div className="mt-4 pt-4 border-t border-medical-gray-200">
+                <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-medical-gray-600">Subtotal:</span>
                     <span className="font-medium text-medical-gray-900">
@@ -611,7 +619,7 @@ const TrackingPage: React.FC = () => {
                     </div>
                   )}
                   
-                  <div className="flex justify-between items-center pt-3 border-t border-medical-gray-200">
+                  <div className="flex justify-between items-center pt-2 border-t border-medical-gray-200">
                   <span className="text-lg font-semibold text-medical-gray-900">Total del pedido:</span>
                   <span className="text-xl font-bold text-medical-blue-700">
                     {formatOrderPrice(order.total, order.total_ref)}
@@ -623,21 +631,21 @@ const TrackingPage: React.FC = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Información del transportista */}
             {order.tracking_info && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white rounded-2xl shadow-soft p-6"
+                className="bg-white rounded-2xl shadow-soft p-5"
               >
-                <h3 className="font-bold text-medical-gray-900 mb-4 flex items-center gap-2">
+                <h3 className="font-bold text-medical-gray-900 mb-3 flex items-center gap-2">
                   <Truck className="w-5 h-5" />
                   Información de Envío
                 </h3>
                 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="p-4 bg-medical-blue-50 rounded-xl">
                     <div className="text-sm text-medical-gray-600 mb-1">Transportista</div>
                     <div className="font-semibold text-medical-gray-900">
@@ -667,14 +675,14 @@ const TrackingPage: React.FC = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-white rounded-2xl shadow-soft p-6"
+              className="bg-white rounded-2xl shadow-soft p-5"
             >
-              <h3 className="font-bold text-medical-gray-900 mb-4 flex items-center gap-2">
+              <h3 className="font-bold text-medical-gray-900 mb-3 flex items-center gap-2">
                 <Info className="w-5 h-5" />
                 Detalles del Pedido
               </h3>
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div>
                   <div className="text-sm text-medical-gray-600 mb-1">Fecha del pedido</div>
                   <div className="font-semibold text-medical-gray-900">
@@ -733,19 +741,6 @@ const TrackingPage: React.FC = () => {
                       </button>
                     </div>
                     
-                    {/* Estado de verificación */}
-                    <div className="mt-3 p-2 bg-white rounded border">
-                      <div className="text-xs text-medical-gray-600 mb-1">Estado de Verificación:</div>
-                      <div className={`text-xs font-medium ${
-                        order.payment_status === 'completed' ? 'text-green-700' :
-                        order.payment_status === 'failed' ? 'text-red-700' :
-                        'text-yellow-700'
-                      }`}>
-                        {order.payment_status === 'completed' ? '✅ Verificado y Confirmado' :
-                         order.payment_status === 'failed' ? '❌ Verificado y Rechazado' :
-                         '⏳ Pendiente de Verificación por Administrador'}
-                      </div>
-                    </div>
                   </div>
                 )}
 
@@ -780,9 +775,9 @@ const TrackingPage: React.FC = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
-              className="bg-white rounded-2xl shadow-soft p-6"
+              className="bg-white rounded-2xl shadow-soft p-5"
             >
-              <h3 className="font-bold text-medical-gray-900 mb-4">¿Necesitas ayuda?</h3>
+              <h3 className="font-bold text-medical-gray-900 mb-3">¿Necesitas ayuda?</h3>
               
               <div className="space-y-3">
                 <Link 

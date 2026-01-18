@@ -1,6 +1,7 @@
+/* @refresh reset */
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { useCurrency } from '../hooks/useCurrency';
-import { useAuth } from './AuthContext';
+import { AuthContext } from './AuthContext';
 import { Currency } from '../types';
 
 interface GlobalCurrencyContextType {
@@ -8,36 +9,68 @@ interface GlobalCurrencyContextType {
   setCurrency: (currency: Currency) => void;
   toggleCurrency: () => void;
   formatPrice: (value: number, valueCurrency?: Currency) => string;
-  convertPrice: (price: number, fromCurrency: Currency, toCurrency?: Currency) => number;
-  getPriceInCurrency: (priceVes: number, priceRef: number) => number;
+  convertPrice: (price: string | number, fromCurrency: Currency, toCurrency?: Currency) => number;
+  getDisplayPrice: (priceUsd: string | number, displayCurrency?: Currency) => number;
+  formatPriceFromBackend: (priceUsd: string | number, displayCurrency?: Currency) => string;
   getCurrencySymbol: (curr: Currency) => string;
   getCurrencyName: (curr: Currency) => string;
   exchangeRates: {
-    VES_TO_REF: number;
+    USD_TO_VES: number;
     VES_TO_USD: number;
-    REF_TO_USD: number;
   };
+  exchangeRateData: any;
+  isLoadingRates: boolean;
+  refreshExchangeRates: () => Promise<void>;
 }
 
 const GlobalCurrencyContext = createContext<GlobalCurrencyContextType | undefined>(undefined);
 
-export const GlobalCurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+interface GlobalCurrencyProviderProps {
+  children: ReactNode;
+  userPreferredCurrency?: string;
+  isAuthenticated?: boolean;
+}
+
+export const GlobalCurrencyProvider: React.FC<GlobalCurrencyProviderProps> = ({ 
+  children, 
+  userPreferredCurrency, 
+  isAuthenticated 
+}) => {
   const currencyHook = useCurrency();
-  const { user, isAuthenticated } = useAuth();
 
   // Set user's preferred currency when loading
   useEffect(() => {
-    if (isAuthenticated && user && user.preferred_currency) {
+    if (isAuthenticated && userPreferredCurrency) {
       // Map user's preferred_currency to our Currency type
-      const userCurrency: Currency = user.preferred_currency === 'USD' ? 'USD' : 'VES';
+      // REF is treated as USD since they are synonymous
+      const userCurrency: Currency = (userPreferredCurrency === 'USD') ? 'USD' : 'VES';
       currencyHook.setCurrency(userCurrency);
     }
-  }, [isAuthenticated, user, currencyHook.setCurrency]);
+  }, [isAuthenticated, userPreferredCurrency, currencyHook.setCurrency]);
 
   return (
     <GlobalCurrencyContext.Provider value={currencyHook}>
       {children}
     </GlobalCurrencyContext.Provider>
+  );
+};
+
+// Wrapper component that uses useAuth and passes data to GlobalCurrencyProvider
+export const GlobalCurrencyProviderWithAuth: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Use useContext directly to avoid hook order issues
+  const authContext = useContext(AuthContext);
+  
+  // Safely extract values, defaulting if context is not available yet
+  const user = authContext?.user ?? null;
+  const isAuthenticated = authContext?.isAuthenticated ?? false;
+  
+  return (
+    <GlobalCurrencyProvider
+      userPreferredCurrency={user?.preferred_currency}
+      isAuthenticated={isAuthenticated}
+    >
+      {children}
+    </GlobalCurrencyProvider>
   );
 };
 

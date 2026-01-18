@@ -1,6 +1,7 @@
 import { Product } from "../types/index";
+import { authService } from '../services/AuthService';
 
-const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const baseUrl = import.meta.env.VITE_API_URL  || 'http://localhost:8000';
 // Interface for paginated response matching the backend structure
 interface PaginatedResponse {
   products: Product[];
@@ -10,9 +11,9 @@ interface PaginatedResponse {
   totalPages: number;
 }
 
-// Interface for backend API response
+// Interface for backend API response (loosely typed; backend may use strings for numbers)
 interface BackendResponse {
-  products: Product[];
+  products: any[];
   pagination: {
     page: number;
     limit: number;
@@ -29,20 +30,22 @@ interface BackendResponse {
   total: number;
 }
 
-// Function to map backend product data to frontend Product interface
-const mapBackendProductToProduct = (backendProduct: Product): Product => {
-  // Prioriza el campo 'image' si no es un placeholder.
-  // Si no, utiliza el array 'images' como alternativa.
-  const primaryImage =
-    backendProduct.image && !backendProduct.image.includes('placeholder')
-      ? backendProduct.image
-      : backendProduct.images?.[0];
+// Function to map backend product data to frontend Product interface (normalize types, USD model)
+const mapBackendProductToProduct = (backendProduct: any): Product => {
+  // Usar el array completo de imágenes del backend
+  const images = backendProduct.images && Array.isArray(backendProduct.images) 
+    ? backendProduct.images.filter((img: string) => img && img.trim() !== '')
+    : [];
 
-  const images = [
-    primaryImage?.includes('placeholder')
-      ? 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop'
-      : primaryImage || 'https://placehold.co/400x400/png',
-  ];
+  // Si no hay imágenes, usar placeholder
+  if (images.length === 0) {
+    images.push('https://placehold.co/400x400/png');
+  }
+
+  const parseNum = (v: any): number => {
+    const n = typeof v === 'string' ? parseFloat(v) : v;
+    return Number.isFinite(n) ? n : 0;
+  };
 
   return {
     id: backendProduct.id,
@@ -51,19 +54,18 @@ const mapBackendProductToProduct = (backendProduct: Product): Product => {
     category: backendProduct.category,
     subcategory: backendProduct.subcategory,
     patology: backendProduct.patology,
-    price_ves: backendProduct.price_ves,
-    price_ref: backendProduct.price_ref,
+    price: parseNum(backendProduct.price).toString(),
     description: backendProduct.description,
     ingredients: backendProduct.ingredients || [],
-    image: primaryImage || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop',
+    image: images[0] || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop',
     images: images,
     in_stock: backendProduct.in_stock,
     stock: backendProduct.stock,
     prescription: backendProduct.prescription,
-    rating: backendProduct.rating,
+    rating: parseNum(backendProduct.rating).toString(),
     review_count: backendProduct.review_count,
     is_offer: backendProduct.is_offer,
-    original_price: backendProduct.original_price || null,
+    original_price: backendProduct.original_price != null ? parseNum(backendProduct.original_price).toString() : null,
     offer_end_time: backendProduct.offer_end_time ? new Date(backendProduct.offer_end_time).toISOString() : null,
     featured: backendProduct.featured,
     dosage: backendProduct.dosage,
@@ -73,11 +75,12 @@ const mapBackendProductToProduct = (backendProduct: Product): Product => {
     contraindicaciones: backendProduct.contraindicaciones,
     efectos_secundarios: backendProduct.efectos_secundarios,
     slug: backendProduct.slug,
-    discount_percentage: backendProduct.discount_percentage,
-    current_price: backendProduct.current_price,
+    discount_percentage: parseNum(backendProduct.discount_percentage).toString(),
+    current_price: parseNum(backendProduct.current_price ?? backendProduct.price).toString(),
     is_available: backendProduct.is_available,
     created_at: backendProduct.created_at,
     updated_at: backendProduct.updated_at,
+    profit_discount: backendProduct.profit_discount || null, // Mapear profit_discount del backend
   };
 };
 
@@ -132,7 +135,6 @@ export const getProductsPaginated = async (page: number = 1, limit: number = 20)
 // Export function for backward compatibility - gets first page of products
 export const getProducts = async (): Promise<Product[]> => {
   const response = await fetchProductsPaginated(1, 100);
-  console.log("response: ", response);
   if (response.products.length === 0) {
     return [];
   }
@@ -141,21 +143,28 @@ export const getProducts = async (): Promise<Product[]> => {
 
 export const getProductById = async (id: string): Promise<Product | null> => {
   const response = await fetch(`${baseUrl}/api/v1/public/products/${id}`);
+  if (!response.ok) return null;
   const data = await response.json();
-  return data || null;
+  return data ? mapBackendProductToProduct(data) : null;
 };
 
-export const updateProduct = async (id: string, product: Product, token: string): Promise<Product | null> => {
-  const response = await fetch(`${baseUrl}/api/v1/admin/products/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(product),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  const data = await response.json();
-  return data || null;
+export const updateProduct = async (id: string, product: Product): Promise<Product | null> => {
+  try {
+    const response = await authService.authenticatedFetch(`/api/v1/admin/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(product),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error updating product: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data ? mapBackendProductToProduct(data) : null;
+  } catch (error) {
+    console.error('Failed to update product:', error);
+    throw error;
+  }
 };
 
 export const deleteImage = async (id: string, image_url: string, token: string): Promise<Product | null> => {

@@ -61,7 +61,7 @@ const Pagination: React.FC<PaginationProps> = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className={`mt-12 space-y-4 ${className}`}>
+    <div className={`mt-12 mb-16 space-y-4 ${className}`}>
       {/* Información de paginación */}
       <div className="text-center text-gray-600">
         <p className="text-sm">
@@ -117,23 +117,6 @@ const Pagination: React.FC<PaginationProps> = ({
         </button>
       </div>
 
-      {/* Ir a página específica */}
-      <div className="flex justify-center items-center gap-2 text-sm">
-        <span className="text-gray-600">Ir a página:</span>
-        <input
-          type="number"
-          min="1"
-          max={totalPages}
-          value={currentPage}
-          onChange={(e) => {
-            const page = parseInt(e.target.value);
-            if (page >= 1 && page <= totalPages) {
-              handlePageChange(page);
-            }
-          }}
-          className="w-16 px-2 py-1 text-center bg-white/80 backdrop-blur-lg border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-medical-primary/50"
-        />
-      </div>
     </div>
   );
 };

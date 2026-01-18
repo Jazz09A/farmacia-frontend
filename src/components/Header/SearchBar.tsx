@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, X, Clock, TrendingUp, Pill, Heart, Sparkles, Stethoscope } from 'lucide-react';
-
-interface SearchSuggestion {
-  id: string;
-  text: string;
-  category: string;
-  icon: React.ElementType;
-}
+import { Search, X, Clock, TrendingUp, Package, Loader2, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { productService } from '../../services/ProductService';
+import { Product } from '../../types';
+import ProductImage from '../common/ProductImage';
 
 interface SearchBarProps {
   isScrolled: boolean;
@@ -18,35 +16,56 @@ export const SearchBar: React.FC<SearchBarProps> = ({ isScrolled }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLFormElement>(null);
+  const navigate = useNavigate();
 
-  // Sugerencias estáticas para asegurar que siempre se muestren
-  const suggestions: SearchSuggestion[] = [
-    { id: '1', text: 'Acetaminofén 500mg', category: 'Analgésicos', icon: Pill },
-    { id: '2', text: 'Ibuprofeno infantil', category: 'Pediatría', icon: Heart },
-    { id: '3', text: 'Vitamina D3 1000 UI', category: 'Suplementos', icon: Sparkles },
-    { id: '4', text: 'Protector solar FPS 50+', category: 'Cuidado Personal', icon: Stethoscope },
-    { id: '5', text: 'Complejo B multivitamínico', category: 'Vitaminas', icon: Sparkles },
-    { id: '6', text: 'Jarabe para la tos', category: 'Respiratorio', icon: Heart },
-  ];
+  // Búsquedas recientes del localStorage
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('recentSearches');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
-  const recentSearches = [
-    'Acetaminofén 500mg',
-    'Vitamina D3',
+  const trendingSearches = [
+    'Acetaminofén',
+    'Vitaminas',
+    'Ibuprofeno',
     'Protector solar'
   ];
 
-  const trendingSearches = [
-    'Ibuprofeno infantil',
-    'Complejo B',
-    'Jarabe para la tos'
-  ];
+  // Buscar productos cuando cambia el query
+  useEffect(() => {
+    const searchProducts = async () => {
+      if (!query || query.trim().length < 2) {
+        setProducts([]);
+        setIsLoading(false);
+        return;
+      }
 
-  // Filtrar sugerencias basadas en la consulta
-  const filteredSuggestions = query.trim() 
-    ? suggestions.filter(s => s.text.toLowerCase().includes(query.toLowerCase()))
-    : suggestions.slice(0, 4);
+      setIsLoading(true);
+      try {
+        const response = await productService.searchProducts({
+          search: query.trim(),
+          limit: 8, // Limitar a 8 resultados para el dropdown
+        });
+        setProducts(response.products);
+      } catch (error) {
+        console.error('Error searching products:', error);
+        setProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const debounce = setTimeout(searchProducts, 300);
+    return () => clearTimeout(debounce);
+  }, [query]);
 
   // Estado activo cuando está en hover, focus o abierto
   const isActive = isHovered || isFocused || isOpen;
@@ -109,7 +128,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ isScrolled }) => {
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setActiveIndex(prev => prev < filteredSuggestions.length - 1 ? prev + 1 : prev);
+        const maxIndex = products.length - 1;
+        setActiveIndex(prev => prev < maxIndex ? prev + 1 : prev);
         break;
       case 'ArrowUp':
         e.preventDefault();
@@ -117,10 +137,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ isScrolled }) => {
         break;
       case 'Enter':
         e.preventDefault();
-        if (activeIndex >= 0) {
-          setQuery(filteredSuggestions[activeIndex].text);
-          setIsOpen(false);
-          setActiveIndex(-1);
+        if (activeIndex >= 0 && products[activeIndex]) {
+          handleProductClick(products[activeIndex]);
         } else if (query.trim()) {
           handleSearch();
         }
@@ -134,19 +152,34 @@ export const SearchBar: React.FC<SearchBarProps> = ({ isScrolled }) => {
     }
   };
 
-  const handleSearch = () => {
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (query.trim()) {
-      console.log('Searching for:', query);
+      addToRecentSearches(query);
+      navigate(`/catalog?search=${encodeURIComponent(query.trim())}`);
       setIsOpen(false);
       setActiveIndex(-1);
     }
   };
 
-  const handleSuggestionClick = (suggestion: SearchSuggestion) => {
-    setQuery(suggestion.text);
+  const handleProductClick = (product: Product) => {
+    addToRecentSearches(query);
+    navigate(`/product/${product.slug || product.id}`);
     setIsOpen(false);
-    setActiveIndex(-1);
-    console.log('Selected:', suggestion.text);
+    setQuery('');
+  };
+
+  const addToRecentSearches = (term: string) => {
+    if (!term.trim()) return;
+    const updated = [term, ...recentSearches.filter(s => s !== term)].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem('recentSearches', JSON.stringify(updated));
+  };
+
+  const handleRecentSearchClick = (search: string) => {
+    setQuery(search);
+    navigate(`/catalog?search=${encodeURIComponent(search)}`);
+    setIsOpen(false);
   };
 
   const clearSearch = () => {
@@ -168,7 +201,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ isScrolled }) => {
   };
 
   return (
-    <div className="relative w-full max-w-5xl" ref={dropdownRef}>
+    <form onSubmit={handleSearch} className="relative w-full max-w-5xl" ref={dropdownRef}>
       {/* Input Principal */}
       <div 
         className="relative"
@@ -185,7 +218,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({ isScrolled }) => {
           ref={inputRef}
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setIsOpen(true);
+            setActiveIndex(-1);
+          }}
           onFocus={handleFocus}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
@@ -223,99 +260,151 @@ export const SearchBar: React.FC<SearchBarProps> = ({ isScrolled }) => {
         )}
       </div>
 
-      {/* Dropdown de Sugerencias */}
-      {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto backdrop-blur-md">
-          {/* Sugerencias de Búsqueda */}
-          {filteredSuggestions.length > 0 && (
-            <div className="p-6">
-              <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                <Search className="h-4 w-4 mr-2 text-blue-600" />
-                {query ? 'Resultados de búsqueda' : 'Sugerencias populares'}
-              </h4>
-              
-              {filteredSuggestions.map((suggestion, index) => {
-                const Icon = suggestion.icon;
-                return (
-                  <button
-                    key={suggestion.id}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className={`w-full text-left p-3 rounded-xl transition-colors flex items-center space-x-3 ${
-                      index === activeIndex 
-                        ? 'bg-blue-50 text-blue-700' 
-                        : 'hover:bg-gray-50 text-gray-900'
-                    }`}
-                  >
-                    <Icon className={`h-5 w-5 ${
-                      index === activeIndex ? 'text-blue-600' : 'text-gray-400'
-                    }`} />
-                    <div className="flex-1">
-                      <div className="font-medium">{suggestion.text}</div>
-                      <div className="text-sm text-gray-500">{suggestion.category}</div>
+      {/* Dropdown de Resultados */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 max-h-[600px] overflow-hidden"
+          >
+            {/* Resultados de productos */}
+            {query.trim().length >= 2 && (
+              <div className="overflow-y-auto max-h-[500px]">
+                {isLoading ? (
+                  <div className="p-8 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+                    <p className="text-gray-600">Buscando productos...</p>
+                  </div>
+                ) : products.length > 0 ? (
+                  <div className="p-4">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center px-2">
+                      <Search className="h-4 w-4 mr-2 text-blue-600" />
+                      Resultados ({products.length})
+                    </h4>
+                    <div className="space-y-1">
+                      {products.map((product, index) => (
+                        <button
+                          key={product.id}
+                          onClick={() => handleProductClick(product)}
+                          className={`w-full text-left p-3 rounded-xl transition-colors flex items-center space-x-3 ${
+                            index === activeIndex
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'hover:bg-gray-50 text-gray-900'
+                          }`}
+                        >
+                          {/* Imagen del producto */}
+                          <div className="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                            <ProductImage
+                              src={product.image}
+                              images={product.images}
+                              alt={product.name}
+                              size="sm"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          
+                          {/* Información del producto */}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm sm:text-base truncate">
+                              {product.name}
+                            </div>
+                            <div className="text-xs sm:text-sm text-gray-500 truncate">
+                              {product.category || 'Sin categoría'}
+                            </div>
+                            {product.price && (
+                              <div className="text-sm font-semibold text-blue-600 mt-1">
+                                ${parseFloat(product.price).toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+
+                          <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        </button>
+                      ))}
                     </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+                    
+                    {/* Ver todos los resultados */}
+                    {products.length >= 8 && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSearch();
+                        }}
+                        className="w-full mt-3 p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-colors font-medium"
+                      >
+                        Ver todos los resultados para "{query}"
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">
+                      No se encontraron productos
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Intenta con otros términos de búsqueda
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
-          {/* Búsquedas Recientes */}
-          {!query && recentSearches.length > 0 && (
-            <div className="p-6 border-t border-gray-100">
-              <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                <Clock className="h-4 w-4 mr-2 text-gray-500" />
-                Búsquedas recientes
-              </h4>
-              
-              {recentSearches.map((search, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setQuery(search);
-                    setIsOpen(false);
-                  }}
-                  className="w-full text-left p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors"
-                >
-                  {search}
-                </button>
-              ))}
-            </div>
-          )}
+            {/* Búsquedas recientes (solo cuando no hay query o es muy corta) */}
+            {(!query || query.trim().length < 2) && recentSearches.length > 0 && (
+              <div className="p-4 border-t border-gray-100">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center px-2">
+                  <Clock className="h-4 w-4 mr-2 text-gray-500" />
+                  Búsquedas recientes
+                </h4>
+                <div className="space-y-1">
+                  {recentSearches.map((search, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleRecentSearchClick(search)}
+                      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors"
+                    >
+                      {search}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {/* Tendencias */}
-          {!query && trendingSearches.length > 0 && (
-            <div className="p-6 border-t border-gray-100">
-              <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                <TrendingUp className="h-4 w-4 mr-2 text-green-600" />
-                Tendencias populares
-              </h4>
-              
-              {trendingSearches.map((search, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setQuery(search);
-                    setIsOpen(false);
-                  }}
-                  className="w-full text-left p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors flex items-center justify-between"
-                >
-                  <span>{search}</span>
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                </button>
-              ))}
-            </div>
-          )}
+            {/* Tendencias */}
+            {(!query || query.trim().length < 2) && trendingSearches.length > 0 && (
+              <div className="p-4 border-t border-gray-100">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center px-2">
+                  <TrendingUp className="h-4 w-4 mr-2 text-green-600" />
+                  Tendencias populares
+                </h4>
+                <div className="space-y-1">
+                  {trendingSearches.map((search, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleRecentSearchClick(search)}
+                      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors flex items-center justify-between"
+                    >
+                      <span>{search}</span>
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {/* Mensaje cuando no hay resultados */}
-          {query && filteredSuggestions.length === 0 && (
-            <div className="p-8 text-center text-gray-500">
-              <Search className="h-8 w-8 mx-auto mb-3 text-gray-300" />
-              <p className="font-medium">No se encontraron resultados para "{query}"</p>
-              <p className="text-sm mt-1">Intenta con otros términos de búsqueda</p>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+            {/* Mensaje cuando no hay query */}
+            {!query && recentSearches.length === 0 && (
+              <div className="p-8 text-center text-gray-500">
+                <p>Escribe para buscar productos...</p>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </form>
   );
 }; 

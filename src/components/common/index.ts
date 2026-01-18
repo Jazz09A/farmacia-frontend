@@ -3,3 +3,8 @@ export { default as ConfirmationModal } from './ConfirmationModal';
 export { default as Pagination } from './Pagination';
 export { default as ProductPlaceholder } from './ProductPlaceholder';
 export { default as ProductImage } from './ProductImage';
+export { default as PriceWithDiscount } from './PriceWithDiscount';
+export { default as SearchInput } from './SearchInput';
+export { default as SimpleSearchInput } from './SimpleSearchInput';
+export { default as LazySection } from './LazySection';
+export { default as OptimizedImage } from './OptimizedImage';

@@ -2,11 +2,10 @@ import React from 'react';
 import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
 
 interface SmartPriceDisplayProps {
-  // Para cuando solo tenemos un valor (como en dashboard metrics)
-  amount?: number;
-  // Para cuando tenemos ambos precios del backend
-  priceVes?: number;
-  priceRef?: number;
+  // Monto principal en USD (puede ser string o number)
+  amountUsd?: number | string;
+  // Prop legacy para compatibilidad
+  amount?: number | string;
   className?: string;
   showBothPrices?: boolean;
 }
@@ -15,61 +14,26 @@ interface SmartPriceDisplayProps {
  * Componente inteligente para mostrar precios que se adapta a los datos disponibles
  */
 const SmartPriceDisplay: React.FC<SmartPriceDisplayProps> = ({
-  amount,
-  priceVes,
-  priceRef,
+  amountUsd,
+  amount, // Prop legacy
   className = '',
   showBothPrices = false
 }) => {
   const { currency, formatPrice } = useAdminCurrency();
 
-  // Si tenemos ambos precios del backend (caso ideal)
-  if (priceVes !== undefined && priceRef !== undefined) {
-    const getDisplayPrice = () => {
-      switch (currency) {
-        case 'VES':
-          return { price: priceVes, displayCurrency: 'VES' as const };
-        case 'USD':
-        case 'REF':
-          return { price: priceRef, displayCurrency: currency };
-        default:
-          return { price: priceVes, displayCurrency: 'VES' as const };
-      }
-    };
+  // Usar amountUsd si está disponible, sino usar amount (legacy)
+  const priceValue = amountUsd !== undefined ? amountUsd : amount;
 
-    const { price, displayCurrency } = getDisplayPrice();
+  // Convertir string a number si es necesario
+  const numericValue = typeof priceValue === 'string' ? parseFloat(priceValue) : priceValue;
 
-    if (showBothPrices) {
-      return (
-        <div className={`space-y-1 ${className}`}>
-          <div className="font-semibold">
-            {formatPrice(price, displayCurrency)}
-          </div>
-          <div className="text-xs text-gray-500">
-            VES: {formatPrice(priceVes, 'VES')} | USD/REF: {formatPrice(priceRef, 'USD')}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <span className={className}>
-        {formatPrice(price, displayCurrency)}
-      </span>
-    );
-  }
-
-  // Si solo tenemos un valor (fallback para datos legacy o dashboard)
-  if (amount !== undefined) {
-    // Asumimos que el amount está en la divisa que el backend está configurado para enviar
-    // Por ahora, asumimos VES y convertimos si es necesario
-    const displayPrice = currency === 'VES' ? amount : amount / 36.5; // Conversión básica
-    
-    return (
-      <span className={className}>
-        {formatPrice(displayPrice, currency)}
-      </span>
-    );
+  if (typeof numericValue === 'number' && !isNaN(numericValue) && numericValue > 0) {
+    // Formatear solo con símbolo $ (sin texto adicional)
+    const formatted = numericValue.toLocaleString('es-VE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    return <span className={className}>${formatted}</span>;
   }
 
   // No hay datos para mostrar

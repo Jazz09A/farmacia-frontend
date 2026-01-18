@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ShoppingCart, 
+  FileText, 
   TrendingUp, 
   Users, 
   DollarSign, 
@@ -15,8 +15,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import OrderModal from '../../components/Admin/OrderModal';
-import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 import { RecentOrder, adminService } from '../../services/AdminService';
+import { useAdminDashboardQuery } from '../../hooks/queries/useAdminQueries';
 import { Order } from '../../types';
 import DashboardSkeleton from '../../components/Skeleton/DashboardSkeleton';
 import OrderModalSkeleton from '../../components/Skeleton/OrderModalSkeleton';
@@ -32,22 +32,34 @@ const AdminDashboardPage: React.FC = () => {
   // Contexto de divisas disponible para uso futuro
   // const { currency } = useAdminCurrency();
 
-  // 🎯 Hook para datos del dashboard con API real
-  const { data, loading, error, refreshData, updateOrderStatus } = useAdminDashboard(selectedTimeRange);
-
-  // 🔄 Actualizar datos cuando cambie el rango de tiempo
-  useEffect(() => {
-    if (selectedTimeRange !== 7) { // Solo si cambió del valor inicial
-      refreshData(selectedTimeRange);
-    }
-  }, [selectedTimeRange]); // Hook maneja la carga inicial
+  // 🎯 Datos del dashboard con React Query
+  const { data, isLoading: loading, status, error, refetch } = useAdminDashboardQuery(String(selectedTimeRange));
 
   // 📊 Extraer datos del API o valores por defecto
   const stats = data?.stats || {
-    total_revenue: 0,
+    total_revenue: '0.00',
     total_orders: 0,
     new_customers: 0,
-    conversion_rate: 0
+    conversion_rate: '0.00',
+    total_discounts_given: '0.00',
+    orders_with_discounts: 0,
+    discount_usage_percentage: 0,
+    average_discount_per_order: '0.00'
+  };
+
+  // Asegurar que conversion_rate sea número antes de formatear
+  const conversionRateNum = (() => {
+    const raw = stats?.conversion_rate;
+    const num = typeof raw === 'number' ? raw : parseFloat(raw ?? '0');
+    return Number.isFinite(num) ? num : 0;
+  })();
+
+  const discountBreakdown = data?.discount_breakdown || {
+    quantity_discounts: 0,
+    flash_discounts: 0,
+    coupon_discounts: 0,
+    promotional_discounts: 0,
+    total_amount_by_type: {}
   };
 
   const orderStatusSummary = data?.order_status_summary || {
@@ -65,12 +77,33 @@ const AdminDashboardPage: React.FC = () => {
   const getStatusColor = (status: string) => {
     const colors = {
       pending: 'yellow',
-      processing: 'blue',
+      confirmed: 'blue', // Azul para confirmed
+      processing: 'orange', // Naranja para processing
       shipped: 'purple',
-      delivered: 'green',
+      delivered: 'green', // Verde para delivered
       cancelled: 'red'
     };
     return colors[status as keyof typeof colors] || 'gray';
+  };
+
+  // Función para traducir estados de órdenes
+  const getOrderStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'Pendiente';
+      case 'confirmed':
+        return 'Confirmado';
+      case 'processing':
+        return 'En Preparación';
+      case 'shipped':
+        return 'Enviado';
+      case 'delivered':
+        return 'Entregado';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
   };
 
 
@@ -94,10 +127,11 @@ const AdminDashboardPage: React.FC = () => {
         order_number: order.id,
         status: order.status,
         subtotal: order.total,
-        shipping_cost: 0,
-        taxes: 0,
+        shipping_cost: '0.00',
+        taxes: '0.00',
         total: order.total,
-        currency: 'VES',
+        payment_currency: 'VES',
+        exchange_rate: '1.00',
         payment_method: 'No especificado',
         payment_status: 'pending',
         payment_reference: 'No especificado',
@@ -132,7 +166,14 @@ const AdminDashboardPage: React.FC = () => {
   // 🔄 Manejar actualización de estado
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     try {
-      await updateOrderStatus(orderId, newStatus);
+      // Verificar si la orden está en un estado final
+      const currentOrder = data?.recent_orders.find(order => order.id === orderId);
+      if (currentOrder && (currentOrder.status === 'delivered' || currentOrder.status === 'cancelled')) {
+        alert('No se puede modificar una orden entregada o cancelada');
+        return;
+      }
+
+      await adminService.updateOrderStatus(orderId, newStatus);
       
       // Actualizar orden seleccionada si corresponde
       if (selectedOrder && selectedOrder.id === orderId) {
@@ -145,12 +186,13 @@ const AdminDashboardPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Error updating order status:', err);
+      alert('Error al actualizar el estado de la cotización');
     }
   };
 
   // 🔄 Función para refrescar datos manualmente
   const handleRefresh = async () => {
-    await refreshData(selectedTimeRange);
+    await refetch();
   };
 
   const StatCard = ({ 
@@ -194,7 +236,7 @@ const AdminDashboardPage: React.FC = () => {
   const QuickActions: React.FC = () => {
     const actions = [
       { title: 'Nuevo Producto', icon: Plus, action: () => navigate('/admin/products/create') },
-      { title: 'Gestionar Pedidos', icon: ShoppingCart, action: () => navigate('/admin/orders') },
+      { title: 'Gestionar Cotizaciones', icon: FileText, action: () => navigate('/admin/orders') },
     ];
 
     return (
@@ -229,13 +271,15 @@ const AdminDashboardPage: React.FC = () => {
               <RefreshCw className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500 animate-spin" />
             )}
           </div>
-          <p className="mt-1 text-sm lg:text-base text-gray-600">Resumen del rendimiento de GRUPO DROZAINKA.</p>
+          <p className="mt-1 text-sm lg:text-base text-gray-600">Resumen del rendimiento de GRUPO DROZAINKA C.A.</p>
           
           {/* Error Message */}
           {error && (
             <div className="mt-2 flex items-start gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-md">
               <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-              <span className="text-sm text-red-700">{error}</span>
+              <span className="text-sm text-red-700">
+                {error instanceof Error ? error.message : 'Error al cargar los datos del dashboard'}
+              </span>
             </div>
           )}
         </div>
@@ -260,7 +304,8 @@ const AdminDashboardPage: React.FC = () => {
           >
             <option value={7}>Últimos 7 días</option>
             <option value={30}>Últimos 30 días</option>
-            <option value={365}>Último año</option>
+            <option value={60}>Últimos 2 meses</option>
+            <option value={90}>Últimos 3 meses</option>
           </select>
         </div>
       </div>
@@ -271,42 +316,42 @@ const AdminDashboardPage: React.FC = () => {
           title="Ingresos Totales" 
           value={<SmartPriceDisplay amount={stats.total_revenue} />} 
           icon={DollarSign} 
-          change="+8.2%" 
-          changeType="up" 
+          // change="+8.2%" 
+          // changeType="up" 
         />
         <StatCard 
-          title="Total de Pedidos" 
+          title="Total de Cotizaciones" 
           value={stats.total_orders} 
-          icon={ShoppingCart} 
-          change="+12.5%" 
-          changeType="up" 
+          icon={FileText} 
+          // change="+12.5%" 
+          // changeType="up" 
         />
         <StatCard 
           title="Nuevos Clientes" 
           value={stats.new_customers} 
           icon={Users} 
-          change="+5" 
-          changeType="up" 
+          // change="+5" 
+          // changeType="up" 
         />
         <StatCard 
           title="Tasa de Conversión" 
-          value={`${stats.conversion_rate.toFixed(2)}%`} 
+          value={`${conversionRateNum.toFixed(2)}%`} 
           icon={TrendingUp} 
-          change="-0.5%" 
-          changeType="down" 
+          // change="-0.5%" 
+          // changeType="down" 
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-        {/* Recent Orders Table */}
+        {/* Recent Quotes Table */}
         <div className="lg:col-span-2 bg-white rounded-lg shadow-md border border-gray-200">
           <div className="p-4 lg:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <h3 className="text-base lg:text-lg font-semibold text-gray-900">Pedidos Recientes</h3>
+            <h3 className="text-base lg:text-lg font-semibold text-gray-900">Cotizaciones Recientes</h3>
             <button
               onClick={() => navigate('/admin/orders')}
               className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors px-2 py-1 rounded hover:bg-blue-50"
             >
-              Ver todos
+              Ver todas
             </button>
           </div>
           <div className="overflow-x-auto">
@@ -345,7 +390,7 @@ const AdminDashboardPage: React.FC = () => {
                         <td className="px-3 lg:px-6 py-3 lg:py-4">
                           <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-${statusColor}-100 text-${statusColor}-800`}>
                             <span className={`w-1.5 h-1.5 mr-1.5 bg-${statusColor}-500 rounded-full`}></span>
-                            <span className="truncate">{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
+                            <span className="truncate">{getOrderStatusText(order.status)}</span>
                           </div>
                         </td>
                         <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
@@ -368,10 +413,10 @@ const AdminDashboardPage: React.FC = () => {
                   <tr>
                     <td colSpan={5} className="px-3 lg:px-6 py-8 text-center">
                       <div className="flex flex-col items-center">
-                        <ShoppingCart className="w-8 h-8 lg:w-12 lg:h-12 text-gray-300 mb-3 lg:mb-4" />
-                        <h3 className="text-sm font-medium text-gray-900 mb-1">No hay órdenes recientes</h3>
+                        <FileText className="w-8 h-8 lg:w-12 lg:h-12 text-gray-300 mb-3 lg:mb-4" />
+                        <h3 className="text-sm font-medium text-gray-900 mb-1">No hay cotizaciones recientes</h3>
                         <p className="text-xs lg:text-sm text-gray-500 px-4">
-                          {loading ? 'Cargando datos...' : 'Las órdenes aparecerán aquí cuando los clientes realicen compras.'}
+                          {loading ? 'Cargando datos...' : 'Las cotizaciones aparecerán aquí cuando los clientes las soliciten.'}
                         </p>
                       </div>
                     </td>
@@ -403,11 +448,11 @@ const AdminDashboardPage: React.FC = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs lg:text-sm font-medium text-gray-600">Confirmados</span>
-                <span className="text-sm lg:text-base font-bold text-green-600">{orderStatusSummary.confirmed}</span>
+                <span className="text-sm lg:text-base font-bold text-blue-600">{orderStatusSummary.confirmed}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs lg:text-sm font-medium text-gray-600">Procesando</span>
-                <span className="text-sm lg:text-base font-bold text-blue-600">{orderStatusSummary.processing}</span>
+                <span className="text-sm lg:text-base font-bold text-orange-600">{orderStatusSummary.processing}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs lg:text-sm font-medium text-gray-600">Enviados</span>
@@ -425,7 +470,7 @@ const AdminDashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
-      {/* Order Modal o Loading Skeleton */}
+      {/* Quote Modal o Loading Skeleton */}
       {showOrderModal && (
         loadingOrderDetails ? (
           <OrderModalSkeleton 

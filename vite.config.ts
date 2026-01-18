@@ -1,11 +1,15 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { compression } from 'vite-plugin-compression2';
 import type { Plugin } from 'vite';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  
+  return {
+    base: '/',
   plugins: [
     react(),
     // Visualizar el tamaño del bundle
@@ -25,13 +29,14 @@ export default defineConfig({
     })
   ],
   server: {
-    allowedHosts: ['us-atmospheric-jamaica-pine.trycloudflare.com'],
+    allowedHosts: ['vertical-gather-develop-prev.trycloudflare.com'],
     host: true,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:8000',
+        target: env.VITE_API_URL || 'http://localhost:8000',
         changeOrigin: true,
-        secure: false,
+        secure: true,
+        configure: (proxy, options) => {
       }
     },
     
@@ -42,8 +47,13 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
-        drop_debugger: true,
+        drop_console: true, // Eliminar todos los console.log en producción
+        drop_debugger: true, // Eliminar debugger statements
+        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.trace'], // Eliminar funciones específicas
+        passes: 3, // Múltiples pases para mejor optimización
+      },
+      format: {
+        comments: false, // Eliminar comentarios
       },
     },
 
@@ -70,5 +80,6 @@ export default defineConfig({
     include: ['react', 'react-dom', 'react-router-dom'],
     exclude: ['lucide-react'],
   },
-  
+  }
+  };
 });

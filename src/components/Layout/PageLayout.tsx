@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 
 interface PageLayoutProps {
@@ -9,6 +9,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
   const location = useLocation();
   const [navbarHeight, setNavbarHeight] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
+
+
 
   // Pages that shouldn't have navbar spacing (admin routes, HomePage with hero)
   const excludedRoutes = ['/admin'];
@@ -88,12 +90,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
     <div 
       style={{
         paddingTop: navbarHeight > 0 ? `${navbarHeight}px` : undefined,
-        paddingBottom: '6rem', // Added for footer spacing
-        minHeight: '100vh',
         width: '100%',
         maxWidth: '100%'
       }}
-      className="page-content"
+      className="page-content flex-1"
     >
       {children}
     </div>

@@ -1,8 +1,10 @@
 // 🔥 Flash Offers Section Component
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, ChevronLeft, ChevronRight, Clock, Zap } from 'lucide-react';
-import { useFlashOffers, useFlashOfferVisibility } from '../../hooks/useFlashOffers';
+import { useFlashOffersPublicQuery } from '../../hooks/queries/useFlashOffersQueries';
+import { useFlashOfferVisibility } from '../../hooks/useFlashOffers';
+import { flashOfferService } from '../../services/FlashOfferService';
 import FlashOfferCard from './FlashOfferCard';
 import { FlashOfferWithProduct } from '../../types';
 
@@ -24,10 +26,15 @@ export const FlashOffersSection: React.FC<FlashOffersSectionProps> = ({
   const scrollRef = useRef<HTMLDivElement>(null);
   const { ref: visibilityRef, isVisible } = useFlashOfferVisibility(0.1);
   
-  // Solo fetch cuando la sección es visible para optimizar performance
-  const { offers, loading, error, hasActiveOffers } = useFlashOffers(
-    isVisible ? refreshInterval : 0
-  );
+  // Usar React Query para obtener ofertas flash
+  const { data: flashOffersResponse, isLoading: loading, error } = useFlashOffersPublicQuery();
+  
+  // Filtrar solo ofertas activas
+  const offers: FlashOfferWithProduct[] = flashOffersResponse?.flash_offers
+    ? flashOffersResponse.flash_offers.filter(offer => flashOfferService.isOfferActive(offer))
+    : [];
+  
+  const hasActiveOffers = offers.length > 0;
 
   // No renderizar si no hay ofertas activas
   if (!hasActiveOffers && !loading) {
@@ -139,19 +146,19 @@ export const FlashOffersSection: React.FC<FlashOffersSectionProps> = ({
           </div>
         </motion.div>
 
-        {/* Navigation Buttons */}
+        {/* Navigation Buttons - Solo en mobile cuando hay scroll */}
         {displayOffers.length > 3 && (
           <>
             <button
               onClick={scrollLeft}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-white hover:bg-gray-50 shadow-lg rounded-full p-3 transition-all duration-300 hover:scale-110"
+              className="sm:hidden absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-white hover:bg-gray-50 shadow-lg rounded-full p-3 transition-all duration-300 hover:scale-110"
               aria-label="Scroll left"
             >
               <ChevronLeft className="w-6 h-6 text-gray-600" />
             </button>
             <button
               onClick={scrollRight}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-white hover:bg-gray-50 shadow-lg rounded-full p-3 transition-all duration-300 hover:scale-110"
+              className="sm:hidden absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-white hover:bg-gray-50 shadow-lg rounded-full p-3 transition-all duration-300 hover:scale-110"
               aria-label="Scroll right"
             >
               <ChevronRight className="w-6 h-6 text-gray-600" />
@@ -159,34 +166,67 @@ export const FlashOffersSection: React.FC<FlashOffersSectionProps> = ({
           </>
         )}
 
-        {/* Offers Grid/Scroll */}
-        <motion.div
-          ref={scrollRef}
-          className="flex space-x-6 overflow-x-auto pb-4 scrollbar-hide scroll-smooth"
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          {displayOffers.map((offer, index) => (
-            <motion.div
-              key={offer.id || `${offer.product_id}-${index}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="flex-shrink-0"
-            >
-              <FlashOfferCard
-                offer={offer}
-                size="medium"
-                showQuantity={true}
-                onAddToCart={(productId) => {
-                  // Analytics tracking
-                  console.log(`Flash offer added to cart: ${productId}`);
-                }}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
+        {/* Offers Grid/Scroll - Responsive: Grid en desktop, scroll en mobile */}
+        <div className="relative">
+          {/* Mobile: Scroll horizontal */}
+          <motion.div
+            ref={scrollRef}
+            className="
+              sm:hidden flex space-x-4 overflow-x-auto pb-4 scrollbar-hide scroll-smooth
+            "
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            {displayOffers.map((offer, index) => (
+              <motion.div
+                key={offer.id || `${offer.product_id}-${index}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="flex-shrink-0 w-[280px]"
+              >
+                <FlashOfferCard
+                  offer={offer}
+                  size="medium"
+                  showQuantity={true}
+                  onAddToCart={(productId) => {
+                    // Analytics tracking
+                  }}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Desktop: Grid simétrico */}
+          <motion.div
+            className="
+              hidden sm:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6
+            "
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            {displayOffers.map((offer, index) => (
+              <motion.div
+                key={offer.id || `${offer.product_id}-${index}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="w-full"
+              >
+                <FlashOfferCard
+                  offer={offer}
+                  size="medium"
+                  showQuantity={true}
+                  onAddToCart={(productId) => {
+                    // Analytics tracking
+                  }}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
 
         {/* Footer CTA */}
         {offers.length > maxItems && (

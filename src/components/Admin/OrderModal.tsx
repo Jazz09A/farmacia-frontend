@@ -20,13 +20,15 @@ import {
   Copy,
   CheckCheck,
   Shield,
-  X
+  X,
+  TrendingUp
 } from 'lucide-react';
+import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
 
 const orderStatuses = [
   { id: 'pending', name: 'Pendiente', color: 'yellow' },
   { id: 'confirmed', name: 'Confirmado', color: 'blue' },
-  { id: 'processing', name: 'Preparando', color: 'blue' },
+  { id: 'processing', name: 'Preparando', color: 'orange' },
   { id: 'shipped', name: 'Enviado', color: 'purple' },
   { id: 'delivered', name: 'Entregado', color: 'green' },
   { id: 'cancelled', name: 'Cancelado', color: 'red' },
@@ -37,6 +39,15 @@ const paymentStatuses = [
   { id: 'completed', name: 'Completado', color: 'green' },
   { id: 'failed', name: 'Fallido', color: 'red' },
   { id: 'refunded', name: 'Reembolsado', color: 'gray' },
+];
+
+const paymentMethods = [
+  { id: 'pago-movil', name: 'Pago Móvil' },
+  { id: 'transferencia', name: 'Transferencia Bancaria' },
+  { id: 'zelle', name: 'Zelle' },
+  { id: 'paypal', name: 'PayPal' },
+  { id: 'efectivo', name: 'Efectivo' },
+  { id: 'tarjeta', name: 'Tarjeta de Crédito/Débito' },
 ];
 
 interface OrderModalProps {
@@ -51,9 +62,9 @@ const getStatusIcon = (status: string) => {
       case 'pending':
         return <Clock className="w-4 h-4 text-yellow-500" />;
       case 'confirmed':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-blue-500" />;
       case 'processing':
-        return <AlertCircle className="w-4 h-4 text-blue-500" />;
+        return <AlertCircle className="w-4 h-4 text-orange-500" />;
       case 'shipped':
         return <Package className="w-4 h-4 text-purple-500" />;
       case 'delivered':
@@ -65,12 +76,27 @@ const getStatusIcon = (status: string) => {
     }
 };
 
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-VE', {
+const formatCurrency = (amount: string | number) => {
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'VES',
-      minimumFractionDigits: 0
-    }).format(amount);
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(numericAmount);
+};
+
+const getPaymentMethodName = (method: string) => {
+    const methodObj = paymentMethods.find(m => m.id === method);
+    return methodObj?.name || method;
+};
+
+const getCurrencyName = (currency: string) => {
+    const currencies: Record<string, string> = {
+        'VES': 'Bolívares (VES) - Pago recibido',
+        'USD': 'Dólares (USD) - Base de datos',
+        'EUR': 'Euros (EUR)'
+    };
+    return currencies[currency] || currency;
 };
 
 const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus, onUpdatePaymentStatus }) => {
@@ -78,18 +104,13 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus,
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUpdatingPayment, setIsUpdatingPayment] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const { exchangeRateData } = useGlobalCurrency();
   
   if (!order) return null;
 
-  // Debug: mostrar información del estado de pago
-  console.log('OrderModal Debug:', {
-    payment_status: order.payment_status,
-    payment_capture_url: order.payment_capture_url,
-    onUpdatePaymentStatus: !!onUpdatePaymentStatus,
-    order_id: order.id,
-    order_number: order.order_number
-  });
-  
+  // Estados finales que no pueden ser modificados
+  const isFinalStatus = order.status === 'delivered' || order.status === 'cancelled';
+
   const handleConfirmStatusChange = async () => {
     if (selectedStatus === order.status) return;
     setIsUpdating(true);
@@ -128,6 +149,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus,
     
     const colorClasses = {
       yellow: 'bg-yellow-100 text-yellow-800',
+      emerald: 'bg-emerald-100 text-emerald-800',
       blue: 'bg-blue-100 text-blue-800',
       purple: 'bg-purple-100 text-purple-800',
       green: 'bg-green-100 text-green-800',
@@ -160,38 +182,41 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus,
       <div className="bg-white rounded-lg w-full max-w-xs sm:max-w-md lg:max-w-6xl max-h-[95vh] overflow-y-auto">
         {/* Header */}
         <div className="p-3 sm:p-4 lg:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <div className="flex justify-between items-start gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 truncate">
-                  Pedido #{order.order_number || order.id.substring(0, 8)}
-                </h2>
-                <div className={getStatusBadge(order.status, 'order')}>
-                  {getStatusIcon(order.status)}
-                  <span className="ml-1 capitalize text-xs sm:text-sm">{orderStatuses.find(s => s.id === order.status)?.name}</span>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="truncate">{formatDate(order.created_at)}</span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <Package className="w-3 h-3 sm:w-4 sm:h-4" />
-                  {order.item_count} items
-                </span>
-                <span className="flex items-center gap-1">
-                  <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="truncate">{formatCurrency(order.total)} {order.currency}</span>
-                </span>
-              </div>
-            </div>
+          {/* Top row: Title and Close button */}
+          <div className="flex justify-between items-start gap-3 mb-3">
+            <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 truncate flex-1 min-w-0">
+              Pedido #{order.order_number || order.id.substring(0, 8)}
+            </h2>
             <button 
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 active:text-gray-800 flex-shrink-0 p-1 rounded-full hover:bg-gray-100 transition-colors"
             >
               <XCircle className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
+          </div>
+
+          {/* Status badge - full width on mobile */}
+          <div className="mb-3">
+            <div className={`${getStatusBadge(order.status, 'order')} inline-flex`}>
+              {getStatusIcon(order.status)}
+              <span className="ml-1 capitalize text-xs sm:text-sm">{orderStatuses.find(s => s.id === order.status)?.name}</span>
+            </div>
+          </div>
+
+          {/* Order details - responsive grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+            <div className="flex items-center gap-1">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="truncate">{formatDate(order.created_at)}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Package className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span>{order.item_count} items</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="truncate font-medium text-gray-900">{formatCurrency(order.total)} USD</span>
+            </div>
           </div>
         </div>
 
@@ -274,12 +299,18 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus,
                 )}
 
                 <div>
-                  <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">Actualizar Estado:</label>
+                  <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
+                    {isFinalStatus ? 'Estado Final (No Modificable):' : 'Actualizar Estado:'}
+                  </label>
                   <select 
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className={`w-full px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      isFinalStatus 
+                        ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed' 
+                        : 'border-gray-300 bg-white'
+                    }`}
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
-                    disabled={isUpdating}
+                    disabled={isUpdating || isFinalStatus}
                   >
                     {orderStatuses.map(status => (
                       <option key={status.id} value={status.id}>
@@ -288,7 +319,20 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus,
                     ))}
                   </select>
                   
-                  {hasStatusChanged && (
+                  {isFinalStatus && (
+                    <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-amber-600" />
+                        <span className="text-xs text-amber-700">
+                          {order.status === 'delivered' 
+                            ? 'Esta orden ya fue entregada y no puede ser modificada.' 
+                            : 'Esta orden fue cancelada y no puede ser modificada.'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {hasStatusChanged && !isFinalStatus && (
                     <button
                       onClick={handleConfirmStatusChange}
                       disabled={isUpdating}
@@ -339,13 +383,13 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus,
                 <div className="flex items-center justify-between">
                   <span className="text-xs lg:text-sm text-gray-500">Estado del pago</span>
                   <div className={getStatusBadge(order.payment_status, 'payment')}>
-                    <span className="text-xs">{order.payment_status}</span>
+                    <span className="text-xs">{paymentStatuses.find(s => s.id === order.payment_status)?.name || order.payment_status}</span>
                   </div>
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <span className="text-xs lg:text-sm text-gray-500">Método de pago</span>
-                  <span className="font-medium text-xs lg:text-sm truncate">{order.payment_method}</span>
+                  <span className="font-medium text-xs lg:text-sm truncate">{getPaymentMethodName(order.payment_method)}</span>
                 </div>
 
                 {order.payment_reference && (
@@ -355,7 +399,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus,
                       <div className="font-medium text-xs lg:text-sm truncate">{order.payment_reference}</div>
                     </div>
                     <button
-                      onClick={() => handleCopyToClipboard(order.payment_reference, 'payment_ref')}
+                      onClick={() => order.payment_reference && handleCopyToClipboard(order.payment_reference, 'payment_ref')}
                       className="p-2 text-gray-400 hover:text-blue-600 active:text-blue-800 rounded-full hover:bg-blue-50 transition-colors flex-shrink-0"
                       title="Copiar referencia"
                     >
@@ -431,21 +475,6 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus,
                       </div>
                     )}
                     
-                    {/* Mensaje cuando el pago ya fue verificado */}
-                    {onUpdatePaymentStatus && order.payment_status !== 'pending' && (
-                      <div className="p-3 bg-gray-50 rounded border">
-                        <div className="text-xs text-gray-600 mb-1">Estado de Verificación:</div>
-                        <div className={`text-sm font-medium ${
-                          order.payment_status === 'completed' ? 'text-green-700' :
-                          order.payment_status === 'failed' ? 'text-red-700' :
-                          'text-gray-700'
-                        }`}>
-                          {order.payment_status === 'completed' ? '✅ Pago ya fue confirmado' :
-                           order.payment_status === 'failed' ? '❌ Pago ya fue rechazado' :
-                           'Estado de pago verificado'}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -562,20 +591,46 @@ const OrderModal: React.FC<OrderModalProps> = ({ order, onClose, onUpdateStatus,
                 <div className="border-t border-gray-200 pt-2 lg:pt-3">
                   <div className="flex justify-between text-sm lg:text-lg font-bold">
                     <span>Total:</span>
-                    <span className="text-blue-600 truncate">{formatCurrency(order.total)} {order.currency}</span>
+                    <span className="text-blue-600 truncate">{formatCurrency(order.total)} USD</span>
                   </div>
                 </div>
               </div>
               
               <div className="space-y-2 lg:space-y-3 text-xs lg:text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Moneda:</span>
-                  <span className="font-medium">{order.currency}</span>
+                  <span className="text-gray-600">Moneda de pago:</span>
+                  <span className="font-medium">{getCurrencyName(order.payment_currency)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Almacenado en:</span>
+                  <span className="font-medium text-blue-600">Dólares (USD) - Base de datos</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Método de pago:</span>
-                  <span className="font-medium truncate">{order.payment_method}</span>
+                  <span className="font-medium truncate">{getPaymentMethodName(order.payment_method)}</span>
                 </div>
+                
+                {/* Tasa de cambio actual */}
+                {exchangeRateData && (
+                  <div className="pt-2 border-t border-gray-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="w-4 h-4 text-blue-600" />
+                      <span className="text-gray-600 font-medium">Tasa de cambio actual:</span>
+                    </div>
+                    <div className="bg-blue-50 rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">USD a VES:</span>
+                        <span className="font-medium text-blue-700">
+                          $1 USD = {exchangeRateData.rate.toFixed(2)} Bs.S
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Fuente: {exchangeRateData.source}</span>
+                        <span className="capitalize">{exchangeRateData.status}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {order.customer_notes && (
                   <div className="pt-2 lg:pt-3 border-t border-gray-200">
                     <div className="text-gray-600 mb-1">Notas del cliente:</div>

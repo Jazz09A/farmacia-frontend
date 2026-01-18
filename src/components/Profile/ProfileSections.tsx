@@ -182,7 +182,7 @@ export const NotificationsSection: React.FC<{ notifications: UserNotification[] 
       promotion_available: 'text-purple-600 bg-purple-100',
       account_update: 'text-orange-600 bg-orange-100',
       system_message: 'text-gray-600 bg-gray-100',
-      payment_received: 'text-emerald-600 bg-emerald-100',
+      payment_received: 'text-blue-600 bg-blue-100',
       low_stock_alert: 'text-red-600 bg-red-100'
     };
     return colors[type as keyof typeof colors] || 'text-gray-600 bg-gray-100';
@@ -335,7 +335,6 @@ export const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets
   const handleSubmitTicket = (e: React.FormEvent) => {
     e.preventDefault();
     // Aquí iría la lógica para enviar el ticket
-    console.log('Nuevo ticket:', newTicket);
     setShowNewTicketForm(false);
     setNewTicket({ subject: '', category: 'general', priority: 'medium', message: '' });
   };

@@ -1,57 +1,143 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Pill, 
-  Heart, 
-  Baby, 
-  Stethoscope, 
-  Syringe, 
-  Cross, 
-  Activity, 
-  Shield,
-  Eye,
+  Pill,
   Brain,
+  Heart, 
+  Shield,
   Bone,
-  Zap
+  Sparkles,
+  User,
+  Flower2,
+  Scale,
+  Award,
+  Package,
+  Leaf,
+  Star,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const CategoriesSection: React.FC = () => {
+  const navigate = useNavigate();
   const categories = [
     {
-      icon: Pill,
-      title: 'Medicamentos Generales',
-      description: 'Medicamentos de uso común y tratamientos básicos',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
-      hoverColor: 'hover:bg-blue-100'
+      icon: Brain,
+      title: 'Sistema Nervioso',
+      description: 'Productos para el cuidado y bienestar del sistema nervioso',
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      borderColor: 'border-purple-200',
+      hoverColor: 'hover:bg-purple-100'
     },
     {
       icon: Heart,
-      title: 'Cardiología',
-      description: 'Medicamentos para el sistema cardiovascular',
+      title: 'Salud Cardiovascular',
+      description: 'Nutraceuticos para el cuidado del corazón y sistema circulatorio',
       color: 'text-red-600',
       bgColor: 'bg-red-50',
       borderColor: 'border-red-200',
       hoverColor: 'hover:bg-red-100'
     },
     {
-      icon: Baby,
-      title: 'Pediatría',
-      description: 'Medicamentos especializados para niños',
+      icon: Shield,
+      title: 'Sistema Inmunológico',
+      description: 'Refuerza tus defensas naturales con productos de alta calidad',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200',
+      hoverColor: 'hover:bg-blue-100'
+    },
+    {
+      icon: Bone,
+      title: 'Sistema Osteoarticular',
+      description: 'Cuidado de huesos, articulaciones y movilidad',
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+      borderColor: 'border-orange-200',
+      hoverColor: 'hover:bg-orange-100'
+    },
+    {
+      icon: Sparkles,
+      title: 'Bienestar General',
+      description: 'Productos para mejorar tu salud y calidad de vida',
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50',
+      borderColor: 'border-yellow-200',
+      hoverColor: 'hover:bg-yellow-100'
+    },
+    {
+      icon: User,
+      title: 'Salud Masculina',
+      description: 'Especializados en el bienestar y salud del hombre',
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      borderColor: 'border-indigo-200',
+      hoverColor: 'hover:bg-indigo-100'
+    },
+    {
+      icon: Flower2,
+      title: 'Salud Femenina',
+      description: 'Cuidado integral para la salud y bienestar de la mujer',
       color: 'text-pink-600',
       bgColor: 'bg-pink-50',
       borderColor: 'border-pink-200',
       hoverColor: 'hover:bg-pink-100'
     },
     {
-      icon: Stethoscope,
-      title: 'Medicina Interna',
-      description: 'Tratamientos para enfermedades internas',
+      icon: Scale,
+      title: 'Pérdida de Peso',
+      description: 'Productos naturales para apoyo en el control de peso',
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200',
       hoverColor: 'hover:bg-green-100'
+    },
+  ];
+
+  const brands = [
+    {
+      name: 'BY NATURLIFES',
+      description: '16 categorías especializadas',
+      icon: Leaf,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      hoverColor: 'hover:bg-green-100',
+      hoverBorderColor: 'group-hover:border-green-300',
+      gradient: 'from-green-500 to-emerald-600'
+    },
+    {
+      name: 'NUVITT',
+      description: '8 categorías de bienestar',
+      icon: Star,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200',
+      hoverColor: 'hover:bg-blue-100',
+      hoverBorderColor: 'group-hover:border-blue-300',
+      gradient: 'from-blue-500 to-cyan-600'
+    },
+    {
+      name: 'DULCILINA',
+      description: 'Alimentación saludable',
+      icon: Award,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      borderColor: 'border-purple-200',
+      hoverColor: 'hover:bg-purple-100',
+      hoverBorderColor: 'group-hover:border-purple-300',
+      gradient: 'from-purple-500 to-pink-600'
+    },
+    {
+      name: 'FITOSANA',
+      description: 'Productos naturales',
+      icon: Package,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+      borderColor: 'border-orange-200',
+      hoverColor: 'hover:bg-orange-100',
+      hoverBorderColor: 'group-hover:border-orange-300',
+      gradient: 'from-orange-500 to-amber-600'
     },
   ];
 
@@ -78,7 +164,7 @@ export const CategoriesSection: React.FC = () => {
           </motion.div>
           
           <motion.h2
-            className="text-4xl lg:text-6xl font-serif font-bold text-gray-900 leading-tight mb-6"
+            className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
@@ -97,8 +183,8 @@ export const CategoriesSection: React.FC = () => {
             transition={{ duration: 0.8, delay: 0.4 }}
             viewport={{ once: true }}
           >
-            Cubrimos todas las especialidades médicas con medicamentos certificados 
-            y productos farmacéuticos de la más alta calidad para tu farmacia.
+             Cubrimos muchas especialidades médicas con productos nutraceuticos 
+             y farmacéuticos de la más alta calidad para tu farmacia.
           </motion.p>
         </motion.div>
 
@@ -151,7 +237,7 @@ export const CategoriesSection: React.FC = () => {
               ¿No encuentras lo que buscas?
             </h3>
             <p className="text-gray-600 mb-6">
-              Tenemos acceso a más de 10,000 productos farmacéuticos. 
+              Tenemos acceso a más de 1.000 productos nutraceuticos y farmacéuticos. 
               Contáctanos para consultas especializadas y pedidos personalizados.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -159,6 +245,7 @@ export const CategoriesSection: React.FC = () => {
                 className="btn-medical-primary px-8 py-3 text-base font-semibold"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => window.open('https://wa.me/584241806018?text=Quiero%20consultar%20disponibilidad%20de%20productos', '_blank')}
               >
                 📞 Consultar Disponibilidad
               </motion.button>
@@ -166,6 +253,9 @@ export const CategoriesSection: React.FC = () => {
                 className="btn-medical-secondary px-8 py-3 text-base font-semibold border-2"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  navigate('/catalog');
+                }}
               >
                 📋 Ver Catálogo Completo
               </motion.button>

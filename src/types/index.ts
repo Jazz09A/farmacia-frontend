@@ -1,3 +1,22 @@
+export interface ProfitDiscountRange {
+  max_quantity: number;
+  discount_percentage: number;
+  range_number: number;
+}
+
+export interface ProfitDiscount {
+  co_desc: string;
+  des_des: string;
+  tip_cli: string;
+  des_tipo: string;
+  ranges: ProfitDiscountRange[];
+  fecha_ini: string;
+  fecha_fin: string;
+  is_active: boolean | string; // Puede venir como boolean o string del backend
+  best_discount_percentage: string;
+  min_quantity_for_discount: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -5,10 +24,10 @@ export interface Product {
   category: string;
   subcategory: string;
   patology: string;
-  price_ves: number;
-  price_ref: number;
+  price: string; // USD - viene como string del backend
+  currency?: string; // Moneda del precio (ej: "US$", "VES")
   description: string;
-  ingredients: string[] | null;
+  ingredients: string[];
   image: string;
   images: string[];
   in_stock: boolean;
@@ -20,18 +39,19 @@ export interface Product {
   registro_sanitario: string;
   contraindicaciones: string;
   efectos_secundarios: string;
-  rating: number;
+  rating: string; // viene como string del backend
   review_count: number;
   is_offer: boolean;
-  original_price: number | null;
+  original_price: string | null; // USD - viene como string del backend
   offer_end_time: string | null;
   featured: boolean;
   slug: string;
-  discount_percentage: number;
-  current_price: number;
+  discount_percentage: string; // viene como string del backend
+  current_price: string; // USD - viene como string del backend
   is_available: boolean;
   created_at: string;
   updated_at: string;
+  profit_discount?: ProfitDiscount | null; // Descuento automático de Profit Plus
 }
 
 export interface CartItem {
@@ -39,18 +59,33 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selected_presentation: string | null;
-  subtotal_ref: number;
-  subtotal_ves: number;
+  subtotal: number; // USD
   created_at: string;
   updated_at: string;
+}
+
+// Respuesta de la API de productos
+export interface ProductsApiResponse {
+  products: Product[];
+  pagination: Record<string, any>;
+  filters_applied: Record<string, any>;
+  total: number;
+}
+
+// Estructura para crear orden desde el carrito
+export interface OrderCreate {
+  shipping_address_id: string;
+  payment_method: string;
+  payment_currency: 'USD' | 'VES';
+  payment_capture_url: string;
+  customer_notes: string;
 }
 
 export interface Cart {
   items: CartItem[];
   total_items: number;
   total_unique_items: number;
-  total_ves: number;
-  total_ref: number;
+  total: number; // USD
 }
 
 export interface SearchFilters {
@@ -66,12 +101,13 @@ export interface SearchFilters {
   sortOrder?: 'asc' | 'desc';
 }
 
-export type Currency = 'VES' | 'REF' | 'USD';
+export type Currency = 'VES' | 'USD';
 
 // 🔥 Flash Offer interfaces - API compliant and extensible
 export interface FlashOffer {
   id?: string;
   product_id: string;
+  co_desc?: string; // Código del descuento (ej: "DESC01", "DESC02")
   discount_type: 'percentage' | 'fixed_amount';
   discount_value: number;
   start_time: string;
@@ -87,17 +123,22 @@ export interface FlashOfferWithProduct extends FlashOffer {
   product: Product;
   remaining_time?: number; // milliseconds until expiry
   claimed_quantity?: number;
+  remaining_quantity?: number; // Cantidad restante disponible (max_quantity - used)
   availability_percentage?: number; // 0-100 based on max_quantity vs claimed
+  des_des?: string; // Descripción de la promoción (ej: "Promo Web", "Promo Web 2.0")
 }
 
-// 🔥 Flash Offer creation payload
+// 🔥 Flash Offer creation payload (Article Discount)
 export interface CreateFlashOfferPayload {
-  product_id: string;
-  discount_type: 'percentage' | 'fixed_amount';
-  discount_value: number;
-  start_time: string;
-  end_time: string;
-  max_quantity?: number;
+  co_art: string;
+  des_des: string;
+  fecha_ini: string;
+  fecha_fin: string;
+  hasta1: number;
+  porc1: number;
+  hasta2?: number;
+  porc2?: number;
+  campo1?: string;
   is_active?: boolean;
 }
 
@@ -197,12 +238,12 @@ export interface OrderItem {
   id: string;
   product_id: string;
   quantity: number;
-  unit_price: number;
-  total_price: number;
-  selected_presentation: string;
+  unit_price: string; // USD como string del backend
+  total_price: string; // USD como string del backend
+  selected_presentation: string | null;
   product_name: string;
   product_brand: string;
-  product_image: string;
+  product_image: string[];
 }
 
 // 🏠 Dirección de envío desde la API
@@ -222,17 +263,18 @@ export interface Order {
   id: string;
   order_number: string;
   status: string;
-  subtotal: number;
-  shipping_cost: number;
-  taxes: number;
-  total: number;
-  currency: string;
+  subtotal: string; // USD como string del backend
+  shipping_cost: string; // USD como string del backend
+  taxes: string; // USD como string del backend
+  total: string; // USD como string del backend
+  payment_currency: 'USD' | 'VES';
+  exchange_rate: string | null; // tasa usada si pago en VES (como string)
   payment_method: string;
   payment_status: string;
-  payment_reference: string;
-  tracking_number?: string;
-  estimated_delivery?: string;
-  delivered_at?: string;
+  payment_reference: string | null;
+  tracking_number?: string | null;
+  estimated_delivery?: string | null;
+  delivered_at?: string | null;
   customer_notes?: string;
   created_at: string;
   updated_at: string;
@@ -241,22 +283,121 @@ export interface Order {
   item_count: number;
   payment_capture_url: string;
   shipping_address_id?: string;
+  // Campos adicionales del backend
+  is_credit_order: boolean;
+  credit_amount: string;
+  credit_remaining: string;
+  credit_paid_total: string;
+  payment_due_date?: string | null;
+  credit_paid: boolean;
+  credit_payment_date?: string | null;
+  quantity_discount?: any | null;
+  quantity_discount_amount: string;
+  discounts?: any | null;
+  original_subtotal?: string | null;
+  total_savings: string;
+  user: string;
 }
 
+// Blog Author from API
+export interface BlogAuthor {
+  id: string;
+  email: string;
+  full_name: string;
+}
+
+// Blog Category from API
+export interface BlogCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  created_at?: string;
+}
+
+// Blog Image from API
+export interface BlogImage {
+  id: string;
+  blog_post_id: string;
+  image_code: string;
+  description?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  image_url: string;
+}
+
+// Blog Post API Response (for list endpoints)
+export interface BlogPostListItem {
+  id: string;
+  title: string;
+  slug: string;
+  featured_image_url: string;
+  images: string[] | null;
+  status: 'draft' | 'published' | 'archived';
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+  author: BlogAuthor;
+  category: BlogCategory;
+  excerpt: string;
+}
+
+// Blog Post API Response (for detail endpoint)
+export interface BlogPostDetail {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  category_id: string;
+  featured_image_url: string | null;
+  status: 'draft' | 'published' | 'archived';
+  published_at: string | null;
+  author_id: string;
+  author: BlogAuthor;
+  category: BlogCategory;
+  created_at: string;
+  updated_at: string;
+  is_published: boolean;
+}
+
+// Blog Post API Paginated Response
+export interface BlogPostApiResponse {
+  items: BlogPostListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+// Blog Images Response
+export interface BlogImagesResponse {
+  images: BlogImage[];
+  total: number;
+}
+
+// Legacy BlogPost interface (for backward compatibility)
 export interface BlogPost {
   id: string;
   title: string;
   slug: string;
   content: string;
   excerpt: string;
-  author: string;
-  category: string;
+  author: string | BlogAuthor;
+  category: string | BlogCategory;
   tags: string[];
   image: string;
+  featured_image_url?: string;
+  images?: string[] | null;
   published: boolean;
+  status?: 'draft' | 'published' | 'archived';
   publishedAt?: Date;
+  published_at?: string | null;
+  category_id?: string;
   createdAt: Date;
+  created_at?: string;
   updatedAt: Date;
+  updated_at?: string;
   readTime: number;
 }
 
@@ -341,4 +482,200 @@ export interface CustomerStats {
   }[];
   favorite_categories: Record<string, any>[];
   purchase_trends: Record<string, any>;
+}
+
+// ===== SOURCE SYSTEM INTERFACES =====
+export type SourceSystemCustomer = {
+  customer_code?: string;
+  customer_name: string;
+  email?: string | null;
+  alternate_email?: string | null;
+  rif?: string | null;
+  phones?: string | null;
+  inactive: boolean;
+  is_juridico: boolean;
+};
+
+export type SourceSystemCustomerListResponse = {
+  customers: SourceSystemCustomer[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+export type CreateUsersFromSourceSystemRequest = {
+  customer_codes: string[];
+  use_alternate_emails?: boolean;
+};
+
+export type UserCreationResult = {
+  success: boolean;
+  customer_code?: string;
+  customer_name?: string;
+  email?: string;
+  user_id?: string;
+  error?: string;
+  email_sent?: boolean;
+  email_error?: string;
+};
+
+export type CreateUsersResponse = {
+  total: number;
+  successful: UserCreationResult[];
+  failed: UserCreationResult[];
+  summary: {
+    total_attempted: number;
+    users_created: number;
+    users_failed: number;
+    emails_sent: number;
+    emails_failed: number;
+    success_rate: number;
+  };
+};
+
+// ===== ARTICLES (PROFIT PLUS) INTERFACES =====
+
+// Flash offer info from ArticleSummary
+export interface ArticleFlashOffer {
+  id: string;
+  discount_type: 'percentage' | 'fixed_amount';
+  discount_value: number;
+  original_price: number;
+  offer_price: number;
+  discount_percentage: number;
+  end_time: string;
+  max_quantity?: number;
+  remaining_quantity?: number;
+}
+
+// ArticleSummary from /api/v1/articles
+export interface ArticleSummary {
+  co_art: string;
+  art_des: string;
+  category_code: string | null;
+  category_name: string | null;
+  price: string; // Decimal as string
+  currency: string;
+  stock: string; // Decimal as string
+  warehouse_code: string | null;
+  cloudinary_image_url: string | null; // Changed from image_url to cloudinary_image_url
+  has_cloudinary_image: boolean; // Changed from has_image to has_cloudinary_image
+  flash_offer?: ArticleFlashOffer | null;
+}
+
+// ArticlePriceDetail from article detail
+export interface ArticlePriceDetail {
+  price_code: string;
+  price_name: string | null;
+  amount: string; // Decimal as string
+  currency: string;
+  desde: string | null; // ISO datetime
+}
+
+// ArticleStockDetail from article detail
+export interface ArticleStockDetail {
+  warehouse_code: string;
+  warehouse_name: string | null;
+  quantity: string; // Decimal as string
+}
+
+// ArticleImageResponse from article detail (legacy - old system)
+export interface ArticleImageResponse {
+  guid: string;
+  url: string;
+  description: string | null;
+  tip: string | null;
+}
+
+// CloudinaryImageResponse - new Cloudinary system
+export interface CloudinaryImageResponse {
+  id: number;
+  co_art_profit: string;
+  cloudinary_url: string;
+  cloudinary_public_id: string | null;
+  is_main: boolean;
+  display_order: number;
+  description: string | null;
+  created_at: string | null;
+  cloudinary_info?: {
+    width: number;
+    height: number;
+    format: string;
+    bytes: number;
+    resource_type: string;
+    created_at: string;
+    version: number;
+    url: string;
+    secure_url: string;
+    public_id: string;
+  };
+}
+
+// ArticleDetail from /api/v1/articles/{co_art}
+export interface ArticleDetail {
+  co_art: string;
+  art_des: string;
+  description: string | null;
+  modelo: string | null;
+  ref: string | null;
+  category_code: string | null;
+  category_name: string | null;
+  line_code: string | null;
+  sub_line_code: string | null;
+  presentation: string | null;
+  additional_data: Record<string, any>;
+  prices: ArticlePriceDetail[];
+  stock_by_warehouse: ArticleStockDetail[];
+  cloudinary_images: CloudinaryImageResponse[]; // Changed from images to cloudinary_images
+  flash_offer?: ArticleFlashOffer | null;
+}
+
+// Articles API Response from /api/v1/articles
+export interface ArticlesApiResponse {
+  articles: ArticleSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+  filters_applied: Record<string, any>;
+}
+
+// Image Upload Response (legacy - old system)
+export interface ImageUploadResponse {
+  success: boolean;
+  message: string;
+  image_guid: string;
+  url: string;
+}
+
+// Cloudinary Image Upload Response
+export interface CloudinaryImageUploadResponse extends CloudinaryImageResponse {
+  // Inherits all fields from CloudinaryImageResponse
+}
+
+// Cloudinary Image List Response
+export interface CloudinaryImageListResponse {
+  co_art_profit: string;
+  images: CloudinaryImageResponse[];
+  total: number;
+}
+
+// Cloudinary Set Main Response
+export interface CloudinarySetMainResponse {
+  success: boolean;
+  message: string;
+  image_id: number;
+  co_art_profit: string;
+  cloudinary_url: string;
+}
+
+// Cloudinary Delete Response
+export interface CloudinaryDeleteResponse {
+  success: boolean;
+  message: string;
+  image_id: number;
+  co_art_profit: string;
+  cloudinary_deleted: boolean;
 }

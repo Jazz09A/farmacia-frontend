@@ -8,7 +8,7 @@ const CurrencyToggle: React.FC = () => {
   const { currency, setCurrency, getCurrencySymbol, getCurrencyName } = useAdminCurrency();
   const [isOpen, setIsOpen] = useState(false);
 
-  const currencies: Currency[] = ['VES', 'USD', 'REF'];
+  const currencies: Currency[] = ['VES', 'USD'];
 
   const handleCurrencySelect = (newCurrency: Currency) => {
     setCurrency(newCurrency);
@@ -19,7 +19,6 @@ const CurrencyToggle: React.FC = () => {
     switch (curr) {
       case 'VES': return 'bg-yellow-500';
       case 'USD': return 'bg-green-500';
-      case 'REF': return 'bg-blue-500';
       default: return 'bg-gray-500';
     }
   };
@@ -28,7 +27,6 @@ const CurrencyToggle: React.FC = () => {
     switch (curr) {
       case 'VES': return '🇻🇪';
       case 'USD': return '🇺🇸';
-      case 'REF': return '💱';
       default: return '💰';
     }
   };
@@ -44,8 +42,8 @@ const CurrencyToggle: React.FC = () => {
         <div className="flex items-center space-x-2">
           <span className="text-lg">{getCurrencyFlag(currency)}</span>
           <div className="flex items-center space-x-1">
-            <span className="font-medium text-gray-700">{getCurrencySymbol(currency)}</span>
-            <span className="text-sm text-gray-500">{currency}</span>
+            <span className="font-semibold text-gray-700 text-base">{getCurrencySymbol(currency)}</span>
+            {currency === 'VES' && <span className="text-sm text-gray-500">VES</span>}
           </div>
         </div>
         <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -90,8 +88,7 @@ const CurrencyToggle: React.FC = () => {
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
                         {curr === 'VES' && 'Bolívares Venezolanos'}
-                        {curr === 'USD' && 'Dólares Estadounidenses'}
-                        {curr === 'REF' && 'Precio de Referencia'}
+                        {curr === 'USD' && 'Dólares'}
                       </div>
                     </div>
                     

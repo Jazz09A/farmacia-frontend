@@ -241,18 +241,32 @@ const CustomerStatsModal: React.FC<CustomerStatsModalProps> = ({
             Distribución de Estados
           </h4>
           <div className="space-y-3">
-            {stats.order_status_distribution.map((status) => (
-              <div key={status.status} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                  <span className="font-medium text-gray-900 capitalize">{status.status}</span>
+            {stats.order_status_distribution.map((status) => {
+              const getStatusColor = (status: string) => {
+                switch (status.toLowerCase()) {
+                  case 'pending': return 'bg-yellow-500';
+                  case 'confirmed': return 'bg-blue-500';
+                  case 'processing': return 'bg-orange-500';
+                  case 'shipped': return 'bg-purple-500';
+                  case 'delivered': return 'bg-green-500';
+                  case 'cancelled': return 'bg-red-500';
+                  default: return 'bg-gray-500';
+                }
+              };
+              
+              return (
+                <div key={status.status} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-4 h-4 ${getStatusColor(status.status)} rounded-full`}></div>
+                    <span className="font-medium text-gray-900 capitalize">{status.status}</span>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm text-gray-600">{status.count} pedidos</span>
+                    <span className="text-sm font-medium text-gray-900">{status.percentage.toFixed(1)}%</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-600">{status.count} pedidos</span>
-                  <span className="text-sm font-medium text-gray-900">{status.percentage.toFixed(1)}%</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

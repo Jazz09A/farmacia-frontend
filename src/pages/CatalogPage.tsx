@@ -1,46 +1,48 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Filter, Grid, List, Heart, Pill, Stethoscope, Shield, Sparkles } from 'lucide-react';
-import { Product, SearchFilters } from '../types';
-import { getProductsPaginated } from '../data/products';
-import { Cart } from '../types';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, Filter, Grid, List, Heart, Pill, Stethoscope, Shield, Sparkles, X, Brain, Bone, User, Flower2, Scale, Loader2 } from 'lucide-react';
+import { SearchFilters } from '../types';
 import { ProductCard } from '../components/Products/ProductCard';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import Pagination from '../components/common/Pagination';
 import { ProductCardSkeleton } from '../components/Skeleton/ProductCardSkeleton';
-import { authService } from '../services/AuthService';
+import { useProductsQuery } from '../hooks/queries/useProductsQueries';
+import { usePrefetchNextPage } from '../hooks/useImagePrefetch';
+import { authenticatedImageCache } from '../utils/authenticatedImageCache';
+import { usePrefetchOnHover } from '../hooks/usePrefetchOnHover';
 
-// Categorías temporales hasta que se obtengan de la API
+// Especialidades Farmacéuticas
 const medicalCategories = [
-  { id: 'SISTEMA NERVIOSO', name: 'Sistema Nervioso', icon: 'Stethoscope', color: 'blue', count: 0 },
-  { id: 'Sin Categoría**', name: 'Sin Categoría', icon: 'Pill', color: 'gray', count: 0 }
+  { id: 'SISTEMA NERVIOSO', name: 'Sistema Nervioso', icon: 'Brain', color: 'purple', count: 0 },
+  { id: 'SALUD CARDIOVASCULAR', name: 'Salud Cardiovascular', icon: 'Heart', color: 'red', count: 0 },
+  { id: 'SISTEMA INMUNOLOGICO', name: 'Sistema Inmunológico', icon: 'Shield', color: 'blue', count: 0 },
+  { id: 'SISTEMA OSTEOARTICULAR', name: 'Sistema Osteoarticular', icon: 'Bone', color: 'orange', count: 0 },
+  { id: 'BIENESTAR GENERAL', name: 'Bienestar General', icon: 'Sparkles', color: 'yellow', count: 0 },
+  { id: 'SALUD MASCULINA', name: 'Salud Masculina', icon: 'User', color: 'indigo', count: 0 },
+  { id: 'SALUD FEMENINA', name: 'Salud Femenina', icon: 'Flower2', color: 'pink', count: 0 },
+  { id: 'PERDIDA DE PESO', name: 'Pérdida de Peso', icon: 'Scale', color: 'green', count: 0 }
 ];
-
-const medicalConditions = [
-  'Patología genérica**',
-  'Neurología',
-  'Cardiología'
-];
-
 
 const CatalogPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams] = useSearchParams();
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchParams.get('search') || '');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isFiltering, setIsFiltering] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [productsPerPage] = useState(8);
-  const [cart, setCart] = useState<Cart | null>(null);
-  const { currency, formatPrice: formatCurrencyPrice, getPriceInCurrency } = useGlobalCurrency();
+  const [productsPerPage] = useState(20);
+  const [isPageChanging, setIsPageChanging] = useState(false);
+  const [isStockFilterToggling, setIsStockFilterToggling] = useState(false);
+  const { currency, formatPriceFromBackend } = useGlobalCurrency();
+  
+  // Ref para scroll al cambiar de página
+  const productsContainerRef = useRef<HTMLDivElement>(null);
   
   const [filters, setFilters] = useState<SearchFilters>({
     category: '',
     subcategory: '',
     patology: '',
-    priceRange: [0, 1000000],
+    priceRange: [0, 1000],
     inStock: false,
     prescription: false,
     rating: 0,
@@ -49,50 +51,206 @@ const CatalogPage: React.FC = () => {
     sortOrder: 'asc'
   });
 
-  // Función para cargar productos paginados
-  const loadProducts = async (page: number = 1) => {
-    setIsLoading(true);
-    try {
-      const response = await getProductsPaginated(page, productsPerPage);
-      setProducts(response.products);
-      setTotalPages(response.totalPages);
-      setTotalProducts(response.total);
-      setCurrentPage(response.page);
-    } catch (error) {
-      console.error('Error loading products:', error);
-      // En caso de error, limpiar el estado
-      setProducts([]);
-      setTotalPages(0);
-      setTotalProducts(0);
+  // Debounce para búsqueda
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
       setCurrentPage(1);
-    } finally {
-      setIsLoading(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Convertir filtros locales a parámetros de búsqueda de API
+  const searchParams_api = useMemo(() => ({
+    search: debouncedSearchTerm || undefined,
+    category: filters.category || undefined,
+    subcategory: filters.subcategory || undefined,
+    patology: filters.patology || undefined,
+    brand: filters.brand || undefined,
+    min_price: filters.priceRange[0] > 0 ? filters.priceRange[0] : undefined,
+    max_price: filters.priceRange[1] < 1000 ? filters.priceRange[1] : undefined,
+    // Nuevo backend: in_stock_only filtra por stock > 0 (en el almacén seleccionado)
+    in_stock_only: filters.inStock || undefined,
+    prescription: filters.prescription || undefined,
+    sort_by: filters.sortBy as 'name' | 'price' | 'rating' | 'created_at' | 'relevance',
+    sort_order: filters.sortOrder,
+    page: currentPage,
+    limit: productsPerPage
+  }), [debouncedSearchTerm, filters, currentPage, productsPerPage]);
+
+  // Usar React Query para obtener productos
+  const { data: productsResponse, isLoading, isFetching } = useProductsQuery(searchParams_api);
+  useEffect(() => {
+  }, [productsResponse, isLoading, isFetching, searchParams_api]);
+
+  const products = productsResponse?.products || [];
+  const totalPages = productsResponse?.pagination?.total_pages || productsResponse?.total ? Math.ceil((productsResponse.total || 0) / productsPerPage) : 1;
+  const totalProducts = productsResponse?.total || productsResponse?.pagination?.total || 0;
+  // const isFiltering = isFetching && !isLoading;
+
+  // Animación de loading cuando el usuario togglea "solo en stock"
+  const showStockFilterLoading = isStockFilterToggling && isFetching;
+  useEffect(() => {
+    if (!isFetching) {
+      setIsStockFilterToggling(false);
     }
-  };
+  }, [isFetching]);
 
-  // Initial loading
+  // Si por aplicar un filtro quedamos en una página que ya no existe, ir a la última disponible
   useEffect(() => {
-    loadProducts(1);
-  }, []);
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
-  // Manejar cambio de página
-  const handlePageChange = (page: number) => {
-    loadProducts(page);
-    // Scroll to top cuando cambie de página
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Filter change loading simulation
+  // Actualizar searchTerm cuando cambia la URL
   useEffect(() => {
-    if (!isLoading) {
-      setIsFiltering(true);
+    const urlSearch = searchParams.get('search');
+    if (urlSearch && urlSearch !== searchTerm) {
+      setSearchTerm(urlSearch);
+    }
+  }, [searchParams]);
+
+  // Resetear página cuando cambian filtros
+  const prevFiltersRef = useRef<SearchFilters | null>(null);
+  const prevDebouncedSearchRef = useRef<string>(debouncedSearchTerm);
+  useEffect(() => {
+    const prevFilters = prevFiltersRef.current;
+    const prevDebouncedSearch = prevDebouncedSearchRef.current;
+
+    const searchChanged = prevDebouncedSearch !== debouncedSearchTerm;
+
+    // Si SOLO cambió el checkbox de stock, no reseteamos la página
+    const didOtherFiltersChange = (() => {
+      if (!prevFilters) return false;
+      return (
+        prevFilters.category !== filters.category ||
+        prevFilters.subcategory !== filters.subcategory ||
+        prevFilters.patology !== filters.patology ||
+        prevFilters.priceRange[0] !== filters.priceRange[0] ||
+        prevFilters.priceRange[1] !== filters.priceRange[1] ||
+        prevFilters.prescription !== filters.prescription ||
+        prevFilters.rating !== filters.rating ||
+        prevFilters.brand !== filters.brand ||
+        prevFilters.sortBy !== filters.sortBy ||
+        prevFilters.sortOrder !== filters.sortOrder
+      );
+    })();
+
+    if (searchChanged || didOtherFiltersChange) {
+      setCurrentPage(1);
+    }
+
+    prevFiltersRef.current = filters;
+    prevDebouncedSearchRef.current = debouncedSearchTerm;
+  }, [filters, debouncedSearchTerm]);
+
+  // Manejar cambio de página con scroll y loading
+  const handlePageChange = useCallback((page: number) => {
+    if (page === currentPage) return;
+    
+    // Activar estado de carga
+    setIsPageChanging(true);
+    setCurrentPage(page);
+    
+    // Scroll suave hacia el contenedor de productos
+    if (productsContainerRef.current) {
+      const offsetTop = productsContainerRef.current.offsetTop - 120; // Offset para el navbar
+      window.scrollTo({
+        top: offsetTop,
+        behavior: 'smooth'
+      });
+    } else {
+      // Fallback: scroll al top
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  }, [currentPage]);
+
+  // Desactivar estado de carga cuando terminan de cargar los productos
+  useEffect(() => {
+    if (!isFetching && isPageChanging) {
+      // Pequeño delay para que la transición sea más suave
       const timer = setTimeout(() => {
-        setIsFiltering(false);
-      }, 600);
-
+        setIsPageChanging(false);
+      }, 300);
       return () => clearTimeout(timer);
     }
-  }, [searchTerm, filters]);
+  }, [isFetching, isPageChanging]);
+
+  // Preconnect al backend para reducir latencia en requests de imágenes
+  useEffect(() => {
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    if (apiUrl && typeof window !== 'undefined') {
+      // Preconnect para establecer conexión temprana
+      const preconnectLink = document.createElement('link');
+      preconnectLink.rel = 'preconnect';
+      preconnectLink.href = apiUrl;
+      preconnectLink.crossOrigin = 'use-credentials';
+      document.head.appendChild(preconnectLink);
+
+      // DNS-prefetch como fallback
+      const dnsPrefetchLink = document.createElement('link');
+      dnsPrefetchLink.rel = 'dns-prefetch';
+      dnsPrefetchLink.href = apiUrl;
+      document.head.appendChild(dnsPrefetchLink);
+
+      return () => {
+        document.head.removeChild(preconnectLink);
+        document.head.removeChild(dnsPrefetchLink);
+      };
+    }
+  }, []);
+
+  // Hook para prefetch on hover
+  const { prefetch: prefetchImage, clearPrefetched } = usePrefetchOnHover();
+
+  // Limpiar prefetch al cambiar de página
+  useEffect(() => {
+    clearPrefetched();
+  }, [currentPage, clearPrefetched]);
+
+  // Prefetch de imágenes de la página actual (más agresivo)
+  usePrefetchNextPage(products, !isLoading && products.length > 0);
+  
+  // Precargar imágenes visibles inmediatamente
+  useEffect(() => {
+    if (!isLoading && products.length > 0) {
+      // Precargar las primeras 12 imágenes (las que están visibles)
+      const visibleProducts = products.slice(0, 12);
+      const imageUrls = visibleProducts
+        .map(product => {
+          if (product.images && product.images.length >= 2) {
+            return product.images[1];
+          }
+          return product.image || (product.images && product.images[0]);
+        })
+        .filter((url): url is string => !!url && url.includes('/api/v1/images/'));
+      
+      // Precargar en paralelo con prioridad alta
+      if (imageUrls.length > 0 && typeof window !== 'undefined') {
+        // Usar requestIdleCallback para no bloquear, pero con timeout corto
+        const prefetchImages = () => {
+          imageUrls.forEach(url => {
+            const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
+            const imageUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+            authenticatedImageCache.getImage(imageUrl, true).catch(() => {
+              // Silenciar errores de prefetch
+            });
+          });
+        };
+        
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(prefetchImages, { timeout: 500 });
+        } else {
+          setTimeout(prefetchImages, 100);
+        }
+      }
+    }
+  }, [products, isLoading]);
 
   // Icono dinámico para categorías
   const getCategoryIcon = (iconName: string) => {
@@ -101,78 +259,40 @@ const CatalogPage: React.FC = () => {
       'Heart': <Heart className="w-5 h-5" />,
       'Sparkles': <Sparkles className="w-5 h-5" />,
       'Shield': <Shield className="w-5 h-5" />,
-      'Stethoscope': <Stethoscope className="w-5 h-5" />
+      'Stethoscope': <Stethoscope className="w-5 h-5" />,
+      'Brain': <Brain className="w-5 h-5" />,
+      'Bone': <Bone className="w-5 h-5" />,
+      'User': <User className="w-5 h-5" />,
+      'Flower2': <Flower2 className="w-5 h-5" />,
+      'Scale': <Scale className="w-5 h-5" />
     };
     return icons[iconName] || <Pill className="w-5 h-5" />;
   };
 
-  // Filtrar y ordenar productos (ahora aplicado sobre los productos paginados)
-  const filteredProducts = useMemo(() => {
-    let filtered = products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           product.description.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesCategory = !filters.category || product.category === filters.category;
-      const matchesSubcategory = !filters.subcategory || product.subcategory === filters.subcategory;
-      const matchesPatology = !filters.patology || product.patology === filters.patology;
-      const matchesBrand = !filters.brand || product.brand.toLowerCase().includes(filters.brand.toLowerCase());
-      // Use the appropriate price field based on current currency
-      const currentPrice = currency === 'VES' ? product.price_ves : product.price_ref;
-      const matchesPrice = currentPrice >= filters.priceRange[0] && currentPrice <= filters.priceRange[1];
-      const matchesStock = !filters.inStock || product.in_stock;
-      const matchesPrescription = !filters.prescription || product.prescription;
-      const matchesRating = product.rating >= filters.rating;
+  // Mapeo de colores para clases de Tailwind
+  const getCategoryBgColor = (color: string) => {
+    const colorMap: { [key: string]: string } = {
+      'purple': 'bg-purple-100',
+      'red': 'bg-red-100',
+      'blue': 'bg-blue-100',
+      'orange': 'bg-orange-100',
+      'yellow': 'bg-yellow-100',
+      'indigo': 'bg-indigo-100',
+      'pink': 'bg-pink-100',
+      'green': 'bg-green-100',
+      'gray': 'bg-gray-100'
+    };
+    return colorMap[color] || 'bg-gray-100';
+  };
 
-      return matchesSearch && matchesCategory && matchesSubcategory && matchesPatology && 
-             matchesBrand && matchesPrice && matchesStock && matchesPrescription && matchesRating;
-    });
-
-    // Ordenar productos
-    filtered.sort((a, b) => {
-      let comparison = 0;
-      
-      switch (filters.sortBy) {
-        case 'price':
-          const priceA = currency === 'VES' ? a.price_ves : a.price_ref;
-          const priceB = currency === 'VES' ? b.price_ves : b.price_ref;
-          comparison = priceA - priceB;
-          break;
-        case 'rating':
-          comparison = a.rating - b.rating;
-          break;
-        case 'name':
-          comparison = a.name.localeCompare(b.name);
-          break;
-        case 'popularity':
-          comparison = a.review_count - b.review_count;
-          break;
-        default:
-          comparison = a.name.localeCompare(b.name);
-      }
-
-      return filters.sortOrder === 'desc' ? -comparison : comparison;
-    });
-
-    return filtered;
-  }, [products, searchTerm, filters]);
+  // Los productos ya vienen filtrados del servidor, no necesitamos filtrar localmente
+  const filteredProducts = products;
 
   // Función para formatear precios individuales (para filtros)
   const formatSinglePrice = (price: number): string => {
-    return formatCurrencyPrice(price);
+    return formatPriceFromBackend(price.toString(), currency);
   };
 
-  // Función para formatear precios del ProductCard (recibe ambos precios)
-  const formatProductPrice = (priceVes: number, priceRef: number): string => {
-    const selectedPrice = getPriceInCurrency(priceVes, priceRef);
-    return formatCurrencyPrice(selectedPrice);
-  };
-
-  useEffect(() => {
-    authService.getCart().then((cart: any) => {
-      setCart(cart.data);
-    });
-  }, []);
 
 
 
@@ -194,7 +314,7 @@ const CatalogPage: React.FC = () => {
         <div className="relative pt-8 pb-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-medical-primary to-medical-accent bg-clip-text text-transparent mb-6">
-              Catálogo Médico Premium
+              Catálogo De Productos
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
               Encuentra todos los medicamentos, suplementos y productos de salud que necesitas con la garantía de calidad farmacéutica
@@ -203,14 +323,24 @@ const CatalogPage: React.FC = () => {
             {/* Barra de búsqueda principal */}
             <div className="max-w-2xl mx-auto relative">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
                   type="text"
-                  placeholder="Buscar medicamentos, marcas, síntomas..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-medical-primary/50 focus:border-medical-primary transition-all duration-300 text-gray-900 placeholder-gray-500"
+                  placeholder="Buscar medicamentos, marcas, síntomas..."
+                  className="w-full pl-12 pr-4 py-4 bg-white/90 backdrop-blur-md border-2 border-medical-blue-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-medical-primary focus:border-transparent transition-all duration-300 text-gray-900 placeholder-gray-500"
                 />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -230,9 +360,9 @@ const CatalogPage: React.FC = () => {
               </button>
 
               <div className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-                {/* Categorías médicas */}
+                {/* Especialidades Farmacéuticas */}
                 <div className="bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Categorías Médicas</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Especialidades Farmacéuticas</h3>
                   <div className="space-y-3">
                     <button
                       onClick={() => setFilters({...filters, category: ''})}
@@ -245,46 +375,19 @@ const CatalogPage: React.FC = () => {
                       Todas las categorías
                     </button>
                     {medicalCategories.map((category) => (
-                      <button
+                      <div
                         key={category.id}
-                        onClick={() => setFilters({...filters, category: category.id})}
-                        className={`w-full text-left p-3 rounded-xl transition-all duration-300 flex items-center gap-3 ${
-                          filters.category === category.id
-                            ? 'bg-gradient-to-r from-medical-primary to-medical-primary-dark text-white'
-                            : 'hover:bg-gray-50'
-                        }`}
+                        className="w-full text-left p-3 rounded-xl flex items-center gap-3 bg-gray-50"
                       >
-                        <span className={`p-2 rounded-lg ${
-                          filters.category === category.id ? 'bg-white/20' : `bg-${category.color}-100`
-                        }`}>
+                        <span className={`p-2 rounded-lg ${getCategoryBgColor(category.color)}`}>
                           {getCategoryIcon(category.icon)}
                         </span>
                         <div className="flex-1">
-                          <div className="font-medium">{category.name}</div>
-                          <div className={`text-sm ${
-                            filters.category === category.id ? 'text-white/80' : 'text-gray-500'
-                          }`}>
-                            {category.count} productos
-                          </div>
+                          <div className="font-medium text-gray-900">{category.name}</div>
                         </div>
-                      </button>
+                      </div>
                     ))}
                   </div>
-                </div>
-
-                {/* Patologías */}
-                <div className="bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Patologías</h3>
-                  <select
-                    value={filters.patology}
-                    onChange={(e) => setFilters({...filters, patology: e.target.value})}
-                    className="w-full p-3 bg-white/50 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-medical-primary/50"
-                  >
-                    <option value="">Todas las patologías</option>
-                    {medicalConditions.map((condition) => (
-                      <option key={condition} value={condition}>{condition}</option>
-                    ))}
-                  </select>
                 </div>
 
                 {/* Rango de precios */}
@@ -294,8 +397,8 @@ const CatalogPage: React.FC = () => {
                     <input
                       type="range"
                       min="0"
-                      max="1000000"
-                      step="5000"
+                      max="100"
+                      step="5"
                       value={filters.priceRange[1]}
                       onChange={(e) => setFilters({
                         ...filters, 
@@ -318,12 +421,26 @@ const CatalogPage: React.FC = () => {
                       <input
                         type="checkbox"
                         checked={filters.inStock}
-                        onChange={(e) => setFilters({...filters, inStock: e.target.checked})}
+                        disabled={showStockFilterLoading}
+                        onChange={(e) => {
+                          setIsStockFilterToggling(true);
+                          setFilters({ ...filters, inStock: e.target.checked });
+                        }}
                         className="w-4 h-4 text-medical-primary bg-gray-100 border-gray-300 rounded focus:ring-medical-primary focus:ring-2"
                       />
-                      <span>Solo productos en stock</span>
+                      <span className={`flex items-center gap-2 ${showStockFilterLoading ? 'text-gray-500' : ''}`}>
+                        Solo productos en stock
+                        <span
+                          className={`transition-all duration-200 ${
+                            showStockFilterLoading ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-1 pointer-events-none'
+                          }`}
+                          aria-hidden={!showStockFilterLoading}
+                        >
+                          <Loader2 className="w-4 h-4 animate-spin text-medical-primary" />
+                        </span>
+                      </span>
                     </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
+                    {/* <label className="flex items-center gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={filters.prescription}
@@ -331,14 +448,14 @@ const CatalogPage: React.FC = () => {
                         className="w-4 h-4 text-medical-primary bg-gray-100 border-gray-300 rounded focus:ring-medical-primary focus:ring-2"
                       />
                       <span>Solo medicamentos con receta</span>
-                    </label>
+                    </label> */}
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Contenido principal */}
-            <div className="flex-1 space-y-6">
+            <div className="flex-1 space-y-6 pb-16">
               {/* Controles de vista y ordenamiento */}
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
                 <div className="flex items-center gap-4">
@@ -392,27 +509,53 @@ const CatalogPage: React.FC = () => {
               </div>
 
               {/* Grid de productos */}
-              {isLoading || isFiltering ? (
-                <div className={`grid gap-6 ${
-                  viewMode === 'grid' 
-                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                    : 'grid-cols-1'
-                }`}>
-                  {[...Array(12)].map((_, index) => (
-                    <ProductCardSkeleton key={index} />
-                  ))}
-                </div>
-              ) : filteredProducts.length > 0 ? (
-                <div className={`grid gap-6 ${
-                  viewMode === 'grid' 
-                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                    : 'grid-cols-1'
-                }`}>
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} currency={currency} formatPrice={formatProductPrice}  />
-                  ))}
-                </div>
-              ) : (
+              <div ref={productsContainerRef} className="relative">
+                {/* Overlay de loading al cambiar de página */}
+                {isPageChanging && (
+                  <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-center rounded-2xl transition-opacity duration-300">
+                    <div className="flex flex-col items-center gap-3 w-40">
+                      <div className="skeleton rounded-full h-14 w-14" />
+                      <div className="skeleton h-3 w-24 rounded-full" />
+                      <div className="skeleton h-3 w-16 rounded-full" />
+                    </div>
+                  </div>
+                )}
+
+                {isLoading ? (
+                  <div className={`grid gap-6 ${
+                    viewMode === 'grid' 
+                      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                      : 'grid-cols-1'
+                  }`}>
+                    {[...Array(12)].map((_, index) => (
+                      <ProductCardSkeleton key={index} />
+                    ))}
+                  </div>
+                ) : filteredProducts.length > 0 ? (
+                  <div className={`grid gap-6 transition-opacity duration-300 ${
+                    viewMode === 'grid' 
+                      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                      : 'grid-cols-1'
+                  } ${isPageChanging ? 'opacity-50' : 'opacity-100'}`}>
+                    {filteredProducts.map((product, index) => (
+                      <div 
+                        key={product.id}
+                        onMouseEnter={() => {
+                          // Prefetch imagen al hacer hover para carga más rápida
+                          const imageUrl = product.images && product.images.length >= 2 
+                            ? product.images[1] 
+                            : product.image || (product.images && product.images[0]);
+                          prefetchImage(imageUrl);
+                        }}
+                      >
+                        <ProductCard 
+                          product={product} 
+                          priority={index < 12} // Prioridad para las primeras 12 imágenes
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
                 <div className="text-center py-16 bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl">
                   <div className="max-w-md mx-auto">
                     <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -429,7 +572,7 @@ const CatalogPage: React.FC = () => {
                           category: '',
                           subcategory: '',
                           patology: '',
-                          priceRange: [0, 1000000],
+                          priceRange: [0, 100],
                           inStock: false,
                           prescription: false,
                           rating: 0,
@@ -445,6 +588,7 @@ const CatalogPage: React.FC = () => {
                   </div>
                 </div>
               )}
+              </div>
 
               {/* Paginación */}
               {totalPages > 1 && (
@@ -458,6 +602,7 @@ const CatalogPage: React.FC = () => {
             </div>
           </div>
         </div>
+
 
 
       </div>

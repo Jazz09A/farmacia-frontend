@@ -8,7 +8,7 @@ interface NavbarContextType {
 
 const NavbarContext = createContext<NavbarContextType | undefined>(undefined);
 
-export const NavbarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function NavbarProvider({ children }: { children: React.ReactNode }) {
   const [isNavbarVisible, setIsNavbarVisible] = useState(true);
 
   const hideNavbar = () => setIsNavbarVisible(false);
@@ -19,12 +19,12 @@ export const NavbarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       {children}
     </NavbarContext.Provider>
   );
-};
+}
 
-export const useNavbar = () => {
+export function useNavbar() {
   const context = useContext(NavbarContext);
   if (context === undefined) {
     throw new Error('useNavbar must be used within a NavbarProvider');
   }
   return context;
-};
+}

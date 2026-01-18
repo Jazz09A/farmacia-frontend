@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, Hash, RefreshCw } from 'lucide-react';
+import { DollarSign, Hash, RefreshCw, TrendingUp } from 'lucide-react';
 
 interface CurrencyToggleProps {
-  currency: 'VES' | 'REF';
+  currency: 'VES' | 'USD';
   onToggle: () => void;
   isScrolled: boolean;
+  exchangeRate?: number;
 }
 
 export const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
   currency,
   onToggle,
-  isScrolled
+  isScrolled,
+  exchangeRate = 36.5
 }) => {
   const [isConverting, setIsConverting] = useState(false);
 
@@ -47,7 +49,7 @@ export const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
         rotate: { duration: 0.5 }
       }}
     >
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-3">
         {/* Currency Icon with Flip Animation */}
         <motion.div
           className="relative w-5 h-5 flex items-center justify-center"
@@ -63,7 +65,7 @@ export const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
         >
           {isConverting ? (
             <RefreshCw className="h-4 w-4 animate-spin" />
-          ) : currency === 'REF' ? (
+          ) : currency === 'USD' ? (
             <DollarSign className="h-5 w-5" />
           ) : (
             <Hash className="h-5 w-5" />
@@ -95,8 +97,21 @@ export const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.3, delay: 0.25 }}
           >
-            {currency === 'REF' ? 'US Dollar' : 'Bolívar'}
+            {currency === 'USD' ? 'US Dollar' : 'Bolívar'}
           </motion.span>
+        </motion.div>
+
+        {/* Exchange Rate Display */}
+        <motion.div
+          className="flex items-center space-x-1 px-2 py-1 rounded-md bg-blue-50 border border-blue-200"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+        >
+          <TrendingUp className="h-3 w-3 text-blue-600" />
+          <span className="text-xs font-bold text-blue-700">
+            {exchangeRate.toFixed(2)}
+          </span>
         </motion.div>
       </div>
 

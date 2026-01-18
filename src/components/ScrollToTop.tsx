@@ -1,26 +1,30 @@
-import { useEffect, memo } from 'react';
+import { useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-const ScrollToTop: React.FC = memo(() => {
+const ScrollToTop = () => {
   const { pathname } = useLocation();
 
-  useEffect(() => {
-    // Only scroll if we're not already at the top to avoid unnecessary operations
-    if (window.pageYOffset > 0) {
-      // Use requestAnimationFrame for better performance
-      requestAnimationFrame(() => {
-        window.scrollTo({
-          top: 0,
-          left: 0,
-          behavior: 'auto'
-        });
-      });
+  // console.log('[ScrollToTop] Component rendered or updated.');
+
+  useLayoutEffect(() => {
+    // console.log(`[ScrollToTop] Effect triggered for pathname: "${pathname}"`);
+    
+    const currentScrollY = window.scrollY;
+    // console.log(`[ScrollToTop] Current scroll position (before scroll): ${currentScrollY}`);
+
+    if (currentScrollY > 0) {
+      // console.log('[ScrollToTop] Attempting to scroll to top...');
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      // console.log('[ScrollToTop] scrollTo(0, 0) called.');
+    } else {
+      // console.log('[ScrollToTop] Already at top. Scroll not needed.');
     }
+
   }, [pathname]);
 
   return null;
-});
+};
 
-ScrollToTop.displayName = 'ScrollToTop';
+export default ScrollToTop;
 
-export default ScrollToTop; 
+

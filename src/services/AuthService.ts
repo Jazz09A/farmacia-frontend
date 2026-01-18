@@ -4,17 +4,38 @@ import {
   AuthResponse, 
   User 
 } from '../types/auth';
-import { Cart } from '../types';
+import { Cart, Order } from '../types';
+import { 
+  CartWithDiscounts, 
+  ApplicableDiscountResponse 
+} from '../types/discounts';
 
 class AuthService {
-  private url = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  // En desarrollo usamos rutas relativas para aprovechar el proxy de Vite
+  // En producción usamos la URL completa
+  private isDevelopment = import.meta.env.DEV;
+  private url = this.isDevelopment ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:8000');
   private baseUrl = '/api/v1/auth';
   private tokenKey = 'auth_token';
+  private refreshTokenKey = 'refresh_token';
+  private tokenExpiryKey = 'token_expiry';
   private userKey = 'auth_user';
   private cartUrl = '/api/v1/user/cart';
   private mePromise: Promise<User | null> | null = null;
   private isRequestInProgress = false;
   private requestAbortController: AbortController | null = null;
+  
+  // Refresh token state management
+  private isRefreshing = false;
+  private refreshPromise: Promise<AuthResponse> | null = null;
+  private pendingRequests: Array<{
+    resolve: (value: Response) => void;
+    reject: (error: Error) => void;
+    url: string;
+    options: RequestInit;
+  }> = [];
+  private readonly tokenRefreshThreshold = 120; // Refresh 2 minutes before expiry (in seconds)
+
 
   // Verificación de email
   async checkEmailAvailability(email: string): Promise<{ available: boolean; message: string }> {
@@ -68,14 +89,38 @@ class AuthService {
       });
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.message || 'Credenciales inválidas');
+        // Devolver mensaje del backend (detail o message) sin lanzar excepción
+        return {
+          success: false,
+          message: result?.detail || result?.message || 'Credenciales inválidas',
+          errors: result?.errors || {}
+        };
       }
       if (result.access_token) {
-        console.log(result.access_token);
         this.setToken(result.access_token);
+        
+        // Store refresh_token if provided
+        if (result.refresh_token) {
+          this.setRefreshToken(result.refresh_token);
+        }
+        
+        // Store token expiry time
+        if (result.expires_in) {
+          this.setTokenExpiry(result.expires_in);
+        }
+        
         const user = await this.getMe(); // Fetch user data after setting token
         if (user) {
-          return { success: true, message: 'Login exitoso', data: { token: result.access_token, user } };
+          return { 
+            success: true, 
+            message: 'Login exitoso', 
+            data: { 
+              token: result.access_token, 
+              refresh_token: result.refresh_token,
+              user 
+            },
+            expires_in: result.expires_in
+          };
         } else {
             throw new Error('No se pudieron obtener los datos del usuario.');
         }
@@ -84,7 +129,12 @@ class AuthService {
       }
     } catch (error) {
       console.error('Error en login:', error);
-      throw new Error('Error de conexión. Por favor, intenta nuevamente.');
+      // Manejo de red/otros errores devolviendo una respuesta uniforme
+      return {
+        success: false,
+        message: 'Error de conexión. Por favor, intenta nuevamente.',
+        errors: {}
+      };
     }
   }
 
@@ -122,8 +172,6 @@ class AuthService {
   }
 
   private async fetchUserData(signal: AbortSignal): Promise<User | null> {
-    const fullUrl = `${this.url}${this.baseUrl}/me`;
-    console.log("fullUrl: ", fullUrl);
     try {
       // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
       const response = await this.authenticatedFetch(`${this.baseUrl}/me`, {
@@ -152,6 +200,109 @@ class AuthService {
     }
   }
 
+  // Solicitar reset de contraseña (olvidé mi contraseña)
+  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await fetch(`${this.url}${this.baseUrl}/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          message: result.message || result.detail || 'Error al solicitar el reset de contraseña'
+        };
+      }
+      
+      return {
+        success: true,
+        message: result.message || 'Se ha enviado un email con las instrucciones para restablecer tu contraseña'
+      };
+    } catch (error) {
+      console.error('Error en forgotPassword:', error);
+      return {
+        success: false,
+        message: 'Error de conexión. Por favor, intenta nuevamente.'
+      };
+    }
+  }
+
+  // Restablecer contraseña con token (desde el enlace del email)
+  async resetPassword(token: string, newPassword: string, confirmPassword: string): Promise<{ success: boolean; message: string; errors?: Record<string, string[]> }> {
+    try {
+      const response = await fetch(`${this.url}${this.baseUrl}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          new_password: newPassword,
+          confirm_password: confirmPassword
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          message: result.message || result.detail || 'Error al restablecer la contraseña',
+          errors: result.errors || {}
+        };
+      }
+      
+      return {
+        success: true,
+        message: result.message || 'Contraseña restablecida exitosamente'
+      };
+    } catch (error) {
+      console.error('Error en resetPassword:', error);
+      return {
+        success: false,
+        message: 'Error de conexión. Por favor, intenta nuevamente.'
+      };
+    }
+  }
+
+  // Cambiar contraseña (usuario autenticado)
+  async changePassword(currentPassword: string, newPassword: string, confirmPassword: string): Promise<{ success: boolean; message: string; errors?: Record<string, string[]> }> {
+    try {
+      const response = await this.authenticatedFetch(`${this.baseUrl}/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+          confirm_password: confirmPassword
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          message: result.message || result.detail || 'Error al cambiar la contraseña',
+          errors: result.errors || {}
+        };
+      }
+      
+      return {
+        success: true,
+        message: result.message || 'Contraseña cambiada exitosamente'
+      };
+    } catch (error) {
+      console.error('Error en changePassword:', error);
+      return {
+        success: false,
+        message: 'Error de conexión. Por favor, intenta nuevamente.'
+      };
+    }
+  }
+
   logout(): void {
     // Cancelar cualquier solicitud en progreso
     if (this.requestAbortController) {
@@ -159,10 +310,19 @@ class AuthService {
     }
     
     this.removeToken();
+    this.removeRefreshToken();
+    this.removeTokenExpiry();
     this.removeUser();
     this.mePromise = null;
     this.isRequestInProgress = false;
     this.requestAbortController = null;
+    
+    // Clear refresh state
+    this.isRefreshing = false;
+    this.refreshPromise = null;
+    
+    // Reject all pending requests
+    this.rejectPendingRequests(new Error('User logged out'));
     
     // 🔥 CRÍTICO: Limpiar datos sensibles adicionales
     this.clearSessionData();
@@ -182,24 +342,62 @@ class AuthService {
 
   // Refrescar token
   async refreshToken(): Promise<AuthResponse> {
-    try {
-      const token = this.getToken();
-      if (!token) {
-        throw new Error('No token available');
-      }
+    // If already refreshing, return the existing promise
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
+    }
 
-      const response = await fetch(`${this.url}${this.baseUrl}/refresh`, {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      this.logout();
+      return {
+        success: false,
+        message: 'No refresh token available',
+        errors: {}
+      };
+    }
+
+    // Set refreshing flag and create promise
+    this.isRefreshing = true;
+    this.refreshPromise = this.performRefresh(refreshToken);
+
+    try {
+      const result = await this.refreshPromise;
+      return result;
+    } finally {
+      // Reset refreshing state after a short delay to allow queued requests to complete
+      setTimeout(() => {
+        this.isRefreshing = false;
+        this.refreshPromise = null;
+      }, 100);
+    }
+  }
+
+  private async performRefresh(refreshToken: string): Promise<AuthResponse> {
+    try {
+      const fullUrl = `${this.url}${this.baseUrl}/refresh`;
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
       const result = await response.json();
       
       if (!response.ok) {
-        this.logout(); // Limpiar datos si el refresh falla
+        // Refresh token expired or invalid - force logout
+        this.logout();
+        
+        // Reject all pending requests
+        this.rejectPendingRequests(new Error('Session expired - please login again'));
+        
+        // Notify components of forced logout
+        window.dispatchEvent(new CustomEvent('forceLogout', { 
+          detail: { reason: 'Refresh token expired', status: response.status }
+        }));
+        
         return {
           success: false,
           message: 'Sesión expirada',
@@ -207,19 +405,44 @@ class AuthService {
         };
       }
 
-      // Actualizar token
-      if (result.data?.token) {
-        this.setToken(result.data.token);
+      // Token rotation: update both access_token and refresh_token
+      if (result.access_token) {
+        this.setToken(result.access_token);
       }
+      
+      if (result.refresh_token) {
+        this.setRefreshToken(result.refresh_token);
+      }
+      
+      // Update expiry time
+      if (result.expires_in) {
+        this.setTokenExpiry(result.expires_in);
+      }
+
+      // Retry all pending requests with new token
+      this.retryPendingRequests();
 
       return {
         success: true,
         message: 'Token renovado',
-        data: result.data
+        data: {
+          token: result.access_token,
+          refresh_token: result.refresh_token
+        },
+        expires_in: result.expires_in
       };
     } catch (error) {
       console.error('Error refreshing token:', error);
       this.logout();
+      
+      // Reject all pending requests
+      this.rejectPendingRequests(new Error('Error renovando sesión'));
+      
+      // Notify components of forced logout
+      window.dispatchEvent(new CustomEvent('forceLogout', { 
+        detail: { reason: 'Refresh token error', error: error }
+      }));
+      
       return {
         success: false,
         message: 'Error renovando sesión',
@@ -228,17 +451,116 @@ class AuthService {
     }
   }
 
+  private async retryPendingRequests(): Promise<void> {
+    const requests = [...this.pendingRequests];
+    this.pendingRequests = [];
+
+    for (const request of requests) {
+      try {
+        const response = await this.makeAuthenticatedRequest(request.url, request.options);
+        request.resolve(response);
+      } catch (error) {
+        request.reject(error as Error);
+      }
+    }
+  }
+
+  private rejectPendingRequests(error: Error): void {
+    const requests = [...this.pendingRequests];
+    this.pendingRequests = [];
+
+    for (const request of requests) {
+      request.reject(error);
+    }
+  }
+
+  private async makeAuthenticatedRequest(url: string, options: RequestInit): Promise<Response> {
+    const token = this.getToken();
+    
+    if (!token) {
+      throw new Error('No authentication token - session terminated');
+    }
+
+    // 🔥 FIX: Asegurar que el token esté limpio (sin espacios) antes de usarlo
+    const cleanToken = token.trim();
+
+    const customHeaders = (options.headers || {}) as Record<string, string>;
+    const headers: HeadersInit = {
+      ...customHeaders,
+      'Authorization': `Bearer ${cleanToken}`,
+    };
+
+    if (!(options.body instanceof FormData) && !customHeaders['Content-Type']) {
+      headers['Content-Type' as keyof HeadersInit] = 'application/json';
+    }
+
+    const isAbsoluteUrl = url.startsWith('http://') || url.startsWith('https://');
+    const fullUrl = isAbsoluteUrl ? url : `${this.url}${url}`;
+    
+    const { headers: _, ...restOptions } = options;
+    return fetch(fullUrl, { ...restOptions, headers });
+  }
+
   // Métodos privados para manejo de localStorage
   public setToken(token: string): void {
-    localStorage.setItem(this.tokenKey, token);
+    // 🔥 FIX: Limpiar el token (eliminar espacios) antes de guardarlo
+    const cleanToken = token.trim();
+    localStorage.setItem(this.tokenKey, cleanToken);
   }
 
   private getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    const token = localStorage.getItem(this.tokenKey);
+    // 🔥 FIX: Limpiar el token al obtenerlo por si acaso tiene espacios
+    return token ? token.trim() : null;
   }
 
   private removeToken(): void {
     localStorage.removeItem(this.tokenKey);
+  }
+
+  // Refresh token management methods
+  private setRefreshToken(refreshToken: string): void {
+    // 🔥 FIX: Limpiar el refresh token antes de guardarlo
+    const cleanToken = refreshToken.trim();
+    localStorage.setItem(this.refreshTokenKey, cleanToken);
+  }
+
+  private getRefreshToken(): string | null {
+    const token = localStorage.getItem(this.refreshTokenKey);
+    // 🔥 FIX: Limpiar el refresh token al obtenerlo
+    return token ? token.trim() : null;
+  }
+
+  private removeRefreshToken(): void {
+    localStorage.removeItem(this.refreshTokenKey);
+  }
+
+  // Token expiry management methods
+  private setTokenExpiry(expiresIn: number): void {
+    // expiresIn is in seconds, convert to milliseconds and add to current time
+    const expiryTime = Date.now() + (expiresIn * 1000);
+    localStorage.setItem(this.tokenExpiryKey, expiryTime.toString());
+  }
+
+  private getTokenExpiry(): number | null {
+    const expiryStr = localStorage.getItem(this.tokenExpiryKey);
+    if (!expiryStr) return null;
+    const expiry = parseInt(expiryStr, 10);
+    return isNaN(expiry) ? null : expiry;
+  }
+
+  private removeTokenExpiry(): void {
+    localStorage.removeItem(this.tokenExpiryKey);
+  }
+
+  // Check if token is expiring soon (within threshold)
+  private isTokenExpiring(): boolean {
+    const expiry = this.getTokenExpiry();
+    if (!expiry) return false;
+    
+    const now = Date.now();
+    const timeUntilExpiry = (expiry - now) / 1000; // Convert to seconds
+    return timeUntilExpiry <= this.tokenRefreshThreshold;
   }
 
   private setUser(user: User): void {
@@ -269,7 +591,9 @@ class AuthService {
       'temp_order_data',
       'search_history',
       'viewed_products',
-      'draft_orders'
+      'draft_orders',
+      this.refreshTokenKey,
+      this.tokenExpiryKey
     ];
     
     sensitiveKeys.forEach(key => {
@@ -312,11 +636,12 @@ class AuthService {
   async clearCart(): Promise<void> {
     // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
     const response = await this.authenticatedFetch(`${this.cartUrl}/clear`, {
-      method: 'POST',
+      method: 'DELETE',
     });
 
     if (!response.ok) {
-      throw new Error('Failed to clear cart');
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to clear cart');
     }
   }
 
@@ -352,6 +677,7 @@ class AuthService {
   async createOrder(orderData: {
     shipping_address_id: string;
     payment_method: string;
+    payment_currency: 'USD' | 'VES';
     payment_capture_url: string;
     customer_notes: string;
   }): Promise<any> {
@@ -378,27 +704,33 @@ class AuthService {
     return await response.json();
   }
 
-  async getOrderDetails(orderId: string): Promise<any> {
+  async getOrderDetails(orderId: string): Promise<Order> {
     // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
     const response = await this.authenticatedFetch(`/api/v1/user/orders/${orderId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch order details');
     }
-    return await response.json();
+    const data = await response.json();
+    return data;
   }
 
-  async getUserAddresses(): Promise<any[]> {
-    const response = await this.authenticatedFetch('/api/v1/user/addresses');
+  async getUserAddresses(_options?: {
+    include_checkout_preview?: boolean;
+    cart_total?: number;
+  }): Promise<any> {
+    const response = await this.authenticatedFetch('/api/v1/user/customer-addresses');
     if (!response.ok) {
       throw new Error('Failed to fetch user addresses');
     }
-    return await response.json();
+    const data = await response.json();
+    return data;
   }
 
 
   async verifyEmailToken(token: string): Promise<{ success: boolean; message: string }>{
     try {
-      const response = await fetch(`${this.url}${this.baseUrl}/verify-email/${token}`, {
+      const fullUrl = `${this.url}${this.baseUrl}/verify-email/${token}`;
+      const response = await fetch(fullUrl, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -452,32 +784,95 @@ class AuthService {
       throw new Error('No authentication token - session terminated');
     }
 
-    const headers: HeadersInit = {
-      'Authorization': `Bearer ${token}`,
-      ...(options.headers || {}),
-    };
-
-    // Si NO es FormData, agregar Content-Type por defecto
-    if (!(options.body instanceof FormData)) {
-      headers['Content-Type' as keyof HeadersInit] = 'application/json';
+    // 🔥 PROACTIVE REFRESH: Check if token is expiring soon and refresh proactively
+    if (this.isTokenExpiring() && !this.isRefreshing) {
+      try {
+        await this.refreshToken();
+      } catch (error) {
+        // If proactive refresh fails, continue with original request
+        // It will fail with 401 and trigger reactive refresh
+        console.warn('Proactive token refresh failed, continuing with original request:', error);
+      }
     }
 
-    const response = await fetch(`${this.url}${url}`, { ...options, headers });
+    // If already refreshing, queue this request
+    if (this.isRefreshing) {
+      return new Promise<Response>((resolve, reject) => {
+        this.pendingRequests.push({ resolve, reject, url, options });
+      });
+    }
 
-    // 🔥 MEJORADO: Manejar diferentes códigos de error de autenticación
-    if (response.status === 401 || response.status === 403) {
-      // Token inválido o expirado - hacer logout completo
-      this.logout();
-      
-      // 🔥 CRÍTICO: Notificar a otros componentes del logout forzado
-      window.dispatchEvent(new CustomEvent('forceLogout', { 
-        detail: { reason: 'Authentication failed', status: response.status }
-      }));
-      
-      throw new Error('Session expired - please login again');
+    // Make the request
+    let response: Response;
+    try {
+      response = await this.makeAuthenticatedRequest(url, options);
+    } catch (error) {
+      throw error;
+    }
+
+    // 🔥 REACTIVE REFRESH: Handle 401 errors
+    if (response.status === 401) {
+      // If not already refreshing, start refresh and queue this request
+      if (!this.isRefreshing) {
+        // Queue the original request
+        const retryPromise = new Promise<Response>((resolve, reject) => {
+          this.pendingRequests.push({ resolve, reject, url, options });
+        });
+
+        // Start refresh (this will retry all queued requests on success)
+        try {
+          await this.refreshToken();
+          // After refresh, the queued request should have been retried
+          // But if it wasn't, retry it now
+          return retryPromise;
+        } catch (error) {
+          // Refresh failed - reject the queued request
+          throw error;
+        }
+      } else {
+        // Already refreshing, just queue this request
+        return new Promise<Response>((resolve, reject) => {
+          this.pendingRequests.push({ resolve, reject, url, options });
+        });
+      }
+    }
+
+    if (response.status === 403) {
+      // Mantener la sesión, pero propagar el error para manejo específico
+      throw new Error('No tienes permisos para esta acción.');
     }
 
     return response;
+  }
+
+  // ===== MÉTODOS DE DESCUENTOS =====
+
+  /**
+   * Obtiene el carrito con información de descuentos aplicados
+   */
+  async getCartWithDiscounts(): Promise<CartWithDiscounts> {
+    const response = await this.authenticatedFetch(this.cartUrl);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error getting cart with discounts');
+    }
+    return await response.json();
+  }
+
+  /**
+   * Obtiene el descuento aplicable por cantidad (endpoint público)
+   */
+  async getApplicableQuantityDiscount(quantity: number): Promise<ApplicableDiscountResponse | null> {
+    try {
+      const response = await fetch(`${this.url}/api/v1/public/quantity-discounts/applicable?total_quantity=${quantity}`);
+      if (!response.ok) {
+        return null;
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching applicable discount:', error);
+      return null;
+    }
   }
 }
 

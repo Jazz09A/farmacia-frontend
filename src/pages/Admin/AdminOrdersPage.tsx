@@ -3,64 +3,71 @@ import {
   Search, 
   Filter, 
   Download, 
-  Trash2,
   Clock,
   CheckCircle,
   AlertCircle,
-  Package,
+  FileText,
   RefreshCw,
   SortAsc,
   SortDesc,
   ChevronLeft,
   ChevronRight,
-  Eye,
-  CreditCard,
-  Truck,
   XCircle,
   Calendar
 } from 'lucide-react';
-import { Order } from '../../types';
-import OrderModal from '../../components/Admin/OrderModal';
-import ConfirmationModal from '../../components/common/ConfirmationModal';
+import { QuoteSummary, QuoteStatus } from '../../types/quotes';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { useOrders } from '../../hooks/useOrders';
+import { useAdminQuotesQuery } from '../../hooks/queries/useAdminQueries';
 import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
 import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
+import AdminQuoteModal from '../../components/Admin/AdminQuoteModal';
 
 const AdminOrdersPage: React.FC = () => {
   const { formatPrice } = useAdminCurrency();
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [showOrderModal, setShowOrderModal] = useState(false);
-  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   
-  const {
-    orders,
-    loading,
-    error,
-    total,
-    pages,
-    currentPage,
-    filters,
-    refreshOrders,
-    updateOrderStatus,
-    updatePaymentStatus,
-    deleteOrder,
-    setFilters,
-    setPage
-  } = useOrders();
+  const [filters, setFilters] = useState({ status: 'all', search: '', sortBy: 'created_at', sortOrder: 'desc', page_size: 10 });
+  const [currentPage, setPage] = useState(1);
+  const { data: quotesResp, isLoading: loading, status, error, refetch } = useAdminQuotesQuery({
+    page: currentPage,
+    page_size: filters.page_size,
+    status: filters.status !== 'all' ? filters.status : undefined,
+    search: filters.search,
+    sort_by: filters.sortBy,
+    sort_order: filters.sortOrder as 'asc' | 'desc'
+  });
+  const quotes = quotesResp?.quotes || [];
+  const total = quotesResp?.total || 0;
+  const pages = quotesResp?.pages || 0;
 
-  const getStatusIcon = (status: string) => {
+  // Función para traducir estados de cotizaciones
+  const getQuoteStatusText = (status: QuoteStatus) => {
+    switch (status) {
+      case 'pending':
+        return 'Pendiente';
+      case 'accepted':
+        return 'Aceptada';
+      case 'converted':
+        return 'Convertida';
+      case 'expired':
+        return 'Expirada';
+      case 'cancelled':
+        return 'Cancelada';
+      default:
+        return status;
+    }
+  };
+
+  const getStatusIcon = (status: QuoteStatus) => {
     switch (status) {
       case 'pending':
         return <Clock className="w-4 h-4 text-yellow-500" />;
-      case 'confirmed':
+      case 'accepted':
         return <CheckCircle className="w-4 h-4 text-blue-500" />;
-      case 'processing':
-        return <AlertCircle className="w-4 h-4 text-blue-600" />;
-      case 'shipped':
-        return <Package className="w-4 h-4 text-purple-500" />;
-      case 'delivered':
+      case 'converted':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'expired':
+        return <AlertCircle className="w-4 h-4 text-gray-500" />;
       case 'cancelled':
         return <XCircle className="w-4 h-4 text-red-500" />;
       default:
@@ -68,19 +75,17 @@ const AdminOrdersPage: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: QuoteStatus) => {
     const baseClasses = "px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1";
     switch (status) {
       case 'pending':
         return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case 'confirmed':
+      case 'accepted':
         return `${baseClasses} bg-blue-100 text-blue-800`;
-      case 'processing':
-        return `${baseClasses} bg-blue-100 text-blue-800`;
-      case 'shipped':
-        return `${baseClasses} bg-purple-100 text-purple-800`;
-      case 'delivered':
+      case 'converted':
         return `${baseClasses} bg-green-100 text-green-800`;
+      case 'expired':
+        return `${baseClasses} bg-gray-100 text-gray-800`;
       case 'cancelled':
         return `${baseClasses} bg-red-100 text-red-800`;
       default:
@@ -88,93 +93,72 @@ const AdminOrdersPage: React.FC = () => {
     }
   };
 
-  const getPaymentStatusBadge = (status: string) => {
-    const baseClasses = "px-2 py-1 text-xs font-medium rounded-full";
-    switch (status) {
-      case 'pending':
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case 'completed':
-        return `${baseClasses} bg-green-100 text-green-800`;
-      case 'failed':
-        return `${baseClasses} bg-red-100 text-red-800`;
-      default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
+
+
+  // Formatear fecha de forma compacta para móviles
+  const formatDate = (dateString: string, compact: boolean = false) => {
+    const date = new Date(dateString);
+    if (compact) {
+      // Formato compacto para móviles: "30 nov 2025, 7:16 PM"
+      return new Intl.DateTimeFormat('es-VE', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }).format(date);
     }
-  };
-
-
-
-  const formatDate = (dateString: string) => {
+    // Formato estándar para desktop
     return new Intl.DateTimeFormat('es-VE', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    }).format(new Date(dateString));
+    }).format(date);
   };
 
-  const handleViewOrder = (order: Order) => {
-    setSelectedOrder(order);
-    setShowOrderModal(true);
+  const removeCOTPrefix = (quoteId: string) => {
+    if (!quoteId) return quoteId;
+    return quoteId.startsWith('COT-') ? quoteId.substring(4) : quoteId;
   };
 
-  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
-    await updateOrderStatus(orderId, newStatus);
-    
-    if (selectedOrder && selectedOrder.id === orderId) {
-      setSelectedOrder({ ...selectedOrder, status: newStatus });
-    }
+  // Formatear precio con símbolo de dólar (solo $, sin texto adicional)
+  const formatPriceLocal = (amount: number | string) => {
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(numericAmount)) return '$0.00';
+    const formatted = numericAmount.toLocaleString('es-VE', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
+    return `$${formatted}`;
   };
 
-  const handleUpdatePaymentStatus = async (orderId: string, paymentStatus: 'completed' | 'failed') => {
-    try {
-      await updatePaymentStatus(orderId, paymentStatus);
-      
-      // Update local state for the modal
-      if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder({ 
-          ...selectedOrder, 
-          payment_status: paymentStatus
-        });
-      }
-      
-      // Refresh orders to get updated data
-      await refreshOrders();
-    } catch (error) {
-      console.error('Error updating payment status:', error);
-    }
+  const handleViewQuote = (quote: QuoteSummary) => {
+    setSelectedQuoteId(quote.quote_id);
   };
   
-  const handleDeleteRequest = (e: React.MouseEvent, order: Order) => {
-    e.stopPropagation();
-    setOrderToDelete(order);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!orderToDelete) return;
-    await deleteOrder(orderToDelete.id);
-    setOrderToDelete(null);
-  };
-
   const handleSearchChange = (value: string) => {
-    setFilters({ search: value });
+    setFilters(prev => ({ ...prev, search: value }));
+    setPage(1); // Reset to first page on search
   };
 
   const handleStatusFilterChange = (status: string) => {
-    setFilters({ status });
+    setFilters(prev => ({ ...prev, status }));
+    setPage(1); // Reset to first page on filter change
   };
 
   const handleSortChange = (sortBy: string) => {
     const newSortOrder = filters.sortBy === sortBy && filters.sortOrder === 'desc' ? 'asc' : 'desc';
-    setFilters({ sortBy, sortOrder: newSortOrder });
+    setFilters(prev => ({ ...prev, sortBy, sortOrder: newSortOrder }));
   };
 
-  const handleRefresh = () => {
-    refreshOrders();
+  const handleRefresh = async () => {
+    await refetch();
   };
 
-  if (loading && orders.length === 0) {
+  if (loading && quotes.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-96">
         <LoadingSpinner />
@@ -184,26 +168,26 @@ const AdminOrdersPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      {/* Header - Optimizado para móviles */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Pedidos</h1>
-          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
-            Administra todos los pedidos de tu farmacia ({total} total)
+          <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
+            Gestión de Cotizaciones
+          </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600">
+            Administra todas las cotizaciones
+            <span className="ml-1.5 font-semibold text-gray-700">({total})</span>
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+        <div className="flex flex-row gap-2 w-full sm:w-auto">
           <button 
             onClick={handleRefresh}
             disabled={loading}
-            className="px-3 lg:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-400 transition-colors flex items-center justify-center font-medium text-sm"
+            className="flex-1 sm:flex-none px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center font-medium text-sm shadow-sm hover:shadow-md min-h-[44px]"
+            aria-label="Actualizar cotizaciones"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Actualizar</span>
-          </button>
-          <button className="px-3 lg:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 transition-colors flex items-center justify-center font-medium text-sm">
-            <Download className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Exportar</span>
           </button>
         </div>
       </div>
@@ -213,13 +197,15 @@ const AdminOrdersPage: React.FC = () => {
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex">
             <AlertCircle className="w-5 h-5 text-red-400 mr-2 flex-shrink-0 mt-0.5" />
-            <div className="text-red-800 text-sm">{error}</div>
+            <div className="text-red-800 text-sm">
+              {error instanceof Error ? error.message : 'Error al cargar las cotizaciones'}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Filters & Search */}
-      <div className="p-3 lg:p-4 bg-white rounded-lg shadow-sm">
+      {/* Filters & Search - Comentado por ahora */}
+      {/* <div className="p-3 lg:p-4 bg-white rounded-lg shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
           <div className="relative sm:col-span-2 lg:col-span-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -238,11 +224,10 @@ const AdminOrdersPage: React.FC = () => {
           >
             <option value="all">Todos los estados</option>
             <option value="pending">Pendiente</option>
-            <option value="confirmed">Confirmado</option>
-            <option value="processing">Preparando</option>
-            <option value="shipped">Enviado</option>
-            <option value="delivered">Entregado</option>
-            <option value="cancelled">Cancelado</option>
+            <option value="accepted">Aceptada</option>
+            <option value="converted">Convertida</option>
+            <option value="expired">Expirada</option>
+            <option value="cancelled">Cancelada</option>
           </select>
           <select
             value={`${filters.sortBy}_${filters.sortOrder}`}
@@ -254,8 +239,8 @@ const AdminOrdersPage: React.FC = () => {
           >
             <option value="created_at_desc">Más recientes</option>
             <option value="created_at_asc">Más antiguos</option>
-            <option value="total_desc">Mayor valor</option>
-            <option value="total_asc">Menor valor</option>
+            <option value="total_gross_desc">Mayor valor</option>
+            <option value="total_gross_asc">Menor valor</option>
             <option value="status_asc">Estado A-Z</option>
           </select>
           <div className="sm:col-span-2 lg:col-span-1">
@@ -269,101 +254,97 @@ const AdminOrdersPage: React.FC = () => {
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
 
-      {/* Orders List/Table */}
-      <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-3 lg:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <h3 className="text-base lg:text-lg font-semibold">Pedidos ({orders.length})</h3>
-          <div className="text-xs lg:text-sm text-gray-500">
-            Página {currentPage} de {pages}
+      {/* Quotes List/Table */}
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="p-3 sm:p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900">Cotizaciones</h3>
+            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+              {quotes.length}
+            </span>
+          </div>
+          <div className="text-xs text-gray-600 font-medium">
+            Página <span className="font-bold text-gray-900">{currentPage}</span> de <span className="font-bold text-gray-900">{pages}</span>
           </div>
         </div>
         
-        {orders.length === 0 ? (
-          <div className="p-8 lg:p-12 text-center text-gray-500">
-            <Package className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-3 lg:mb-4 text-gray-300" />
-            <p className="text-base lg:text-lg font-medium mb-1 lg:mb-2">No se encontraron pedidos</p>
-            <p className="text-sm lg:text-base">Intenta ajustar los filtros de búsqueda</p>
+        {quotes.length === 0 ? (
+          <div className="p-12 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+              <FileText className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-lg font-semibold text-gray-900 mb-2">No se encontraron cotizaciones</p>
+            <p className="text-sm text-gray-500">Intenta ajustar los filtros de búsqueda</p>
           </div>
         ) : (
           <>
-            {/* Mobile View - Enhanced Cards */}
+            {/* Mobile View - Enhanced Cards with Professional UX/UI */}
             <div className="md:hidden">
               <div className="divide-y divide-gray-200">
-                {orders.map((order) => (
-                  <div 
-                    key={order.id} 
-                    onClick={() => handleViewOrder(order)}
-                    className="p-3 lg:p-4 hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors"
+                {quotes.map((quote) => (
+                  <button
+                    key={quote.quote_id}
+                    onClick={() => handleViewQuote(quote)}
+                    className="w-full text-left p-4 hover:bg-blue-50 active:bg-blue-100 cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
                   >
-                    <div className="flex justify-between items-start mb-3">
+                    {/* Header: ID, Monto y Estado */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <div className="font-bold text-gray-900 text-sm">#{order.order_number || order.id.substring(0, 8)}</div>
-                          <div className={getStatusBadge(order.status)}>
-                            {getStatusIcon(order.status)}
-                            <span className="capitalize text-xs">{order.status}</span>
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <h3 className="font-bold text-gray-900 text-base leading-tight">
+                            {removeCOTPrefix(quote.quote_id)}
+                          </h3>
+                          <div className={getStatusBadge(quote.status)}>
+                            {getStatusIcon(quote.status)}
+                            <span className="text-xs whitespace-nowrap">{getQuoteStatusText(quote.status)}</span>
                           </div>
                         </div>
-                        <div className="text-sm text-gray-600 truncate">{order.shipping_address.recipient_name}</div>
-                        <div className="text-xs text-gray-500 flex items-center gap-3 mt-1 flex-wrap">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(order.created_at)}
+                      </div>
+                      {/* Monto destacado - Solo símbolo $ */}
+                      <div className="text-right flex-shrink-0">
+                        <div className="font-bold text-gray-900 text-lg leading-tight">
+                          {formatPriceLocal(quote.total_gross)}
+                        </div>
+                          </div>
+                        </div>
+
+                    {/* Información secundaria optimizada para móviles */}
+                    <div className="space-y-2">
+                        {quote.profit_plus_id && (
+                        <div className="text-xs text-gray-600 flex items-center gap-1.5">
+                          <span className="font-medium">ID:</span>
+                          <span className="font-mono text-gray-700">{quote.profit_plus_id}</span>
+                        </div>
+                        )}
+                      
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-gray-600">
+                        <span className="flex items-center gap-1.5 min-w-0">
+                          <Calendar className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
+                          <span className="truncate">{formatDate(quote.created_at, true)}</span>
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Package className="w-3 h-3" />
-                            {order.item_count} items
+                        <span className="flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
+                          <span className="font-medium">{quote.items_count}</span>
                           </span>
                         </div>
-                      </div>
-                      <div className="text-right flex-shrink-0 ml-2">
-                        <div className="font-bold text-gray-900 text-base lg:text-lg">
-                          <SmartPriceDisplay 
-                            amount={order.total}
-                            className="font-bold text-gray-900 text-base lg:text-lg"
-                          />
+
+                      {quote.email_sent_at && (
+                        <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                          <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span className="truncate">Email enviado</span>
                         </div>
-                        <div className={getPaymentStatusBadge(order.payment_status)}>
-                          {order.payment_status}
-                        </div>
-                      </div>
+                      )}
+
+                        {quote.expires_at && (
+                        <div className="flex items-center gap-1.5 text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded">
+                          <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span className="truncate">Expira: {formatDate(quote.expires_at, true)}</span>
+                          </div>
+                        )}
                     </div>
-                    
-                    {order.tracking_number && (
-                      <div className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-                        <Truck className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">Tracking: {order.tracking_number}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                      <div className="flex items-center gap-2 text-xs text-gray-500 min-w-0">
-                        <CreditCard className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{order.payment_method}</span>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewOrder(order);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 active:text-blue-900 flex items-center text-sm font-medium p-2 rounded-md hover:bg-blue-50"
-                          title="Ver detalles"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={(e) => handleDeleteRequest(e, order)} 
-                          className="text-red-600 hover:text-red-800 active:text-red-900 flex items-center text-sm font-medium p-2 rounded-md hover:bg-red-50"
-                          title="Eliminar pedido"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -371,136 +352,102 @@ const AdminOrdersPage: React.FC = () => {
             {/* Desktop View - Enhanced Table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm text-left text-gray-500">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th 
                       scope="col" 
-                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSortChange('order_number')}
+                      className="px-4 lg:px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleSortChange('quote_id')}
                     >
-                      <div className="flex items-center gap-1">
-                        Pedido
-                        {filters.sortBy === 'order_number' && (
-                          filters.sortOrder === 'desc' ? <SortDesc className="w-3 h-3" /> : <SortAsc className="w-3 h-3" />
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">Cotización</span>
+                        {filters.sortBy === 'quote_id' && (
+                          filters.sortOrder === 'desc' ? <SortDesc className="w-3.5 h-3.5" /> : <SortAsc className="w-3.5 h-3.5" />
                         )}
                       </div>
                     </th>
-                    <th scope="col" className="px-6 py-3">Cliente</th>
+                    <th scope="col" className="px-4 lg:px-6 py-3 font-semibold">ID Sistema</th>
                     <th 
                       scope="col" 
-                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                      className="px-4 lg:px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors"
                       onClick={() => handleSortChange('created_at')}
                     >
-                      <div className="flex items-center gap-1">
-                        Fecha
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">Fecha</span>
                         {filters.sortBy === 'created_at' && (
-                          filters.sortOrder === 'desc' ? <SortDesc className="w-3 h-3" /> : <SortAsc className="w-3 h-3" />
+                          filters.sortOrder === 'desc' ? <SortDesc className="w-3.5 h-3.5" /> : <SortAsc className="w-3.5 h-3.5" />
                         )}
                       </div>
                     </th>
+                    <th scope="col" className="px-4 lg:px-6 py-3 font-semibold">Expira</th>
                     <th 
                       scope="col" 
-                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSortChange('total')}
+                      className="px-4 lg:px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleSortChange('total_gross')}
                     >
-                      <div className="flex items-center gap-1">
-                        Total
-                        {filters.sortBy === 'total' && (
-                          filters.sortOrder === 'desc' ? <SortDesc className="w-3 h-3" /> : <SortAsc className="w-3 h-3" />
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">Total</span>
+                        {filters.sortBy === 'total_gross' && (
+                          filters.sortOrder === 'desc' ? <SortDesc className="w-3.5 h-3.5" /> : <SortAsc className="w-3.5 h-3.5" />
                         )}
                       </div>
                     </th>
+                    <th scope="col" className="px-4 lg:px-6 py-3 font-semibold">Items</th>
                     <th 
                       scope="col" 
-                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                      className="px-4 lg:px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors"
                       onClick={() => handleSortChange('status')}
                     >
-                      <div className="flex items-center gap-1">
-                        Estado
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">Estado</span>
                         {filters.sortBy === 'status' && (
-                          filters.sortOrder === 'desc' ? <SortDesc className="w-3 h-3" /> : <SortAsc className="w-3 h-3" />
+                          filters.sortOrder === 'desc' ? <SortDesc className="w-3.5 h-3.5" /> : <SortAsc className="w-3.5 h-3.5" />
                         )}
                       </div>
                     </th>
-                    <th scope="col" className="px-6 py-3">Pago</th>
-                    <th scope="col" className="px-6 py-3 text-center">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
-                  {orders.map((order) => (
+                <tbody className="divide-y divide-gray-200">
+                  {quotes.map((quote) => (
                     <tr 
-                      key={order.id} 
-                      onClick={() => handleViewOrder(order)}
-                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      key={quote.quote_id} 
+                      onClick={() => handleViewQuote(quote)}
+                      className="hover:bg-blue-50 cursor-pointer transition-colors duration-150 active:bg-blue-100"
                     >
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-blue-600 hover:underline">
-                          #{order.order_number || order.id.substring(0, 8)}
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className="font-semibold text-gray-900 text-base">
+                          {removeCOTPrefix(quote.quote_id)}
                         </div>
-                        <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                          {order.tracking_number && (
-                            <>
-                              <Truck className="w-3 h-3" />
-                              {order.tracking_number}
-                            </>
-                          )}
+                        {quote.email_sent_at && (
+                          <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />
+                            Email enviado
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className="text-xs text-gray-600 font-mono">{quote.profit_plus_id || '-'}</div>
+                      </td>
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className="text-sm text-gray-700">{formatDate(quote.created_at)}</div>
+                      </td>
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className="text-xs text-gray-600">
+                          {quote.expires_at ? formatDate(quote.expires_at) : <span className="text-gray-400">-</span>}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="font-medium">{order.shipping_address.recipient_name}</div>
-                        <div className="text-xs text-gray-500">{order.shipping_address.recipient_phone}</div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {order.item_count} {order.item_count === 1 ? 'item' : 'items'}
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className="font-bold text-gray-900 text-base">
+                          {formatPriceLocal(quote.total_gross)}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div>{formatDate(order.created_at)}</div>
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className="text-sm font-medium text-gray-700">{quote.items_count}</div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-gray-900">
-                          <SmartPriceDisplay 
-                            amount={order.total}
-                            className="font-medium text-gray-900"
-                          />
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {order.currency}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className={getStatusBadge(order.status)}>
-                          {getStatusIcon(order.status)}
-                          <span className="capitalize">{order.status}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className={getPaymentStatusBadge(order.payment_status)}>
-                          {order.payment_status}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                          <CreditCard className="w-3 h-3" />
-                          {order.payment_method}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewOrder(order);
-                            }}
-                            className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 transition-colors"
-                            title="Ver detalles"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={(e) => handleDeleteRequest(e, order)} 
-                            className="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-red-100 transition-colors"
-                            title="Eliminar pedido"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className={getStatusBadge(quote.status)}>
+                          {getStatusIcon(quote.status)}
+                          <span>{getQuoteStatusText(quote.status)}</span>
                         </div>
                       </td>
                     </tr>
@@ -511,17 +458,20 @@ const AdminOrdersPage: React.FC = () => {
           </>
         )}
 
-        {/* Pagination */}
+        {/* Pagination - Optimizada para móviles */}
         {pages > 1 && (
-          <div className="px-3 lg:px-6 py-3 lg:py-4 border-t bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="text-xs lg:text-sm text-gray-700">
-              Mostrando {((currentPage - 1) * filters.limit) + 1} a {Math.min(currentPage * filters.limit, total)} de {total} pedidos
+          <div className="px-3 sm:px-4 py-3 sm:py-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+            <div className="text-xs sm:text-sm text-gray-600 order-2 sm:order-1 text-center sm:text-left">
+              Mostrando <span className="font-semibold text-gray-900">{((currentPage - 1) * filters.page_size) + 1}</span> a{' '}
+              <span className="font-semibold text-gray-900">{Math.min(currentPage * filters.page_size, total)}</span> de{' '}
+              <span className="font-semibold text-gray-900">{total}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 order-1 sm:order-2 w-full sm:w-auto justify-center sm:justify-end">
               <button
                 onClick={() => setPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-2 lg:px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-150 shadow-sm hover:shadow-md flex items-center justify-center min-w-[44px]"
+                aria-label="Página anterior"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -533,11 +483,12 @@ const AdminOrdersPage: React.FC = () => {
                     <button
                       key={pageNum}
                       onClick={() => setPage(pageNum)}
-                      className={`px-2 lg:px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150 min-w-[40px] ${
                         currentPage === pageNum
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 active:bg-gray-100'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 active:bg-gray-100 shadow-sm hover:shadow'
                       }`}
+                      aria-label={`Ir a página ${pageNum}`}
                     >
                       {pageNum}
                     </button>
@@ -545,14 +496,15 @@ const AdminOrdersPage: React.FC = () => {
                 })}
               </div>
               
-              <div className="sm:hidden text-xs text-gray-500">
+              <div className="sm:hidden px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg min-w-[80px] text-center">
                 {currentPage} / {pages}
               </div>
 
               <button
                 onClick={() => setPage(currentPage + 1)}
                 disabled={currentPage === pages}
-                className="px-2 lg:px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-150 shadow-sm hover:shadow-md flex items-center justify-center min-w-[44px]"
+                aria-label="Página siguiente"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -561,33 +513,11 @@ const AdminOrdersPage: React.FC = () => {
         )}
       </div>
 
-      {/* Order Modal */}
-      {showOrderModal && (
-        <OrderModal
-          order={selectedOrder}
-          onClose={() => setShowOrderModal(false)}
-          onUpdateStatus={handleUpdateStatus}
-          onUpdatePaymentStatus={handleUpdatePaymentStatus}
-        />
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {orderToDelete && (
-        <ConfirmationModal
-          isOpen={!!orderToDelete}
-          onClose={() => setOrderToDelete(null)}
-          onConfirm={handleConfirmDelete}
-          title="Confirmar Eliminación"
-          message={
-            <span>
-              ¿Estás seguro de que quieres eliminar el pedido{' '}
-              <strong>#{orderToDelete.order_number || orderToDelete.id.substring(0, 8)}</strong>? 
-              <br />
-              Esta acción no se puede deshacer.
-            </span>
-          }
-          confirmText="Sí, eliminar"
-          isDestructive={true}
+      {/* Quote Modal */}
+      {selectedQuoteId && (
+        <AdminQuoteModal
+          quoteId={selectedQuoteId}
+          onClose={() => setSelectedQuoteId(null)}
         />
       )}
     </div>

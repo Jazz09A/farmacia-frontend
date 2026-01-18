@@ -8,12 +8,12 @@ export interface UserStats {
 }
 
 class UserService {
-  private baseUrl = '/api/v1/user';
+  private baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1/user';
 
   // 📊 Obtener estadísticas del usuario
   async getUserStats(): Promise<UserStats> {
     try {
-      const response = await authService.authenticatedFetch(`${this.baseUrl}/stats`);
+      const response = await authService.authenticatedFetch(`/api/v1/user/stats`);
       
       if (!response.ok) {
         throw new Error(`Error fetching user stats: ${response.status}`);

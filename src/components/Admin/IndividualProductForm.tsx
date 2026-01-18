@@ -37,8 +37,7 @@ interface ProductFormData extends Omit<BulkProduct, 'row_number' | 'images'> {
 const IndividualProductForm: React.FC<IndividualProductFormProps> = ({ onSuccess }) => {
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
-    price_ves: 0,
-    price_ref: 0,
+    price: 0,
     description: '',
     brand: '',
     category: '',
@@ -102,8 +101,7 @@ const IndividualProductForm: React.FC<IndividualProductFormProps> = ({ onSuccess
     if (!formData.name.trim()) newErrors.name = 'El nombre es requerido';
     if (!formData.brand.trim()) newErrors.brand = 'La marca es requerida';
     if (!formData.category.trim()) newErrors.category = 'La categoría es requerida';
-    if (formData.price_ves <= 0) newErrors.price_ves = 'El precio en VES debe ser mayor a 0';
-    if (formData.price_ref <= 0) newErrors.price_ref = 'El precio en REF debe ser mayor a 0';
+    if (formData.price <= 0) newErrors.price = 'El precio (USD) debe ser mayor a 0';
     if (!formData.description.trim()) newErrors.description = 'La descripción es requerida';
 
     setErrors(newErrors);
@@ -132,7 +130,7 @@ const IndividualProductForm: React.FC<IndividualProductFormProps> = ({ onSuccess
         ingredients,
         images,
         image: mainImage,
-        original_price: formData.is_offer ? formData.original_price : formData.price_ves
+        original_price: formData.is_offer ? formData.original_price : formData.price
       };
 
       // Remover campos temporales
@@ -325,42 +323,21 @@ const IndividualProductForm: React.FC<IndividualProductFormProps> = ({ onSuccess
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         <div>
           <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
-            Precio en VES *
+            Precio (USD) *
           </label>
           <input
             type="number"
-            value={formData.price_ves}
-            onChange={(e) => handleInputChange('price_ves', parseFloat(e.target.value) || 0)}
+            value={formData.price}
+            onChange={(e) => handleInputChange('price', parseFloat(e.target.value) || 0)}
             className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             min="0"
             step="0.01"
             placeholder="0.00"
           />
-          {errors.price_ves && (
+          {errors.price && (
             <p className="text-red-500 text-xs lg:text-sm mt-1 flex items-center">
               <AlertCircle className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
-              <span>{errors.price_ves}</span>
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
-            Precio en REF *
-          </label>
-          <input
-            type="number"
-            value={formData.price_ref}
-            onChange={(e) => handleInputChange('price_ref', parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-          />
-          {errors.price_ref && (
-            <p className="text-red-500 text-xs lg:text-sm mt-1 flex items-center">
-              <AlertCircle className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
-              <span>{errors.price_ref}</span>
+              <span>{errors.price}</span>
             </p>
           )}
         </div>

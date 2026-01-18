@@ -310,7 +310,7 @@ class DebugUtils {
         testUrl: (url: string) => DebugUtils.testObfuscation(url)
       };
 
-      console.log('🎯 Grupo Drozainka Debug Utils loaded! Use window.drozainkaDebug');
+      console.log('🎯 Grupo Drozainka C.A Debug Utils loaded! Use window.drozainkaDebug');
     }
   }
 }

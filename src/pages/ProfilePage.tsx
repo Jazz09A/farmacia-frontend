@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User as UserIcon, 
   Package, 
   Gift, 
   MessageCircle, 
-  Settings, 
   Key,
   Clock,
   CheckCircle,
@@ -19,7 +18,10 @@ import {
   Calendar,
   Loader2,
   DollarSign,
-  ShoppingBag
+  ShoppingBag,
+  CreditCard as CreditIcon,
+  ArrowLeft,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
@@ -29,18 +31,26 @@ import type {
 } from '../types/profile';
 import { User } from '../types/auth';
 import OrdersSection from '../components/Profile/OrdersSection';
+import QuotesSection from '../components/Profile/QuotesSection';
+import { CreditOrdersList, CreditOrderDetails } from '../components/Credit';
+import EnhancedPaymentForm from '../components/Credit/EnhancedPaymentForm';
+import { CreditOrder } from '../types/credit';
 import { useUserStats } from '../hooks/useUserStats';
+import ChangePasswordForm from '../components/Profile/ChangePasswordForm';
 
-type TabType = 'cuenta' | 'pedidos' | 'promociones' | 'soporte';
+type TabType = 'cuenta' | 'pedidos' | 'credito' | 'cotizaciones' | 'promociones' | 'soporte';
+type CreditViewMode = 'list' | 'details' | 'payment';
 
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('pedidos');
+  const [creditViewMode, setCreditViewMode] = useState<CreditViewMode>('list');
+  const [selectedCreditOrder, setSelectedCreditOrder] = useState<CreditOrder | null>(null);
   const { user, loading } = useAuth();
   const { formatPrice } = useGlobalCurrency();
   const location = useLocation();
   
   const [promotions] = useState<UserPromotion[]>([]);
-  const [supportTickets] = useState<SupportTicket[]>([]);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const { stats: userStats, loading: statsLoading, error: statsError } = useUserStats();
 
   useEffect(() => {
@@ -49,9 +59,36 @@ const ProfilePage: React.FC = () => {
     }
   }, [location.state]);
 
+  // Funciones para manejo de navegación de crédito
+  const handleViewCreditDetails = (order: CreditOrder) => {
+    setSelectedCreditOrder(order);
+    setCreditViewMode('details');
+  };
+
+  const handleMakeCreditPayment = (order: CreditOrder) => {
+    setSelectedCreditOrder(order);
+    setCreditViewMode('payment');
+  };
+
+  const handleBackToCreditList = () => {
+    setCreditViewMode('list');
+    setSelectedCreditOrder(null);
+  };
+
+  const handleBackToCreditDetails = () => {
+    setCreditViewMode('details');
+  };
+
+  const handleCreditPaymentCreated = () => {
+    // After payment is created, go back to details to see the updated payment history
+    setCreditViewMode('details');
+  };
+
   const tabs = [
     { id: 'cuenta', label: 'Mi Cuenta', icon: UserIcon, count: null },
     { id: 'pedidos', label: 'Pedidos', icon: Package, count: null },
+    // { id: 'credito', label: 'Crédito', icon: CreditIcon, count: null },
+    { id: 'cotizaciones', label: 'Cotizaciones', icon: FileText, count: null },
     // { id: 'promociones', label: 'Promociones', icon: Gift, count: promotions.filter(p => !p.is_used).length },
     // { id: 'soporte', label: 'Soporte', icon: MessageCircle, count: supportTickets.filter(t => t.status === 'open').length }
   ];
@@ -204,7 +241,7 @@ const ProfilePage: React.FC = () => {
              {tabs.map((tab) => (
                <button
                  key={tab.id}
-                 onClick={() => setActiveTab(tab.id as TabType)}
+                onClick={() => setActiveTab(tab.id as TabType)}
                  className={`flex items-center justify-center sm:justify-start gap-2 lg:gap-3 px-4 lg:px-6 py-4 lg:py-5 font-medium transition-all relative text-sm lg:text-base min-h-[60px] sm:min-h-0 ${
                    activeTab === tab.id
                      ? 'text-medical-blue-700 bg-medical-blue-50 border-b-2 sm:border-b-0 border-medical-blue-600'
@@ -241,8 +278,18 @@ const ProfilePage: React.FC = () => {
           >
             {activeTab === 'cuenta' && <AccountSection user={user} />}
             {activeTab === 'pedidos' && <OrdersSection />}
+            {activeTab === 'credito' && <CreditSection 
+              viewMode={creditViewMode}
+              selectedOrder={selectedCreditOrder}
+              onViewDetails={handleViewCreditDetails}
+              onMakePayment={handleMakeCreditPayment}
+              onBackToList={handleBackToCreditList}
+              onBackToDetails={handleBackToCreditDetails}
+              onPaymentCreated={handleCreditPaymentCreated}
+            />}
+            {activeTab === 'cotizaciones' && <QuotesSection />}
             {activeTab === 'promociones' && <PromotionsSection promotions={promotions} />}
-            {activeTab === 'soporte' && <SupportSection tickets={supportTickets} />}
+            {activeTab === 'soporte' && <SupportSection tickets={supportTickets} setTickets={setSupportTickets} />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -252,6 +299,8 @@ const ProfilePage: React.FC = () => {
 
 // Componente para la sección de cuenta
 const AccountSection: React.FC<{ user: User }> = ({ user }) => {
+  const [showChangePassword, setShowChangePassword] = useState(false);
+
   return (
     <div className="space-y-6 lg:space-y-8">
              {/* Información de la cuenta */}
@@ -261,11 +310,11 @@ const AccountSection: React.FC<{ user: User }> = ({ user }) => {
              <UserIcon className="w-5 h-5 lg:w-6 lg:h-6" />
              Información de la Cuenta
            </h2>
-           <button className="btn-medical-secondary self-start sm:self-auto px-4 py-2 lg:px-6 lg:py-3">
+           {/* <button className="btn-medical-secondary self-start sm:self-auto px-4 py-2 lg:px-6 lg:py-3">
              <Settings className="w-4 h-4 lg:w-5 lg:h-5" />
              <span className="hidden sm:inline ml-2">Editar</span>
              <span className="sm:hidden">Editar</span>
-           </button>
+           </button> */}
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
@@ -341,45 +390,55 @@ const AccountSection: React.FC<{ user: User }> = ({ user }) => {
        </div>
 
              {/* Seguridad */}
-       <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
-         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 lg:mb-8">
-           <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
-             <Key className="w-5 h-5 lg:w-6 lg:h-6" />
-             Seguridad
-           </h2>
-           <button className="btn-medical-secondary self-start sm:self-auto px-4 py-2 lg:px-6 lg:py-3">
-             <span className="hidden sm:inline">Cambiar Contraseña</span>
-             <span className="sm:hidden">Contraseña</span>
-           </button>
-         </div>
+       {showChangePassword ? (
+         <ChangePasswordForm
+           onSuccess={() => setShowChangePassword(false)}
+           onCancel={() => setShowChangePassword(false)}
+         />
+       ) : (
+         <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
+           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 lg:mb-8">
+             <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
+               <Key className="w-5 h-5 lg:w-6 lg:h-6" />
+               Seguridad
+             </h2>
+             <button
+               onClick={() => setShowChangePassword(true)}
+               className="btn-medical-secondary self-start sm:self-auto px-4 py-2 lg:px-6 lg:py-3"
+             >
+               <span className="hidden sm:inline">Cambiar Contraseña</span>
+               <span className="sm:hidden">Contraseña</span>
+             </button>
+           </div>
 
-         <div className="space-y-4 lg:space-y-5">
-           <div className="flex items-center gap-4 p-4 lg:p-5 bg-green-50 rounded-xl border border-green-200 hover:shadow-sm transition-all">
-             <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-               <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
-             </div>
-             <div className="min-w-0 flex-1">
-               <div className="font-semibold text-green-800 text-sm lg:text-base mb-1">
-                 Cuenta {user.is_verified ? 'verificada' : 'no verificada'}
+           <div className="space-y-4 lg:space-y-5">
+             <div className="flex items-center gap-4 p-4 lg:p-5 bg-green-50 rounded-xl border border-green-200 hover:shadow-sm transition-all">
+               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                 <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
                </div>
-               <div className="text-xs lg:text-sm text-green-600">
-                 Tu cuenta está {user.is_active ? 'activa' : 'inactiva'}
+               <div className="min-w-0 flex-1">
+                 <div className="font-semibold text-green-800 text-sm lg:text-base mb-1">
+                   Cuenta {user.is_verified ? 'verificada' : 'no verificada'}
+                 </div>
+                 <div className="text-xs lg:text-sm text-green-600">
+                   Tu cuenta está {user.is_active ? 'activa' : 'inactiva'}
+                 </div>
                </div>
              </div>
-           </div>
-           <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
-             <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-               <Calendar className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
-             </div>
-             <div className="min-w-0 flex-1">
-               <div className="text-xs lg:text-sm text-medical-gray-500 mb-1">Último acceso</div>
-               <div className="font-semibold text-sm lg:text-base">
-                 {user.last_login ? new Date(user.last_login).toLocaleString('es-VE') : 'No registrado'}
+             <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
+               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                 <Calendar className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
+               </div>
+               <div className="min-w-0 flex-1">
+                 <div className="text-xs lg:text-sm text-medical-gray-500 mb-1">Último acceso</div>
+                 <div className="font-semibold text-sm lg:text-base">
+                   {user.last_login ? new Date(user.last_login).toLocaleString('es-VE') : 'No registrado'}
+                 </div>
                </div>
              </div>
            </div>
          </div>
-       </div>
+       )}
     </div>
   );
 };
@@ -521,7 +580,10 @@ const PromotionsSection: React.FC<{ promotions: UserPromotion[] }> = ({ promotio
 };
 
 // Sección de Soporte
-const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => {
+const SupportSection: React.FC<{ 
+  tickets: SupportTicket[];
+  setTickets: React.Dispatch<React.SetStateAction<SupportTicket[]>>;
+}> = ({ tickets, setTickets }) => {
   const [showNewTicketForm, setShowNewTicketForm] = useState(false);
   const [newTicket, setNewTicket] = useState({
     subject: '',
@@ -553,7 +615,19 @@ const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => 
   const handleSubmitTicket = (e: React.FormEvent) => {
     e.preventDefault();
     // Aquí iría la lógica para enviar el ticket
-    console.log('Nuevo ticket:', newTicket);
+    const ticket: SupportTicket = {
+      id: `ticket-${Date.now()}`,
+      user_id: '', // Se asignará cuando se implemente la lógica real
+      subject: newTicket.subject,
+      message: newTicket.message,
+      status: 'open',
+      priority: newTicket.priority as 'low' | 'medium' | 'high' | 'urgent',
+      category: newTicket.category as 'technical' | 'billing' | 'order' | 'general',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      responses: []
+    };
+    setTickets((prev: SupportTicket[]) => [...prev, ticket]);
     setShowNewTicketForm(false);
     setNewTicket({ subject: '', category: 'general', priority: 'medium', message: '' });
   };
@@ -747,6 +821,112 @@ const SupportSection: React.FC<{ tickets: SupportTicket[] }> = ({ tickets }) => 
           )}
         </div>
       )}
+    </div>
+  );
+};
+
+// Sección de Crédito
+interface CreditSectionProps {
+  viewMode: CreditViewMode;
+  selectedOrder: CreditOrder | null;
+  onViewDetails: (order: CreditOrder) => void;
+  onMakePayment: (order: CreditOrder) => void;
+  onBackToList: () => void;
+  onBackToDetails: () => void;
+  onPaymentCreated: () => void;
+}
+
+const CreditSection: React.FC<CreditSectionProps> = ({
+  viewMode,
+  selectedOrder,
+  onViewDetails,
+  onMakePayment,
+  onBackToList,
+  onBackToDetails,
+  onPaymentCreated
+}) => {
+  const renderCreditContent = () => {
+    switch (viewMode) {
+      case 'list':
+        return (
+          <CreditOrdersList
+            onViewDetails={onViewDetails}
+            onMakePayment={onMakePayment}
+          />
+        );
+      
+      case 'details':
+        return selectedOrder ? (
+          <CreditOrderDetails
+            orderId={selectedOrder.id}
+            onBack={onBackToList}
+            onMakePayment={onMakePayment}
+          />
+        ) : null;
+      
+      case 'payment':
+        return selectedOrder ? (
+          <div className="space-y-6">
+            {/* Header */}
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-4"
+            >
+              <button
+                onClick={onBackToDetails}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </button>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Realizar Pago
+                </h2>
+                <p className="text-gray-600">
+                  Orden {selectedOrder.order_number}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Payment Form */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <EnhancedPaymentForm
+                orderId={selectedOrder.id}
+                orderTotal={parseFloat(selectedOrder.total) || 0}
+                orderTotalRef={undefined}
+                creditRemaining={selectedOrder.credit_remaining}
+                orderNumber={selectedOrder.order_number}
+                exchangeRate={selectedOrder.exchange_rate ? parseFloat(selectedOrder.exchange_rate) : 1}
+                onPaymentCreated={onPaymentCreated}
+                onCancel={onBackToDetails}
+              />
+            </motion.div>
+          </div>
+        ) : null;
+      
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl shadow-soft p-6 lg:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-lg lg:text-xl font-bold text-medical-gray-900 flex items-center gap-2">
+            <CreditIcon className="w-5 h-5 lg:w-6 lg:h-6" />
+            {viewMode === 'list' ? 'Mis Órdenes de Crédito' : 
+             viewMode === 'details' ? 'Detalles de la Orden' : 
+             'Realizar Pago'}
+          </h2>
+        </div>
+        {renderCreditContent()}
+      </div>
     </div>
   );
 };

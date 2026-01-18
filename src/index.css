@@ -1,6 +1,9 @@
 /* Google Fonts - Medical Typography */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
 
+/* Import Credit System Styles */
+@import './styles/credit.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -36,23 +39,17 @@
 
 html {
   scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  height: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overflow-y: scroll;
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-feature-settings: 'cv11', 'ss01';
-  font-variation-settings: 'opsz' 32;
-  background-color: var(--medical-gray-50);
-  color: #2c3e50;
-  line-height: 1.6;
-  height: 100%;
-  margin: 0;
-  padding: 0;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+  background-color: #f9fafb;
   overflow-x: hidden;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Fix for root container */
@@ -69,6 +66,8 @@ img, video {
   max-width: 100%;
   height: auto;
   display: block;
+  /* Lazy loading nativo */
+  loading: lazy;
 }
 
 /* Preload critical animations */
@@ -78,6 +77,52 @@ img, video {
 
 .will-change-opacity {
   will-change: opacity;
+}
+
+/* Optimizaciones de scroll */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+.scroll-optimized {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-snap-type: y proximity;
+}
+
+/* GPU acceleration para elementos animados */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Reducir repaints en scroll */
+.reduce-motion {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Shimmer animation for image loading */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* Medical specific base styles */
@@ -448,4 +493,59 @@ html {
 .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: #888 #f1f1f1;
+}
+
+/* Hero Carousel Specific Styles */
+.hero-carousel {
+  contain: layout style paint;
+}
+
+.hero-carousel img {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Smooth transitions for carousel controls */
+.carousel-control {
+  transition: all var(--duration-normal) var(--ease-medical);
+  will-change: transform, background-color, border-color;
+}
+
+.carousel-control:hover {
+  transform: scale(1.05);
+}
+
+.carousel-indicator {
+  transition: all var(--duration-normal) var(--ease-medical);
+  will-change: transform, background-color;
+}
+
+.carousel-indicator.active {
+  transform: scale(1.2);
+}
+
+/* Performance optimizations for carousel animations */
+.carousel-slide-enter {
+  opacity: 0;
+  transform: scale(1.1);
+}
+
+.carousel-slide-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 800ms ease-in-out, transform 800ms ease-in-out;
+}
+
+.carousel-slide-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.carousel-slide-exit-active {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 800ms ease-in-out, transform 800ms ease-in-out;
 }

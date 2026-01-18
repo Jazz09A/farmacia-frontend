@@ -1,15 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Star, Quote } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const TestimonialsSection: React.FC = () => {
+  const navigate = useNavigate();
   const testimonials = [
     {
       name: 'Dr. María González',
       role: 'Farmacéutica - Farmacia San Rafael',
       location: 'Caracas, Venezuela',
       rating: 5,
-      quote: 'Grupo Drozainka ha sido nuestro socio estratégico por más de 8 años. Su confiabilidad en el suministro y la calidad de sus productos nos ha permitido brindar un servicio excepcional a nuestros pacientes.',
+      quote: 'Grupo Drozainka C.A ha sido nuestro socio estratégico por más de 8 años. Su confiabilidad en el suministro y la calidad de sus productos nos ha permitido brindar un servicio excepcional a nuestros pacientes.',
       image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80'
     },
     {
@@ -53,7 +55,7 @@ export const TestimonialsSection: React.FC = () => {
           </motion.div>
           
           <motion.h2
-            className="text-4xl lg:text-6xl font-serif font-bold text-gray-900 leading-tight mb-6"
+            className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
@@ -72,8 +74,8 @@ export const TestimonialsSection: React.FC = () => {
             transition={{ duration: 0.8, delay: 0.4 }}
             viewport={{ once: true }}
           >
-            Más de 500 farmacias confían en nosotros para su suministro farmacéutico. 
-            Conoce las experiencias de nuestros clientes satisfechos.
+             Más de 1200 farmacias confían en nosotros. 
+             Conoce las experiencias de nuestros clientes satisfechos.
           </motion.p>
         </motion.div>
 
@@ -131,41 +133,6 @@ export const TestimonialsSection: React.FC = () => {
               </div>
             </motion.div>
           ))}
-        </motion.div>
-
-        {/* Call to Action */}
-        <motion.div
-          className="text-center mt-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 1.0 }}
-          viewport={{ once: true }}
-        >
-          <div className="bg-gradient-to-r from-medical-blue-50 to-medical-green-50 border border-medical-blue-200 rounded-2xl p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              ¿Quieres ser nuestro próximo cliente satisfecho?
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Únete a más de 500 farmacias que ya confían en nosotros. 
-              Descubre por qué somos el distribuidor farmacéutico más confiable de Venezuela.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.button
-                className="btn-medical-primary px-8 py-3 text-base font-semibold"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                🚀 Convierte en Cliente
-              </motion.button>
-              <motion.button
-                className="btn-medical-secondary px-8 py-3 text-base font-semibold border-2"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                📞 Contactar Ventas
-              </motion.button>
-            </div>
-          </div>
         </motion.div>
       </div>
     </section>

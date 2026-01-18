@@ -7,7 +7,6 @@ import {
   ShoppingCart,
   Users,
   Package,
-  Calendar,
   Download,
   Filter,
   Eye,
@@ -21,6 +20,8 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAdminCurrency } from '../../contexts/AdminCurrencyContext';
+import SmartPriceDisplay from '../../components/Admin/SmartPriceDisplay';
 
 interface AnalyticsData {
   period: string;
@@ -70,7 +71,6 @@ const trafficSources: TrafficSource[] = [
 ];
 
 const AdminAnalyticsPage: React.FC = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [selectedDateRange, setSelectedDateRange] = useState('last_30_days');
   const { formatPrice } = useAdminCurrency();
 
@@ -165,7 +165,6 @@ const AdminAnalyticsPage: React.FC = () => {
             <option value="last_7_days">Últimos 7 días</option>
             <option value="last_30_days">Últimos 30 días</option>
             <option value="last_3_months">Últimos 3 meses</option>
-            <option value="last_year">Último año</option>
           </select>
           <button className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
             <Download className="w-4 h-4 mr-2" />
@@ -178,7 +177,7 @@ const AdminAnalyticsPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                     <MetricCard
             title="Ingresos Totales"
-            value={<SmartPriceDisplay amount={currentData.revenue} />}
+            value={<SmartPriceDisplay amountUsd={currentData.revenue} />}
             growth={revenueGrowth}
             icon={DollarSign}
             color="green"
@@ -225,7 +224,7 @@ const AdminAnalyticsPage: React.FC = () => {
                 return (
                   <div key={data.period} className="flex flex-col items-center">
                     <div className="text-xs text-gray-600 mb-2">
-                      {formatCurrency(data.revenue)}
+                      {formatPrice(data.revenue)}
                     </div>
                     <motion.div
                       initial={{ height: 0 }}
@@ -297,7 +296,7 @@ const AdminAnalyticsPage: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-gray-900 text-sm">
-                    {formatCurrency(product.revenue)}
+                    {formatPrice(product.revenue)}
                   </p>
                   <p className={`text-xs ${
                     product.growth > 0 ? 'text-green-600' : 'text-red-600'
@@ -365,7 +364,7 @@ const AdminAnalyticsPage: React.FC = () => {
                 </div>
                 <div className="flex items-center text-xs text-gray-500">
                   <ShoppingCart className="w-3 h-3 mr-1" />
-                <span>{formatCurrency(18500)} en ingresos</span>
+                <span>{formatPrice(18500)} en ingresos</span>
                 </div>
               </div>
 
@@ -413,7 +412,7 @@ const AdminAnalyticsPage: React.FC = () => {
             <Zap className="w-5 h-5 text-yellow-500" />
           </div>
           <p className="text-3xl font-bold text-gray-900 mb-2">
-            {formatCurrency(currentData.avg_order_value)}
+            {formatPrice(currentData.avg_order_value)}
           </p>
           <div className="flex items-center text-sm text-green-600">
             <TrendingUp className="w-4 h-4 mr-1" />
@@ -483,7 +482,7 @@ const AdminAnalyticsPage: React.FC = () => {
                   </div>
                 </div>
             <p className="text-sm font-medium text-gray-900">Ingresos</p>
-            <p className="text-xs text-gray-500">{formatCurrency(220000)} / {formatCurrency(300000)}</p>
+            <p className="text-xs text-gray-500">{formatPrice(220000)} / {formatPrice(300000)}</p>
         </div>
 
               <div className="text-center">
