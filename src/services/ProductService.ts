@@ -11,6 +11,8 @@ export interface ProductSearchParams {
   min_price?: number;
   max_price?: number;
   in_stock?: boolean;
+  // Nuevo parámetro en API de artículos: filtra por stock > 0 en warehouse_code
+  in_stock_only?: boolean;
   prescription?: boolean;
   is_offer?: boolean;
   featured?: boolean;
@@ -136,10 +138,10 @@ class ProductService {
 
     // Usar valores del artículo (si vienen del API) o del caché
     // Priorizar valores del API si están disponibles, sino usar caché
-    let imageUrl = article.image_url;
-    let hasImage = article.has_image;
+    let imageUrl = article.cloudinary_image_url; // Changed from image_url to cloudinary_image_url
+    let hasImage = article.has_cloudinary_image; // Changed from has_image to has_cloudinary_image
     
-    // Si el artículo no tiene image_url pero tenemos caché, usar el caché
+    // Si el artículo no tiene cloudinary_image_url pero tenemos caché, usar el caché
     if (!imageUrl) {
       const cached = this.imageCache.get(article.co_art);
       if (cached && cached.image_url) {
@@ -234,11 +236,11 @@ class ProductService {
       return sum + parseNum(stock.quantity);
     }, 0);
 
-    // Construir array de imágenes
+    // Construir array de imágenes desde Cloudinary
     const images: string[] = [];
-    if (article.images && article.images.length > 0) {
-      article.images.forEach(img => {
-        if (img.url) images.push(img.url);
+    if (article.cloudinary_images && article.cloudinary_images.length > 0) {
+      article.cloudinary_images.forEach(img => {
+        if (img.cloudinary_url) images.push(img.cloudinary_url);
       });
     }
     
@@ -339,6 +341,11 @@ class ProductService {
       if (params.line_code) queryParams.append('line_code', params.line_code);
       if (params.min_price !== undefined) queryParams.append('min_price', params.min_price.toString());
       if (params.max_price !== undefined) queryParams.append('max_price', params.max_price.toString());
+
+      // Filtro de stock (nuevo backend): in_stock_only=true
+      // Mantener compatibilidad con el flag legacy in_stock del frontend
+      const inStockOnly = params.in_stock_only ?? params.in_stock;
+      if (inStockOnly) queryParams.append('in_stock_only', 'true');
       
       // Parámetros de artículos
       if (params.price_code) queryParams.append('price_code', params.price_code);
@@ -439,6 +446,7 @@ class ProductService {
    */
   async getSearchSuggestions(query: string, limit: number = 10): Promise<SearchSuggestion[]> {
     try {
+      void limit; // Mantener firma; API no soporta suggestions
       if (!query || query.length < 2) {
         return [];
       }
@@ -588,6 +596,8 @@ class ProductService {
    * Nota: La API de artículos es de solo lectura, este método no está disponible
    */
   async updateProduct(productId: string, productData: Partial<Product>): Promise<Product> {
+    void productId;
+    void productData;
     throw new Error('Update product is not available for articles API. Articles are read-only from Profit Plus.');
   }
 
@@ -596,6 +606,8 @@ class ProductService {
    * Nota: La API de artículos no tiene endpoint para eliminar imágenes individuales
    */
   async deleteProductImage(productId: string, imageUrl: string): Promise<Product> {
+    void productId;
+    void imageUrl;
     throw new Error('Delete product image is not available for articles API.');
   }
 

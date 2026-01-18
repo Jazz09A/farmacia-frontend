@@ -62,9 +62,9 @@ const AdminEditProductPage: React.FC = () => {
       return 'Solo se permiten archivos JPG o PNG';
     }
 
-    // Validar tamaño (máx 5 MB)
-    if (file.size > 5 * 1024 * 1024) {
-      return 'El archivo no debe exceder 5 MB';
+    // Validar tamaño (máx 10 MB)
+    if (file.size > 10 * 1024 * 1024) {
+      return 'El archivo no debe exceder 10 MB';
     }
 
     return null;
@@ -145,9 +145,10 @@ const AdminEditProductPage: React.FC = () => {
     );
 
     try {
-      const result = await productImageService.uploadArticleImage(id, image.file, 'PRINC');
+      // Subir imagen a Cloudinary - usar true para marcarla como principal
+      const result = await productImageService.uploadArticleImage(id, image.file, true);
 
-      if (result && result.url) {
+      if (result && result.cloudinary_url) {
         // Marcar como subido
         setPendingImages((prev) =>
           prev.map((img) =>
@@ -215,7 +216,7 @@ const AdminEditProductPage: React.FC = () => {
       const file = new File([editedImageBlob], 'edited-image.jpg', { type: 'image/jpeg' });
       const result = await productImageService.uploadArticleImage(id, file);
 
-      if (result && result.url) {
+      if (result && result.cloudinary_url) {
         const updatedProduct = await productService.getProductById(id);
         if (updatedProduct) {
           setProduct(updatedProduct);
@@ -362,7 +363,7 @@ const AdminEditProductPage: React.FC = () => {
             {isDragging ? 'Suelta las imágenes aquí' : 'Arrastra imágenes o haz clic para seleccionar'}
           </p>
           <p className="text-xs lg:text-sm text-gray-500">
-            Formatos: JPG, PNG • Tamaño máximo: 5 MB por imagen
+            Formatos: JPG, PNG • Tamaño máximo: 10 MB por imagen
           </p>
         </div>
 

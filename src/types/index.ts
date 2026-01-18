@@ -558,8 +558,8 @@ export interface ArticleSummary {
   currency: string;
   stock: string; // Decimal as string
   warehouse_code: string | null;
-  image_url: string | null;
-  has_image: boolean;
+  cloudinary_image_url: string | null; // Changed from image_url to cloudinary_image_url
+  has_cloudinary_image: boolean; // Changed from has_image to has_cloudinary_image
   flash_offer?: ArticleFlashOffer | null;
 }
 
@@ -579,12 +579,36 @@ export interface ArticleStockDetail {
   quantity: string; // Decimal as string
 }
 
-// ArticleImageResponse from article detail
+// ArticleImageResponse from article detail (legacy - old system)
 export interface ArticleImageResponse {
   guid: string;
   url: string;
   description: string | null;
   tip: string | null;
+}
+
+// CloudinaryImageResponse - new Cloudinary system
+export interface CloudinaryImageResponse {
+  id: number;
+  co_art_profit: string;
+  cloudinary_url: string;
+  cloudinary_public_id: string | null;
+  is_main: boolean;
+  display_order: number;
+  description: string | null;
+  created_at: string | null;
+  cloudinary_info?: {
+    width: number;
+    height: number;
+    format: string;
+    bytes: number;
+    resource_type: string;
+    created_at: string;
+    version: number;
+    url: string;
+    secure_url: string;
+    public_id: string;
+  };
 }
 
 // ArticleDetail from /api/v1/articles/{co_art}
@@ -602,7 +626,7 @@ export interface ArticleDetail {
   additional_data: Record<string, any>;
   prices: ArticlePriceDetail[];
   stock_by_warehouse: ArticleStockDetail[];
-  images: ArticleImageResponse[];
+  cloudinary_images: CloudinaryImageResponse[]; // Changed from images to cloudinary_images
   flash_offer?: ArticleFlashOffer | null;
 }
 
@@ -618,10 +642,40 @@ export interface ArticlesApiResponse {
   filters_applied: Record<string, any>;
 }
 
-// Image Upload Response
+// Image Upload Response (legacy - old system)
 export interface ImageUploadResponse {
   success: boolean;
   message: string;
   image_guid: string;
   url: string;
+}
+
+// Cloudinary Image Upload Response
+export interface CloudinaryImageUploadResponse extends CloudinaryImageResponse {
+  // Inherits all fields from CloudinaryImageResponse
+}
+
+// Cloudinary Image List Response
+export interface CloudinaryImageListResponse {
+  co_art_profit: string;
+  images: CloudinaryImageResponse[];
+  total: number;
+}
+
+// Cloudinary Set Main Response
+export interface CloudinarySetMainResponse {
+  success: boolean;
+  message: string;
+  image_id: number;
+  co_art_profit: string;
+  cloudinary_url: string;
+}
+
+// Cloudinary Delete Response
+export interface CloudinaryDeleteResponse {
+  success: boolean;
+  message: string;
+  image_id: number;
+  co_art_profit: string;
+  cloudinary_deleted: boolean;
 }

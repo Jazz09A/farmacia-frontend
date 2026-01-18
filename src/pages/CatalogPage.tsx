@@ -6,7 +6,6 @@ import { ProductCard } from '../components/Products/ProductCard';
 import { useGlobalCurrency } from '../contexts/GlobalCurrencyContext';
 import Pagination from '../components/common/Pagination';
 import { ProductCardSkeleton } from '../components/Skeleton/ProductCardSkeleton';
-import MapSection from '../components/Map/MapSection';
 import { useProductsQuery } from '../hooks/queries/useProductsQueries';
 import { usePrefetchNextPage } from '../hooks/useImagePrefetch';
 import { authenticatedImageCache } from '../utils/authenticatedImageCache';
@@ -33,7 +32,8 @@ const CatalogPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [productsPerPage] = useState(20);
   const [isPageChanging, setIsPageChanging] = useState(false);
-  const { currency, formatPriceFromBackend, getDisplayPrice } = useGlobalCurrency();
+  const [isStockFilterToggling, setIsStockFilterToggling] = useState(false);
+  const { currency, formatPriceFromBackend } = useGlobalCurrency();
   
   // Ref para scroll al cambiar de página
   const productsContainerRef = useRef<HTMLDivElement>(null);
@@ -70,7 +70,8 @@ const CatalogPage: React.FC = () => {
     brand: filters.brand || undefined,
     min_price: filters.priceRange[0] > 0 ? filters.priceRange[0] : undefined,
     max_price: filters.priceRange[1] < 1000 ? filters.priceRange[1] : undefined,
-    in_stock: filters.inStock || undefined,
+    // Nuevo backend: in_stock_only filtra por stock > 0 (en el almacén seleccionado)
+    in_stock_only: filters.inStock || undefined,
     prescription: filters.prescription || undefined,
     sort_by: filters.sortBy as 'name' | 'price' | 'rating' | 'created_at' | 'relevance',
     sort_order: filters.sortOrder,
@@ -79,14 +80,29 @@ const CatalogPage: React.FC = () => {
   }), [debouncedSearchTerm, filters, currentPage, productsPerPage]);
 
   // Usar React Query para obtener productos
-  const { data: productsResponse, isLoading, isFetching, error } = useProductsQuery(searchParams_api);
+  const { data: productsResponse, isLoading, isFetching } = useProductsQuery(searchParams_api);
   useEffect(() => {
   }, [productsResponse, isLoading, isFetching, searchParams_api]);
 
   const products = productsResponse?.products || [];
   const totalPages = productsResponse?.pagination?.total_pages || productsResponse?.total ? Math.ceil((productsResponse.total || 0) / productsPerPage) : 1;
   const totalProducts = productsResponse?.total || productsResponse?.pagination?.total || 0;
-  const isFiltering = isFetching && !isLoading;
+  // const isFiltering = isFetching && !isLoading;
+
+  // Animación de loading cuando el usuario togglea "solo en stock"
+  const showStockFilterLoading = isStockFilterToggling && isFetching;
+  useEffect(() => {
+    if (!isFetching) {
+      setIsStockFilterToggling(false);
+    }
+  }, [isFetching]);
+
+  // Si por aplicar un filtro quedamos en una página que ya no existe, ir a la última disponible
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   // Actualizar searchTerm cuando cambia la URL
   useEffect(() => {
@@ -97,8 +113,37 @@ const CatalogPage: React.FC = () => {
   }, [searchParams]);
 
   // Resetear página cuando cambian filtros
+  const prevFiltersRef = useRef<SearchFilters | null>(null);
+  const prevDebouncedSearchRef = useRef<string>(debouncedSearchTerm);
   useEffect(() => {
-    setCurrentPage(1);
+    const prevFilters = prevFiltersRef.current;
+    const prevDebouncedSearch = prevDebouncedSearchRef.current;
+
+    const searchChanged = prevDebouncedSearch !== debouncedSearchTerm;
+
+    // Si SOLO cambió el checkbox de stock, no reseteamos la página
+    const didOtherFiltersChange = (() => {
+      if (!prevFilters) return false;
+      return (
+        prevFilters.category !== filters.category ||
+        prevFilters.subcategory !== filters.subcategory ||
+        prevFilters.patology !== filters.patology ||
+        prevFilters.priceRange[0] !== filters.priceRange[0] ||
+        prevFilters.priceRange[1] !== filters.priceRange[1] ||
+        prevFilters.prescription !== filters.prescription ||
+        prevFilters.rating !== filters.rating ||
+        prevFilters.brand !== filters.brand ||
+        prevFilters.sortBy !== filters.sortBy ||
+        prevFilters.sortOrder !== filters.sortOrder
+      );
+    })();
+
+    if (searchChanged || didOtherFiltersChange) {
+      setCurrentPage(1);
+    }
+
+    prevFiltersRef.current = filters;
+    prevDebouncedSearchRef.current = debouncedSearchTerm;
   }, [filters, debouncedSearchTerm]);
 
   // Manejar cambio de página con scroll y loading
@@ -376,12 +421,26 @@ const CatalogPage: React.FC = () => {
                       <input
                         type="checkbox"
                         checked={filters.inStock}
-                        onChange={(e) => setFilters({...filters, inStock: e.target.checked})}
+                        disabled={showStockFilterLoading}
+                        onChange={(e) => {
+                          setIsStockFilterToggling(true);
+                          setFilters({ ...filters, inStock: e.target.checked });
+                        }}
                         className="w-4 h-4 text-medical-primary bg-gray-100 border-gray-300 rounded focus:ring-medical-primary focus:ring-2"
                       />
-                      <span>Solo productos en stock</span>
+                      <span className={`flex items-center gap-2 ${showStockFilterLoading ? 'text-gray-500' : ''}`}>
+                        Solo productos en stock
+                        <span
+                          className={`transition-all duration-200 ${
+                            showStockFilterLoading ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-1 pointer-events-none'
+                          }`}
+                          aria-hidden={!showStockFilterLoading}
+                        >
+                          <Loader2 className="w-4 h-4 animate-spin text-medical-primary" />
+                        </span>
+                      </span>
                     </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
+                    {/* <label className="flex items-center gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={filters.prescription}
@@ -389,7 +448,7 @@ const CatalogPage: React.FC = () => {
                         className="w-4 h-4 text-medical-primary bg-gray-100 border-gray-300 rounded focus:ring-medical-primary focus:ring-2"
                       />
                       <span>Solo medicamentos con receta</span>
-                    </label>
+                    </label> */}
                   </div>
                 </div>
               </div>

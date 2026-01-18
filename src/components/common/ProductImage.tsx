@@ -65,14 +65,15 @@ const ProductImage: React.FC<ProductImageProps> = ({
     );
   }
 
-  // Si la imagen es de la API de artículos (requiere autenticación), usar AuthenticatedImage
-  // Detectar tanto URLs relativas como absolutas
-  const isArticleImage = imageToShow && (
-    imageToShow.includes('/api/v1/images/') || 
-    imageToShow.startsWith('/api/v1/images/')
+  // Determinar si la imagen requiere autenticación (es decir, viene de un endpoint específico que la necesita)
+  // Las URLs de artículos/productos (ej: /api/v1/articles/images/) se consideran públicas
+  // y deben ser manejadas por OptimizedImage para aprovechar el caché del navegador.
+  const isAuthRequiredImage = imageToShow && (
+    (imageToShow.includes('/api/v1/images/') || imageToShow.startsWith('/api/v1/images/')) &&
+    !imageToShow.includes('/api/v1/articles/images/') // Excluir URLs de artículos/productos
   );
   
-  if (isArticleImage) {
+  if (isAuthRequiredImage) {
     return (
       <AuthenticatedImage
         src={imageToShow}
