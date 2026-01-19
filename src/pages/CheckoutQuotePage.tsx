@@ -201,7 +201,7 @@ const CheckoutQuotePage: React.FC = () => {
     ];
 
     const rawList = candidates.find(Array.isArray) as any[] | undefined;
-
+    console.log('rawList', rawList);
     if (!Array.isArray(rawList)) {
       setAddresses([]);
       return;
