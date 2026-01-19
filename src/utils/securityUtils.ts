@@ -185,8 +185,8 @@ export class SecurityManager {
         'credit_card', 'card_number', 'cvv', 'cvc',
         'ssn', 'social_security',
         // 'email', // Descomentar si quieres ocultar emails también
-        'phone', 'telephone', 'mobile',
-        'address', 'street', 'zip', 'postal',
+        // Nota: NO ocultamos phone/address aquí porque esta sanitización intercepta `fetch().json()`
+        // y rompe el UI (ej: checkout necesita direcciones). Mantener solo secretos/tokens.
         'rfc', 'tax_id', 'vat',
         'iban', 'account_number', 'bank_account',
         'session', 'session_id', 'session_token'

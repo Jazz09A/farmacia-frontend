@@ -36,8 +36,7 @@ export default defineConfig(({ mode }) => {
         target: env.VITE_API_URL || 'http://localhost:8000',
         changeOrigin: true,
         secure: true,
-        configure: (proxy, options) => {
-      }
+        configure: (_proxy, _options) => {}
     },
     
   },
@@ -47,8 +46,8 @@ export default defineConfig(({ mode }) => {
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true, // Eliminar todos los console.log en producción
-        drop_debugger: true, // Eliminar debugger statements
+        drop_console: false, // Eliminar todos los console.log en producción
+        drop_debugger: false, // Eliminar debugger statements
         pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.trace'], // Eliminar funciones específicas
         passes: 3, // Múltiples pases para mejor optimización
       },

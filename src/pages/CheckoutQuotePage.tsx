@@ -46,6 +46,17 @@ type Address = {
   is_profit_address?: boolean;
 };
 
+// Helper opcional (por ahora no se usa en esta pantalla)
+// const toDecimalString = (value: string | number | null | undefined): string => {
+//   if (typeof value === 'string' && value.trim() !== '') {
+//     return value;
+//   }
+//   if (typeof value === 'number' && Number.isFinite(value)) {
+//     return value.toFixed(2);
+//   }
+//   return '0.00';
+// };
+
 const PAYMENT_TERMS_OPTIONS = [
   { code: 'CON', label: 'CON · Contado' },
   { code: '3D', label: '3D · 3 días de crédito' },
@@ -172,58 +183,32 @@ const CheckoutQuotePage: React.FC = () => {
 
   useEffect(() => {
     if (!addressesData) {
+      console.log('[CheckoutQuote] addressesData is falsy:', addressesData);
       return;
     }
 
-    // En producción hemos visto casos donde el query devuelve un Response (sin .json() parseado).
-    // Normalizamos aquí para que el UI no dependa de ese detalle.
-    const normalizeResponse = async (value: any): Promise<any> => {
-      // Detectar Response sin usar instanceof (más robusto entre entornos/bundlers)
-      if (
-        value &&
-        typeof value === 'object' &&
-        typeof value.json === 'function' &&
-        typeof value.text === 'function' &&
-        typeof value.headers === 'object' &&
-        typeof value.status === 'number'
-      ) {
-        try {
-          // Clonar por seguridad por si el body ya fue leído en otro lado
-          return await value.clone().json();
-        } catch {
-          try {
-            const txt = await value.clone().text();
-            return JSON.parse(txt);
-          } catch {
-            return null;
-          }
-        }
-      }
-      return value;
-    };
+    const response = addressesData as any;
+    console.log('[CheckoutQuote] addressesData type:', typeof addressesData);
+    console.log('[CheckoutQuote] addressesData ctor:', response?.constructor?.name);
+    console.log('[CheckoutQuote] addressesData keys:', response && typeof response === 'object' ? Object.keys(response) : response);
 
-    (async () => {
-      const response = await normalizeResponse(addressesData as any);
-      if (!response) {
-        setAddresses([]);
-        return;
-      }
+    // La API puede devolver diferentes envoltorios:
+    // - { addresses: [...] }
+    // - { data: { addresses: [...] } }
+    // - { success: true, data: { addresses: [...] } }
+    // - o directamente [...]
+    const candidates = [
+      response?.addresses,
+      response?.data?.addresses,
+      response?.data?.data?.addresses,
+      response?.payload?.addresses,
+      response?.result?.addresses,
+      response,
+    ];
 
-      // La API puede devolver diferentes envoltorios:
-      // - { addresses: [...] }
-      // - { data: { addresses: [...] } }
-      // - { success: true, data: { addresses: [...] } }
-      // - o directamente [...]
-      const candidates = [
-        response?.addresses,
-        response?.data?.addresses,
-        response?.data?.data?.addresses,
-        response?.payload?.addresses,
-        response?.result?.addresses,
-        response,
-      ];
-
-      const rawList = candidates.find(Array.isArray) as any[] | undefined;
+    const rawList = candidates.find(Array.isArray) as any[] | undefined;
+    console.log('[CheckoutQuote] candidates:', candidates);
+    console.log('[CheckoutQuote] rawList:', rawList);
 
       if (!Array.isArray(rawList)) {
         setAddresses([]);
