@@ -718,11 +718,14 @@ class AuthService {
     include_checkout_preview?: boolean;
     cart_total?: number;
   }): Promise<any> {
+    console.log('[AuthService] getUserAddresses options:', _options);
     const response = await this.authenticatedFetch('/api/v1/user/customer-addresses');
     if (!response.ok) {
+      console.log('[AuthService] getUserAddresses response status:', response.status);
       throw new Error('Failed to fetch user addresses');
     }
     const data = await response.json();
+    console.log('[AuthService] getUserAddresses data keys:', data && typeof data === 'object' ? Object.keys(data) : data);
     return data;
   }
 

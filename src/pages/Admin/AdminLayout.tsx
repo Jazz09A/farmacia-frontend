@@ -6,7 +6,6 @@ import {
   BookOpen, 
   Users, 
   Package, 
-  Search,
   LogOut,
   Menu,
   X,

@@ -46,15 +46,16 @@ type Address = {
   is_profit_address?: boolean;
 };
 
-const toDecimalString = (value: string | number | null | undefined): string => {
-  if (typeof value === 'string' && value.trim() !== '') {
-    return value;
-  }
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value.toFixed(2);
-  }
-  return '0.00';
-};
+// Helper opcional (por ahora no se usa en esta pantalla)
+// const toDecimalString = (value: string | number | null | undefined): string => {
+//   if (typeof value === 'string' && value.trim() !== '') {
+//     return value;
+//   }
+//   if (typeof value === 'number' && Number.isFinite(value)) {
+//     return value.toFixed(2);
+//   }
+//   return '0.00';
+// };
 
 const PAYMENT_TERMS_OPTIONS = [
   { code: 'CON', label: 'CON · Contado' },
@@ -182,10 +183,15 @@ const CheckoutQuotePage: React.FC = () => {
 
   useEffect(() => {
     if (!addressesData) {
+      console.log('[CheckoutQuote] addressesData is falsy:', addressesData);
       return;
     }
 
     const response = addressesData as any;
+    console.log('[CheckoutQuote] addressesData type:', typeof addressesData);
+    console.log('[CheckoutQuote] addressesData ctor:', response?.constructor?.name);
+    console.log('[CheckoutQuote] addressesData keys:', response && typeof response === 'object' ? Object.keys(response) : response);
+
     // La API puede devolver diferentes envoltorios:
     // - { addresses: [...] }
     // - { data: { addresses: [...] } }
@@ -201,6 +207,8 @@ const CheckoutQuotePage: React.FC = () => {
     ];
 
     const rawList = candidates.find(Array.isArray) as any[] | undefined;
+    console.log('[CheckoutQuote] candidates:', candidates);
+    console.log('[CheckoutQuote] rawList:', rawList);
 
     if (!Array.isArray(rawList)) {
       setAddresses([]);
