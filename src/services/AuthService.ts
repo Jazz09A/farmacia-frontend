@@ -425,10 +425,6 @@ class AuthService {
       return {
         success: true,
         message: 'Token renovado',
-        data: {
-          token: result.access_token,
-          refresh_token: result.refresh_token
-        },
         expires_in: result.expires_in
       };
     } catch (error) {
