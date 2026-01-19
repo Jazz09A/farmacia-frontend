@@ -45,17 +45,17 @@ export default defineConfig(({ mode }) => {
     target: 'es2022',
     // Activar minificación avanzada
     minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Eliminar todos los console.log en producción
-        drop_debugger: true, // Eliminar debugger statements
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.trace'], // Eliminar funciones específicas
-        passes: 3, // Múltiples pases para mejor optimización
-      },
-      format: {
-        comments: false, // Eliminar comentarios
-      },
-    },
+    // terserOptions: {
+    //   compress: {
+    //     drop_console: true, // Eliminar todos los console.log en producción
+    //     drop_debugger: true, // Eliminar debugger statements
+    //     pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.trace'], // Eliminar funciones específicas
+    //     passes: 3, // Múltiples pases para mejor optimización
+    //   },
+    //   format: {
+    //     comments: false, // Eliminar comentarios
+    //   },
+    // },
 
     // Optimizar chunks
     rollupOptions: {
