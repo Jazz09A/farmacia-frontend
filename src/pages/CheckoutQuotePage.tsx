@@ -186,11 +186,21 @@ const CheckoutQuotePage: React.FC = () => {
     }
 
     const response = addressesData as any;
-    const rawList = Array.isArray(response?.addresses)
-      ? response.addresses
-      : Array.isArray(response)
-      ? response
-      : [];
+    // La API puede devolver diferentes envoltorios:
+    // - { addresses: [...] }
+    // - { data: { addresses: [...] } }
+    // - { success: true, data: { addresses: [...] } }
+    // - o directamente [...]
+    const candidates = [
+      response?.addresses,
+      response?.data?.addresses,
+      response?.data?.data?.addresses,
+      response?.payload?.addresses,
+      response?.result?.addresses,
+      response,
+    ];
+
+    const rawList = candidates.find(Array.isArray) as any[] | undefined;
 
     if (!Array.isArray(rawList)) {
       setAddresses([]);
