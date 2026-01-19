@@ -210,13 +210,13 @@ const CheckoutQuotePage: React.FC = () => {
     console.log('[CheckoutQuote] candidates:', candidates);
     console.log('[CheckoutQuote] rawList:', rawList);
 
-      if (!Array.isArray(rawList)) {
-        setAddresses([]);
-        return;
-      }
+    if (!Array.isArray(rawList)) {
+      setAddresses([]);
+      return;
+    }
 
-      const normalizedList = rawList
-        .map((item: any, index: number): Address | null => {
+    const normalizedList = rawList
+      .map((item: any, index: number): Address | null => {
         if (!item || typeof item !== 'object') {
           return null;
         }
@@ -334,17 +334,16 @@ const CheckoutQuotePage: React.FC = () => {
           raw_address,
           is_profit_address: !trimmedId && Boolean(raw_address),
         };
-        })
-        .filter((addr): addr is Address => Boolean(addr));
+      })
+      .filter((addr): addr is Address => Boolean(addr));
 
-      setAddresses(normalizedList);
+    setAddresses(normalizedList);
 
-      if (!selectedAddressId && normalizedList.length > 0) {
-        const defaultAddress =
-          normalizedList.find(addr => addr.is_default) || normalizedList[0];
-        setSelectedAddressId(defaultAddress.id);
-      }
-    })();
+    if (!selectedAddressId && normalizedList.length > 0) {
+      const defaultAddress =
+        normalizedList.find(addr => addr.is_default) || normalizedList[0];
+      setSelectedAddressId(defaultAddress.id);
+    }
   }, [addressesData, selectedAddressId]);
 
   const selectedAddress = useMemo(
