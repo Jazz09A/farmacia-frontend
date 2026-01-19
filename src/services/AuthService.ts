@@ -718,12 +718,37 @@ class AuthService {
     include_checkout_preview?: boolean;
     cart_total?: number;
   }): Promise<any> {
-    const response = await this.authenticatedFetch('/api/v1/user/customer-addresses');
-    if (!response.ok) {
-      throw new Error('Failed to fetch user addresses');
+    const queryParams = new URLSearchParams();
+    if (_options?.include_checkout_preview !== undefined) {
+      queryParams.set('include_checkout_preview', String(_options.include_checkout_preview));
     }
-    const data = await response.json();
-    return data;
+    if (_options?.cart_total !== undefined) {
+      queryParams.set('cart_total', String(_options.cart_total));
+    }
+
+    const url = `/api/v1/user/customer-addresses${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await this.authenticatedFetch(url);
+    if (!response.ok) {
+      let detail = '';
+      try {
+        const err = await response.json();
+        detail = err?.detail || err?.message || '';
+      } catch {
+        // ignore
+      }
+      throw new Error(detail || 'Failed to fetch user addresses');
+    }
+    try {
+      return await response.json();
+    } catch {
+      // Fallback por si el backend responde texto/HTML en algún proxy
+      const txt = await response.text().catch(() => '');
+      try {
+        return JSON.parse(txt);
+      } catch {
+        return { raw: txt };
+      }
+    }
   }
 
 

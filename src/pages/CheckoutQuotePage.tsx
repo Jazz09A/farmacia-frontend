@@ -46,16 +46,6 @@ type Address = {
   is_profit_address?: boolean;
 };
 
-const toDecimalString = (value: string | number | null | undefined): string => {
-  if (typeof value === 'string' && value.trim() !== '') {
-    return value;
-  }
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value.toFixed(2);
-  }
-  return '0.00';
-};
-
 const PAYMENT_TERMS_OPTIONS = [
   { code: 'CON', label: 'CON · Contado' },
   { code: '3D', label: '3D · 3 días de crédito' },
@@ -185,30 +175,63 @@ const CheckoutQuotePage: React.FC = () => {
       return;
     }
 
-    const response = addressesData as any;
-    // La API puede devolver diferentes envoltorios:
-    // - { addresses: [...] }
-    // - { data: { addresses: [...] } }
-    // - { success: true, data: { addresses: [...] } }
-    // - o directamente [...]
-    const candidates = [
-      response?.addresses,
-      response?.data?.addresses,
-      response?.data?.data?.addresses,
-      response?.payload?.addresses,
-      response?.result?.addresses,
-      response,
-    ];
+    // En producción hemos visto casos donde el query devuelve un Response (sin .json() parseado).
+    // Normalizamos aquí para que el UI no dependa de ese detalle.
+    const normalizeResponse = async (value: any): Promise<any> => {
+      // Detectar Response sin usar instanceof (más robusto entre entornos/bundlers)
+      if (
+        value &&
+        typeof value === 'object' &&
+        typeof value.json === 'function' &&
+        typeof value.text === 'function' &&
+        typeof value.headers === 'object' &&
+        typeof value.status === 'number'
+      ) {
+        try {
+          // Clonar por seguridad por si el body ya fue leído en otro lado
+          return await value.clone().json();
+        } catch {
+          try {
+            const txt = await value.clone().text();
+            return JSON.parse(txt);
+          } catch {
+            return null;
+          }
+        }
+      }
+      return value;
+    };
 
-    const rawList = candidates.find(Array.isArray) as any[] | undefined;
-    console.log('rawList', rawList);
-    if (!Array.isArray(rawList)) {
-      setAddresses([]);
-      return;
-    }
+    (async () => {
+      const response = await normalizeResponse(addressesData as any);
+      if (!response) {
+        setAddresses([]);
+        return;
+      }
 
-    const normalizedList = rawList
-      .map((item: any, index: number): Address | null => {
+      // La API puede devolver diferentes envoltorios:
+      // - { addresses: [...] }
+      // - { data: { addresses: [...] } }
+      // - { success: true, data: { addresses: [...] } }
+      // - o directamente [...]
+      const candidates = [
+        response?.addresses,
+        response?.data?.addresses,
+        response?.data?.data?.addresses,
+        response?.payload?.addresses,
+        response?.result?.addresses,
+        response,
+      ];
+
+      const rawList = candidates.find(Array.isArray) as any[] | undefined;
+
+      if (!Array.isArray(rawList)) {
+        setAddresses([]);
+        return;
+      }
+
+      const normalizedList = rawList
+        .map((item: any, index: number): Address | null => {
         if (!item || typeof item !== 'object') {
           return null;
         }
@@ -326,16 +349,17 @@ const CheckoutQuotePage: React.FC = () => {
           raw_address,
           is_profit_address: !trimmedId && Boolean(raw_address),
         };
-      })
-      .filter((addr): addr is Address => Boolean(addr));
+        })
+        .filter((addr): addr is Address => Boolean(addr));
 
-    setAddresses(normalizedList);
+      setAddresses(normalizedList);
 
-    if (!selectedAddressId && normalizedList.length > 0) {
-      const defaultAddress =
-        normalizedList.find(addr => addr.is_default) || normalizedList[0];
-      setSelectedAddressId(defaultAddress.id);
-    }
+      if (!selectedAddressId && normalizedList.length > 0) {
+        const defaultAddress =
+          normalizedList.find(addr => addr.is_default) || normalizedList[0];
+        setSelectedAddressId(defaultAddress.id);
+      }
+    })();
   }, [addressesData, selectedAddressId]);
 
   const selectedAddress = useMemo(
