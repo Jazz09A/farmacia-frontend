@@ -166,13 +166,19 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
       )}
 
       {/* Progress Bar */}
-      <motion.div
-        className="absolute bottom-0 left-0 h-1 bg-white/30 z-50"
-        initial={{ width: 0 }}
-        animate={{ width: '100%' }}
-        transition={{ duration: autoPlayInterval / 1000, ease: "linear" }}
-        key={currentIndex}
-      />
+      {autoPlay && images.length > 1 && (
+        <motion.div
+          className="absolute bottom-0 left-0 h-1 bg-white/30 z-50"
+          initial={{ width: 0 }}
+          animate={{ width: isHovered ? 0 : '100%' }}
+          transition={{ 
+            duration: autoPlayInterval / 1000, 
+            ease: "linear",
+            ...(isHovered && { duration: 0 })
+          }}
+          key={currentIndex}
+        />
+      )}
     </div>
   );
 };

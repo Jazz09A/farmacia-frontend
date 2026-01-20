@@ -23,6 +23,7 @@ export const HeroSection: React.FC = () => {
         >
           <HeroCarousel
             images={heroCarouselImages}
+            autoPlay={true}
             autoPlayInterval={6000}
             className="w-full h-full"
           />
