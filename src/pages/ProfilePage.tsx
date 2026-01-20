@@ -46,7 +46,7 @@ const ProfilePage: React.FC = () => {
   const [creditViewMode, setCreditViewMode] = useState<CreditViewMode>('list');
   const [selectedCreditOrder, setSelectedCreditOrder] = useState<CreditOrder | null>(null);
   const { user, loading } = useAuth();
-  const { formatPrice } = useGlobalCurrency();
+  const { formatPrice, formatPriceFromBackend } = useGlobalCurrency();
   const location = useLocation();
   
   const [promotions] = useState<UserPromotion[]>([]);
@@ -86,7 +86,7 @@ const ProfilePage: React.FC = () => {
 
   const tabs = [
     { id: 'cuenta', label: 'Mi Cuenta', icon: UserIcon, count: null },
-    { id: 'pedidos', label: 'Pedidos', icon: Package, count: null },
+    { id: 'pedidos', label: 'Facturas', icon: Package, count: null },
     // { id: 'credito', label: 'Crédito', icon: CreditIcon, count: null },
     { id: 'cotizaciones', label: 'Cotizaciones', icon: FileText, count: null },
     // { id: 'promociones', label: 'Promociones', icon: Gift, count: promotions.filter(p => !p.is_used).length },
@@ -112,7 +112,7 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-medical-gray-50 pt-32 pb-16">
+    <div className="min-h-screen bg-medical-gray-50 pt-18 pb-15">
       <div className="medical-container">
         {/* Header del perfil */}
         <motion.div
@@ -177,7 +177,7 @@ const ProfilePage: React.FC = () => {
                       userStats?.total_orders || 0
                     )}
                   </div>
-                  <div className="text-sm lg:text-base text-medical-gray-600 font-medium">Total Pedidos</div>
+                  <div className="text-sm lg:text-base text-medical-gray-600 font-medium">Total Facturas</div>
                   {statsError && (
                     <button 
                       onClick={() => window.location.reload()}
@@ -202,7 +202,7 @@ const ProfilePage: React.FC = () => {
                     ) : statsError ? (
                       <span className="text-sm text-red-500">Error</span>
                     ) : (
-                      formatPrice(userStats?.total_spent || 0)
+                      formatPriceFromBackend(userStats?.total_spent || 0)
                     )}
                   </div>
                   <div className="text-sm lg:text-base text-medical-gray-600 font-medium">Total Gastado</div>
@@ -363,7 +363,7 @@ const AccountSection: React.FC<{ user: User }> = ({ user }) => {
                  </div>
                </div>
              </div>
-             <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
+             {/* <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
                  <Shield className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-600" />
                </div>
@@ -373,7 +373,7 @@ const AccountSection: React.FC<{ user: User }> = ({ user }) => {
                    {user.representante_legal_nombre || 'No disponible'}
                  </div>
                </div>
-             </div>
+             </div> */}
              <div className="flex items-center gap-4 p-4 lg:p-5 bg-medical-gray-50 rounded-xl border border-medical-gray-100 hover:shadow-sm transition-all">
                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
                  <MapPin className="w-5 h-5 lg:w-6 lg:h-6 text-red-600" />

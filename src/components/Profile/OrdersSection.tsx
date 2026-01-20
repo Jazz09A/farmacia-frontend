@@ -12,6 +12,7 @@ import { useUserOrdersQuery, useOrderDetailsQuery } from '../../hooks/queries/us
 import { useInvoicesQuery, useInvoiceDetailsQuery } from '../../hooks/queries/useInvoiceQueries';
 import { queryKeys } from '../../hooks/queries/queryKeys';
 import type { DEMOAInvoice, DEMOAInvoiceDetails } from '../../types/invoices';
+import type { Currency } from '../../types';
 
 // Define interfaces for Order and OrderDetails to use TypeScript benefits
 interface Order {
@@ -35,7 +36,7 @@ const OrdersSection: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const { currency, formatPriceFromBackend, formatPrice } = useGlobalCurrency();
+  const { currency, formatPriceFromBackend, formatPrice, convertPrice } = useGlobalCurrency();
 
   // React Query hooks
   const { data: orders = [], isLoading: loadingOrders } = useUserOrdersQuery();
@@ -206,11 +207,20 @@ const OrdersSection: React.FC = () => {
   };
 
   // Funciones para facturas DEMOA
-  const formatInvoicePrice = (amount: string) => {
-    // Las facturas vienen en Bolívares como string
-    // Convertir a número y formatear en VES
+  const formatInvoicePrice = (amount: string, invoiceCurrency: string) => {
+    // Convertir a número
     const numAmount = parseFloat(amount);
-    return formatPrice(numAmount, 'VES');
+    
+    // Mapear la moneda del API a nuestro formato
+    // "Dolares Americanos" -> "USD"
+    // Cualquier otra cosa (Bolívares, etc.) -> "VES"
+    const originalCurrency: Currency = invoiceCurrency.toLowerCase().includes('dolar') ? 'USD' : 'VES';
+    
+    // Convertir de la moneda original a la moneda seleccionada globalmente
+    const convertedAmount = convertPrice(numAmount, originalCurrency, currency);
+    
+    // Formatear en la moneda seleccionada
+    return formatPrice(convertedAmount, currency);
   };
 
   const getInvoiceStatusText = (status: string) => {
@@ -378,11 +388,11 @@ const OrdersSection: React.FC = () => {
                         </span>
                       </div>
                       <p className="font-semibold mt-1">
-                        {formatInvoicePrice(invoice.total_amount)}
+                        {formatInvoicePrice(invoice.total_amount, invoice.currency)}
                       </p>
                       {invoice.status === 'pending' && parseFloat(invoice.balance) > 0 && (
                         <p className="text-xs text-red-600 font-medium">
-                          Saldo pendiente: {formatInvoicePrice(invoice.balance)}
+                          Saldo pendiente: {formatInvoicePrice(invoice.balance, invoice.currency)}
                         </p>
                       )}
                     </div>
