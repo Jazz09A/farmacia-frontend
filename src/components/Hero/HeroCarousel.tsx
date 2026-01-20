@@ -49,14 +49,15 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
 
   // Auto-play functionality
   useEffect(() => {
-    if (isHovered || !autoPlay) return;
+    if (!autoPlay || images.length <= 1) return;
+    if (isHovered) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
     }, autoPlayInterval);
 
     return () => clearInterval(interval);
-  }, [isHovered, autoPlayInterval, images.length, autoPlay]);
+  }, [currentIndex, isHovered, autoPlayInterval, images.length, autoPlay]);
 
   // Navigation functions
   const goToPrevious = () => {
