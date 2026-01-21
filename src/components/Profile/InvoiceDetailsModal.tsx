@@ -4,6 +4,7 @@ import { X, FileText, Calendar, DollarSign, CheckCircle, Clock } from 'lucide-re
 import { useGlobalCurrency } from '../../contexts/GlobalCurrencyContext';
 import { useNavbar } from '../../contexts/NavbarContext';
 import type { DEMOAInvoiceDetails } from '../../types/invoices';
+import type { Currency } from '../../types';
 
 interface InvoiceDetailsModalProps {
   invoice: DEMOAInvoiceDetails;
@@ -11,7 +12,7 @@ interface InvoiceDetailsModalProps {
 }
 
 const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({ invoice, onClose }) => {
-  const { formatPrice } = useGlobalCurrency();
+  const { currency, convertPrice, formatPrice } = useGlobalCurrency();
   const { hideNavbar, showNavbar } = useNavbar();
   
   // Hide navbar when modal opens and show it when modal closes
@@ -24,10 +25,14 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({ invoice, onCl
   
   if (!invoice) return null;
 
-  // Formatear precio en Bolívares
+  // Detectar moneda original de la factura (viene como string, a veces con espacios)
+  const originalCurrency: Currency = invoice.currency?.toLowerCase().trim().includes('dolar') ? 'USD' : 'VES';
+
+  // Formatear montos respetando la moneda original y la divisa global seleccionada
   const formatInvoicePrice = (amount: string) => {
     const numAmount = parseFloat(amount);
-    return formatPrice(numAmount, 'VES');
+    const convertedAmount = convertPrice(numAmount, originalCurrency, currency);
+    return formatPrice(convertedAmount, currency);
   };
 
   const getStatusBadge = (status: string) => {
