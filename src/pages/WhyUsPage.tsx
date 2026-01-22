@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, ChevronLeft, ChevronRight, Clock, Award, Star, Zap, Target, TrendingUp, Quote } from 'lucide-react';
+import { Play, ChevronLeft, ChevronRight, Clock, Star, Quote } from 'lucide-react';
 import { ContactForm } from '../components/ContactUs/ContactForm';
 
 const WhyUsPage: React.FC = () => {
@@ -57,7 +57,6 @@ const WhyUsPage: React.FC = () => {
       step: 1,
       title: 'Análisis de Necesidades',
       description: 'Evaluamos tu inventario actual y identificamos oportunidades de mejora',
-      icon: Target,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200'
@@ -66,7 +65,6 @@ const WhyUsPage: React.FC = () => {
       step: 2,
       title: 'Propuesta Personalizada',
       description: 'Diseñamos un plan de suministro adaptado a tu farmacia',
-      icon: TrendingUp,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200'
@@ -75,7 +73,6 @@ const WhyUsPage: React.FC = () => {
       step: 3,
       title: 'Implementación',
       description: 'Ejecutamos el plan con seguimiento continuo y ajustes',
-      icon: Zap,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
       borderColor: 'border-purple-200'
@@ -84,7 +81,6 @@ const WhyUsPage: React.FC = () => {
       step: 4,
       title: 'Seguimiento y Optimización',
       description: 'Monitoreamos resultados y optimizamos continuamente',
-      icon: Award,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
       borderColor: 'border-orange-200'
@@ -283,11 +279,10 @@ const WhyUsPage: React.FC = () => {
                 whileHover={{ y: -5 }}
               >
                 <div className="text-center">
-                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${step.bgColor} ${step.borderColor} border-2 mb-6`}>
-                    <step.icon className={`w-8 h-8 ${step.color}`} />
-                  </div>
-                  <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${step.color} bg-white border-2 ${step.borderColor} text-sm font-bold mb-4`}>
-                    {step.step}
+                  <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full ${step.bgColor} ${step.borderColor} border-2 mb-6`}>
+                    <span className={`text-4xl font-bold ${step.color}`}>
+                      {step.step}
+                    </span>
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-4">{step.title}</h3>
                   <p className="text-gray-600 leading-relaxed">{step.description}</p>
