@@ -81,68 +81,11 @@ export const WhyUsSection: React.FC = () => {
         </motion.div>
 
         {/* Video and Content Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-          {/* Video Section - Left Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-start">
+          {/* Content Section - Left Side */}
           <motion.div
-            className="relative lg:sticky lg:top-32 lg:flex lg:items-center lg:justify-center px-4"
+            className="lg:col-span-2 space-y-6"
             initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl w-full max-w-md mx-auto">
-              {/* Video Placeholder */}
-              <div className="relative w-full h-72 lg:h-80 flex items-center justify-center">
-                {/* Background Image */}
-                <img 
-                  src="/equipo/HenryRojo.webp" 
-                  alt="Henry Rojo - Grupo Drozainka C.A"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                
-                {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-medical-blue-900/40 to-medical-blue-800/60" />
-                
-                {/* Play Button Overlay */}
-                <motion.div
-                  className="absolute inset-0 flex items-center justify-center cursor-pointer group"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:bg-white transition-colors duration-300">
-                    <svg
-                      className="w-6 h-6 text-medical-blue-600 ml-1"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </motion.div>
-                
-                {/* Video Thumbnail/Preview Text */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                  <div className="text-white">
-                    <h3 className="text-lg font-semibold mb-1">Conoce Nuestra Historia</h3>
-                    <p className="text-white/80 text-sm">Video corporativo - 2:30 min</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Video Info Badge */}
-              <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1">
-                <div className="flex items-center space-x-1">
-                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs font-medium text-gray-700">En Vivo</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Content Section - Right Side */}
-          <motion.div
-            className="space-y-6"
-            initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
             viewport={{ once: true }}
@@ -184,7 +127,7 @@ export const WhyUsSection: React.FC = () => {
               transition={{ duration: 0.6, delay: 1.0 }}
               viewport={{ once: true }}
             >
-              {/* Urgency Message */}
+              {/* Urgency Message
               <div className="bg-gradient-to-r from-medical-blue-50 to-medical-green-50 border border-medical-blue-200 rounded-xl p-4">
                 <div className="text-center">
                   <h4 className="text-lg font-bold text-gray-900 mb-2">
@@ -195,10 +138,10 @@ export const WhyUsSection: React.FC = () => {
                     aumentar tus ventas desde el primer día.
                   </p>
                 </div>
-              </div>
+              </div> */}
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-3">
+              {/* <div className="flex flex-col gap-3">
                 <Link to="/why-us">
                   <motion.button
                     className="btn-medical-primary w-full px-6 py-3 text-base font-semibold shadow-lg hover:shadow-xl"
@@ -217,7 +160,7 @@ export const WhyUsSection: React.FC = () => {
                     📋 Ver Catálogo Completo
                   </motion.button>
                 </Link>
-              </div>
+              </div> */}
 
               {/* Trust Indicators */}
               <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-500">
@@ -235,6 +178,63 @@ export const WhyUsSection: React.FC = () => {
                 </div>
               </div>
             </motion.div>
+          </motion.div>
+
+          {/* Video Section - Right Side */}
+          <motion.div
+            className="lg:col-span-3 relative lg:sticky lg:top-32"
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl w-full">
+              {/* Video Placeholder */}
+              <div className="relative w-full aspect-video flex items-center justify-center">
+                {/* Background Image */}
+                <img 
+                  src="/equipo/HenryRojo.webp" 
+                  alt="Henry Rojo - Grupo Drozainka C.A"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                
+                {/* Overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-medical-blue-900/40 to-medical-blue-800/60" />
+                
+                {/* Play Button Overlay */}
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center cursor-pointer group"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:bg-white transition-colors duration-300">
+                    <svg
+                      className="w-8 h-8 text-medical-blue-600 ml-1"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </motion.div>
+                
+                {/* Video Thumbnail/Preview Text */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
+                  <div className="text-white">
+                    <h3 className="text-xl font-semibold mb-1">Conoce Nuestra Historia</h3>
+                    <p className="text-white/80 text-base">Video corporativo - 2:30 min</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Video Info Badge */}
+              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                <div className="flex items-center space-x-1.5">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-gray-700">En Vivo</span>
+                </div>
+              </div>
+            </div>
           </motion.div>
         </div>
       </div>
