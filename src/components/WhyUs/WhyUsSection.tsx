@@ -102,9 +102,9 @@ export const WhyUsSection: React.FC = () => {
                   viewport={{ once: true }}
                   whileHover={{ y: -3, scale: 1.01 }}
                 >
-                  <div className="flex items-start space-x-4">
-                    <div className={`p-2.5 rounded-lg ${feature.bgColor} ${feature.borderColor} border group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
-                      <feature.icon className={`w-5 h-5 ${feature.color}`} />
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-4 rounded-lg ${feature.bgColor} ${feature.borderColor} border group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
+                      <feature.icon className={`w-8 h-8 ${feature.color}`} />
                     </div>
                     <div className="flex-1">
                       <h3 className="text-base font-semibold text-gray-900 mb-1.5">
