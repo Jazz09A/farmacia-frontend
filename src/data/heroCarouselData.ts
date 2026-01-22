@@ -22,4 +22,25 @@ export const heroCarouselImages: CarouselImage[] = [
     srcDesktop: '/3.webp',
     alt: 'Banner promocional 3',
   },
+  {
+    id: 'banner-4',
+    src: '/Pc4.png', 
+    // srcMobile: '/Celular4.png',
+    srcDesktop: '/4.webp',
+    alt: 'Banner promocional 4',
+  },
+  {
+    id: 'banner-5',
+    src: '/Pc5.png', 
+    // srcMobile: '/Celular5.png',
+    srcDesktop: '/5.webp',
+    alt: 'Banner promocional 5',
+  },  
+  {
+    id: 'banner-6',
+    src: '/Pc6.png', 
+    // srcMobile: '/Celular6.png',
+    srcDesktop: '/6.webp',
+    alt: 'Banner promocional 6',
+  },
 ];

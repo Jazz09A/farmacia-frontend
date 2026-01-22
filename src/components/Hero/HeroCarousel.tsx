@@ -27,10 +27,28 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detectar si es dispositivo móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Filtrar imágenes según el dispositivo
+  const filteredImages = isMobile 
+    ? images.filter(img => img.srcMobile) 
+    : images;
 
   // Preload all carousel images for instant transitions
   useEffect(() => {
-    images.forEach((image) => {
+    filteredImages.forEach((image) => {
       // Preload mobile image if available
       if (image.srcMobile) {
         const imgMobile = new Image();
@@ -45,30 +63,30 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
       const img = new Image();
       img.src = image.src;
     });
-  }, [images]);
+  }, [filteredImages]);
 
-  // Auto-play functionality
+  // Auto-play functionality - Removido currentIndex de dependencias para tiempo consistente
   useEffect(() => {
-    if (!autoPlay || images.length <= 1) return;
+    if (!autoPlay || filteredImages.length <= 1) return;
     if (isHovered) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % filteredImages.length);
     }, autoPlayInterval);
 
     return () => clearInterval(interval);
-  }, [currentIndex, isHovered, autoPlayInterval, images.length, autoPlay]);
+  }, [isHovered, autoPlayInterval, filteredImages.length, autoPlay]);
 
   // Navigation functions
   const goToPrevious = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + filteredImages.length) % filteredImages.length);
   };
 
   const goToNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % filteredImages.length);
   };
 
-  if (!images.length) return null;
+  if (!filteredImages.length) return null;
 
   return (
     <div 
@@ -91,23 +109,23 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
             {/* object-cover para que la imagen llene todo el espacio sin espacios vacíos */}
             <picture className="absolute inset-0 w-full h-full">
               {/* Desktop image - shown on screens 768px and wider */}
-              {images[currentIndex].srcDesktop && (
+              {filteredImages[currentIndex].srcDesktop && (
                 <source
                   media="(min-width: 768px)"
-                  srcSet={images[currentIndex].srcDesktop}
+                  srcSet={filteredImages[currentIndex].srcDesktop}
                 />
               )}
               {/* Mobile image - shown on screens smaller than 768px */}
-              {images[currentIndex].srcMobile && (
+              {filteredImages[currentIndex].srcMobile && (
                 <source
                   media="(max-width: 767px)"
-                  srcSet={images[currentIndex].srcMobile}
+                  srcSet={filteredImages[currentIndex].srcMobile}
                 />
               )}
               {/* Fallback image */}
               <img
-                src={images[currentIndex].src}
-                alt={images[currentIndex].alt}
+                src={filteredImages[currentIndex].src}
+                alt={filteredImages[currentIndex].alt}
                 className="w-full h-full object-cover object-center"
                 loading="eager"
                 fetchpriority={currentIndex === 0 ? "high" : "auto"}
@@ -122,21 +140,21 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
         </AnimatePresence>
 
         {/* Image Info Overlay */}
-        {(images[currentIndex].title || images[currentIndex].description) && (
+        {(filteredImages[currentIndex].title || filteredImages[currentIndex].description) && (
           <motion.div
             className="absolute bottom-8 left-4 right-4 sm:left-8 sm:right-8 text-white z-10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            {images[currentIndex].title && (
+            {filteredImages[currentIndex].title && (
               <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
-                {images[currentIndex].title}
+                {filteredImages[currentIndex].title}
               </h3>
             )}
-            {images[currentIndex].description && (
+            {filteredImages[currentIndex].description && (
               <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl">
-                {images[currentIndex].description}
+                {filteredImages[currentIndex].description}
               </p>
             )}
           </motion.div>
@@ -144,7 +162,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
       </div>
 
       {/* Navigation Arrows - Only show if more than one image */}
-      {images.length > 1 && (
+      {filteredImages.length > 1 && (
         <>
           {/* Previous Button */}
           <button
@@ -167,7 +185,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
       )}
 
       {/* Progress Bar */}
-      {autoPlay && images.length > 1 && (
+      {autoPlay && filteredImages.length > 1 && (
         <motion.div
           className="absolute bottom-0 left-0 h-1 bg-white/30 z-50"
           initial={{ width: 0 }}
