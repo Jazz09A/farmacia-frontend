@@ -218,9 +218,9 @@ export const ContactUsSection: React.FC = () => {
                   <motion.button 
                     type="submit" 
                     disabled={isSubmitting}
-                    className="btn-medical-primary disabled:opacity-50 disabled:cursor-not-allowed" 
-                    whileHover={{ scale: isSubmitting ? 1 : 1.05 }} 
-                    whileTap={{ scale: isSubmitting ? 1 : 0.95 }}
+                    className="w-full bg-gradient-to-r from-medical-blue-600 to-medical-blue-700 hover:from-medical-blue-700 hover:to-medical-blue-800 text-white font-semibold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" 
+                    whileHover={{ scale: isSubmitting ? 1 : 1.02 }} 
+                    whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center space-x-2">

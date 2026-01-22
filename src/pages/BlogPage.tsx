@@ -379,7 +379,7 @@ const BlogPage: React.FC = () => {
 
               {/* Newsletter Signup */}
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
-                <h3 className="text-lg font-semibold mb-2">Suscríbete a nuestro boletín</h3>
+                <h3 className="text-lg font-semibold mb-2">Suscríbete a nuestra newsletter</h3>
                 <p className="text-blue-100 text-sm mb-4">
                   Recibe los últimos artículos y consejos de salud directamente en tu email.
                 </p>

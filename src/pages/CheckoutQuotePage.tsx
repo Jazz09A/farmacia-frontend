@@ -1209,7 +1209,7 @@ const CheckoutQuotePage: React.FC = () => {
                 (validationResult && !validationResult.valido) ||
                 !validationResult
               }
-              className="w-full inline-flex items-center justify-center gap-3 py-4 rounded-2xl bg-medical-primary text-white font-semibold text-lg shadow-xl hover:bg-medical-primary-dark transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-medical-blue-600 to-medical-blue-700 hover:from-medical-blue-700 hover:to-medical-blue-800 text-white font-semibold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none inline-flex items-center justify-center gap-3"
             >
               {isSubmitting ? (
                 <>

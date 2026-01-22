@@ -979,7 +979,7 @@ const CheckoutPage: React.FC = () => {
               <button 
                 onClick={handleConfirmOrder} 
                 disabled={isConfirming}
-                className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-green-500 hover:bg-green-600 disabled:bg-green-400 text-white rounded-xl transition-all disabled:cursor-not-allowed font-bold shadow-xl hover:shadow-2xl"
+                className="w-full bg-gradient-to-r from-medical-blue-600 to-medical-blue-700 hover:from-medical-blue-700 hover:to-medical-blue-800 text-white font-semibold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
               >
                 {isConfirming ? (
                   <>
