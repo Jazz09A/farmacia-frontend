@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Clock, Truck, Award, Users, Heart, MapPin } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Shield, Clock, Award, MapPin } from 'lucide-react';
 
 export const WhyUsSection: React.FC = () => {
   const features = [
@@ -11,30 +10,76 @@ export const WhyUsSection: React.FC = () => {
       description: 'Más de 15 años de experiencia especializada en la distribución de nutracéuticos y productos farmacéuticos de alta calidad.',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200'
+      borderColor: 'border-blue-200',
+      hoverGlow: 'hover:shadow-blue-100',
+      gradientColor: 'from-blue-500 to-blue-600',
+      stat: '15+ años',
     },
     {
       icon: MapPin,
       title: 'Atención a todos los estados del país',
       description: 'Cobertura nacional con logística especializada que garantiza entregas puntuales en cualquier rincón de Venezuela.',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-200'
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-50',
+      borderColor: 'border-emerald-200',
+      hoverGlow: 'hover:shadow-emerald-100',
+      gradientColor: 'from-emerald-500 to-emerald-600',
+      stat: '24 estados',
     },
     {
       icon: Clock,
       title: 'Despachos en tiempo récord',
       description: 'Sistema de distribución optimizado que permite entregas en 24-48 horas en las principales ciudades del país.',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-200'
+      color: 'text-violet-600',
+      bgColor: 'bg-violet-50',
+      borderColor: 'border-violet-200',
+      hoverGlow: 'hover:shadow-violet-100',
+      gradientColor: 'from-violet-500 to-violet-600',
+      stat: '24-48 hrs',
     },
-    
+    // {
+    //   icon: Truck,
+    //   title: 'Distribución farmacéutica certificada',
+    //   description: 'Cadena de frío y protocolos BPA (Buenas Prácticas de Almacenamiento) garantizan la integridad de cada producto.',
+    //   color: 'text-amber-600',
+    //   bgColor: 'bg-amber-50',
+    //   borderColor: 'border-amber-200',
+    //   hoverGlow: 'hover:shadow-amber-100',
+    //   stat: 'BPA cert.',
+    // },
+    // {
+    //   icon: Users,
+    //   title: 'Red de más de 1.200 farmacias aliadas',
+    //   description: 'Somos el proveedor de confianza de miles de farmacias en Venezuela con una relación comercial sólida y duradera.',
+    //   color: 'text-rose-600',
+    //   bgColor: 'bg-rose-50',
+    //   borderColor: 'border-rose-200',
+    //   hoverGlow: 'hover:shadow-rose-100',
+    //   stat: '1.200+',
+    // },
+    // {
+    //   icon: CheckCircle,
+    //   title: 'Garantía de calidad en cada producto',
+    //   description: 'Todos nuestros productos cuentan con registro sanitario y pasan rigurosos controles de calidad antes de su despacho.',
+    //   color: 'text-cyan-600',
+    //   bgColor: 'bg-cyan-50',
+    //   borderColor: 'border-cyan-200',
+    //   hoverGlow: 'hover:shadow-cyan-100',
+    //   stat: '100% cert.',
+    // },
+  ];
+
+  const trustIndicators = [
+    { label: 'Registro gratuito' },
+    { label: 'Sin compromisos' },
+    { label: 'Soporte 24/7' },
+    { label: 'Entregas garantizadas' },
   ];
 
   return (
     <section className="py-24 bg-gradient-to-br from-gray-50 to-blue-50">
       <div className="medical-container">
+
         {/* Section Header - Centered */}
         <motion.div
           className="text-center mb-16"
@@ -53,7 +98,7 @@ export const WhyUsSection: React.FC = () => {
             <Shield className="w-5 h-5" />
             <span>¿Por qué elegirnos?</span>
           </motion.div>
-          
+
           <motion.h2
             className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6"
             initial={{ opacity: 0, y: 20 }}
@@ -66,7 +111,7 @@ export const WhyUsSection: React.FC = () => {
               distribución farmacéutica
             </span>
           </motion.h2>
-          
+
           <motion.p
             className="text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
@@ -74,169 +119,69 @@ export const WhyUsSection: React.FC = () => {
             transition={{ duration: 0.8, delay: 0.4 }}
             viewport={{ once: true }}
           >
-            Con más de 15 años de experiencia, somos el distribuidor farmacéutico 
-            más confiable de Venezuela, comprometidos con la excelencia y la 
+            Con más de 15 años de experiencia, somos el distribuidor farmacéutico
+            más confiable de Venezuela, comprometidos con la excelencia y la
             innovación en cada entrega.
           </motion.p>
         </motion.div>
 
-        {/* Video and Content Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-start">
-          {/* Content Section - Left Side */}
-          <motion.div
-            className="lg:col-span-2 space-y-6"
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            viewport={{ once: true }}
-          >
-            {/* Features Grid */}
-            <div className="grid grid-cols-1 gap-4">
-              {features.map((feature, index) => (
-                <motion.div
-                  key={index}
-                  className={`p-5 rounded-xl border-2 ${feature.bgColor} ${feature.borderColor} hover:shadow-lg transition-all duration-300 group`}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -3, scale: 1.01 }}
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-4 rounded-lg ${feature.bgColor} ${feature.borderColor} border group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
-                      <feature.icon className={`w-8 h-8 ${feature.color}`} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-base font-semibold text-gray-900 mb-1.5">
-                        {feature.title}
-                      </h3>
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Enhanced Call to Action */}
+        {/* Feature Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-14">
+          {features.map((feature, index) => (
             <motion.div
-              className="pt-6 space-y-4"
-              initial={{ opacity: 0, y: 20 }}
+              key={index}
+              className={`group relative p-7 rounded-2xl border-2 bg-white ${feature.borderColor} ${feature.hoverGlow} hover:shadow-xl transition-all duration-300 overflow-hidden`}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
               viewport={{ once: true }}
+              whileHover={{ y: -6, scale: 1.02 }}
             >
-              {/* Urgency Message
-              <div className="bg-gradient-to-r from-medical-blue-50 to-medical-green-50 border border-medical-blue-200 rounded-xl p-4">
-                <div className="text-center">
-                  <h4 className="text-lg font-bold text-gray-900 mb-2">
-                    🚀 ¡Únete a las 1200+ farmacias exitosas!
-                  </h4>
-                  <p className="text-gray-600 text-sm">
-                    Obtén acceso inmediato a nuestro catálogo completo y comienza a 
-                    aumentar tus ventas desde el primer día.
-                  </p>
-                </div>
-              </div> */}
+              {/* Subtle background fill on hover */}
+              <div className={`absolute inset-0 ${feature.bgColor} opacity-0 group-hover:opacity-40 transition-opacity duration-300 pointer-events-none`} />
 
-              {/* Action Buttons */}
-              {/* <div className="flex flex-col gap-3">
-                <Link to="/why-us">
-                  <motion.button
-                    className="btn-medical-primary w-full px-6 py-3 text-base font-semibold shadow-lg hover:shadow-xl"
-                    whileHover={{ scale: 1.02, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    🎯 Conoce Más Sobre Nosotros
-                  </motion.button>
-                </Link>
-                <Link to="/catalog">
-                  <motion.button
-                    className="btn-medical-secondary w-full px-6 py-3 text-base font-semibold border-2 hover:border-medical-blue-300"
-                    whileHover={{ scale: 1.02, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    📋 Ver Catálogo Completo
-                  </motion.button>
-                </Link>
-              </div> */}
-
-              {/* Trust Indicators */}
-              <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-500">
-                <div className="flex items-center space-x-1">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                  <span>✓ Registro gratuito</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                  <span>✓ Sin compromisos</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                  <span>✓ Soporte 24/7</span>
-                </div>
+              {/* Stat badge */}
+              <div className={`absolute top-5 right-5 text-xs font-bold px-2.5 py-1 rounded-full ${feature.bgColor} ${feature.color} border ${feature.borderColor}`}>
+                {feature.stat}
               </div>
+
+              <div className="relative z-10 text-center">
+                {/* Icon */}
+                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r ${feature.gradientColor} text-white mb-6 group-hover:scale-110 transition-transform duration-300 shadow-md`}>
+                  <feature.icon className="w-8 h-8 text-white" />
+                </div>
+
+                {/* Text */}
+                <h3 className="text-xl font-bold text-gray-900 mb-3 leading-snug">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 text-base leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+
+              {/* Bottom accent line */}
+              <div className={`absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-500 rounded-b-2xl bg-gradient-to-r from-medical-blue-400 to-medical-green-400`} />
             </motion.div>
-          </motion.div>
-
-          {/* Video Section - Right Side */}
-          <motion.div
-            className="lg:col-span-3 relative lg:sticky lg:top-32"
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl w-full">
-              {/* Video Placeholder */}
-              <div className="relative w-full aspect-video flex items-center justify-center">
-                {/* Background Image */}
-                <img 
-                  src="/equipo/HenryRojo.webp" 
-                  alt="Henry Rojo - Grupo Drozainka C.A"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                
-                {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-medical-blue-900/40 to-medical-blue-800/60" />
-                
-                {/* Play Button Overlay */}
-                <motion.div
-                  className="absolute inset-0 flex items-center justify-center cursor-pointer group"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:bg-white transition-colors duration-300">
-                    <svg
-                      className="w-8 h-8 text-medical-blue-600 ml-1"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </motion.div>
-                
-                {/* Video Thumbnail/Preview Text */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
-                  <div className="text-white">
-                    <h3 className="text-xl font-semibold mb-1">Conoce Nuestra Historia</h3>
-                    <p className="text-white/80 text-base">Video corporativo - 2:30 min</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Video Info Badge */}
-              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5">
-                <div className="flex items-center space-x-1.5">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-gray-700">En Vivo</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+          ))}
         </div>
+
+        {/* Trust Indicators Bar */}
+        <motion.div
+          className="flex flex-wrap items-center justify-center gap-6"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+          viewport={{ once: true }}
+        >
+          {trustIndicators.map((item, i) => (
+            <div key={i} className="flex items-center space-x-2 text-sm text-gray-500">
+              <div className="w-2 h-2 bg-medical-green-500 rounded-full flex-shrink-0" />
+              <span className="font-medium">✓ {item.label}</span>
+            </div>
+          ))}
+        </motion.div>
+
       </div>
     </section>
   );
