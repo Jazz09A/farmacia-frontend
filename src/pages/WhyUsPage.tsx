@@ -397,7 +397,7 @@ const WhyUsPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Team Section */}
+      {/* Team Section
       <section className="py-24 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="medical-container">
           <motion.div
@@ -447,7 +447,7 @@ const WhyUsPage: React.FC = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
       <section className="py-20 bg-white">
