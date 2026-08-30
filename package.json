@@ -2,22 +2,18 @@
   "name": "grupo-drozainka-farmacia",
   "private": true,
   "version": "0.0.0",
+  "description": "Storefront Grupo Drozainka — Fase 1: checkout por cotizaciones; crédito retirado del FE. Arquitectura: src/architecture/ADR_001_frontend_phase1.ts",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 vite build",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@cloudinary/react": "^1.14.3",
-    "@cloudinary/url-gen": "^1.21.0",
     "@emailjs/browser": "^4.4.1",
-    "@headlessui/react": "^2.2.6",
     "@tanstack/react-query": "^5.59.16",
-    "@types/react-router-dom": "^5.3.3",
-    "axios": "^1.10.0",
-    "cloudinary": "^2.7.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^10.18.0",
     "lucide-react": "^0.344.0",
@@ -30,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",
+    "@playwright/test": "^1.62.1",
     "@tanstack/react-query-devtools": "^5.59.16",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",

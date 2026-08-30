@@ -228,7 +228,7 @@ export const BrandsSection: React.FC = () => {
   }, [carouselWidth]);
 
   return (
-    <section className="py-16 bg-white">
+    <section data-testid="brands-section" className="py-16 bg-white">
       {/* Header dentro del contenedor limitado */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <motion.div

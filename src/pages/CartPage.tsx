@@ -125,7 +125,7 @@ const CartPage: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-medical-gray-50 pt-24 text-center px-4">
         <ShoppingCart className="w-24 h-24 text-medical-gray-300 mb-6" />
-        <h1 className="text-3xl font-bold text-medical-gray-800 mb-2">Tu carrito está vacío</h1>
+        <h1 data-testid="empty-cart-message" className="text-3xl font-bold text-medical-gray-800 mb-2">Tu carrito está vacío</h1>
         <p className="text-medical-gray-600 mb-8">
           Parece que no has añadido nada a tu carrito. ¡Explora nuestro catálogo farmacéutico!
         </p>
@@ -236,6 +236,7 @@ const CartPage: React.FC = () => {
               return (
                 <motion.div
                   key={item.co_art}
+                  data-testid="cart-item"
                   className={`flex items-start space-x-6 bg-white p-6 rounded-2xl shadow-soft ${
                     hasError ? 'border-2 border-red-200 bg-red-50/30' : ''
                   }`}
@@ -280,7 +281,7 @@ const CartPage: React.FC = () => {
                       >
                         <Minus className="w-4 h-4" />
                       </button>
-                      <span className="px-3 text-md font-semibold">{item.cantidad}</span>
+                      <span data-testid="quantity-input" className="px-3 text-md font-semibold">{item.cantidad}</span>
                       <button 
                         onClick={() => handleIncreaseQuantity(item.co_art, item.cantidad)} 
                         className="p-2 text-medical-gray-500 hover:text-medical-primary transition-colors"
@@ -314,6 +315,7 @@ const CartPage: React.FC = () => {
                       </>
                     )}
                     <button 
+                      data-testid="remove-item-button"
                       onClick={() => handleRemoveItem(item.co_art)} 
                       className="text-medical-gray-400 hover:text-red-500 mt-4 transition-colors"
                       title="Eliminar producto del carrito"
@@ -357,7 +359,7 @@ const CartPage: React.FC = () => {
                     </div>
                     <div className="flex justify-between font-bold text-xl text-medical-gray-900 border-t pt-4 mt-4">
                       <span>Total</span>
-                      <span>{formatPriceFromBackend(validationResult.totales.neto, currency)}</span>
+                      <span data-testid="cart-total">{formatPriceFromBackend(validationResult.totales.neto, currency)}</span>
                     </div>
                     <p className="text-xs text-medical-gray-500 italic">
                       * Precios confirmados con la última validación
@@ -373,7 +375,7 @@ const CartPage: React.FC = () => {
                     </div>
                     <div className="flex justify-between font-bold text-xl text-medical-gray-900 border-t pt-4 mt-4">
                       <span>Total estimado</span>
-                      <span>{formatPriceFromBackend(localTotals.total.toFixed(2), currency)}</span>
+                      <span data-testid="cart-total">{formatPriceFromBackend(localTotals.total.toFixed(2), currency)}</span>
                     </div>
                     <p className="text-xs text-medical-gray-500 italic">
                       * Los precios se validarán al generar la cotización
@@ -384,6 +386,7 @@ const CartPage: React.FC = () => {
 
               <div className="mt-8 space-y-4">
                 <Link
+                  data-testid="checkout-button"
                   to="/checkout/quote"
                   className={`w-full text-center block px-6 py-4 bg-medical-primary text-white font-semibold rounded-2xl shadow-medical hover:bg-medical-primary-dark transition-all ${
                     validationResult && !validationResult.valido
@@ -401,6 +404,7 @@ const CartPage: React.FC = () => {
                     : 'Generar Cotización'}
                 </Link>
                 <Link
+                  data-testid="continue-shopping-button"
                   to="/catalog"
                   className="w-full flex items-center justify-center gap-2 text-center px-6 py-3 text-medical-primary font-semibold transition-all"
                 >

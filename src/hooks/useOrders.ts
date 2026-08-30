@@ -50,57 +50,15 @@ export const useOrders = (): OrdersHookState => {
   const isLoadingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // 📊 Función para cargar órdenes con protección contra duplicados
+  // 📊 Órdenes legacy: /admin/orders no montado — usar useAdminQuotesQuery / AdminOrdersPage
   const refreshOrders = useCallback(async () => {
-    if (!isAuthenticated || !user) {
-      setOrders([]);
-      setLoading(false);
-      return;
-    }
-
-    // 🚫 Prevenir llamadas duplicadas
-    if (isLoadingRef.current) {
-      return;
-    }
-
-    // 🛑 Cancelar request anterior si existe
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // 🔄 Nuevo controller para esta request
-    abortControllerRef.current = new AbortController();
-    isLoadingRef.current = true;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const params = {
-        page: currentPage,
-        limit: filters.limit,
-        status: filters.status,
-        search: filters.search,
-        sort_by: filters.sortBy,
-        sort_order: filters.sortOrder
-      };
-
-      const response = await adminService.getOrders(params);
-      setOrders(response.orders);
-      setTotal(response.total);
-      setPages(response.pages);
-    } catch (err: any) {
-      // No mostrar error si fue cancelado
-      if (err.name !== 'AbortError') {
-        console.error('Error loading orders:', err);
-        setError(err.message || 'Error cargando órdenes');
-      }
-    } finally {
-      setLoading(false);
-      isLoadingRef.current = false;
-      abortControllerRef.current = null;
-    }
-  }, [isAuthenticated, user, currentPage, filters]);
+    setOrders([]);
+    setTotal(0);
+    setPages(0);
+    setError('Admin Orders API no disponible. Use cotizaciones (/admin/quotes).');
+    setLoading(false);
+    isLoadingRef.current = false;
+  }, []);
 
   // 🔄 Actualizar estado de orden con actualización optimista
   const updateOrderStatus = useCallback(async (orderId: string, newStatus: string) => {

@@ -7,7 +7,7 @@ export const HeroSection: React.FC = () => {
   const navbarHeight = useNavbarHeight();
 
   return (
-    <div className="relative w-full">
+    <div data-testid="hero-section" className="relative w-full">
       {/* Contenedor principal con altura completa de pantalla */}
       {/* La imagen debe comenzar justo debajo del navbar para verse completa */}
       <div className="min-h-screen flex items-center justify-center overflow-hidden relative">

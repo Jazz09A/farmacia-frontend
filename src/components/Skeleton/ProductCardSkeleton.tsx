@@ -1,9 +1,9 @@
 import React from 'react';
 import { SkeletonBase } from './SkeletonBase';
 
-export const ProductCardSkeleton: React.FC = () => {
+export const ProductCardSkeleton: React.FC<{ 'data-testid'?: string }> = ({ 'data-testid': testId }) => {
   return (
-    <div className="group relative bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-6 flex flex-col">
+    <div data-testid={testId} className="group relative bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-6 flex flex-col">
       {/* Image skeleton */}
       <div className="relative overflow-hidden rounded-xl mb-4">
         <SkeletonBase height="12rem" rounded="xl" />

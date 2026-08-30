@@ -56,8 +56,8 @@ export interface UpdateCategoryData {
 }
 
 class BlogService {
-  private publicBaseUrl = `api/v1/public/blog`;
-  private adminBaseUrl = `api/v1/admin/blog`;
+  private publicBaseUrl = `/api/v1/public/blog`;
+  private adminBaseUrl = `/api/v1/admin/blog`;
 
   // ========== PUBLIC METHODS (No authentication required) ==========
 

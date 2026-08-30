@@ -9,17 +9,16 @@ import {
   CartWithDiscounts, 
   ApplicableDiscountResponse 
 } from '../types/discounts';
+import { AUTH_STORAGE_KEYS, getApiOrigin, resolveApiUrl } from './api/apiClient';
 
 class AuthService {
-  // En desarrollo usamos rutas relativas para aprovechar el proxy de Vite
-  // En producción usamos la URL completa
-  private isDevelopment = import.meta.env.DEV;
-  private url = this.isDevelopment ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:8000');
+  // Origen vía apiClient: '' en DEV (proxy Vite), VITE_API_URL en PROD
+  private url = getApiOrigin();
   private baseUrl = '/api/v1/auth';
-  private tokenKey = 'auth_token';
-  private refreshTokenKey = 'refresh_token';
-  private tokenExpiryKey = 'token_expiry';
-  private userKey = 'auth_user';
+  private tokenKey = AUTH_STORAGE_KEYS.token;
+  private refreshTokenKey = AUTH_STORAGE_KEYS.refreshToken;
+  private tokenExpiryKey = AUTH_STORAGE_KEYS.tokenExpiry;
+  private userKey = AUTH_STORAGE_KEYS.user;
   private cartUrl = '/api/v1/user/cart';
   private mePromise: Promise<User | null> | null = null;
   private isRequestInProgress = false;
@@ -490,8 +489,7 @@ class AuthService {
       headers['Content-Type' as keyof HeadersInit] = 'application/json';
     }
 
-    const isAbsoluteUrl = url.startsWith('http://') || url.startsWith('https://');
-    const fullUrl = isAbsoluteUrl ? url : `${this.url}${url}`;
+    const fullUrl = resolveApiUrl(url);
     
     const { headers: _, ...restOptions } = options;
     return fetch(fullUrl, { ...restOptions, headers });
@@ -670,44 +668,25 @@ class AuthService {
     return await response.json();
   }
 
-  async createOrder(orderData: {
+  async createOrder(_orderData: {
     shipping_address_id: string;
     payment_method: string;
     payment_currency: 'USD' | 'VES';
     payment_capture_url: string;
     customer_notes: string;
-  }): Promise<any> {
-    // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
-    const response = await this.authenticatedFetch(`/api/v1/user/orders`, {
-      method: 'POST',
-      body: JSON.stringify(orderData),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Error creating order');
-    }
-    
-    return await response.json();
+  }): Promise<never> {
+    // Orders API no montada en backend — flujo de negocio = cotizaciones
+    throw new Error('El flujo de pedidos directos no está disponible. Use cotización.');
   }
 
   async getUserOrders(): Promise<any[]> {
-    // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
-    const response = await this.authenticatedFetch(`/api/v1/user/orders`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch user orders');
-    }
-    return await response.json();
+    // Orders API no montada — no hacer fetch a /api/v1/user/orders
+    return [];
   }
 
-  async getOrderDetails(orderId: string): Promise<Order> {
-    // FIX: Pass relative path to authenticatedFetch to avoid URL duplication.
-    const response = await this.authenticatedFetch(`/api/v1/user/orders/${orderId}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch order details');
-    }
-    const data = await response.json();
-    return data;
+  async getOrderDetails(_orderId: string): Promise<Order> {
+    // Orders API no montada — no hacer fetch a /api/v1/user/orders/{id}
+    throw new Error('Orders API no disponible. El seguimiento de pedidos no está habilitado.');
   }
 
   async getUserAddresses(_options?: {
@@ -746,18 +725,9 @@ class AuthService {
     }
   }
 
-  async createUserAddress(addressData: any): Promise<any> {
-    const response = await this.authenticatedFetch('/api/v1/user/addresses', {
-      method: 'POST',
-      body: JSON.stringify(addressData),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Error creating address');
-    }
-    
-    return await response.json();
+  async createUserAddress(_addressData: any): Promise<never> {
+    // /api/v1/user/addresses está comentado en backend — usar customer-addresses en checkout de cotización
+    throw new Error('API de direcciones legacy no disponible. Use direcciones de cliente (customer-addresses).');
   }
 
   async resendVerificationEmail(): Promise<any> {
@@ -859,19 +829,11 @@ class AuthService {
   }
 
   /**
-   * Obtiene el descuento aplicable por cantidad (endpoint público)
+   * Descuento por cantidad: endpoint público no montado en backend.
+   * Degrada a "sin descuento" sin hacer fetch.
    */
-  async getApplicableQuantityDiscount(quantity: number): Promise<ApplicableDiscountResponse | null> {
-    try {
-      const response = await fetch(`${this.url}/api/v1/public/quantity-discounts/applicable?total_quantity=${quantity}`);
-      if (!response.ok) {
-        return null;
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching applicable discount:', error);
-      return null;
-    }
+  async getApplicableQuantityDiscount(_quantity: number): Promise<ApplicableDiscountResponse | null> {
+    return null;
   }
 }
 

@@ -41,18 +41,22 @@ export const useCartWithDiscountsQuery = (enabled: boolean = true) => {
 export const useQuantityDiscountQuery = (quantity: number, enabled: boolean) => {
   return useQuery<QuantityDiscount | null>({
     queryKey: queryKeys.auth.quantityDiscount(quantity),
+    // Stub: AuthService retorna null sin fetch (quantity-discounts no montado)
     queryFn: () => authService.getApplicableQuantityDiscount(quantity),
     enabled: enabled && quantity > 0,
-    staleTime: 2 * 60 * 1000,
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 };
 
 export const useUserOrdersQuery = () => {
   return useQuery<Order[]>({
     queryKey: queryKeys.auth.orders,
+    // Stub: AuthService retorna [] sin fetch (orders API no montada)
     queryFn: () => authService.getUserOrders(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
     refetchOnWindowFocus: false,
+    retry: false,
   });
 };
 
@@ -60,8 +64,10 @@ export const useOrderDetailsQuery = (orderId: string, enabled: boolean = true) =
   return useQuery<Order>({
     queryKey: queryKeys.auth.order(orderId),
     queryFn: () => authService.getOrderDetails(orderId),
-    enabled: enabled && !!orderId,
-    staleTime: 5 * 60 * 1000,
+    // Orders API no disponible — no disparar fetch
+    enabled: false && enabled && !!orderId,
+    staleTime: Infinity,
+    retry: false,
   });
 };
 
@@ -248,7 +254,7 @@ export const useCreateOrderMutation = () => {
       payment_currency: 'USD' | 'VES';
       payment_capture_url: string;
       customer_notes: string;
-    }) => authService.createOrder(orderData),
+    }) => authService.createOrder(orderData), // throw: pedidos directos no disponibles
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.orders });
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.cart });
@@ -261,6 +267,7 @@ export const useCreateAddressMutation = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
+    // Legacy /user/addresses no montado — AuthService lanza error claro
     mutationFn: (addressData: any) => authService.createUserAddress(addressData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.addresses });

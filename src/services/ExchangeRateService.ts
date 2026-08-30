@@ -1,4 +1,5 @@
 // 💱 Servicio para manejar la tasa de cambio del BCV
+import { publicFetch } from './api/apiClient';
 
 export interface ExchangeRateResponse {
   exchange_rate: {
@@ -18,18 +19,15 @@ export interface ExchangeRateData {
 }
 
 class ExchangeRateService {
-  private baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1';
+  private baseUrl = '/api/v1';
 
   /**
    * Obtiene la tasa de cambio actual del BCV
    */
   async getExchangeRate(): Promise<ExchangeRateData> {
     try {
-      const response = await fetch(`${this.baseUrl}/exchange_rate/`, {
+      const response = await publicFetch(`${this.baseUrl}/exchange_rate/`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
       });
       
       if (!response.ok) {

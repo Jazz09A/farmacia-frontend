@@ -4,7 +4,12 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { compression } from 'vite-plugin-compression2';
 import type { Plugin } from 'vite';
 
-// https://vitejs.dev/config/
+/**
+ * Vite config — storefront farmacia (post–Fase 1: flujo = cotizaciones).
+ * En DEV, `apiClient.getApiOrigin()` usa '' y este proxy reescribe `/api` → backend.
+ * Arquitectura: `src/architecture/ADR_001_frontend_phase1.ts`
+ * @see https://vitejs.dev/config/
+ */
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   
@@ -31,6 +36,7 @@ export default defineConfig(({ mode }) => {
   server: {
     allowedHosts: ['vertical-gather-develop-prev.trycloudflare.com'],
     host: true,
+    // Alineado con apiClient: paths relativos `/api/...` en DEV
     proxy: {
       '/api': {
         target: env.VITE_API_URL || 'http://localhost:8000',

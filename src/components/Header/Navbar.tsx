@@ -218,6 +218,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex items-center space-x-1 lg:space-x-2">
                 <Link to="/cart" className="relative">
                   <motion.button
+                    data-testid="cart-button"
                     className={`relative p-2 lg:p-3 rounded-2xl transition-all duration-300 group ${getActionButtonClasses()}`}
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
@@ -241,6 +242,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     {/* Desktop: Menú desplegable tradicional */}
                     <div className="hidden lg:block relative">
                       <motion.button
+                        data-testid="user-menu-button"
                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                         className={`p-2 lg:p-3 rounded-2xl transition-all duration-300 group relative ${getActionButtonClasses()}`}
                         whileHover={{ scale: 1.1, y: -2 }}
@@ -285,6 +287,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                               </Link>
                               <div className="border-t border-medical-gray-200/50 my-2"></div>
                               <motion.button
+                                data-testid="logout-button"
                                 onClick={async () => {
                                   setIsLoggingOut(true);
                                   setTimeout(async () => {
@@ -316,6 +319,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                     {/* Mobile: Botón del avatar */}
                     <button
+                      data-testid="user-menu-button"
                       onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                       className={`lg:hidden p-2 rounded-2xl transition-all duration-300 relative ${getActionButtonClasses()}`}
                       aria-label="Abrir menú de usuario"
@@ -444,6 +448,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </div>
               <motion.button
+                data-testid="mobile-menu-button"
                 onClick={() => setIsMobileMenuOpen(true)}
                 className={`lg:hidden p-2 lg:p-3 rounded-2xl transition-all duration-300 ${getActionButtonClasses()}`}
                 whileHover={{ scale: 1.1 }}
@@ -472,7 +477,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Enhanced Mobile Menu Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div className="fixed inset-0 z-40 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div data-testid="mobile-menu" className="fixed inset-0 z-40 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <motion.div className="fixed inset-0 bg-black/60 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsMobileMenuOpen(false)} />
             <motion.div className="fixed right-0 top-0 h-full w-[280px] max-w-[85vw] sm:w-80 sm:max-w-sm glass-card shadow-elegant border-l border-white/30" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
               <div className="flex flex-col h-full">

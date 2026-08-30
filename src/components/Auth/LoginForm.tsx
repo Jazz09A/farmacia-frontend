@@ -83,7 +83,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md flex items-center"
           >
             <AlertCircle className="w-5 h-5 mr-3" />
-            <span>{errors.general[0]}</span>
+            <span data-testid="error-message">{errors.general[0]}</span>
           </motion.div>
         )}
 
@@ -92,6 +92,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
+              data-testid="email-input"
               id="email"
               type="email"
               name="email"
@@ -108,6 +109,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           <div className="flex items-center justify-between mb-2">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
             <button
+              data-testid="forgot-password-link"
               type="button"
               onClick={() => navigate('/auth?mode=forgot-password')}
               className="text-sm text-blue-600 hover:underline"
@@ -118,6 +120,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
+              data-testid="password-input"
               id="password"
               type="password"
               name="password"
@@ -131,6 +134,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         </div>
 
         <button
+          data-testid="login-button"
           type="submit"
           disabled={isLoading}
           className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center disabled:opacity-75"
@@ -148,7 +152,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       <div className="text-center mt-6">
         <p className="text-sm text-gray-600">
           ¿No tienes una cuenta?{' '}
-          <button onClick={onSwitchToRegister} className="font-medium text-blue-600 hover:underline">
+          <button data-testid="register-link" onClick={onSwitchToRegister} className="font-medium text-blue-600 hover:underline">
             Regístrate
           </button>
         </p>

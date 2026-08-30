@@ -36,17 +36,6 @@ export const queryKeys = {
     customerStats: (userId: string) => ['admin', 'customers', userId, 'stats'] as const,
     analytics: (timeRange: string = 'month') => ['admin', 'analytics', timeRange] as const,
   },
-  credit: {
-    info: ['credit', 'info'] as const,
-    dashboard: ['credit', 'dashboard'] as const,
-    orders: (page: number, limit: number) => ['credit', 'orders', { page, limit }] as const,
-    order: (id: string) => ['credit', 'orders', id] as const,
-    orderPayments: (orderId: string) => ['credit', 'orders', orderId, 'payments'] as const,
-    myPayments: ['credit', 'myPayments'] as const,
-    pendingPayments: ['credit', 'pendingPayments'] as const,
-    allPayments: (filters?: any) => ['credit', 'allPayments', filters || {}] as const,
-    adminDashboard: ['credit', 'adminDashboard'] as const,
-  },
   invoices: {
     summary: ['invoices', 'summary'] as const,
     list: (status?: 'pending' | 'paid' | 'all') => ['invoices', 'list', status || 'all'] as const,

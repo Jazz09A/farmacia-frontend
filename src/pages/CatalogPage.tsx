@@ -327,6 +327,7 @@ const CatalogPage: React.FC = () => {
                   <Search className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  data-testid="catalog-search-input"
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -352,6 +353,7 @@ const CatalogPage: React.FC = () => {
             <div className="lg:w-80 space-y-6">
               {/* Toggle para filtros en móvil */}
               <button
+                data-testid="filters-toggle"
                 onClick={() => setShowFilters(!showFilters)}
                 className="lg:hidden w-full flex items-center justify-between p-4 bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl"
               >
@@ -359,7 +361,7 @@ const CatalogPage: React.FC = () => {
                 <Filter className="w-5 h-5" />
               </button>
 
-              <div className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+              <div data-testid="category-filters" className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
                 {/* Especialidades Farmacéuticas */}
                 <div className="bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Especialidades Farmacéuticas</h3>
@@ -395,6 +397,7 @@ const CatalogPage: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Rango de Precios</h3>
                   <div className="space-y-4">
                     <input
+                      data-testid="price-range-slider"
                       type="range"
                       min="0"
                       max="100"
@@ -419,6 +422,7 @@ const CatalogPage: React.FC = () => {
                   <div className="space-y-3">
                     <label className="flex items-center gap-3 cursor-pointer">
                       <input
+                        data-testid="in-stock-filter"
                         type="checkbox"
                         checked={filters.inStock}
                         disabled={showStockFilterLoading}
@@ -459,7 +463,7 @@ const CatalogPage: React.FC = () => {
               {/* Controles de vista y ordenamiento */}
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
                 <div className="flex items-center gap-4">
-                  <p className="text-gray-600">
+                  <p data-testid="results-count" className="text-gray-600">
                     {totalProducts} productos encontrados
                   </p>
                 </div>
@@ -467,6 +471,7 @@ const CatalogPage: React.FC = () => {
                 <div className="flex items-center gap-4">
                   {/* Ordenamiento */}
                   <select
+                    data-testid="sort-select"
                     value={`${filters.sortBy}-${filters.sortOrder}`}
                     onChange={(e) => {
                       const [sortBy, sortOrder] = e.target.value.split('-') as [any, 'asc' | 'desc'];
@@ -485,6 +490,7 @@ const CatalogPage: React.FC = () => {
                   {/* Vista grid/list */}
                   <div className="flex bg-white/50 border border-white/20 rounded-xl p-1">
                     <button
+                      data-testid="view-mode-grid"
                       onClick={() => setViewMode('grid')}
                       className={`p-2 rounded-lg transition-all duration-300 ${
                         viewMode === 'grid' 
@@ -495,6 +501,7 @@ const CatalogPage: React.FC = () => {
                       <Grid className="w-4 h-4" />
                     </button>
                     <button
+                      data-testid="view-mode-list"
                       onClick={() => setViewMode('list')}
                       className={`p-2 rounded-lg transition-all duration-300 ${
                         viewMode === 'list' 
@@ -509,7 +516,7 @@ const CatalogPage: React.FC = () => {
               </div>
 
               {/* Grid de productos */}
-              <div ref={productsContainerRef} className="relative">
+              <div data-testid="product-grid" ref={productsContainerRef} className="relative">
                 {/* Overlay de loading al cambiar de página */}
                 {isPageChanging && (
                   <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-center rounded-2xl transition-opacity duration-300">
@@ -528,7 +535,7 @@ const CatalogPage: React.FC = () => {
                       : 'grid-cols-1'
                   }`}>
                     {[...Array(12)].map((_, index) => (
-                      <ProductCardSkeleton key={index} />
+                      <ProductCardSkeleton key={index} data-testid="product-skeleton" />
                     ))}
                   </div>
                 ) : filteredProducts.length > 0 ? (
@@ -540,6 +547,7 @@ const CatalogPage: React.FC = () => {
                     {filteredProducts.map((product, index) => (
                       <div 
                         key={product.id}
+                        data-testid="product-card"
                         onMouseEnter={() => {
                           // Prefetch imagen al hacer hover para carga más rápida
                           const imageUrl = product.images && product.images.length >= 2 
@@ -593,6 +601,7 @@ const CatalogPage: React.FC = () => {
               {/* Paginación */}
               {totalPages > 1 && (
                 <Pagination
+                  data-testid="pagination"
                   currentPage={currentPage}
                   totalPages={totalPages}
                   totalItems={totalProducts}

@@ -1,8 +1,15 @@
-// Configuración centralizada de la aplicación
+import { FRONTEND_PHASE1 } from '../architecture/ADR_001_frontend_phase1';
+import { AUTH_STORAGE_KEYS, getApiOrigin, resolveApiUrl } from '../services/api/apiClient';
+
+/**
+ * Configuración centralizada de la aplicación.
+ * Arquitectura post–Fase 1: ver `src/architecture/ADR_001_frontend_phase1.ts`.
+ * Flujo comercial = cotizaciones; crédito y orders legacy no montados en FE.
+ */
 export const config = {
-  // API Configuration
+  // API Configuration — origen vacío en DEV (proxy Vite vía apiClient.getApiOrigin)
   api: {
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+    baseUrl: getApiOrigin() || (import.meta.env.VITE_API_URL || 'http://localhost:8000'),
     timeout: 30000,
     retryAttempts: 3,
   },
@@ -29,11 +36,11 @@ export const config = {
     description: 'Professional Medical Care Platform',
   },
 
-  // Auth Configuration
+  // Auth Configuration — keys alineadas con AuthService / apiClient
   auth: {
-    tokenKey: 'access_token',
-    refreshTokenKey: 'refresh_token',
-    userDataKey: 'user_data',
+    tokenKey: AUTH_STORAGE_KEYS.token,
+    refreshTokenKey: AUTH_STORAGE_KEYS.refreshToken,
+    userDataKey: AUTH_STORAGE_KEYS.user,
     sessionTimeout: 60 * 60 * 1000, // 1 hour in milliseconds
     tokenRefreshThreshold: 120, // Refresh token 2 minutes before expiry (in seconds)
   },
@@ -50,11 +57,17 @@ export const config = {
     maxSize: 100,
   },
 
-  // Features flags
+  // Features flags — alineados con contrato backend / ADR-001 (no habilitar sin API montada)
   features: {
     urlObfuscation: true,
     debugConsole: import.meta.env.MODE === 'development',
     analytics: false,
+    /** Crédito retirado del FE en Fase 1; no remontar sin decisión explícita. */
+    credit: FRONTEND_PHASE1.creditMountedInFrontend,
+    /** Pedidos directos /orders no montados; checkout → cotización. */
+    directOrders: FRONTEND_PHASE1.directOrdersMounted,
+    /** Checkout y carrito operan sobre cotizaciones. */
+    quotesCheckout: FRONTEND_PHASE1.commerceMode === 'quotes',
     paymentGateways: {
       stripe: false,
       paypal: false,
@@ -82,6 +95,8 @@ export const config = {
 
   // Business Rules
   business: {
+    /** 'quotes' = único flujo de compra post–Fase 1 (ADR-001). */
+    commerceMode: FRONTEND_PHASE1.commerceMode,
     currency: {
       default: 'VES' as const,
       supported: ['VES', 'USD'] as const,
@@ -115,11 +130,13 @@ export const isDev = () => config.isDevelopment;
 export const isProd = () => config.isProduction;
 export const isDebug = () => config.debug;
 
-// API utilities
+// API utilities — DEV usa proxy (origen ''), PROD usa VITE_API_URL
 export const getApiUrl = (endpoint: string = '') => {
-  const baseUrl = config.api.baseUrl;
-  endpoint = endpoint ? `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}` : baseUrl;
-  return endpoint;
+  if (!endpoint) {
+    return getApiOrigin() || config.api.baseUrl;
+  }
+  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return resolveApiUrl(path);
 };
 
 // Feature flag utilities
