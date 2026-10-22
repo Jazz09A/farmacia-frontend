@@ -72,12 +72,15 @@ test.describe('Admin Panel', () => {
     await adminOrdersPage.filterByStatus('PENDING');
     await adminOrdersPage.expectLoaded();
     
-    // Update order status
+    // Update order status - this test requires at least one order to exist
+    // If no orders exist, the test will fail explicitly (not silent pass)
     const orderCount = await adminOrdersPage.orderRows.count();
-    if (orderCount > 0) {
-      await adminOrdersPage.updateOrderStatus(0, 'CONFIRMED');
-      await expect(page.getByText('Estado actualizado')).toBeVisible({ timeout: 10000 });
+    if (orderCount === 0) {
+      throw new Error('Test requires at least one order in the system. Seed test data or run against a populated environment.');
     }
+    
+    await adminOrdersPage.updateOrderStatus(0, 'CONFIRMED');
+    await expect(page.getByText('Estado actualizado')).toBeVisible({ timeout: 10000 });
   });
 
   test('admin-analytics', async ({ page, loginAsAdmin, adminDashboardPage }) => {

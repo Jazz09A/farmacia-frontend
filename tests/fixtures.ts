@@ -114,34 +114,29 @@ export const test = base.extend<PageObjects & TestFixtures>({
 
   loginAsUser: async ({ page }, use) => {
     await use(async (email: string, password: string) => {
-      // Try to login via API first, fallback to localStorage mock
+      // Try to login via API - MUST succeed, no fallback to mock
       const response = await page.request.post('/api/v1/auth/login', {
         data: { email, password },
       });
       
-      if (response.ok()) {
-        const data = await response.json();
-        if (data.token) {
-          await page.evaluate((token) => {
-            localStorage.setItem('auth_token', token);
-          }, data.token);
-          if (data.user) {
-            await page.evaluate((user) => {
-              localStorage.setItem('user_data', JSON.stringify(user));
-            }, data.user);
-          }
-        }
-      } else {
-        // Fallback: mock auth via localStorage
-        await page.evaluate(([email]) => {
-          localStorage.setItem('auth_token', 'mock-token-' + Date.now());
-          localStorage.setItem('user_data', JSON.stringify({
-            email,
-            company_name: 'Test Pharmacy',
-            role: 'customer',
-            is_verified: true,
-          }));
-        }, [email]);
+      if (!response.ok()) {
+        const errorText = await response.text();
+        throw new Error(`Login failed for ${email}: ${response.status()} - ${errorText}`);
+      }
+      
+      const data = await response.json();
+      if (!data.token) {
+        throw new Error(`Login response missing token for ${email}: ${JSON.stringify(data)}`);
+      }
+      
+      await page.evaluate((token) => {
+        localStorage.setItem('auth_token', token);
+      }, data.token);
+      
+      if (data.user) {
+        await page.evaluate((user) => {
+          localStorage.setItem('user_data', JSON.stringify(user));
+        }, data.user);
       }
       
       await page.goto('/');
