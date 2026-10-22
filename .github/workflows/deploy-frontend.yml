@@ -16,6 +16,13 @@ jobs:
         with:
           node-version: '20'
 
+      # ---> AGREGA ESTE PASO AQUÍ <---
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          run_install: false
+
       - name: Install dependencies and build
         run: |
           pnpm install
