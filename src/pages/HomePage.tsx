@@ -13,7 +13,7 @@ import { ContactUsSection } from '../components/ContactUs/ContactUsSection';
 import { 
   HeroSkeleton, 
   SectionSkeleton, 
-  BlogPostSkeleton 
+  BlogPostSkeleton  
 } from '../components/Skeleton';
 
 // Hooks
