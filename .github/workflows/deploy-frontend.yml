@@ -34,6 +34,8 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 2222
           source: "dist/*"
           target: "/var/www/mi-frontend"
+          strip_components: 1
           rm: true
