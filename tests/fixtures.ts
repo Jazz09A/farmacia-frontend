@@ -37,6 +37,9 @@ type TestFixtures = {
   // Test data
   testUser: RegisterUserData;
   adminUser: { email: string; password: string };
+
+  // Synthetic auth header for flows that mock network routes (visual/a11y/errors)
+  authHeaders: { Authorization: string };
 };
 
 interface RegisterUserData {
@@ -110,6 +113,12 @@ export const test = base.extend<PageObjects & TestFixtures>({
       email: process.env.ADMIN_EMAIL || 'admin@farmaplus.com',
       password: process.env.ADMIN_PASSWORD || 'admin123',
     });
+  },
+
+  authHeaders: async ({}, use) => {
+    // Token sintetico: suficiente para flows que mockean las APIs con page.route
+    // (visual, a11y, errors). No pretende autenticar contra el backend real.
+    await use({ Authorization: `Bearer e2e-synthetic-token-${Date.now()}` });
   },
 
   loginAsUser: async ({ page }, use) => {

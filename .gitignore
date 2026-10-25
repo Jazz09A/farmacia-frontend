@@ -15,6 +15,7 @@ dist-ssr
 # Test artifacts
 playwright-report/
 test-results/
+tests/visual/*-snapshots/
 playwright/.cache/
 *.md
 # Editor directories and files
