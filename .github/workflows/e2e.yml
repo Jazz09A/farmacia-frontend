@@ -77,7 +77,7 @@ jobs:
   e2e:
     name: E2E tests (report-only, suite necesita mock-backend)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     # TODO(hard-gate): ~60% de la suite depende de un backend real (VITE_API_URL);
     # en CI no hay servicio SQL Server. Pendiente: arnes de mock API (page.route
     # global) o backend de servicio, y baselines de screenshots visuales.
@@ -105,9 +105,11 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       # Solo chromium en CI: la matriz completa (firefox/webkit/móviles) queda
-      # para corridas locales; mantiene el pipeline en ~5 min.
+      # para corridas locales. Sin retries y 2 workers: es report-only,
+      # prior Catch rápido sobre exhaustividad (la config por defecto serializa
+      # con 1 worker y 2 retries y desborda el timeout del runner).
       - name: Run Playwright tests
-        run: pnpm exec playwright test --project=chromium
+        run: pnpm exec playwright test --project=chromium --retries=0 --workers=2
 
       - name: Upload Playwright report
         if: always()
