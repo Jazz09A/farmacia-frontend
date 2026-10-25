@@ -10,7 +10,7 @@ import {
   CreateUsersResponse
 } from '../types';
 import { exchangeRateService, ExchangeRateData } from './ExchangeRateService';
-import { QuoteSummary, QuoteListResponse } from '../types/quotes';
+import { QuoteSummary, QuoteListResponse, QuoteDetailResponse } from '../types/quotes';
 
 export interface DashboardStats {
   total_revenue: string;
@@ -56,7 +56,7 @@ export interface DashboardResponse {
 }
 
 class AdminService {
-  private baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1/admin';
+  private baseUrl = '/api/v1/admin';
 
   // 📊 Obtener datos del dashboard
   async getDashboardData(): Promise<DashboardResponse> {
@@ -95,89 +95,23 @@ class AdminService {
     }
   }
 
-  // 🔄 Actualizar estado de orden
-  async updateOrderStatus(orderId: string, newStatus: string): Promise<void> {
-    try {
-      // Primero obtener el estado actual de la orden para validar
-      const orderResponse = await authService.authenticatedFetch(
-        `${this.baseUrl}/order/${orderId}`
-      );
-      
-      if (!orderResponse.ok) {
-        throw new Error('No se pudo obtener la información de la orden');
-      }
-      
-      const orderData = await orderResponse.json();
-      const currentStatus = orderData.status;
-      
-      // Verificar si la orden está en un estado final
-      if (currentStatus === 'delivered' || currentStatus === 'cancelled') {
-        throw new Error('No se puede modificar una orden entregada o cancelada');
-      }
-
-      const response = await authService.authenticatedFetch(
-        `${this.baseUrl}/order/${orderId}/status`,
-        {
-          method: 'PUT',
-          body: JSON.stringify({ status: newStatus })
-        }
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Error updating order status: ${errorData.message}`);
-      }
-    } catch (error) {
-      console.error('Failed to update order status:', error);
-      throw error;
-    }
+  // 🔄 Estado de orden legacy — /admin/order/* no montado
+  async updateOrderStatus(_orderId: string, _newStatus: string): Promise<void> {
+    throw new Error('Admin Orders API no disponible. Gestione cotizaciones en /admin/quotes.');
   }
 
-  // 💳 Actualizar estado de pago
-  async updatePaymentStatus(orderId: string, paymentStatus: 'completed' | 'failed'): Promise<void> {
-    try {
-      const response = await authService.authenticatedFetch(
-        `${this.baseUrl}/payments/status`,
-        {
-          method: 'PUT',
-          body: JSON.stringify({ 
-            order_id: orderId,
-            status: paymentStatus 
-          })
-        }
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Error updating payment status: ${errorData.message || response.statusText}`);
-      }
-    } catch (error) {
-      console.error('Failed to update payment status:', error);
-      throw error;
-    }
+  // 💳 Pago de orden legacy — endpoint no montado
+  async updatePaymentStatus(_orderId: string, _paymentStatus: 'completed' | 'failed'): Promise<void> {
+    throw new Error('Admin Orders API no disponible. Gestione cotizaciones en /admin/quotes.');
   }
 
-  // 📋 Obtener detalles de una orden específica
-  async getOrderDetails(orderId: string): Promise<Order> {
-    try {
-      const response = await authService.authenticatedFetch(
-        `${this.baseUrl}/order/${orderId}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Error fetching order details: ${response.status}`);
-      }
-      const responseJson = await response.json();
-      return responseJson;
-      
-    } catch (error) {
-      console.error('Failed to fetch order details:', error);
-      throw error;
-    }
+  // 📋 Detalle de orden legacy — API /admin/order/{id} no montada. Usar getQuoteDetail.
+  async getOrderDetails(_orderId: string): Promise<Order> {
+    throw new Error('Admin Orders API no disponible. Use getQuoteDetail (/admin/quotes/{id}).');
   }
 
-  // 📋 Obtener todas las órdenes con filtros y paginación
-  async getOrders(params?: {
+  // 📋 Listado de órdenes legacy — API /admin/orders no montada. Usar getQuotes.
+  async getOrders(_params?: {
     page?: number;
     limit?: number;
     status?: string;
@@ -185,51 +119,7 @@ class AdminService {
     sort_by?: string;
     sort_order?: 'asc' | 'desc';
   }): Promise<{ orders: Order[]; total: number; pages: number }> {
-    try {
-      const searchParams = new URLSearchParams();
-      
-      if (params?.page) searchParams.append('page', params.page.toString());
-      if (params?.limit) searchParams.append('limit', params.limit.toString());
-      if (params?.status && params.status !== 'all') searchParams.append('status', params.status);
-      if (params?.search) searchParams.append('search', params.search);
-      if (params?.sort_by) searchParams.append('sort_by', params.sort_by);
-      if (params?.sort_order) searchParams.append('sort_order', params.sort_order);
-
-      const url = `${this.baseUrl}/orders${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-      const response = await authService.authenticatedFetch(url);
-      if (!response.ok) {
-        throw new Error(`Error fetching orders: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      // Manejar diferentes estructuras de respuesta de la API
-      if (Array.isArray(data)) {
-        // Si la API devuelve directamente un array de órdenes
-        return {
-          orders: data,
-          total: data.length,
-          pages: Math.ceil(data.length / (params?.limit || 20))
-        };
-      } else if (data.orders && Array.isArray(data.orders)) {
-        // Si la API devuelve un objeto con orders, total, pages
-        return {
-          orders: data.orders,
-          total: data.total || data.orders.length,
-          pages: data.pages || Math.ceil((data.total || data.orders.length) / (params?.limit || 20))
-        };
-      } else {
-        // Fallback: tratar como array vacío
-        return {
-          orders: [],
-          total: 0,
-          pages: 0
-        };
-      }
-    } catch (error) {
-      console.error('Failed to fetch orders:', error);
-      throw error;
-    }
+    throw new Error('Admin Orders API no disponible. Use getQuotes (/admin/quotes).');
   }
 
   // 📋 Obtener cotizaciones (admin)
@@ -294,24 +184,9 @@ class AdminService {
     }
   }
 
-  // 🗑️ Eliminar orden (soft delete)
-  async deleteOrder(orderId: string): Promise<void> {
-    try {
-      const response = await authService.authenticatedFetch(
-        `${this.baseUrl}/order/${orderId}`,
-        {
-          method: 'DELETE'
-        }
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Error deleting order: ${errorData.message}`);
-      }
-    } catch (error) {
-      console.error('Failed to delete order:', error);
-      throw error;
-    }
+  // 🗑️ Eliminar orden legacy — /admin/order/{id} no montado
+  async deleteOrder(_orderId: string): Promise<void> {
+    throw new Error('Admin Orders API no disponible. Gestione cotizaciones en /admin/quotes.');
   }
 
   // 📊 Obtener análiticas avanzadas
@@ -477,21 +352,23 @@ class AdminService {
     search?: string;
   }): Promise<SourceSystemCustomerListResponse> {
     try {
-      const url = new URL(`${this.baseUrl}/source-system/customers`);
-      url.searchParams.set('page', String(params.page));
-      url.searchParams.set('limit', String(params.limit));
+      const searchParams = new URLSearchParams();
+      searchParams.set('page', String(params.page));
+      searchParams.set('limit', String(params.limit));
       
       if (params.include_inactive !== undefined) {
-        url.searchParams.set('include_inactive', String(params.include_inactive));
+        searchParams.set('include_inactive', String(params.include_inactive));
       }
       if (params.only_with_email !== undefined) {
-        url.searchParams.set('only_with_email', String(params.only_with_email));
+        searchParams.set('only_with_email', String(params.only_with_email));
       }
       if (params.search) {
-        url.searchParams.set('search', params.search);
+        searchParams.set('search', params.search);
       }
 
-      const response = await authService.authenticatedFetch(url.pathname + url.search);
+      const response = await authService.authenticatedFetch(
+        `${this.baseUrl}/source-system/customers?${searchParams.toString()}`
+      );
       if (!response.ok) {
         throw new Error(`Error ${response.status}: Failed to fetch source customers`);
       }

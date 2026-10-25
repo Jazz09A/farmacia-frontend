@@ -1,5 +1,6 @@
 // 🔥 Flash Offer Service - API interactions for flash offers
 import { authService } from './AuthService';
+import { publicFetch } from './api/apiClient';
 import { 
   FlashOffer, 
   FlashOfferWithProduct, 
@@ -17,14 +18,14 @@ export interface FlashOfferFilters {
 }
 
 class FlashOfferService {
-  private adminBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v1/admin';
+  private adminBaseUrl = '/api/v1/admin';
   private adminFlashOffersBase = `${this.adminBaseUrl}/flash-offers`;
   private articleDiscountsBase = `${this.adminBaseUrl}/article-discounts`;
   private publicFlashOffersUrl = `${this.adminFlashOffersBase}/public`;
 
   async getFlashOffersPublic(): Promise<FlashOfferResponse> {
     try {
-      const response = await fetch(this.publicFlashOffersUrl);
+      const response = await publicFetch(this.publicFlashOffersUrl);
       if (!response.ok) {
         throw new Error(`Error fetching flash offers: ${response.status}`);
       }
@@ -52,7 +53,7 @@ class FlashOfferService {
   // 🔥 Obtener ofertas flash activas (público)
   async getActiveFlashOffers(): Promise<FlashOfferWithProduct[]> {
     try {
-      const response = await fetch(this.publicFlashOffersUrl);
+      const response = await publicFetch(this.publicFlashOffersUrl);
       
       if (!response.ok) {
         if (response.status === 404) {

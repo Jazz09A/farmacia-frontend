@@ -20,10 +20,13 @@ export const useAdminOrdersQuery = (params: {
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
 }) => {
+  // Legacy /admin/orders no montado — preferir useAdminQuotesQuery
   return useQuery({
     queryKey: queryKeys.admin.orders(params),
     queryFn: () => adminService.getOrders(params),
-    staleTime: 30 * 1000,
+    enabled: false,
+    staleTime: Infinity,
+    retry: false,
     keepPreviousData: true as any,
   });
 };
@@ -54,11 +57,13 @@ export const useAdminQuoteDetailQuery = (quoteId: string, enabled: boolean = tru
 };
 
 export const useAdminOrderDetailsQuery = (orderId: string, enabled: boolean = true) => {
+  // Legacy /admin/order/{id} no montado — preferir useAdminQuoteDetailQuery
   return useQuery<Order>({
     queryKey: queryKeys.admin.order(orderId),
     queryFn: () => adminService.getOrderDetails(orderId),
-    enabled: !!orderId && enabled,
-    staleTime: 2 * 60 * 1000,
+    enabled: false && !!orderId && enabled,
+    staleTime: Infinity,
+    retry: false,
   });
 };
 

@@ -3,6 +3,8 @@
  * Evita múltiples fetches de la misma imagen y gestiona una cola de requests
  */
 
+import { AUTH_STORAGE_KEYS, resolveApiUrl } from '../services/api/apiClient';
+
 interface CacheEntry {
   blobUrl: string;
   timestamp: number;
@@ -52,9 +54,7 @@ class AuthenticatedImageCache {
       return src;
     }
 
-    // Construir URL completa
-    const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
-    const imageUrl = src.startsWith('http') ? src : `${baseUrl}${src}`;
+    const imageUrl = resolveApiUrl(src);
 
     // Verificar caché
     const cached = this.cache.get(imageUrl);
@@ -80,7 +80,7 @@ class AuthenticatedImageCache {
         try {
           this.activeRequests++;
 
-          const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+          const token = localStorage.getItem(AUTH_STORAGE_KEYS.token);
           if (!token) {
             throw new Error('No hay token de autenticación');
           }
@@ -102,14 +102,14 @@ class AuthenticatedImageCache {
           this.setCache(imageUrl, blobUrl);
 
           // Resolver todas las peticiones pendientes
-          const pending = this.pendingRequests.get(imageUrl) || [];
-          pending.forEach(req => req.resolve(blobUrl));
+          const pendingReqs = this.pendingRequests.get(imageUrl) || [];
+          pendingReqs.forEach(req => req.resolve(blobUrl));
           this.pendingRequests.delete(imageUrl);
 
         } catch (error) {
           // Rechazar todas las peticiones pendientes
-          const pending = this.pendingRequests.get(imageUrl) || [];
-          pending.forEach(req => req.reject(error as Error));
+          const pendingReqs = this.pendingRequests.get(imageUrl) || [];
+          pendingReqs.forEach(req => req.reject(error as Error));
           this.pendingRequests.delete(imageUrl);
         } finally {
           this.activeRequests--;
@@ -171,8 +171,7 @@ class AuthenticatedImageCache {
       return;
     }
 
-    const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
-    const imageUrl = src.startsWith('http') ? src : `${baseUrl}${src}`;
+    const imageUrl = resolveApiUrl(src);
 
     const cached = this.cache.get(imageUrl);
     if (cached) {

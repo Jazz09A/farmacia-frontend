@@ -27,12 +27,4 @@ export const paymentMethods: PaymentMethod[] = [
     available: true,
     currencies: ['VES', 'USD'],
   },
-  {
-    id: 'credito',
-    name: 'Pago con Crédito',
-    description: 'Usa tu línea de crédito disponible',
-    icon: '',
-    available: true,
-    currencies: ['USD'],
-  },
 ];

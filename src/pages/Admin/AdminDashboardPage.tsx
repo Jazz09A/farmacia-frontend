@@ -108,59 +108,48 @@ const AdminDashboardPage: React.FC = () => {
 
 
 
-  // 👁️ Ver detalles de orden con carga completa
+  // 👁️ Detalle de orden legacy: /admin/order/{id} no montado — mostrar datos del dashboard
   const handleViewOrderDetails = async (order: RecentOrder) => {
     setSelectedOrder(order);
     setLoadingOrderDetails(true);
-    
-    try {
-      // 🌐 Obtener detalles completos de la orden
-      const fullOrder = await adminService.getOrderDetails(order.id);
-      setFullOrderDetails(fullOrder);
-      setShowOrderModal(true);
-    } catch (error) {
-      console.error('Error fetching order details:', error);
-      
-      // 🔄 Fallback: crear orden básica con datos disponibles
-      const fallbackOrder: Order = {
-        id: order.id,
-        order_number: order.id,
-        status: order.status,
-        subtotal: order.total,
-        shipping_cost: '0.00',
-        taxes: '0.00',
-        total: order.total,
-        payment_currency: 'VES',
-        exchange_rate: '1.00',
-        payment_method: 'No especificado',
-        payment_status: 'pending',
-        payment_reference: 'No especificado',
-        tracking_number: undefined,
-        estimated_delivery: undefined,
-        delivered_at: undefined,
-        customer_notes: undefined,
-        created_at: order.date,
-        updated_at: order.date,
-        items: [],
-        shipping_address: {
-          street: 'Información no disponible',
-          city: 'No disponible',
-          state: 'No disponible',
-          postal_code: '0000',
-          country: 'Venezuela',
-          recipient_name: 'No disponible',
-          recipient_phone: 'No disponible',
-          delivery_instructions: undefined
-        },
-        item_count: 0,
-        payment_capture_url: ''
-      };
-      
-      setFullOrderDetails(fallbackOrder);
-      setShowOrderModal(true);
-    } finally {
-      setLoadingOrderDetails(false);
-    }
+
+    const fallbackOrder: Order = {
+      id: order.id,
+      order_number: order.id,
+      status: order.status,
+      subtotal: order.total,
+      shipping_cost: '0.00',
+      taxes: '0.00',
+      total: order.total,
+      payment_currency: 'VES',
+      exchange_rate: '1.00',
+      payment_method: 'No especificado',
+      payment_status: 'pending',
+      payment_reference: 'No especificado',
+      tracking_number: undefined,
+      estimated_delivery: undefined,
+      delivered_at: undefined,
+      customer_notes: 'Detalle completo no disponible. Gestione cotizaciones en /admin/orders.',
+      created_at: order.date,
+      updated_at: order.date,
+      items: [],
+      shipping_address: {
+        street: 'Información no disponible',
+        city: 'No disponible',
+        state: 'No disponible',
+        postal_code: '0000',
+        country: 'Venezuela',
+        recipient_name: 'No disponible',
+        recipient_phone: 'No disponible',
+        delivery_instructions: undefined
+      },
+      item_count: 0,
+      payment_capture_url: ''
+    };
+
+    setFullOrderDetails(fallbackOrder);
+    setShowOrderModal(true);
+    setLoadingOrderDetails(false);
   };
 
   // 🔄 Manejar actualización de estado
@@ -212,6 +201,7 @@ const AdminDashboardPage: React.FC = () => {
       className="bg-white rounded-lg shadow-md p-4 lg:p-6 border border-gray-200"
       whileHover={{ y: -2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
       transition={{ duration: 0.2 }}
+      data-testid="admin-stats-card"
     >
       <div className="flex items-center justify-between">
         <div className="min-w-0 flex-1">

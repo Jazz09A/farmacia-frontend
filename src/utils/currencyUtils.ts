@@ -163,7 +163,6 @@ export const getPaymentMethodCurrency = (paymentMethodId: string): 'VES' | 'USD'
     'paypal',
     'transferencia-usd',
     'efectivo-usd',
-    'credito'
   ];
   
   if (venezuelanMethods.includes(paymentMethodId)) {

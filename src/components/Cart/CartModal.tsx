@@ -68,6 +68,7 @@ export const CartModal: React.FC<CartModalProps> = ({
               onClick={onClose}
             />
             <motion.div
+              data-testid="cart-modal"
               className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
@@ -77,7 +78,7 @@ export const CartModal: React.FC<CartModalProps> = ({
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 text-lg">Tu carrito está vacío</p>
+                  <p data-testid="empty-cart-message" className="text-gray-500 text-lg">Tu carrito está vacío</p>
                 </div>
               </div>
             </motion.div>
@@ -107,6 +108,7 @@ export const CartModal: React.FC<CartModalProps> = ({
 
           {/* Modal */}
           <motion.div
+            data-testid="cart-modal"
             className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -122,6 +124,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                 </h2>
               </div>
               <motion.button
+                data-testid="cart-close-button"
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 whileHover={{ scale: 1.1 }}
@@ -143,6 +146,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                   return (
                     <motion.div
                       key={item.id}
+                      data-testid="cart-item"
                       className="flex items-center space-x-4 bg-gray-50 rounded-lg p-4"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -193,7 +197,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                             <Minus className="h-4 w-4 text-gray-600" />
                           </motion.button>
                           
-                          <span className="w-8 text-center font-medium">
+                          <span data-testid="quantity-input" className="w-8 text-center font-medium">
                             {item.quantity}
                           </span>
                           
@@ -209,6 +213,7 @@ export const CartModal: React.FC<CartModalProps> = ({
 
                         {/* Remove Button */}
                         <motion.button
+                          data-testid="remove-item-button"
                           onClick={() => onRemoveItem(item.id)}
                           className="p-1 hover:bg-red-100 text-red-500 rounded-full transition-colors"
                           whileHover={{ scale: 1.1 }}
@@ -252,13 +257,14 @@ export const CartModal: React.FC<CartModalProps> = ({
                   
                   <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
                     <span>Total:</span>
-                    <span className="text-blue-600">
+                    <span data-testid="cart-total" className="text-blue-600">
                       {formatPriceFromBackend(totalWithDiscounts.toString())}
                     </span>
                   </div>
                 </div>
                 
                 <motion.button
+                  data-testid="checkout-button"
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

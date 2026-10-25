@@ -120,8 +120,9 @@ const ProductDetailPage: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Gallery */}
-          <div className="space-y-4">
+          <div data-testid="product-images" className="space-y-4">
             <motion.div 
+              data-testid="product-image"
               className="bg-white rounded-2xl shadow-soft p-4 overflow-hidden"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -166,7 +167,7 @@ const ProductDetailPage: React.FC = () => {
 
           {/* Product Info & Actions */}
           <div className="space-y-4">
-            <h1 className="text-3xl lg:text-4xl font-bold text-medical-gray-900">{product.name}</h1>
+            <h1 data-testid="product-name" className="text-3xl lg:text-4xl font-bold text-medical-gray-900">{product.name}</h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               {product.brand && (
                 <>
@@ -193,7 +194,7 @@ const ProductDetailPage: React.FC = () => {
             {/* Price */}
             <div className={`rounded-xl p-2.5 sm:p-3 ${product.is_offer ? 'bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200' : (product.profit_discount && (product.profit_discount.is_active === true || product.profit_discount.is_active === 'true')) ? 'bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200' : 'bg-medical-blue-50/50'}`}>
               {product.is_offer && product.original_price ? (
-                <div className="space-y-1.5">
+                <div data-testid="product-price" className="space-y-1.5">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
                     <span className="text-2xl lg:text-3xl font-bold text-red-600">
                       {formatPrice(getDisplayPrice(product.price, currency), currency)}
@@ -223,7 +224,7 @@ const ProductDetailPage: React.FC = () => {
                       const originalPriceNum = parseFloat(product.price);
                       const discountedPriceNum = isNaN(originalPriceNum) ? 0 : originalPriceNum * (1 - discountPercent / 100);
                       return (
-                        <div className="flex flex-wrap items-baseline gap-3">
+                        <div data-testid="product-price" className="flex flex-wrap items-baseline gap-3">
                           <span className="text-2xl lg:text-3xl font-bold text-red-600">
                             {formatPrice(getDisplayPrice(discountedPriceNum.toFixed(2), currency), currency)}
                           </span>
@@ -237,7 +238,7 @@ const ProductDetailPage: React.FC = () => {
                       );
                     })()
                   ) : (
-                    <span className="text-2xl lg:text-3xl font-bold text-medical-primary">
+                    <span data-testid="product-price" className="text-2xl lg:text-3xl font-bold text-medical-primary">
                       {formatPrice(getDisplayPrice(product.price, currency), currency)}
                     </span>
                   )}
@@ -273,11 +274,12 @@ const ProductDetailPage: React.FC = () => {
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <div className="flex w-full max-w-xs items-center justify-between rounded-xl border border-medical-gray-300 sm:w-auto">
                 <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="p-3 text-medical-gray-600 transition-colors hover:text-medical-primary"><Minus className="w-5 h-5" /></button>
-                <span className="w-16 px-4 text-center text-lg font-semibold">{quantity}</span>
+                <span data-testid="quantity-input" className="w-16 px-4 text-center text-lg font-semibold">{quantity}</span>
                 <button onClick={() => setQuantity(q => q + 1)} className="p-3 text-medical-gray-600 transition-colors hover:text-medical-primary"><Plus className="w-5 h-5" /></button>
               </div>
               <div className="flex w-full max-w-xs items-stretch gap-2 sm:w-auto">
                 <motion.button
+                  data-testid="add-to-cart-button"
                   onClick={handleAddToCart}
                   disabled={!product.in_stock || addingToCart}
                   className="flex-1 flex items-center justify-center space-x-2 rounded-2xl bg-medical-primary px-4 py-3 font-semibold text-white shadow-medical transition-all duration-300 hover:bg-medical-primary-dark disabled:cursor-not-allowed disabled:bg-medical-gray-400"
@@ -340,7 +342,7 @@ const ProductDetailPage: React.FC = () => {
             </nav>
           </div>
           <div className="py-8">
-            {activeTab === 'description' && <p className="text-medical-gray-700 leading-relaxed">{product.description}</p>}
+            {activeTab === 'description' && <p data-testid="product-description" className="text-medical-gray-700 leading-relaxed">{product.description}</p>}
             {activeTab === 'details' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-medical-gray-700">
                 {product.ingredients && <p><strong>Ingredientes:</strong> {product.ingredients.join(', ')}</p>}

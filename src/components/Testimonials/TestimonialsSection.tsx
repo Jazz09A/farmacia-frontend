@@ -33,7 +33,7 @@ export const TestimonialsSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section data-testid="testimonials-section" className="py-20 bg-white">
       <div className="medical-container">
         {/* Section Header */}
         <motion.div
